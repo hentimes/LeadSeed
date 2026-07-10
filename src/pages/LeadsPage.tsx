@@ -1,12 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLeads } from '../hooks/useLeads';
 import { useLists } from '../hooks/useLists';
+import { useLeadFilters } from '../hooks/useLeadFilters';
 import type { Lead, LeadList, ExportFormat, LeadStatus } from '../types';
-import { STATUS_LABELS } from '../types';
 import LeadsTable from '../components/LeadsTable';
 import LeadForm from '../components/LeadForm';
 import LeadDetail from '../components/LeadDetail';
 import ImportModal from '../components/ImportModal';
+import BulkActionBar from '../components/leads/BulkActionBar';
 import { useSort } from '../hooks/useSort';
 import type { ColumnDef } from '../components/ColumnSelector';
 import { ParsedRow } from '../utils/importParser';
@@ -31,10 +32,9 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   const [showImport, setShowImport] = useState(false);
   const [viewing, setViewing] = useState<Lead | null>(null);
   const [toast, setToast] = useState<{ id: number; name: string } | null>(null);
-  const [filterListId, setFilterListId] = useState<number | null>(null);
-  const [filterStatus, setFilterStatus] = useState<LeadStatus | null>(null);
-  const [filterDate, setFilterDate] = useState('');
-  const [search, setSearch] = useState('');
+  
+  const { filtered, filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters(leads);
+
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
 
@@ -78,41 +78,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
     loadLists();
   }, [refreshKey, showTrash]);
 
-  const filtered = useMemo(() => {
-    let result = leads;
-    if (filterListId !== null) {
-      result = result.filter((l) => l.listaIds.includes(filterListId));
-    }
-    if (filterStatus !== null) {
-      result = result.filter((l) => (l.status || 'nuevo') === filterStatus);
-    }
-    if (filterDate) {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      if (filterDate === '7d') {
-        const cutoff = new Date(today.getTime() - 7 * 86400000).toISOString();
-        result = result.filter((l) => l.createdAt >= cutoff);
-      } else if (filterDate === '30d') {
-        const cutoff = new Date(today.getTime() - 30 * 86400000).toISOString();
-        result = result.filter((l) => l.createdAt >= cutoff);
-      } else if (filterDate === 'thisMonth') {
-        const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        result = result.filter((l) => l.createdAt >= start);
-      }
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (l) =>
-          l.name.toLowerCase().includes(q) ||
-          l.email.toLowerCase().includes(q) ||
-          l.phone.toLowerCase().includes(q) ||
-          l.company.toLowerCase().includes(q) ||
-          l.rut.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [leads, filterListId, filterStatus, filterDate, search]);
+  // Los leads filtrados ahora se manejan con useLeadFilters
 
   const { sort, toggle: onSort, sorted } = useSort(filtered, {
     createdAt: (l) => l.createdAt,
@@ -257,31 +223,31 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Leads</h2>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-bold">Leads</h2>
         <div className="flex gap-2 items-center">
           <button
             onClick={handleExport}
             title={`Exportar ${selectedIds.size > 0 ? 'seleccionados' : filterListId || filterStatus || filterDate || search.trim() ? 'vista actual' : 'todos'} como ${exportFormat.toUpperCase()}`}
-            className="bg-green-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-green-700"
+            className="bg-green-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-green-700 transition-colors"
           >
             Exportar
           </button>
           <button
             onClick={() => setShowImport(true)}
-            className="bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-700"
+            className="bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
           >
             Importar
           </button>
           <button
             onClick={() => { setEditing(null); setShowForm(true); }}
-            className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700"
+            className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
           >
-            Nuevo Lead
+            + Lead
           </button>
           <button
             onClick={() => { setShowTrash(!showTrash); setSelectedIds(new Set()); }}
-            className={`px-3 py-2 rounded text-sm font-medium ${showTrash ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+            className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center ${showTrash ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             title={showTrash ? 'Volver a leads' : 'Papelera'}
           >
             {showTrash ? 'Salir de papelera' : Icon.Trash()}
@@ -291,7 +257,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
 
       {showForm && (
         <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-          <h3 className="font-semibold mb-3">{editing ? 'Editar Lead' : 'Nuevo Lead'}</h3>
+          <h3 className="text-base font-semibold mb-3">{editing ? 'Editar Lead' : 'Nuevo Lead'}</h3>
           <LeadForm
             lead={editing}
             lists={lists}
@@ -301,70 +267,18 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
         </div>
       )}
 
-      {selectedIds.size > 0 && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-medium text-blue-800">
-            {selectedIds.size} seleccionados
-          </span>
-          <button
-            onClick={handleExport}
-            title={`Exportar seleccionados como ${exportFormat.toUpperCase()}`}
-            className="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-700"
-          >
-            Exportar
-          </button>
-          {showTrash ? (
-            <>
-              <button onClick={handleBulkRestore} className="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-700">
-                Restaurar seleccionados
-              </button>
-              <button onClick={handleBulkDelete} className="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-red-700">
-                Eliminar definitivo
-              </button>
-            </>
-          ) : (
-            <button onClick={handleBulkDelete} className="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-red-700">
-              Eliminar seleccionados
-            </button>
-          )}
-          {!showTrash && (
-            <select
-              onChange={(e) => { if (e.target.value) handleBulkStatusChange(e.target.value as LeadStatus); e.target.value = ''; }}
-              className="border border-blue-300 rounded px-2 py-1 text-xs bg-white"
-              defaultValue=""
-            >
-              <option value="" disabled>Cambiar estado...</option>
-              {(['nuevo', 'contactado', 'interesado', 'convertido', 'descartado'] as LeadStatus[]).map((s) => (
-                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-              ))}
-            </select>
-          )}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-blue-600">Agregar a lista:</span>
-            {lists.length === 0 ? (
-              <span className="text-xs text-gray-400">No hay listas. Créalas en la pestaña Listas.</span>
-            ) : (
-              lists.map((list) => (
-                <button
-                  key={list.id}
-                  type="button"
-                  onClick={() => handleAddToList(list.id!)}
-                  className="px-2 py-1 rounded-full text-xs text-white font-medium hover:ring-2 hover:ring-offset-1 cursor-pointer"
-                  style={{ backgroundColor: list.color, border: `2px solid ${list.color}` }}
-                >
-                  {list.name}
-                </button>
-              ))
-            )}
-          </div>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="text-xs text-blue-600 hover:text-blue-800 ml-auto"
-          >
-            Deseleccionar todo
-          </button>
-        </div>
-      )}
+      <BulkActionBar
+        selectedIds={selectedIds}
+        showTrash={showTrash}
+        exportFormat={exportFormat}
+        lists={lists}
+        onExport={handleExport}
+        onRestore={handleBulkRestore}
+        onDelete={handleBulkDelete}
+        onStatusChange={handleBulkStatusChange}
+        onAddToList={handleAddToList}
+        onClearSelection={() => setSelectedIds(new Set())}
+      />
 
       <LeadsTable
         leads={sorted}

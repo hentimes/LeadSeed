@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import type { Lead, LeadList, LeadStatus } from '../types';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import type { SortConfig, SortField } from '../hooks/useSort';
@@ -69,6 +69,12 @@ export default function LeadsTable({
   const statusVis = visibleCols.find((c) => c.key === 'status')?.visible ?? true;
   const scoreVis = visibleCols.find((c) => c.key === 'score')?.visible ?? false;
 
+  const listsMap = useMemo(() => {
+    const map = new Map<number, LeadList>();
+    for (const l of lists) map.set(l.id!, l);
+    return map;
+  }, [lists]);
+
   const getScore = (lead: Lead): number => {
     let s = 0;
     if (lead.phone) s++;
@@ -133,34 +139,60 @@ export default function LeadsTable({
     return () => tbody.removeEventListener('click', handler);
   }, []);
 
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFiltersCount = (filterListId ? 1 : 0) + (filterStatus ? 1 : 0) + (filterDate ? 1 : 0);
+
   return (
     <div>
-      <div className="flex gap-2 mb-3 items-center flex-wrap">
-        <input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Buscar nombre, teléfono, email, RUT..." className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm w-48 focus:ring-2 focus:ring-blue-500" />
-        <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
-          className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
-          <option value="">Todas las listas</option>
-          {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-        </select>
-        <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
-          className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
-          <option value="">Todos los estados</option>
-          {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
-            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-          ))}
-        </select>
-        <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
-          className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
-          <option value="">Todas las fechas</option>
-          <option value="7d">Última semana</option>
-          <option value="30d">Último mes</option>
-          <option value="thisMonth">Este mes</option>
-        </select>
-        <span className="text-xs text-gray-500">
-          {visibleCount !== totalCount ? `${visibleCount}/${totalCount} leads` : `${totalCount} leads`}
-          {selectedCount > 0 && <span className="ml-1 text-blue-600 font-medium">{selectedCount} sel.</span>}
-        </span>
+      {showFilters && (
+        <div className="flex gap-2 mb-2 items-center flex-wrap bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded p-2 animate-toast-in">
+          <span className="text-xs font-semibold text-gray-500 mr-1">Filtrar por:</span>
+          <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Todas las listas</option>
+            {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          </select>
+          <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Todos los estados</option>
+            {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
+              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            ))}
+          </select>
+          <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Todas las fechas</option>
+            <option value="7d">Última semana</option>
+            <option value="30d">Último mes</option>
+            <option value="thisMonth">Este mes</option>
+          </select>
+          {activeFiltersCount > 0 && (
+            <button onClick={() => { onFilterChange(null); onFilterStatusChange(null); onFilterDateChange(''); }} className="text-xs text-red-500 hover:text-red-700 ml-auto underline decoration-dotted">
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex-1 max-w-sm">
+          <input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Buscar nombre, teléfono, email, RUT..." className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 rounded px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        
+        <div className="flex items-center gap-3 shrink-0 ml-2">
+          <span className="text-xs text-gray-500 hidden sm:inline-block">
+            {visibleCount !== totalCount ? `${visibleCount}/${totalCount} leads` : `${totalCount} leads`}
+            {selectedCount > 0 && <span className="ml-1 text-blue-600 font-medium">{selectedCount} sel.</span>}
+          </span>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'}`}
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+          </button>
+        </div>
       </div>
 
       <div className="border rounded-lg overflow-x-auto">
@@ -208,7 +240,7 @@ export default function LeadsTable({
               </td></tr>
             ) : compactMode ? (
               leads.map((lead, idx) => (
-                <tr key={lead.id} data-row-index={idx} data-lead-id={lead.id!} className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${selectedIds.has(lead.id!) ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}>
+                <tr key={lead.id} data-row-index={idx} data-lead-id={lead.id!} className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${selectedIds.has(lead.id!) ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`}>
                   <td className="px-2 py-1.5"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedIds.has(lead.id!) ? 'bg-blue-600 border-blue-600' : 'border-gray-300 dark:border-gray-600 bg-white'}`}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.has(lead.id!) ? 1 : 0}/></svg></div></td>
                   <td className="px-2 py-1.5">
                     <div className="font-medium text-xs">{shortName(lead.name)}</div>
@@ -225,7 +257,7 @@ export default function LeadsTable({
                   {listsVis && <td className="px-2 py-1.5">
                     <div className="flex gap-0.5 flex-wrap">
                       {lead.listaIds.map((lid) => {
-                        const list = lists.find((l) => l.id === lid);
+                        const list = listsMap.get(lid);
                         return list ? <span key={lid} className="px-1 py-0.5 rounded text-xs text-white" style={{ backgroundColor: list.color }}>{list.name}</span> : null;
                       })}
                     </div></td>}
@@ -251,7 +283,7 @@ export default function LeadsTable({
               ))
             ) : (
               leads.map((lead, idx) => (
-                <tr key={lead.id} data-row-index={idx} data-lead-id={lead.id!} className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${selectedIds.has(lead.id!) ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}>
+                <tr key={lead.id} data-row-index={idx} data-lead-id={lead.id!} className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${selectedIds.has(lead.id!) ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`}>
                   <td className="px-2 py-1.5"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedIds.has(lead.id!) ? 'bg-blue-600 border-blue-600' : 'border-gray-300 dark:border-gray-600 bg-white'}`}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.has(lead.id!) ? 1 : 0}/></svg></div></td>
                   {nameVis && <td className="px-2 py-1.5 font-medium text-xs">{lead.name}</td>}
                   {phoneVis && <td className="px-2 py-1.5 text-xs">{lead.phone}</td>}
@@ -262,7 +294,7 @@ export default function LeadsTable({
                   {listsVis && <td className="px-2 py-1.5">
                     <div className="flex gap-0.5 flex-wrap">
                       {lead.listaIds.map((lid) => {
-                        const list = lists.find((l) => l.id === lid);
+                        const list = listsMap.get(lid);
                         return list ? <span key={lid} className="px-1 py-0.5 rounded text-xs text-white" style={{ backgroundColor: list.color }}>{list.name}</span> : null;
                       })}
                     </div></td>}

@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-4">Dashboard</h2>
+      <h2 className="text-lg font-bold mb-3">Dashboard</h2>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-3 gap-2 mb-4">

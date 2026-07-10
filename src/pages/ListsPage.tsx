@@ -126,20 +126,20 @@ export default function ListsPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
-        <h2 className="text-base font-bold">Listas</h2>
+        <h2 className="text-lg font-bold">Listas</h2>
         <button onClick={() => setCreating(!creating)}
-          className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">+ Nueva lista</button>
+          className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">+ Nueva lista</button>
       </div>
 
       {creating && (
         <form onSubmit={handleCreate} className="flex gap-2 mb-3">
           <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
             placeholder="Nombre de la lista" className="flex-1 border rounded px-2 py-1 text-xs" required autoFocus />
-          <select value={newColor} onChange={(e) => setNewColor(e.target.value)} className="border rounded px-1 py-1 text-xs">
+          <select value={newColor} onChange={(e) => setNewColor(e.target.value)} className="border rounded px-1 py-1.5 text-xs outline-none focus:border-blue-300">
             {COLORS.map((c) => <option key={c.value} value={c.value}>● {c.name}</option>)}
           </select>
-          <button type="submit" className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Crear</button>
-          <button type="button" onClick={() => setCreating(false)} className="text-gray-400 text-xs">Cancelar</button>
+          <button type="submit" className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">Crear</button>
+          <button type="button" onClick={() => setCreating(false)} className="text-gray-500 hover:text-gray-700 text-xs underline decoration-dotted">Cancelar</button>
         </form>
       )}
 
@@ -147,11 +147,11 @@ export default function ListsPage() {
         <form onSubmit={handleEdit} className="flex gap-2 mb-3">
           <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
             className="flex-1 border rounded px-2 py-1 text-xs" required autoFocus />
-          <select value={editColor} onChange={(e) => setEditColor(e.target.value)} className="border rounded px-1 py-1 text-xs">
+          <select value={editColor} onChange={(e) => setEditColor(e.target.value)} className="border rounded px-1 py-1.5 text-xs outline-none focus:border-blue-300">
             {COLORS.map((c) => <option key={c.value} value={c.value}>● {c.name}</option>)}
           </select>
-          <button type="submit" className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Guardar</button>
-          <button type="button" onClick={() => setEditingList(null)} className="text-gray-400 text-xs">Cancelar</button>
+          <button type="submit" className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">Guardar</button>
+          <button type="button" onClick={() => setEditingList(null)} className="text-gray-500 hover:text-gray-700 text-xs underline decoration-dotted">Cancelar</button>
         </form>
       )}
 

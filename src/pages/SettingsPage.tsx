@@ -14,7 +14,9 @@ interface Props {
 }
 
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
-  const [emailJS, setEmailJS] = useState({ userId: '', serviceId: '', templateId: '' });
+  const [emailSettings, setEmailSettings] = useState<{ provider: 'emailjs' | 'resend'; resendApiKey: string; resendFromName: string; resendFromEmail: string; userId: string; serviceId: string; templateId: string }>({
+    provider: 'emailjs', resendApiKey: '', resendFromName: 'Acme', resendFromEmail: 'onboarding@resend.dev', userId: '', serviceId: '', templateId: ''
+  });
   const [exportFormat, setExportFormatState] = useState<ExportFormat>('json');
   const [saved, setSaved] = useState(false);
   const [restoreMsg, setRestoreMsg] = useState('');
@@ -24,14 +26,32 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
 
   useEffect(() => {
     getSettings().then((s) => {
-      setEmailJS({ userId: s.emailJSUserId, serviceId: s.emailJSServiceId, templateId: s.emailJSTemplateId });
+      setEmailSettings({
+        provider: s.emailProvider || 'emailjs',
+        resendApiKey: s.resendApiKey || '',
+        resendFromName: s.resendFromName || 'Acme',
+        resendFromEmail: s.resendFromEmail || 'onboarding@resend.dev',
+        userId: s.emailJSUserId || '',
+        serviceId: s.emailJSServiceId || '',
+        templateId: s.emailJSTemplateId || ''
+      });
       setExportFormatState(s.exportFormat);
     });
   }, []);
 
   const handleSaveEmail = async () => {
     const current = await getSettings();
-    await saveSettings({ ...current, emailJSUserId: emailJS.userId, emailJSServiceId: emailJS.serviceId, emailJSTemplateId: emailJS.templateId, exportFormat });
+    await saveSettings({
+      ...current,
+      emailProvider: emailSettings.provider,
+      resendApiKey: emailSettings.resendApiKey,
+      resendFromName: emailSettings.resendFromName,
+      resendFromEmail: emailSettings.resendFromEmail,
+      emailJSUserId: emailSettings.userId,
+      emailJSServiceId: emailSettings.serviceId,
+      emailJSTemplateId: emailSettings.templateId,
+      exportFormat
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -56,7 +76,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
     const leads = await db.leads.toArray();
     const active = leads.filter((l) => !l.deletedAt);
     const found: typeof duplicates = [];
-    const seenRut = new Map<string, number>(); // rut → first index
+    const seenRut = new Map<string, number>();
     const seenPhone = new Map<string, number>();
     for (let i = 0; i < active.length; i++) {
       const l = active[i];
@@ -90,12 +110,10 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
       updatedAt: new Date().toISOString(),
     };
     await db.leads.update(lead1.id!, best);
-    // Migrar notas y registros del lead2 al lead1
     const notes2 = await db.leadNotes.where('leadId').equals(lead2.id!).toArray();
     for (const n of notes2) await db.leadNotes.update(n.id!, { leadId: lead1.id! });
     const logs2 = await db.sendLog.where('leadId').equals(lead2.id!).toArray();
     for (const sl of logs2) await db.sendLog.update(sl.id!, { leadId: lead1.id! });
-    // Eliminar lead2
     await db.leads.delete(lead2.id!);
     setMergeMsg(`Unidos: ${lead2.name} → ${lead1.name}`);
     setTimeout(() => setMergeMsg(''), 3000);
@@ -108,7 +126,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
 
   return (
     <div className="max-w-lg">
-      <h2 className="text-lg font-bold mb-4">Ajustes</h2>
+      <h2 className="text-lg font-bold mb-3">Ajustes</h2>
 
       {/* --- Visualización --- */}
       <section className="mb-6">
@@ -167,7 +185,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         <div className="flex gap-2 items-center flex-wrap">
           <button
             onClick={exportBackup}
-            className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-gray-700"
+            className="bg-gray-100 text-gray-700 border border-gray-200 px-2.5 py-1.5 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
           >
             Exportar respaldo
           </button>
@@ -181,7 +199,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="bg-amber-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-amber-700"
+            className="bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1.5 rounded text-xs font-medium hover:bg-amber-200 transition-colors"
           >
             Restaurar respaldo
           </button>
@@ -193,7 +211,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
       <section className="mb-6">
         <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Duplicados</h3>
         <p className="text-xs text-gray-500 mb-2">Buscar leads con mismo RUT o teléfono para unirlos.</p>
-        <button onClick={findDuplicates} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-gray-700 mb-2">
+        <button onClick={findDuplicates} className="bg-gray-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-gray-700 mb-2">
           Buscar duplicados
         </button>
         {mergeMsg && <p className="text-xs text-green-600 ml-2 inline">{mergeMsg}</p>}
@@ -220,24 +238,63 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
 
       {/* --- Email --- */}
       <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Correo Electrónico (EmailJS)</h3>
-        <p className="text-xs text-gray-500 mb-3">
-          Regístrate en <a href="https://www.emailjs.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">emailjs.com</a> (200 emails/día gratis).
-          Campos necesarios en la plantilla: <code className="bg-gray-100 px-1 rounded text-xs">to_email, to_name, subject, message, message_html</code>.
-        </p>
-        <div className="space-y-2">
-          <div><label className="block text-xs text-gray-600 mb-0.5">Public Key</label>
-            <input type="text" value={emailJS.userId} onChange={(e) => setEmailJS({ ...emailJS, userId: e.target.value })}
-              className="w-full border rounded px-2 py-1.5 text-xs" /></div>
-          <div><label className="block text-xs text-gray-600 mb-0.5">Service ID</label>
-            <input type="text" value={emailJS.serviceId} onChange={(e) => setEmailJS({ ...emailJS, serviceId: e.target.value })}
-              className="w-full border rounded px-2 py-1.5 text-xs" /></div>
-          <div><label className="block text-xs text-gray-600 mb-0.5">Template ID</label>
-            <input type="text" value={emailJS.templateId} onChange={(e) => setEmailJS({ ...emailJS, templateId: e.target.value })}
-              className="w-full border rounded px-2 py-1.5 text-xs" /></div>
-          <button onClick={handleSaveEmail} className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700">
-            Guardar configuración</button>
-          {saved && <span className="ml-2 text-green-600 text-xs">Guardado</span>}
+        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Proveedor de Correo</h3>
+        
+        <div className="mb-4">
+          <label className="block text-xs text-gray-600 mb-1">Servicio Activo</label>
+          <select 
+            value={emailSettings.provider} 
+            onChange={(e) => setEmailSettings({ ...emailSettings, provider: e.target.value as 'emailjs' | 'resend' })}
+            className="w-full border rounded px-2 py-1.5 text-sm"
+          >
+            <option value="resend">Resend (Recomendado - API Nativa)</option>
+            <option value="emailjs">EmailJS (Básico)</option>
+          </select>
+        </div>
+
+        {emailSettings.provider === 'resend' ? (
+          <div className="space-y-2 p-3 bg-gray-50 border rounded-lg">
+            <p className="text-xs text-gray-500 mb-2">
+              Envío de correos ultra-rápido mediante la API nativa de <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Resend</a>.
+            </p>
+            <div>
+              <label className="block text-xs text-gray-600 mb-0.5">API Key (Empieza con re_...)</label>
+              <input type="password" value={emailSettings.resendApiKey} onChange={(e) => setEmailSettings({ ...emailSettings, resendApiKey: e.target.value })}
+                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="re_123456789..." />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-0.5">Nombre del remitente</label>
+              <input type="text" value={emailSettings.resendFromName} onChange={(e) => setEmailSettings({ ...emailSettings, resendFromName: e.target.value })}
+                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="Ej: Juan Pérez" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-0.5">Correo del remitente (Verificado en Resend)</label>
+              <input type="email" value={emailSettings.resendFromEmail} onChange={(e) => setEmailSettings({ ...emailSettings, resendFromEmail: e.target.value })}
+                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="onboarding@resend.dev o tu dominio" />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2 p-3 bg-gray-50 border rounded-lg">
+            <p className="text-xs text-gray-500 mb-2">
+              Configuración de <a href="https://www.emailjs.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">EmailJS</a>. Campos requeridos en la plantilla: <code className="bg-gray-200 px-1 rounded">to_email, to_name, subject, message, message_html</code>.
+            </p>
+            <div><label className="block text-xs text-gray-600 mb-0.5">Public Key (User ID)</label>
+              <input type="text" value={emailSettings.userId} onChange={(e) => setEmailSettings({ ...emailSettings, userId: e.target.value })}
+                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" /></div>
+            <div><label className="block text-xs text-gray-600 mb-0.5">Service ID</label>
+              <input type="text" value={emailSettings.serviceId} onChange={(e) => setEmailSettings({ ...emailSettings, serviceId: e.target.value })}
+                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" /></div>
+            <div><label className="block text-xs text-gray-600 mb-0.5">Template ID</label>
+              <input type="text" value={emailSettings.templateId} onChange={(e) => setEmailSettings({ ...emailSettings, templateId: e.target.value })}
+                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" /></div>
+          </div>
+        )}
+
+        <div className="mt-3 flex items-center">
+          <button onClick={handleSaveEmail} className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">
+            Guardar configuración de correo
+          </button>
+          {saved && <span className="ml-2 text-green-600 text-xs font-medium">¡Guardado exitosamente!</span>}
         </div>
       </section>
     </div>

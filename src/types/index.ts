@@ -79,6 +79,10 @@ export interface EmailTemplateList {
 export type ExportFormat = 'json' | 'excel';
 
 export interface AppSettings {
+  emailProvider: 'emailjs' | 'resend';
+  resendApiKey: string;
+  resendFromName: string;
+  resendFromEmail: string;
   emailJSUserId: string;
   emailJSServiceId: string;
   emailJSTemplateId: string;

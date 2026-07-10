@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { db } from '../db/database';
 import type { SendLog, WhatsAppTemplate, EmailTemplate, LeadNote, Lead } from '../types';
-import type { Page } from '../App';
+import type { Page } from '../types';
 
 type EnrichedLog = SendLog & {
   templateNombre: string;

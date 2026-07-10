@@ -89,21 +89,21 @@ export default function TemplateListsPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Categorías de Plantillas</h2>
+      <h2 className="text-lg font-bold mb-3">Categorías de Plantillas</h2>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-4">
         <button
           onClick={() => setTab('whatsapp')}
-          className={`px-4 py-2 rounded text-sm font-medium ${
-            tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+          className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+            tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
           WhatsApp
         </button>
         <button
           onClick={() => setTab('email')}
-          className={`px-4 py-2 rounded text-sm font-medium ${
-            tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+          className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+            tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
           Email
@@ -117,10 +117,10 @@ export default function TemplateListsPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nombre de categoría"
-          className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
           required
         />
-        <div className="flex gap-1">
+        <div className="flex gap-1 pb-0.5">
           {COLORS.map((c) => (
             <button
               key={c}
@@ -131,11 +131,11 @@ export default function TemplateListsPage() {
             />
           ))}
         </div>
-        <button type="submit" className="bg-blue-600 text-white px-3 py-2 rounded text-sm">
+        <button type="submit" className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">
           {editing ? 'Actualizar' : 'Crear'}
         </button>
         {editing && (
-          <button type="button" onClick={() => setEditing(null)} className="bg-gray-200 px-3 py-2 rounded text-sm">
+          <button type="button" onClick={() => setEditing(null)} className="text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded text-xs font-medium underline decoration-dotted transition-colors">
             Cancelar
           </button>
         )}

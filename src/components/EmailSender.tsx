@@ -196,8 +196,18 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       </button>
 
       {result && (
-        <div className={`mt-2 p-2 rounded text-xs ${result.errors.length ? 'bg-yellow-50 text-yellow-800' : 'bg-green-50 text-green-800'}`}>
-          {result.sent}/{result.total} enviados
+        <div className={`mt-2 p-2 rounded text-xs ${result.errors.length ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200 text-green-800'}`}>
+          <div className="font-medium text-gray-800">{result.sent}/{result.total} enviados</div>
+          {result.errors.length > 0 && (
+            <div className="mt-1.5 space-y-1">
+              {result.errors.map((err, i) => (
+                <div key={i} className="text-red-600 flex gap-1">
+                  <span className="shrink-0 text-red-400">⚠</span>
+                  <span>{err}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

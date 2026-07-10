@@ -127,7 +127,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-base font-bold">Mensajes</h2>
+        <h2 className="text-lg font-bold">Mensajes</h2>
         <div className="flex gap-1">
           <button onClick={() => setTab('whatsapp')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>WhatsApp</button>
           <button onClick={() => setTab('email')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Email</button>
@@ -137,7 +137,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
       {/* Toolbar */}
       <div className="flex flex-wrap gap-1 mb-2 items-center">
         <button onClick={() => { setEditing({ nombre: '', contenido: '', asunto: '', isHtml: false }); }}
-          className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">+ Nueva plantilla</button>
+          className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">+ Nueva plantilla</button>
 
         {/* Category filter */}
         <select value={filterCatId ?? ''} onChange={(e) => setFilterCatId(e.target.value ? Number(e.target.value) : null)}
@@ -147,12 +147,12 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
         </select>
 
         <button onClick={() => setShowCatManager(!showCatManager)}
-          className={`px-2 py-1 rounded text-xs ${showCatManager ? 'bg-gray-300' : 'bg-gray-100 hover:bg-gray-200'}`}>
+          className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showCatManager ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
           Gestionar categorías
         </button>
 
         {selectedIds.size > 0 && (
-          <button onClick={handleBulkDelete} className="bg-red-600 text-white px-2 py-1 rounded text-xs">
+          <button onClick={handleBulkDelete} className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-2.5 py-1.5 rounded text-xs font-medium transition-colors">
             Eliminar ({selectedIds.size})
           </button>
         )}
@@ -166,11 +166,11 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
           <h3 className="text-xs font-medium mb-1">Categorías</h3>
           <form onSubmit={handleCreateCategory} className="flex gap-1 mb-2">
             <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)}
-              placeholder="Nueva categoría" className="flex-1 border rounded px-2 py-1 text-xs" required />
-            <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border rounded px-1 py-1 text-xs">
+              placeholder="Nueva categoría" className="flex-1 border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-300" required />
+            <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border rounded px-1 py-1.5 text-xs outline-none focus:border-blue-300">
               {COLORS.map((c) => <option key={c.value} value={c.value}>{c.name}</option>)}
             </select>
-            <button type="submit" className="bg-blue-600 text-white px-2 py-1 rounded text-xs">Crear</button>
+            <button type="submit" className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">Crear</button>
           </form>
           <div className="flex flex-wrap gap-1">
             {tplLists.map((l) => (

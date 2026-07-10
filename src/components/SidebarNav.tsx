@@ -51,7 +51,7 @@ function NavButton({
 
 export default function SidebarNav({ currentPage, onNavigate, taskCount }: Props) {
   return (
-    <aside className="flex h-full w-[68px] shrink-0 flex-col items-center justify-between border-r border-gray-200 bg-white/50 backdrop-blur-md px-2 py-4 dark:border-gray-800 dark:bg-gray-950/50 z-40 relative">
+    <aside className="flex h-full w-[68px] shrink-0 flex-col items-center justify-between border-l border-gray-200 bg-white/50 backdrop-blur-md px-2 py-4 dark:border-gray-800 dark:bg-gray-950/50 z-40 relative">
       <div className="flex w-full flex-col items-center gap-2">
         {primaryRoutes.map(({ page, label, icon, badge }) => (
           <NavButton

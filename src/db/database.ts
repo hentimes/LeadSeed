@@ -62,6 +62,10 @@ export async function getSettings(): Promise<AppSettings> {
   const settings = await db.settings.get('default');
   return (
     settings || {
+      emailProvider: 'emailjs',
+      resendApiKey: '',
+      resendFromName: 'Acme',
+      resendFromEmail: 'onboarding@resend.dev',
       emailJSUserId: '',
       emailJSServiceId: '',
       emailJSTemplateId: '',
