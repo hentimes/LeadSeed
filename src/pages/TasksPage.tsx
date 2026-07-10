@@ -91,23 +91,26 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
   }, [stats, filter]);
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
+    <div className="max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold">Tareas</h2>
-          <div className="flex gap-1.5">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Tareas</h2>
+            <p className="text-sm text-gray-500 mt-1">Gestiona tus seguimientos y recordatorios.</p>
+          </div>
+          <div className="flex gap-1.5 self-start mt-1">
             {stats.overdue.length > 0 && (
-              <span className="bg-red-600 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
+              <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-red-200">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
             )}
             {stats.dueToday.length > 0 && (
-              <span className="bg-amber-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">{stats.dueToday.length} hoy</span>
+              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-amber-200">{stats.dueToday.length} hoy</span>
             )}
             {stats.dueTomorrow.length > 0 && (
-              <span className="bg-blue-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">{stats.dueTomorrow.length} mañana</span>
+              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} mañana</span>
             )}
           </div>
         </div>
-        <button onClick={openNew} className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors flex items-center gap-1">
+        <button onClick={openNew} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
           {Icon.Plus()} Nueva Tarea
         </button>
       </div>

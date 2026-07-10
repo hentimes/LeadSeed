@@ -1,8 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { getSettings, saveSettings, db } from '../db/database';
+import { useState, useEffect } from 'react';
 import type { ColumnDef } from '../components/ColumnSelector';
-import type { ExportFormat, Lead } from '../types';
-import { exportBackup, importBackup } from '../utils/backup';
+import type { ExportFormat } from '../types';
+import { getSettings } from '../db/database';
+import DisplaySettings from '../components/settings/DisplaySettings';
+import DataManagement from '../components/settings/DataManagement';
+import EmailSettings from '../components/settings/EmailSettings';
 
 interface Props {
   compactMode: boolean;
@@ -13,290 +15,77 @@ interface Props {
   onColsChange: (cols: ColumnDef[]) => void;
 }
 
+type Tab = 'display' | 'data' | 'email';
+
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
-  const [emailSettings, setEmailSettings] = useState<{ provider: 'emailjs' | 'resend'; resendApiKey: string; resendFromName: string; resendFromEmail: string; userId: string; serviceId: string; templateId: string }>({
-    provider: 'emailjs', resendApiKey: '', resendFromName: 'Acme', resendFromEmail: 'onboarding@resend.dev', userId: '', serviceId: '', templateId: ''
-  });
-  const [exportFormat, setExportFormatState] = useState<ExportFormat>('json');
-  const [saved, setSaved] = useState(false);
-  const [restoreMsg, setRestoreMsg] = useState('');
-  const [duplicates, setDuplicates] = useState<{ lead1: Lead; lead2: Lead; reason: string }[]>([]);
-  const [mergeMsg, setMergeMsg] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [tab, setTab] = useState<Tab>('display');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
 
   useEffect(() => {
     getSettings().then((s) => {
-      setEmailSettings({
-        provider: s.emailProvider || 'emailjs',
-        resendApiKey: s.resendApiKey || '',
-        resendFromName: s.resendFromName || 'Acme',
-        resendFromEmail: s.resendFromEmail || 'onboarding@resend.dev',
-        userId: s.emailJSUserId || '',
-        serviceId: s.emailJSServiceId || '',
-        templateId: s.emailJSTemplateId || ''
-      });
-      setExportFormatState(s.exportFormat);
+      setExportFormat(s.exportFormat);
     });
   }, []);
 
-  const handleSaveEmail = async () => {
-    const current = await getSettings();
-    await saveSettings({
-      ...current,
-      emailProvider: emailSettings.provider,
-      resendApiKey: emailSettings.resendApiKey,
-      resendFromName: emailSettings.resendFromName,
-      resendFromEmail: emailSettings.resendFromEmail,
-      emailJSUserId: emailSettings.userId,
-      emailJSServiceId: emailSettings.serviceId,
-      emailJSTemplateId: emailSettings.templateId,
-      exportFormat
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
-
-  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!confirm('¿Restaurar respaldo? Se perderán todos los datos actuales.')) return;
-    try {
-      const msg = await importBackup(file);
-      setRestoreMsg(msg);
-      setTimeout(() => setRestoreMsg(''), 5000);
-      window.location.reload();
-    } catch (err) {
-      setRestoreMsg(err instanceof Error ? err.message : 'Error');
-      setTimeout(() => setRestoreMsg(''), 5000);
-    }
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const findDuplicates = async () => {
-    const leads = await db.leads.toArray();
-    const active = leads.filter((l) => !l.deletedAt);
-    const found: typeof duplicates = [];
-    const seenRut = new Map<string, number>();
-    const seenPhone = new Map<string, number>();
-    for (let i = 0; i < active.length; i++) {
-      const l = active[i];
-      if (l.rut && seenRut.has(l.rut)) {
-        found.push({ lead1: active[seenRut.get(l.rut)!], lead2: l, reason: `RUT: ${l.rut}` });
-      } else if (l.rut) {
-        seenRut.set(l.rut, i);
-      }
-      const phone = l.phone?.replace(/[^+\d]/g, '');
-      if (phone && seenPhone.has(phone)) {
-        found.push({ lead1: active[seenPhone.get(phone)!], lead2: l, reason: `Teléfono: ${l.phone}` });
-      } else if (phone) {
-        seenPhone.set(phone, i);
-      }
-    }
-    setDuplicates(found);
-  };
-
-  const mergeLeads = async (lead1: Lead, lead2: Lead) => {
-    const mergedLists = [...new Set([...(lead1.listaIds || []), ...(lead2.listaIds || [])])];
-    const mergedNotes = [lead1.notes, lead2.notes].filter(Boolean).join(' | ');
-    const best: Partial<Lead> = {
-      name: lead1.name || lead2.name,
-      phone: lead1.phone || lead2.phone,
-      email: lead1.email || lead2.email,
-      company: lead1.company || lead2.company,
-      rut: lead1.rut || lead2.rut,
-      notes: mergedNotes,
-      status: (lead1.status !== 'nuevo' ? lead1.status : lead2.status) || 'nuevo',
-      listaIds: mergedLists,
-      updatedAt: new Date().toISOString(),
-    };
-    await db.leads.update(lead1.id!, best);
-    const notes2 = await db.leadNotes.where('leadId').equals(lead2.id!).toArray();
-    for (const n of notes2) await db.leadNotes.update(n.id!, { leadId: lead1.id! });
-    const logs2 = await db.sendLog.where('leadId').equals(lead2.id!).toArray();
-    for (const sl of logs2) await db.sendLog.update(sl.id!, { leadId: lead1.id! });
-    await db.leads.delete(lead2.id!);
-    setMergeMsg(`Unidos: ${lead2.name} → ${lead1.name}`);
-    setTimeout(() => setMergeMsg(''), 3000);
-    findDuplicates();
-  };
-
-  const toggleCol = (key: string) => {
-    onColsChange(visibleCols.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
-  };
-
   return (
-    <div className="max-w-lg">
-      <h2 className="text-lg font-bold mb-3">Ajustes</h2>
+    <div className="max-w-2xl">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Ajustes</h2>
+        <p className="text-sm text-gray-500 mt-1">Configura la extensión, gestiona tus datos y conecta proveedores.</p>
+      </div>
 
-      {/* --- Visualización --- */}
-      <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Visualización de Leads</h3>
-
-        <label className="flex items-center justify-between py-1.5">
-          <span className="text-sm">Modo compacto</span>
-          <input type="checkbox" checked={compactMode} onChange={(e) => onCompactModeChange(e.target.checked)} className="rounded" />
-        </label>
-
-        <label className="flex items-center justify-between py-1.5">
-          <span className="text-sm">Modo oscuro</span>
-          <input type="checkbox" checked={darkMode} onChange={(e) => onDarkModeChange(e.target.checked)} className="rounded" />
-        </label>
-
-        <div className="mt-2">
-          <p className="text-xs text-gray-500 mb-2">Columnas visibles en la tabla:</p>
-          {visibleCols.filter((c) => c.key !== 'name').map((col) => (
-            <label key={col.key} className="flex items-center justify-between py-1">
-              <span className="text-sm">{col.label}</span>
-              <input type="checkbox" checked={col.visible} onChange={() => toggleCol(col.key)} className="rounded" />
-            </label>
-          ))}
-          <p className="text-xs text-gray-400 mt-1">El nombre siempre es visible.</p>
-        </div>
-      </section>
-
-      {/* --- Exportación --- */}
-      <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Exportación</h3>
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">Formato por defecto</label>
-          <select
-            value={exportFormat}
-            onChange={async (e) => {
-              const fmt = e.target.value as ExportFormat;
-              setExportFormatState(fmt);
-              try { chrome.storage.sync.set({ exportFormat: fmt }); } catch { /* noop */ }
-              const current = await getSettings();
-              await saveSettings({ ...current, exportFormat: fmt });
-            }}
-            className="border rounded px-2 py-1.5 text-sm"
-          >
-            <option value="json">JSON</option>
-            <option value="excel">Excel (.xlsx)</option>
-          </select>
-        </div>
-      </section>
-
-      {/* --- Respaldo --- */}
-      <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Respaldo y Restauración</h3>
-        <p className="text-xs text-gray-500 mb-3">
-          Exportá toda la base de datos (leads, listas, plantillas, historial, configuración) a un archivo JSON. Usalo para respaldar o migrar.
-        </p>
-        <div className="flex gap-2 items-center flex-wrap">
-          <button
-            onClick={exportBackup}
-            className="bg-gray-100 text-gray-700 border border-gray-200 px-2.5 py-1.5 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
-          >
-            Exportar respaldo
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleRestore}
-            className="hidden"
-            id="restore-file"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1.5 rounded text-xs font-medium hover:bg-amber-200 transition-colors"
-          >
-            Restaurar respaldo
-          </button>
-        </div>
-        {restoreMsg && <p className="mt-2 text-xs text-green-600">{restoreMsg}</p>}
-      </section>
-
-      {/* --- Duplicados --- */}
-      <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Duplicados</h3>
-        <p className="text-xs text-gray-500 mb-2">Buscar leads con mismo RUT o teléfono para unirlos.</p>
-        <button onClick={findDuplicates} className="bg-gray-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-gray-700 mb-2">
-          Buscar duplicados
+      {/* Tabs */}
+      <div className="flex bg-gray-100/80 rounded-lg p-1.5 mb-6 shadow-sm border border-gray-200/50">
+        <button
+          onClick={() => setTab('display')}
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+            tab === 'display' ? 'bg-white shadow-sm text-gray-900 border border-gray-200/50' : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          🎨 Apariencia
         </button>
-        {mergeMsg && <p className="text-xs text-green-600 ml-2 inline">{mergeMsg}</p>}
-        {duplicates.length > 0 && (
-          <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
-            {duplicates.map((d, i) => (
-              <div key={i} className="border rounded p-2 text-xs flex items-center justify-between gap-2">
-                <div>
-                  <span className="font-medium">{d.lead1.name}</span>
-                  <span className="text-gray-400 mx-1">+</span>
-                  <span className="font-medium">{d.lead2.name}</span>
-                  <span className="text-gray-400 ml-2">({d.reason})</span>
-                </div>
-                <button onClick={() => { if (confirm('¿Unir estos leads?')) mergeLeads(d.lead1, d.lead2); }}
-                  className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-blue-700 shrink-0">
-                  Unir
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        {duplicates.length === 0 && mergeMsg && <p className="text-xs text-gray-400">No se encontraron duplicados.</p>}
-      </section>
+        <button
+          onClick={() => setTab('data')}
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+            tab === 'data' ? 'bg-white shadow-sm text-gray-900 border border-gray-200/50' : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          💾 Datos y Respaldo
+        </button>
+        <button
+          onClick={() => setTab('email')}
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
+            tab === 'email' ? 'bg-white shadow-sm text-gray-900 border border-gray-200/50' : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          ✉️ Email
+        </button>
+      </div>
 
-      {/* --- Email --- */}
-      <section className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-800 border-b pb-1 mb-2">Proveedor de Correo</h3>
+      {/* Content */}
+      <div className="transition-all duration-300">
+        {tab === 'display' && (
+          <DisplaySettings 
+            compactMode={compactMode}
+            onCompactModeChange={onCompactModeChange}
+            darkMode={darkMode}
+            onDarkModeChange={onDarkModeChange}
+            visibleCols={visibleCols}
+            onColsChange={onColsChange}
+          />
+        )}
         
-        <div className="mb-4">
-          <label className="block text-xs text-gray-600 mb-1">Servicio Activo</label>
-          <select 
-            value={emailSettings.provider} 
-            onChange={(e) => setEmailSettings({ ...emailSettings, provider: e.target.value as 'emailjs' | 'resend' })}
-            className="w-full border rounded px-2 py-1.5 text-sm"
-          >
-            <option value="resend">Resend (Recomendado - API Nativa)</option>
-            <option value="emailjs">EmailJS (Básico)</option>
-          </select>
-        </div>
-
-        {emailSettings.provider === 'resend' ? (
-          <div className="space-y-2 p-3 bg-gray-50 border rounded-lg">
-            <p className="text-xs text-gray-500 mb-2">
-              Envío de correos ultra-rápido mediante la API nativa de <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Resend</a>.
-            </p>
-            <div>
-              <label className="block text-xs text-gray-600 mb-0.5">API Key (Empieza con re_...)</label>
-              <input type="password" value={emailSettings.resendApiKey} onChange={(e) => setEmailSettings({ ...emailSettings, resendApiKey: e.target.value })}
-                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="re_123456789..." />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-0.5">Nombre del remitente</label>
-              <input type="text" value={emailSettings.resendFromName} onChange={(e) => setEmailSettings({ ...emailSettings, resendFromName: e.target.value })}
-                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="Ej: Juan Pérez" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-0.5">Correo del remitente (Verificado en Resend)</label>
-              <input type="email" value={emailSettings.resendFromEmail} onChange={(e) => setEmailSettings({ ...emailSettings, resendFromEmail: e.target.value })}
-                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" placeholder="onboarding@resend.dev o tu dominio" />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2 p-3 bg-gray-50 border rounded-lg">
-            <p className="text-xs text-gray-500 mb-2">
-              Configuración de <a href="https://www.emailjs.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">EmailJS</a>. Campos requeridos en la plantilla: <code className="bg-gray-200 px-1 rounded">to_email, to_name, subject, message, message_html</code>.
-            </p>
-            <div><label className="block text-xs text-gray-600 mb-0.5">Public Key (User ID)</label>
-              <input type="text" value={emailSettings.userId} onChange={(e) => setEmailSettings({ ...emailSettings, userId: e.target.value })}
-                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" /></div>
-            <div><label className="block text-xs text-gray-600 mb-0.5">Service ID</label>
-              <input type="text" value={emailSettings.serviceId} onChange={(e) => setEmailSettings({ ...emailSettings, serviceId: e.target.value })}
-                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" /></div>
-            <div><label className="block text-xs text-gray-600 mb-0.5">Template ID</label>
-              <input type="text" value={emailSettings.templateId} onChange={(e) => setEmailSettings({ ...emailSettings, templateId: e.target.value })}
-                className="w-full border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-500" /></div>
-          </div>
+        {tab === 'data' && (
+          <DataManagement 
+            exportFormat={exportFormat}
+            onExportFormatChange={setExportFormat}
+          />
         )}
-
-        <div className="mt-3 flex items-center">
-          <button onClick={handleSaveEmail} className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">
-            Guardar configuración de correo
-          </button>
-          {saved && <span className="ml-2 text-green-600 text-xs font-medium">¡Guardado exitosamente!</span>}
-        </div>
-      </section>
+        
+        {tab === 'email' && (
+          <EmailSettings />
+        )}
+      </div>
     </div>
   );
 }
