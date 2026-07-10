@@ -11,7 +11,7 @@
   "permissions": ["sidePanel", "storage", "notifications", "alarms"],
   "host_permissions": ["https://wa.me/*", "https://api.emailjs.com/*", "https://api.resend.com/*"],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:;"
   },
   "side_panel": {
     "default_path": "index.html"

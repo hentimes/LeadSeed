@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import EmojiPicker from './EmojiPicker';
+import VariableDropdown from './VariableDropdown';
+import { insertTextAtCursor } from '../utils/textHelper';
 
 interface Props {
   template?: {
@@ -38,6 +40,9 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
   const [showEmoji, setShowEmoji] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const asuntoRef = useRef<HTMLInputElement>(null);
+  const contenidoRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (template) {
@@ -124,13 +129,17 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
       {type === 'email' && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Asunto *</label>
+            <div className="flex justify-between items-end mb-1">
+              <label className="block text-sm font-medium text-gray-700">Asunto *</label>
+              <VariableDropdown onSelect={(val) => insertTextAtCursor(asuntoRef, asunto, val, setAsunto)} />
+            </div>
             <div className="flex gap-2">
               <input
+                ref={asuntoRef}
                 type="text"
                 value={asunto}
                 onChange={(e) => setAsunto(e.target.value)}
-                placeholder="Asunto del correo"
+                placeholder="Ej: Hola {nombre}, sobre tu plan de salud..."
                 className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
@@ -172,6 +181,7 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
             Contenido *
           </label>
           <div className="flex gap-1">
+            <VariableDropdown onSelect={(val) => insertTextAtCursor(contenidoRef, contenido, val, setContenido)} />
             {type === 'email' && isHtml && (
               <button
                 type="button"
@@ -195,13 +205,14 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
 
         {showEmoji && (
           <div className="mb-2">
-            <EmojiPicker onSelect={insertEmoji} onClose={() => setShowEmoji(false)} />
+            <EmojiPicker onSelect={(emoji) => insertTextAtCursor(contenidoRef, contenido, emoji, setContenido)} onClose={() => setShowEmoji(false)} />
           </div>
         )}
 
         <div className={showPreview ? 'grid grid-cols-2 gap-2' : ''}>
           {type === 'email' && isHtml ? (
             <textarea
+              ref={contenidoRef}
               value={contenido}
               onChange={(e) => setContenido(e.target.value)}
               rows={showPreview ? 12 : 8}
@@ -211,6 +222,7 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
             />
           ) : (
             <textarea
+              ref={contenidoRef}
               value={contenido}
               onChange={(e) => setContenido(e.target.value)}
               rows={6}
@@ -254,28 +266,6 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Insertar variable:
-        </label>
-        <p className="text-[10px] text-gray-400 mb-1.5">
-          Se reemplazan con los datos reales del lead al enviar. Ej: {'{nombre}'} → "María González"
-        </p>
-        <div className="flex gap-1 flex-wrap">
-          {variables.map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => insertVariable(v)}
-              title={`{${v}} → se reemplaza con el ${v} del lead`}
-              className="px-2 py-0.5 bg-gray-100 border border-gray-300 rounded text-xs hover:bg-gray-200"
-            >
-              {`{${v}}`}
-            </button>
-          ))}
         </div>
       </div>
 

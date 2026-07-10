@@ -3,11 +3,17 @@ import { getSettings } from '../db/database';
 import type { Lead } from '../types';
 import { replaceVariables } from './waHelper';
 
+export interface EmailAttachment {
+  filename: string;
+  content: string;
+}
+
 export async function sendEmail(
   lead: Lead,
   asunto: string,
   contenido: string,
-  isHtml: boolean
+  isHtml: boolean,
+  attachments: EmailAttachment[] = []
 ): Promise<{ success: boolean; error?: string }> {
   const settings = await getSettings();
   const provider = settings.emailProvider || 'emailjs';
@@ -33,6 +39,10 @@ export async function sendEmail(
         to: [lead.email],
         subject: subject,
       };
+
+      if (attachments && attachments.length > 0) {
+        payload.attachments = attachments;
+      }
 
       if (isHtml) {
         const hasTags = /<[a-z][\s\S]*>/i.test(body);
@@ -104,13 +114,14 @@ export async function sendEmailToLeads(
   leads: Lead[],
   asunto: string,
   contenido: string,
-  isHtml: boolean
+  isHtml: boolean,
+  attachments: EmailAttachment[] = []
 ): Promise<{ total: number; sent: number; errors: string[] }> {
   let sent = 0;
   const errors: string[] = [];
 
   for (const lead of leads) {
-    const result = await sendEmail(lead, asunto, contenido, isHtml);
+    const result = await sendEmail(lead, asunto, contenido, isHtml, attachments);
     if (result.success) {
       sent++;
     } else {

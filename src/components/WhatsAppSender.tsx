@@ -1,8 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../types';
 import { replaceVariables, openWhatsAppForLeads } from '../utils/waHelper';
 import { db } from '../db/database';
 import { Icon } from '../utils/icons';
+import VariableDropdown from './VariableDropdown';
+import { insertTextAtCursor } from '../utils/textHelper';
 
 interface Props {
   leads: Lead[];
@@ -14,22 +16,32 @@ interface Props {
 export default function WhatsAppSender({ leads, templates, templateLists, leadLists }: Props) {
   const [catId, setCatId] = useState<number | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Edición dinámica al vuelo
+  const [customBody, setCustomBody] = useState('');
+  
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(new Set());
   const [selectedListIds, setSelectedListIds] = useState<Set<number>>(new Set());
-  const [previewLead, setPreviewLead] = useState<Lead | null>(null);
+  
   const [leadSearch, setLeadSearch] = useState('');
   const [sentLog, setSentLog] = useState<SendLog[]>([]);
+  
+  const [previewLead, setPreviewLead] = useState<Lead | null>(null);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const filteredTemplates = catId
     ? templates.filter((t) => (t.templateListIds || []).includes(catId))
     : templates;
 
-  // Load sent log when template changes
   useEffect(() => {
     if (selectedTemplate) {
       db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray().then(setSentLog);
+      setCustomBody(selectedTemplate.contenido || '');
     } else {
       setSentLog([]);
+      setCustomBody('');
     }
   }, [selectedTemplate]);
 
@@ -43,29 +55,41 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     return leads.filter((l) => ids.has(l.id!));
   }, [leads, selectedLeadIds, selectedListIds]);
 
+  // Set default preview lead
+  useEffect(() => {
+    if (recipients.length > 0 && !previewLead) {
+      setPreviewLead(recipients[0]);
+    }
+  }, [recipients, previewLead]);
+
   const toggleLead = (id: number) => {
-    setSelectedLeadIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelectedLeadIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
-
   const toggleList = (id: number) => {
-    setSelectedListIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelectedListIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
 
-  const filteredLeads = leadSearch
-    ? leads.filter((l) => l.name.toLowerCase().includes(leadSearch.toLowerCase()) || l.phone.includes(leadSearch))
-    : leads;
+  const filteredLeads = useMemo(() => {
+    let result = leads;
+    if (selectedListIds.size > 0) {
+      result = result.filter(l => l.listaIds.some(id => selectedListIds.has(id)));
+    }
+    if (leadSearch) {
+      const q = leadSearch.toLowerCase();
+      result = result.filter((l) => l.name.toLowerCase().includes(q) || l.phone.includes(q));
+    }
+    return result;
+  }, [leads, selectedListIds, leadSearch]);
 
-  const handleSend = async () => {
+  const preConfirmSend = () => {
     if (!selectedTemplate || recipients.length === 0) return;
-    // Log sends
+    setShowConfirmModal(true);
+  };
+
+  const executeSend = async () => {
+    setShowConfirmModal(false);
+    if (!selectedTemplate || recipients.length === 0) return;
+    
     const now = new Date().toISOString();
     const logs = recipients.map((l) => ({
       templateId: selectedTemplate.id!,
@@ -75,125 +99,231 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       leadPhone: l.phone,
       sentAt: now,
     }));
+    
     await db.sendLog.bulkAdd(logs);
-    // Marcar leads como contactados
+    
     for (const l of recipients) {
       await db.leads.update(l.id!, { status: 'contactado' });
     }
-    // Reload log
+    
     const updated = await db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray();
     setSentLog(updated);
-    // Open WhatsApp
-    openWhatsAppForLeads(recipients, selectedTemplate.contenido);
+    
+    openWhatsAppForLeads(recipients, customBody);
   };
 
   return (
-    <div>
-      {/* Template */}
-      <div className="mb-3">
-        <h3 className="text-xs font-medium text-gray-500 mb-1">1. Plantilla</h3>
-        <div className="flex gap-1 mb-1">
-          <select value={catId ?? ''} onChange={(e) => { setCatId(e.target.value ? Number(e.target.value) : null); setSelectedTemplate(null); }}
-            className="border rounded px-2 py-1 text-xs flex-1">
-            <option value="">Todas las categorías</option>
-            {templateLists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
-        </div>
-        <div className="border rounded max-h-32 overflow-y-auto">
-          {filteredTemplates.map((t) => (
-            <button key={t.id} onClick={() => setSelectedTemplate(t)}
-              className={`w-full text-left px-2 py-1.5 text-xs border-b last:border-0 ${selectedTemplate?.id === t.id ? 'bg-blue-50 border-l-2 border-l-blue-500' : 'hover:bg-gray-50'}`}>
-              {t.nombre || '(sin nombre)'}
-            </button>
-          ))}
+    <div className="space-y-4 relative">
+      
+      {/* 1. Selección de Plantilla */}
+      <div className="bg-white border rounded-lg p-3 shadow-sm">
+        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">1. Seleccionar Plantilla</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] text-gray-500 mb-1">Categoría</label>
+            <select value={catId ?? ''} onChange={(e) => { setCatId(e.target.value ? Number(e.target.value) : null); setSelectedTemplate(null); }}
+              className="w-full border rounded px-2 py-1.5 text-sm bg-gray-50">
+              <option value="">Todas las categorías</option>
+              {templateLists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] text-gray-500 mb-1">Plantilla</label>
+            <select value={selectedTemplate?.id ?? ''} 
+              onChange={(e) => {
+                const tpl = templates.find(t => t.id === Number(e.target.value));
+                setSelectedTemplate(tpl || null);
+              }}
+              className="w-full border rounded px-2 py-1.5 text-sm bg-gray-50">
+              <option value="">Elegir plantilla...</option>
+              {filteredTemplates.map((t) => (
+                <option key={t.id} value={t.id}>{t.nombre || '(sin nombre)'}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Recipients */}
-      <div className="mb-3">
-        <h3 className="text-xs font-medium text-gray-500 mb-1">2. Destinatarios ({recipients.length})</h3>
-        <details className="mb-1" open>
-          <summary className="text-xs text-gray-500 cursor-pointer">Listas ({selectedListIds.size} seleccionadas)</summary>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {leadLists.map((list) => {
-              const on = selectedListIds.has(list.id!);
-              return (
-                <button key={list.id} onClick={() => toggleList(list.id!)}
-                  className={`px-2 py-1 rounded-full text-xs font-medium border ${on ? 'text-white border-transparent' : 'text-gray-600 border-gray-300'}`}
-                  style={on ? { backgroundColor: list.color } : {}}>
-                  {list.name} ({leads.filter((l) => l.listaIds.includes(list.id!)).length})
-                </button>
-              );
-            })}
-          </div>
-        </details>
-        <details className="mb-1" open>
-          <summary className="text-xs text-gray-500 cursor-pointer">Leads ({selectedLeadIds.size} seleccionados)</summary>
-          <input type="text" value={leadSearch} onChange={(e) => setLeadSearch(e.target.value)}
-            placeholder="Buscar lead..." className="w-full border rounded px-2 py-1 text-xs mt-1 mb-1" />
-          <div className="border rounded max-h-40 overflow-y-auto">
-            {filteredLeads.slice(0, 50).map((lead) => (
-              <label key={lead.id} className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 cursor-pointer border-b text-xs">
-                <input type="checkbox" checked={selectedLeadIds.has(lead.id!)} onChange={() => toggleLead(lead.id!)}
-                  className="rounded" />
-                <span className="flex-1 truncate">{lead.name}</span>
-                <span className="text-gray-400">{lead.phone}</span>
-                {sentLeadIds.has(lead.id!) && <span className="text-green-500 text-xs">✓</span>}
-              </label>
-            ))}
-          </div>
-        </details>
-      </div>
-
-      {/* Preview */}
-      {selectedTemplate && recipients.length > 0 && (
-        <div className="border rounded p-2 mb-3">
-          <h3 className="text-xs font-medium text-gray-500 mb-1">3. Vista previa</h3>
-          <select value={previewLead?.id ?? ''} onChange={(e) => setPreviewLead(leads.find((l) => l.id === Number(e.target.value)) || null)}
-            className="w-full border rounded px-2 py-1 text-xs mb-1">
-            <option value="">Elegir lead para previsualizar</option>
-            {recipients.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
-          {previewLead && (
-            <div className="bg-[#efeae2] p-2 rounded">
-              <div className="bg-white rounded-lg p-2 shadow-sm inline-block max-w-[85%] text-xs whitespace-pre-wrap">
-                {replaceVariables(selectedTemplate.contenido, previewLead)}
+      {/* 2. Edición Dinámica y Previsualización Integrada */}
+      {selectedTemplate && (
+        <div className="bg-green-50 border border-green-100 rounded-lg p-3 shadow-sm">
+           <h3 className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-2">2. Edición al Vuelo</h3>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="flex justify-between items-end mb-0.5">
+                  <label className="block text-[11px] text-green-700">Contenido (Edición temporal)</label>
+                  <VariableDropdown onSelect={(val) => insertTextAtCursor(bodyRef, customBody, val, setCustomBody)} />
+                </div>
+                <textarea 
+                  ref={bodyRef}
+                  value={customBody} 
+                  onChange={(e) => setCustomBody(e.target.value)}
+                  rows={6}
+                  className="w-full border border-green-200 rounded px-2 py-1.5 text-sm outline-none focus:border-green-500" 
+                />
               </div>
-            </div>
-          )}
+              
+              <div className="flex flex-col">
+                 <div className="flex justify-between items-center mb-0.5">
+                   <label className="block text-[11px] text-green-700">Previsualizar como:</label>
+                   <select value={previewLead?.id ?? ''} onChange={(e) => setPreviewLead(leads.find((l) => l.id === Number(e.target.value)) || null)}
+                      className="border border-green-200 rounded px-1 text-[10px] bg-white outline-none">
+                      <option value="">Elegir...</option>
+                      {recipients.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                   </select>
+                 </div>
+                 <div className="flex-1 bg-[#efeae2] p-2 rounded border border-green-200 overflow-y-auto max-h-32">
+                   {previewLead ? (
+                     <div className="bg-white rounded-lg p-2 shadow-sm inline-block max-w-[90%] text-xs whitespace-pre-wrap">
+                       {replaceVariables(customBody, previewLead)}
+                     </div>
+                   ) : (
+                     <div className="text-xs text-gray-500 text-center mt-4">Selecciona un destinatario</div>
+                   )}
+                 </div>
+              </div>
+           </div>
         </div>
       )}
 
-      <button onClick={handleSend} disabled={!selectedTemplate || recipients.length === 0}
-        className="w-full bg-green-600 text-white px-4 py-2.5 rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50">
-        Abrir WhatsApp para {recipients.length} lead(s)
-      </button>
+      {/* 3. Selección de Destinatarios */}
+      <div className="bg-white border rounded-lg p-3 shadow-sm">
+        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">3. Destinatarios ({recipients.length})</h3>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {/* Columna Izquierda: Listas */}
+          <div className="border border-gray-100 rounded-lg bg-gray-50 p-2 flex flex-col h-48">
+             <div className="text-xs font-medium text-gray-500 mb-2 border-b pb-1">Tus Listas</div>
+             <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+                {leadLists.map((list) => {
+                  const on = selectedListIds.has(list.id!);
+                  return (
+                    <button key={list.id} onClick={() => toggleList(list.id!)}
+                      className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors flex justify-between items-center ${on ? 'text-white' : 'text-gray-700 hover:bg-gray-200'}`}
+                      style={on ? { backgroundColor: list.color } : {}}>
+                      <span className="truncate">{list.name}</span>
+                      <span className="opacity-75 text-[10px] ml-1 bg-black/10 px-1.5 rounded-full">{leads.filter((l) => l.listaIds.includes(list.id!)).length}</span>
+                    </button>
+                  );
+                })}
+                {leadLists.length === 0 && <p className="text-xs text-gray-400 text-center mt-4">No hay listas</p>}
+             </div>
+          </div>
 
+          {/* Columna Derecha: Leads */}
+          <div className="border border-gray-100 rounded-lg bg-gray-50 p-2 flex flex-col h-48">
+            <div className="flex justify-between items-center border-b pb-1 mb-2">
+              <span className="text-xs font-medium text-gray-500">Leads Directos</span>
+              <input type="text" value={leadSearch} onChange={(e) => setLeadSearch(e.target.value)}
+                placeholder="Buscar..." className="border rounded px-1.5 py-0.5 text-[10px] w-24 outline-none focus:border-green-400" />
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-0.5 pr-1">
+              {filteredLeads.map((lead) => (
+                <label key={lead.id} className="group relative flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-200 rounded cursor-pointer text-xs transition-colors">
+                  <input type="checkbox" checked={selectedLeadIds.has(lead.id!)} onChange={() => toggleLead(lead.id!)} className="rounded" />
+                  <span className="flex-1 truncate select-none">{lead.name}</span>
+                  {sentLeadIds.has(lead.id!) && <span className="text-green-500 text-[10px]" title="Ya enviado">✓</span>}
+                  
+                  {/* Tooltip flotante */}
+                  <div className="absolute left-full top-0 ml-2 hidden group-hover:block z-10 bg-gray-800 text-white p-2 rounded shadow-lg text-[10px] w-40 pointer-events-none">
+                    <p className="font-bold truncate">{lead.name}</p>
+                    <p className="text-gray-300">{lead.phone || 'Sin teléfono'}</p>
+                    {lead.company && <p className="text-gray-400 truncate border-t border-gray-600 mt-1 pt-1">{lead.company}</p>}
+                  </div>
+                </label>
+              ))}
+              {filteredLeads.length === 0 && <p className="text-xs text-gray-400 text-center mt-4">Sin resultados</p>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Enviar */}
+      <div className="bg-white border rounded-lg p-3 shadow-sm">
+        <button onClick={preConfirmSend} disabled={!selectedTemplate || recipients.length === 0}
+          className="w-full bg-[#25D366] text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-[#1DA851] disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-[0.98]">
+          Abrir WhatsApp para {recipients.length} lead(s)
+        </button>
+      </div>
+
+      {/* 5. Historial Compacto */}
       {sentLog.length > 0 && (
-        <div className="mt-2 border rounded p-2 text-xs">
-          <p className="font-medium text-gray-600 mb-1">Enviado anteriormente a:</p>
-          <div className="max-h-24 overflow-y-auto space-y-0.5">
+        <details className="bg-gray-50 border rounded-lg p-2 group shadow-sm">
+          <summary className="text-xs font-semibold text-gray-600 cursor-pointer select-none outline-none flex items-center">
+            <span className="w-4 h-4 inline-flex items-center justify-center bg-gray-200 rounded-full mr-2 group-open:rotate-90 transition-transform">▸</span>
+            Ver historial de envíos de esta plantilla ({sentLog.length})
+          </summary>
+          <div className="mt-2 pl-6 max-h-40 overflow-y-auto space-y-1">
             {sentLog.map((l) => (
-              <div key={l.id} className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-medium">{l.leadName}</span>
-                <span className="text-green-500">✓</span>
+              <div key={l.id} className="flex items-center gap-1.5 flex-wrap text-[11px] border-b border-gray-100 py-1 last:border-0">
+                <span className="font-medium text-gray-800">{l.leadName}</span>
+                <span className="text-green-500 font-bold">✓</span>
                 <span className="text-gray-400">·</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedTemplate(selectedTemplate)}
-                  className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2"
-                  title="Ver plantilla"
-                >
-                  {selectedTemplate?.nombre || 'Plantilla'}
-                </button>
-                <span className="text-gray-400">via</span>
-                <span title="WhatsApp" className="text-green-600">{Icon.Send()}</span>
+                <span className="text-gray-500 bg-gray-200 px-1 rounded">{selectedTemplate?.nombre}</span>
                 <span className="text-gray-400 ml-auto">{new Date(l.sentAt).toLocaleString('es-CL')}</span>
               </div>
             ))}
           </div>
+        </details>
+      )}
+
+      {/* Modal de Confirmación de Envío */}
+      {showConfirmModal && selectedTemplate && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-200">
+            <div className="p-4 bg-green-50 border-b border-green-100 flex items-center gap-3">
+              <div className="bg-[#25D366] text-white w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm">
+                💬
+              </div>
+              <div>
+                <h3 className="font-bold text-green-900 text-lg">Confirmar Envío</h3>
+                <p className="text-xs text-green-700">Se abrirá WhatsApp Web</p>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-gray-50 space-y-3">
+              <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm space-y-2">
+                <div>
+                  <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider">Plantilla</span>
+                  <span className="text-sm font-medium text-gray-800">{selectedTemplate.nombre}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-0.5">Destinatarios</span>
+                  <div className="text-sm font-medium text-gray-800">
+                    {recipients.slice(0, 2).map(r => r.name).join(', ')}
+                    {recipients.length > 2 && (
+                      <span 
+                        className="text-gray-500 text-xs ml-1 cursor-help border-b border-dotted border-gray-400" 
+                        title={recipients.slice(2).map(r => r.name).join(', ')}
+                      >
+                        y {recipients.length - 2} más...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 border-t bg-white flex gap-2 justify-end">
+              <button 
+                onClick={() => setShowConfirmModal(false)} 
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={executeSend} 
+                className="px-4 py-2 bg-[#25D366] hover:bg-[#1DA851] text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+              >
+                Sí, Abrir WhatsApp
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
     </div>
   );
 }

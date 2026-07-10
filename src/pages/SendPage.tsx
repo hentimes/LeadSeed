@@ -51,22 +51,22 @@ export default function SendPage() {
     <div>
       <h2 className="text-lg font-bold mb-3">Enviar Mensajes</h2>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
         <button
           onClick={() => setTab('whatsapp')}
-          className={`px-4 py-2 rounded text-sm font-medium ${
-            tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+            tab === 'whatsapp' ? 'bg-white shadow-sm text-green-700' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          WhatsApp
+          💬 WhatsApp
         </button>
         <button
           onClick={() => setTab('email')}
-          className={`px-4 py-2 rounded text-sm font-medium ${
-            tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+            tab === 'email' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          Email
+          ✉️ Email
         </button>
       </div>
 
