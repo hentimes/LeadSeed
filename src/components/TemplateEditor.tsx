@@ -10,14 +10,17 @@ interface Props {
     contenido: string;
     asunto?: string;
     isHtml?: boolean;
+    templateListIds?: number[];
   } | null;
   type: 'whatsapp' | 'email';
+  categories?: { id: number; name: string; color: string }[];
   onSave: (data: {
     id?: number;
     nombre: string;
     contenido: string;
     asunto?: string;
     isHtml?: boolean;
+    templateListIds?: number[];
   }) => void;
   onCancel: () => void;
 }
@@ -32,11 +35,12 @@ const SAMPLE_LEAD = {
   notes: 'Cliente VIP',
 };
 
-export default function TemplateEditor({ template, type, onSave, onCancel }: Props) {
+export default function TemplateEditor({ template, type, categories = [], onSave, onCancel }: Props) {
   const [nombre, setNombre] = useState('');
   const [contenido, setContenido] = useState('');
   const [asunto, setAsunto] = useState('');
   const [isHtml, setIsHtml] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set());
   const [showEmoji, setShowEmoji] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,11 +54,13 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
       setContenido(template.contenido);
       setAsunto(template.asunto || '');
       setIsHtml(template.isHtml || false);
+      setSelectedCategories(new Set(template.templateListIds || []));
     } else {
       setNombre('');
       setContenido('');
       setAsunto('');
       setIsHtml(false);
+      setSelectedCategories(new Set());
     }
   }, [template]);
 
@@ -68,6 +74,7 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
       contenido: contenido.trim(),
       asunto: type === 'email' ? asunto.trim() : undefined,
       isHtml: type === 'email' ? isHtml : undefined,
+      templateListIds: Array.from(selectedCategories),
     });
   };
 
@@ -266,6 +273,31 @@ export default function TemplateEditor({ template, type, onSave, onCancel }: Pro
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="pt-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Categorías</label>
+        <div className="flex flex-wrap gap-1">
+          {categories.map((c) => {
+            const on = selectedCategories.has(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  const n = new Set(selectedCategories);
+                  n.has(c.id) ? n.delete(c.id) : n.add(c.id);
+                  setSelectedCategories(n);
+                }}
+                className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-gray-600 border-gray-300'}`}
+                style={on ? { backgroundColor: c.color } : {}}
+              >
+                {c.name}
+              </button>
+            );
+          })}
+          {categories.length === 0 && <span className="text-xs text-gray-400">No hay categorías disponibles. Créalas afuera.</span>}
         </div>
       </div>
 

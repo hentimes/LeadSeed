@@ -71,11 +71,17 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
     load();
   };
 
-  const handleSave = async (data: { id?: number; nombre: string; contenido: string; asunto?: string; isHtml?: boolean }) => {
+  const handleSave = async (data: { id?: number; nombre: string; contenido: string; asunto?: string; isHtml?: boolean; templateListIds?: number[] }) => {
     if (saving) return; // prevent double submit
     setSaving(true);
     const existing = templates.find((t) => t.id === data.id);
-    const base = { ...data, templateListIds: existing?.templateListIds || [], leadIds: existing?.leadIds || [], leadListIds: existing?.leadListIds || [], createdAt: existing?.createdAt || '' };
+    const base = { 
+      ...data, 
+      templateListIds: data.templateListIds || existing?.templateListIds || [], 
+      leadIds: existing?.leadIds || [], 
+      leadListIds: existing?.leadListIds || [], 
+      createdAt: existing?.createdAt || '' 
+    };
     if (tab === 'whatsapp') await waT.save(base);
     else await emT.save({ ...base, isHtml: data.isHtml || false } as any);
     setEditing(null); setSaving(false);
@@ -192,23 +198,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
             <button onClick={() => setEditing(null)} className="text-gray-400 text-sm">x</button>
           </div>
 
-          <TemplateEditor template={editing} type={tab} onSave={handleSave} onCancel={() => setEditing(null)} />
-
-          {/* Category assignment */}
-          <div className="mt-3 pt-3 border-t">
-            <p className="text-xs text-gray-500 mb-1">Asignar a categorías:</p>
-            <div className="flex flex-wrap gap-1">
-              {tplLists.map((l: any) => {
-                const on = (editing.templateListIds || []).includes(l.id!);
-                return (
-                  <button key={l.id} type="button" onClick={() => toggleCat(editing, l.id!)}
-                    className={`px-1.5 py-0.5 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-gray-600 border-gray-300'}`}
-                    style={on ? { backgroundColor: l.color } : {}}>{l.name}</button>
-                );
-              })}
-              {tplLists.length === 0 && <span className="text-xs text-gray-400">Sin categorías. Créalas arriba.</span>}
-            </div>
-          </div>
+          <TemplateEditor template={editing} type={tab} categories={tplLists} onSave={handleSave} onCancel={() => setEditing(null)} />
         </div>
       )}
 
