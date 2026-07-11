@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Lead } from '../../types';
+import { useSendCounts } from '../../hooks/useSendCounts';
 
 interface Props {
   leads: Lead[];
@@ -18,6 +19,7 @@ function shortName(full: string): string {
 }
 
 export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSelectAll, onRemoveLead, sort, onSort }: Props) {
+  const sendCounts = useSendCounts();
   if (leads.length === 0) {
     return <p className="text-sm text-gray-400 text-center py-6 bg-white border rounded-lg">Sin leads en esta lista.</p>;
   }
@@ -69,7 +71,21 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </td>
-                <td className="px-3 py-2 font-medium text-gray-800">{shortName(lead.name)}</td>
+                <td className="px-3 py-2 font-medium text-gray-800">
+                  <div className="flex items-center gap-1.5">
+                    {shortName(lead.name)}
+                    {sendCounts[lead.id!]?.whatsapp > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full shadow-sm" title={`${sendCounts[lead.id!].whatsapp} WhatsApp(s) enviado(s)`}>
+                        {sendCounts[lead.id!].whatsapp}
+                      </span>
+                    )}
+                    {sendCounts[lead.id!]?.email > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full shadow-sm" title={`${sendCounts[lead.id!].email} Email(s) enviado(s)`}>
+                        {sendCounts[lead.id!].email}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-3 py-2 text-gray-600">{lead.phone}</td>
                 <td className="px-3 py-2 font-mono text-gray-500 text-xs">{lead.rut || '-'}</td>
                 <td className="px-3 py-2 text-center">

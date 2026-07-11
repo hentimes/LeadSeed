@@ -198,7 +198,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             <h3 className="text-xs font-semibold text-blue-800 uppercase tracking-wider">2. Edición al Vuelo</h3>
             {selectedTemplate.isHtml && (
               <button onClick={() => setShowPreviewModal(true)} className="bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded text-xs font-medium hover:bg-blue-100 flex items-center gap-1 shadow-sm">
-                👁 Ver Vista Previa
+                <Icon.View /> Ver Vista Previa
               </button>
             )}
            </div>
@@ -243,7 +243,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
                   <div className="flex flex-wrap gap-1.5">
                     {attachments.map((att, i) => (
                       <span key={i} className="bg-white border border-blue-200 text-blue-700 px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1.5 shadow-sm">
-                        📄 <span className="max-w-[120px] truncate" title={att.filename}>{att.filename}</span>
+                        <Icon.Paperclip /> <span className="max-w-[120px] truncate" title={att.filename}>{att.filename}</span>
                         <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full w-4 h-4 flex items-center justify-center font-bold">×</button>
                       </span>
                     ))}
@@ -291,7 +291,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
                 <label key={lead.id} className="group relative flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-200 rounded cursor-pointer text-xs transition-colors">
                   <input type="checkbox" checked={selectedLeadIds.has(lead.id!)} onChange={() => toggleLead(lead.id!)} className="rounded" />
                   <span className="flex-1 truncate select-none">{lead.name}</span>
-                  {sentLeadIds.has(lead.id!) && <span className="text-green-500 text-[10px]" title="Ya enviado">✓</span>}
+                  {sentLeadIds.has(lead.id!) && <span className="text-green-500 text-[10px]" title="Ya enviado"><Icon.Check /></span>}
                   
                   {/* Tooltip flotante al hacer hover */}
                   <div className="absolute left-full top-0 ml-2 hidden group-hover:block z-10 bg-gray-800 text-white p-2 rounded shadow-lg text-[10px] w-40 pointer-events-none">
@@ -333,7 +333,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
         {result && (
           <div className={`mt-3 p-2.5 rounded-lg text-sm flex items-start gap-2 ${result.errors.length ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
-            <span className="text-lg">{result.errors.length ? '⚠️' : '✅'}</span>
+            <span className="text-lg">{result.errors.length ? <Icon.Warning /> : <Icon.Check />}</span>
             <div>
               <div className={`font-semibold ${result.errors.length ? 'text-yellow-800' : 'text-green-800'}`}>
                 {result.sent} de {result.total} enviados con éxito
@@ -361,7 +361,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             {sentLog.map((l) => (
               <div key={l.id} className="flex items-center gap-1.5 flex-wrap text-[11px] border-b border-gray-100 py-1 last:border-0">
                 <span className="font-medium text-gray-800">{l.leadName}</span>
-                <span className="text-green-500 font-bold">✓</span>
+                <span className="text-green-500 font-bold"><Icon.Check /></span>
                 <span className="text-gray-400">·</span>
                 <span className="text-gray-500 bg-gray-200 px-1 rounded">{selectedTemplate?.nombre}</span>
                 <span className="text-gray-400 ml-auto">{new Date(l.sentAt).toLocaleString('es-CL')}</span>
@@ -377,7 +377,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden">
             <div className="flex justify-between items-center p-3 border-b bg-gray-50">
               <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <span>👁</span> Vista Previa del Correo
+                <span><Icon.View /></span> Vista Previa del Correo
               </h3>
               <button onClick={() => setShowPreviewModal(false)} className="text-gray-400 hover:text-red-500 font-bold text-lg w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center transition-colors">
                 ×
@@ -435,7 +435,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-200">
             <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center gap-3">
               <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm">
-                ✉️
+                <Icon.Email />
               </div>
               <div>
                 <h3 className="font-bold text-blue-900 text-lg">Confirmar Envío</h3>

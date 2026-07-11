@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import EmojiPicker from './EmojiPicker';
 import VariableDropdown from './VariableDropdown';
 import { insertTextAtCursor } from '../utils/textHelper';
+import { Icon } from '../utils/icons';
 
 interface Props {
   template?: {
@@ -12,7 +12,7 @@ interface Props {
     isHtml?: boolean;
     templateListIds?: number[];
   } | null;
-  type: 'whatsapp' | 'email';
+  type: 'whatsapp' | 'email' | 'call';
   categories?: { id: number; name: string; color: string }[];
   onSave: (data: {
     id?: number;
@@ -41,7 +41,6 @@ export default function TemplateEditor({ template, type, categories = [], onSave
   const [asunto, setAsunto] = useState('');
   const [isHtml, setIsHtml] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set());
-  const [showEmoji, setShowEmoji] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -78,15 +77,6 @@ export default function TemplateEditor({ template, type, categories = [], onSave
     });
   };
 
-  const insertVariable = (v: string) => {
-    setContenido((prev) => prev + ` {${v}}`);
-  };
-
-  const insertEmoji = (emoji: string) => {
-    setContenido((prev) => prev + emoji);
-    setShowEmoji(false);
-  };
-
   const replaceVars = useCallback((text: string) => {
     return text
       .replace(/\{nombre\}/gi, SAMPLE_LEAD.name)
@@ -116,8 +106,6 @@ export default function TemplateEditor({ template, type, categories = [], onSave
     // reset input so same file can be re-loaded
     e.target.value = '';
   };
-
-  const variables = ['nombre', 'telefono', 'email', 'empresa', 'notas', 'rut'];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -200,21 +188,8 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                 👁 Preview
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setShowEmoji(!showEmoji)}
-              className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded flex items-center gap-1"
-            >
-              😊 Emoji
-            </button>
           </div>
         </div>
-
-        {showEmoji && (
-          <div className="mb-2">
-            <EmojiPicker onSelect={(emoji) => insertTextAtCursor(contenidoRef, contenido, emoji, setContenido)} onClose={() => setShowEmoji(false)} />
-          </div>
-        )}
 
         <div className={showPreview ? 'grid grid-cols-2 gap-2' : ''}>
           {type === 'email' && isHtml ? (
@@ -262,14 +237,12 @@ export default function TemplateEditor({ template, type, categories = [], onSave
 
           {/* WhatsApp preview */}
           {type === 'whatsapp' && contenido && (
-            <div className="border rounded-lg overflow-hidden mt-2">
-              <div className="bg-green-50 px-3 py-2 border-b text-xs text-green-700 font-medium flex items-center gap-1">
-                💬 Vista previa WhatsApp
+            <div className="bg-white border rounded-lg overflow-hidden flex flex-col h-full shadow-sm sticky top-4">
+              <div className="bg-gray-100 px-4 py-2 border-b flex items-center gap-2">
+                <span className="text-green-600"><Icon.Messages /></span> <span className="text-sm font-semibold text-gray-700">Vista previa WhatsApp</span>
               </div>
-              <div className="p-3 bg-[#efeae2] max-h-[200px] overflow-y-auto">
-                <div className="bg-white rounded-lg p-3 shadow-sm inline-block max-w-[85%] text-sm whitespace-pre-wrap">
+              <div className="p-4 bg-[#efeae2] flex-1 overflow-y-auto" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.9 }}>
                   {replaceVars(contenido)}
-                </div>
               </div>
             </div>
           )}

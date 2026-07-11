@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import {
   useWhatsAppTemplates, useWhatsAppTemplateLists,
   useEmailTemplates, useEmailTemplateLists,
+  useCallTemplates, useCallTemplateLists,
 } from '../hooks/useTemplates';
 import { db } from '../db/database';
 import type { LeadList, SendLog } from '../types';
 import TemplateEditor from '../components/TemplateEditor';
 
-type Tab = 'whatsapp' | 'email';
+type Tab = 'whatsapp' | 'email' | 'call';
 
 const COLORS = [
   { name: 'Azul', value: '#3B82F6' }, { name: 'Rojo', value: '#EF4444' },
@@ -17,7 +18,7 @@ const COLORS = [
 ];
 
 interface Props {
-  highlightTemplate?: { type: 'whatsapp' | 'email'; id: number } | null;
+  highlightTemplate?: { type: 'whatsapp' | 'email' | 'call'; id: number } | null;
   onClearHighlight?: () => void;
 }
 
@@ -25,6 +26,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
   const [tab, setTab] = useState<Tab>(highlightTemplate?.type || 'whatsapp');
   const waT = useWhatsAppTemplates(); const waL = useWhatsAppTemplateLists();
   const emT = useEmailTemplates(); const emL = useEmailTemplateLists();
+  const caT = useCallTemplates(); const caL = useCallTemplateLists();
 
   const [templates, setTemplates] = useState<any[]>([]);
   const [tplLists, setTplLists] = useState<any[]>([]);
@@ -48,9 +50,12 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
     if (tab === 'whatsapp') {
       setTemplates(await waT.getAll());
       setTplLists(await waL.getAll());
-    } else {
+    } else if (tab === 'email') {
       setTemplates(await emT.getAll());
       setTplLists(await emL.getAll());
+    } else {
+      setTemplates(await caT.getAll());
+      setTplLists(await caL.getAll());
     }
   };
 
@@ -60,13 +65,16 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
     e.preventDefault();
     if (!catName.trim()) return;
     if (tab === 'whatsapp') await waL.save({ name: catName.trim(), color: catColor, createdAt: '' });
-    else await emL.save({ name: catName.trim(), color: catColor, createdAt: '' });
+    else if (tab === 'email') await emL.save({ name: catName.trim(), color: catColor, createdAt: '' });
+    else await caL.save({ name: catName.trim(), color: catColor, createdAt: '' });
     setCatName(''); load();
   };
 
   const handleDeleteCategory = async (id: number) => {
     if (!confirm('¿Eliminar esta categoría?')) return;
-    if (tab === 'whatsapp') await waL.remove(id); else await emL.remove(id);
+    if (tab === 'whatsapp') await waL.remove(id); 
+    else if (tab === 'email') await emL.remove(id);
+    else await caL.remove(id);
     if (filterCatId === id) setFilterCatId(null);
     load();
   };
@@ -83,14 +91,17 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
       createdAt: existing?.createdAt || '' 
     };
     if (tab === 'whatsapp') await waT.save(base);
-    else await emT.save({ ...base, isHtml: data.isHtml || false } as any);
+    else if (tab === 'email') await emT.save({ ...base, isHtml: data.isHtml || false } as any);
+    else await caT.save(base);
     setEditing(null); setSaving(false);
     load();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar esta plantilla?')) return;
-    if (tab === 'whatsapp') await waT.remove(id); else await emT.remove(id);
+    if (tab === 'whatsapp') await waT.remove(id); 
+    else if (tab === 'email') await emT.remove(id);
+    else await caT.remove(id);
     if (editing?.id === id) setEditing(null);
     setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
     load();
@@ -100,7 +111,9 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
     if (selectedIds.size === 0) return;
     if (!confirm(`¿Eliminar ${selectedIds.size} plantillas?`)) return;
     for (const id of selectedIds) {
-      if (tab === 'whatsapp') await waT.remove(id); else await emT.remove(id);
+      if (tab === 'whatsapp') await waT.remove(id); 
+      else if (tab === 'email') await emT.remove(id);
+      else await caT.remove(id);
     }
     setSelectedIds(new Set());
     load();
@@ -117,7 +130,9 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
   const toggleCat = async (tpl: any, listId: number) => {
     const ids = tpl.templateListIds || [];
     const u = { ...tpl, templateListIds: ids.includes(listId) ? ids.filter((id: number) => id !== listId) : [...ids, listId] };
-    if (tab === 'whatsapp') await waT.save(u); else await emT.save(u);
+    if (tab === 'whatsapp') await waT.save(u); 
+    else if (tab === 'email') await emT.save(u);
+    else await caT.save(u);
     load();
   };
 
@@ -137,6 +152,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
         <div className="flex gap-1">
           <button onClick={() => setTab('whatsapp')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>WhatsApp</button>
           <button onClick={() => setTab('email')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Email</button>
+          <button onClick={() => setTab('call')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'call' ? 'bg-amber-500 text-white' : 'bg-gray-200'}`}>Llamadas</button>
         </div>
       </div>
 

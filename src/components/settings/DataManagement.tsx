@@ -3,6 +3,7 @@ import { exportBackup, importBackup } from '../../utils/backup';
 import { useDuplicates } from '../../hooks/useDuplicates';
 import { getSettings, saveSettings } from '../../db/database';
 import type { ExportFormat } from '../../types';
+import { Icon } from '../../utils/icons';
 
 interface Props {
   exportFormat: ExportFormat;
@@ -39,11 +40,11 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white border rounded-xl shadow-sm p-5">
-        <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Exportación y Respaldo</h3>
-        
-        <div className="mb-6">
+    <div className="animate-fade-in pt-2 flex flex-col gap-6">
+      {/* Exportar */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Exportación y Respaldo</h3>
+        <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Formato de Exportación por defecto</label>
           <select
             value={exportFormat}
@@ -55,7 +56,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
           </select>
         </div>
 
-        <div>
+        <div className="mt-6">
           <h4 className="text-sm font-medium text-gray-700 mb-1">Respaldo Completo</h4>
           <p className="text-xs text-gray-500 mb-3">
             Descarga o restaura una copia exacta de toda tu base de datos (leads, listas, plantillas, historiales).
@@ -63,9 +64,9 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
           <div className="flex gap-3 items-center flex-wrap">
             <button
               onClick={exportBackup}
-              className="bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm"
+              className="bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm flex items-center gap-2"
             >
-              ⬇️ Descargar Respaldo
+              <Icon.Download /> Descargar Respaldo
             </button>
             <input
               ref={fileInputRef}
@@ -76,25 +77,26 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="bg-amber-100 text-amber-800 border border-amber-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-200 transition-colors shadow-sm"
+              className="bg-amber-100 text-amber-800 border border-amber-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-200 transition-colors shadow-sm flex items-center gap-2"
             >
-              ⬆️ Restaurar Respaldo
+              <Icon.Upload /> Restaurar Respaldo
             </button>
           </div>
           {restoreMsg && <p className={`mt-3 text-sm font-medium ${restoreMsg.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>{restoreMsg}</p>}
         </div>
       </div>
 
-      <div className="bg-white border rounded-xl shadow-sm p-5">
-        <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Gestión de Duplicados</h3>
+      {/* Importar */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Gestión de Duplicados</h3>
         <p className="text-sm text-gray-600 mb-4">
           Nuestra herramienta busca leads que compartan el mismo RUT o Número de Teléfono para fusionarlos y mantener tu base de datos limpia.
         </p>
         <button 
           onClick={findDuplicates} 
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm mb-4"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm mb-4 flex items-center gap-2"
         >
-          🔍 Buscar leads duplicados
+          <Icon.Search /> Buscar leads duplicados
         </button>
         
         {mergeMsg && <div className="mb-4 text-sm text-green-600 font-medium bg-green-50 p-2 rounded">{mergeMsg}</div>}

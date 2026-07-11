@@ -76,7 +76,26 @@ export interface EmailTemplateList {
   createdAt: string;
 }
 
+export interface CallTemplate {
+  id?: number;
+  templateListIds: number[];   // N:M - múltiples categorías
+  nombre: string;
+  contenido: string;            // el script de la llamada
+  leadIds: number[];            // leads asignados directamente
+  leadListIds: number[];        // listas de leads asignadas
+  createdAt: string;
+}
+
+export interface CallTemplateList {
+  id?: number;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
 export type ExportFormat = 'json' | 'excel';
+
+export type ComparePeriod = 'yesterday' | 'lastWeek' | 'lastMonth' | 'lastYear';
 
 export interface AppSettings {
   emailProvider: 'emailjs' | 'resend';
@@ -90,6 +109,12 @@ export interface AppSettings {
   compactMode: boolean;
   darkMode: boolean;
   visibleCols: { key: string; label: string; visible: boolean }[];
+  
+  // Nuevas Metas Diarias
+  dailyGoalWhatsApp: number;
+  dailyGoalEmail: number;
+  dailyGoalCalls: number;
+  dashboardComparePeriod: ComparePeriod;
 }
 
 export type TaskStatus = 'pendiente' | 'completada';
@@ -120,7 +145,7 @@ export interface LeadNote {
 export interface SendLog {
   id?: number;
   templateId: number;
-  templateType: 'whatsapp' | 'email';
+  templateType: 'whatsapp' | 'email' | 'call';
   leadId: number;
   leadName: string;
   leadPhone: string;

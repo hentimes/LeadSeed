@@ -315,9 +315,9 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
               </button>
               <button 
                 onClick={executeSend} 
-                className="px-4 py-2 bg-[#25D366] hover:bg-[#1DA851] text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sí, Abrir WhatsApp
+                <Icon.Messages /> Iniciar Envío (Abre WhatsApp Web)
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { db } from '../db/database';
 import type { SendLog, WhatsAppTemplate, EmailTemplate, LeadNote, Lead } from '../types';
 import type { Page } from '../types';
+import { Icon } from '../utils/icons';
 
 type EnrichedLog = SendLog & {
   templateNombre: string;
@@ -18,7 +19,7 @@ type ActivityItem = {
 
 interface Props {
   onNavigate: (page: Page) => void;
-  onViewTemplate: (type: 'whatsapp' | 'email', id: number) => void;
+  onViewTemplate: (type: 'whatsapp' | 'email' | 'call', id: number) => void;
 }
 
 const PAGE_SIZE = 8;
@@ -72,21 +73,6 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
   };
 
   const searchLower = search.toLowerCase().trim();
-  const searchLeadIds = useMemo(() => {
-    if (!searchLower) return null;
-    // Filtrar logs y activity por nombre, teléfono, email, RUT del lead asociado
-    return null; // lo manejamos en el filter abajo
-  }, [searchLower]);
-
-  const matchSearch = (item: { leadName?: string; leadPhone?: string; text?: string }, extra?: { leadPhone?: string }) => {
-    if (!searchLower) return true;
-    const fields = [
-      item.leadName || '',
-      extra?.leadPhone || item.leadPhone || '',
-      item.text || '',
-    ];
-    return fields.some((f) => f.toLowerCase().includes(searchLower));
-  };
 
   const filteredLogs = useMemo(() => {
     let result = logs;
@@ -144,11 +130,13 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
             pagedLogs.map((log) => (
               <div key={log.id} className={`border-b last:border-0 dark:border-gray-700 ${expandedId === log.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
                 <div className="px-3 py-1.5 text-xs flex items-center gap-2">
-                  <span className={log.templateType === 'whatsapp' ? 'text-green-500' : 'text-blue-500'}>{log.templateType === 'whatsapp' ? 'WA' : '@'}</span>
+                  {log.templateType === 'whatsapp' && <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Messages /> WP</span>}
+                  {log.templateType === 'email' && <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Email /> EM</span>}
+                  {log.templateType === 'call' && <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Phone /> LLAMADA</span>}
                   <span className="font-medium truncate">{log.leadName}</span>
                   <span className="text-gray-400 truncate hidden sm:inline">{log.leadPhone}</span>
                   <span className="text-gray-400">·</span>
-                  <button onClick={() => { if (log.templateContenido) onViewTemplate(log.templateType, log.templateId); }}
+                  <button onClick={() => { if (log.templateContenido) onViewTemplate(log.templateType as 'whatsapp' | 'email' | 'call', log.templateId); }}
                     className={`${log.templateContenido ? 'text-blue-600 hover:text-blue-800 underline' : 'text-gray-400 cursor-default'}`}>
                     {log.templateNombre}
                   </button>

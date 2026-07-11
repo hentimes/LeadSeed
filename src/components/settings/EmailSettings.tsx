@@ -48,8 +48,8 @@ export default function EmailSettings() {
   };
 
   return (
-    <div className="bg-white border rounded-xl shadow-sm p-5">
-      <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Proveedor de Correo</h3>
+    <div className="animate-fade-in pt-2">
+      <h3 className="text-sm font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Proveedor de Correo</h3>
       
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-1">Servicio Activo</label>

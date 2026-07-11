@@ -5,6 +5,8 @@ import { getSettings } from '../db/database';
 import DisplaySettings from '../components/settings/DisplaySettings';
 import DataManagement from '../components/settings/DataManagement';
 import EmailSettings from '../components/settings/EmailSettings';
+import GoalsSettings from '../components/settings/GoalsSettings';
+import { Icon } from '../utils/icons';
 
 interface Props {
   compactMode: boolean;
@@ -15,7 +17,7 @@ interface Props {
   onColsChange: (cols: ColumnDef[]) => void;
 }
 
-type Tab = 'display' | 'data' | 'email';
+type Tab = 'display' | 'data' | 'email' | 'goals';
 
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
   const [tab, setTab] = useState<Tab>('display');
@@ -34,31 +36,39 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         <p className="text-sm text-gray-500 mt-1">Configura la extensión, gestiona tus datos y conecta proveedores.</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex bg-gray-100/80 rounded-lg p-1.5 mb-6 shadow-sm border border-gray-200/50">
+      {/* Tabs - Header Style */}
+      <div className="flex border-b border-gray-200 mb-6 px-2 gap-6">
         <button
           onClick={() => setTab('display')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
-            tab === 'display' ? 'bg-white shadow-sm text-gray-900 border border-gray-200/50' : 'text-gray-500 hover:text-gray-800'
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'display' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
-          🎨 Apariencia
+          <Icon.Palette /> Apariencia
         </button>
         <button
           onClick={() => setTab('data')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
-            tab === 'data' ? 'bg-white shadow-sm text-gray-900 border border-gray-200/50' : 'text-gray-500 hover:text-gray-800'
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'data' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
-          💾 Datos y Respaldo
+          <Icon.Database /> Datos
         </button>
         <button
           onClick={() => setTab('email')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
-            tab === 'email' ? 'bg-white shadow-sm text-gray-900 border border-gray-200/50' : 'text-gray-500 hover:text-gray-800'
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'email' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
-          ✉️ Email
+          <Icon.Email /> Email
+        </button>
+        <button
+          onClick={() => setTab('goals')}
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'goals' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          <Icon.Bullseye /> Metas
         </button>
       </div>
 
@@ -84,6 +94,10 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         
         {tab === 'email' && (
           <EmailSettings />
+        )}
+        
+        {tab === 'goals' && (
+          <GoalsSettings />
         )}
       </div>
     </div>

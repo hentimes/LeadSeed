@@ -16,10 +16,10 @@ export default function DisplaySettings({ compactMode, onCompactModeChange, dark
   };
 
   return (
-    <div className="bg-white border rounded-xl shadow-sm p-5">
-      <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Apariencia y Visualización</h3>
-
-      <div className="space-y-4">
+    <div className="animate-fade-in pt-2">
+      <h3 className="text-sm font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Apariencia y Visualización</h3>
+      
+      <div className="space-y-6">
         <label className="flex items-center justify-between py-2 border-b border-gray-50">
           <div>
             <span className="text-sm font-medium text-gray-700 block">Modo compacto</span>

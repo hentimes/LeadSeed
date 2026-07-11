@@ -8,6 +8,8 @@ import type {
   WhatsAppTemplateList,
   EmailTemplate,
   EmailTemplateList,
+  CallTemplate,
+  CallTemplateList,
   AppSettings,
   SendLog,
 } from '../types';
@@ -19,6 +21,8 @@ class LeadsDatabase extends Dexie {
   whatsappTemplateLists!: Table<WhatsAppTemplateList, number>;
   emailTemplates!: Table<EmailTemplate, number>;
   emailTemplateLists!: Table<EmailTemplateList, number>;
+  callTemplates!: Table<CallTemplate, number>;
+  callTemplateLists!: Table<CallTemplateList, number>;
   settings!: Table<AppSettings, string>;
   tasks!: Table<Task, number>;
   leadNotes!: Table<LeadNote, number>;
@@ -52,6 +56,21 @@ class LeadsDatabase extends Dexie {
       leadNotes: '++id, leadId, createdAt',
       sendLog: '++id, templateId, leadId, sentAt',
     });
+
+    this.version(3).stores({
+      leads: '++id, name, email, phone, company, rut, status, createdAt, *listaIds',
+      leadLists: '++id, name, createdAt',
+      whatsappTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
+      whatsappTemplateLists: '++id, name, createdAt',
+      emailTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
+      emailTemplateLists: '++id, name, createdAt',
+      callTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
+      callTemplateLists: '++id, name, createdAt',
+      settings: '&emailJSUserId',
+      tasks: '++id, fechaVencimiento, status, *leadIds, *leadListIds',
+      leadNotes: '++id, leadId, createdAt',
+      sendLog: '++id, templateId, leadId, sentAt',
+    });
   }
 }
 
@@ -73,6 +92,10 @@ export async function getSettings(): Promise<AppSettings> {
       compactMode: true,
       darkMode: false,
       visibleCols: [],
+      dailyGoalWhatsApp: 30,
+      dailyGoalEmail: 20,
+      dailyGoalCalls: 5,
+      dashboardComparePeriod: 'yesterday',
     }
   );
 }

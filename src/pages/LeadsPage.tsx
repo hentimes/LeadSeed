@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLeads } from '../hooks/useLeads';
 import { useLists } from '../hooks/useLists';
 import { useLeadFilters } from '../hooks/useLeadFilters';
-import type { Lead, LeadList, ExportFormat, LeadStatus } from '../types';
+import type { ExportFormat, Lead, LeadList, LeadStatus } from '../types';
+import { db } from '../db/database';
 import LeadsTable from '../components/LeadsTable';
 import LeadForm from '../components/LeadForm';
 import LeadDetail from '../components/LeadDetail';
@@ -23,6 +24,22 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   const { getAll, getDeleted, save, remove, restore, permanentDelete, purgeOldDeleted, addToList, importLeads, refreshKey } = useLeads();
   const { getAll: getLists } = useLists();
 
+  const [filterMode, setFilterMode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('filter=olvidados')) {
+      setFilterMode('olvidados');
+    } else {
+      setFilterMode(null);
+    }
+    if (hash.includes('action=new')) {
+      setEditing(null);
+      setShowForm(true);
+      window.location.hash = '#leads'; // reset hash to avoid opening on reload
+    }
+  }, []);
+
   const [leads, setLeads] = useState<Lead[]>([]);
   const [lists, setLists] = useState<LeadList[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -33,10 +50,10 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   const [viewing, setViewing] = useState<Lead | null>(null);
   const [toast, setToast] = useState<{ id: number; name: string } | null>(null);
   
-  const { filtered, filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters(leads);
-
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
+
+  const { filtered, filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters(leads);
 
   useEffect(() => {
     getSettings().then((s) => setExportFormat(s.exportFormat));
@@ -61,11 +78,18 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   }, [leads]);
 
   const loadLeads = async () => {
-    if (showTrash) {
-      setLeads(await getDeleted());
-    } else {
-      setLeads(await getAll());
+    let data = showTrash ? await getDeleted() : await getAll();
+    
+    if (!showTrash && filterMode === 'olvidados') {
+      const logs = await db.sendLog.toArray();
+      data = data.filter(l => {
+        const daysSince = Math.floor((Date.now() - new Date(l.createdAt).getTime()) / (1000 * 3600 * 24));
+        if (daysSince <= 7) return false;
+        return !logs.some((log: any) => log.leadId === l.id);
+      });
     }
+
+    setLeads(data);
   };
 
   const loadLists = async () => {
@@ -76,9 +100,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   useEffect(() => {
     loadLeads();
     loadLists();
-  }, [refreshKey, showTrash]);
-
-  // Los leads filtrados ahora se manejan con useLeadFilters
+  }, [refreshKey, showTrash, filterMode]);
 
   const { sort, toggle: onSort, sorted } = useSort(filtered, {
     createdAt: (l) => l.createdAt,
@@ -119,10 +141,8 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   }, [sorted]);
 
   const handleSave = async (lead: Lead) => {
-    // Detectar duplicados
     const dupRut = lead.rut && existingRuts.has(lead.rut);
     const dupPhone = lead.phone && existingPhones.has(lead.phone.replace(/[^+\d]/g, ''));
-    // Si es edición del mismo lead, no es duplicado
     const isSelfRut = lead.id && leads.find((l) => l.id === lead.id)?.rut === lead.rut;
     const isSelfPhone = lead.id && leads.find((l) => l.id === lead.id)?.phone === lead.phone;
     if ((dupRut && !isSelfRut) || (dupPhone && !isSelfPhone)) {
@@ -208,9 +228,9 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
     if (selectedIds.size > 0) {
       data = leads.filter((l) => selectedIds.has(l.id!));
     } else if (filterListId !== null || filterStatus !== null || filterDate || search.trim()) {
-      data = sorted;  // vista actual filtrada
+      data = sorted;
     } else {
-      data = leads;   // todos los leads
+      data = leads;
     }
     if (exportFormat === 'excel') exportToExcel(data);
     else exportToJSON(data);
@@ -239,12 +259,20 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
           >
             Importar
           </button>
-          <button
-            onClick={() => { setEditing(null); setShowForm(true); }}
-            className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
-          >
-            + Lead
-          </button>
+          <div className="flex gap-2 mb-0 items-center">
+            {filterMode === 'olvidados' && (
+              <span className="bg-red-600 text-white text-xs px-2.5 py-1.5 rounded font-medium flex items-center gap-1.5 shadow-sm">
+                Olvidados
+                <button onClick={() => { setFilterMode(null); window.location.hash = '#leads'; }} className="opacity-80 hover:opacity-100 transition-opacity font-bold ml-1">✕</button>
+              </span>
+            )}
+            <button
+              onClick={() => { setEditing(null); setShowForm(true); }}
+              className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+            >
+              + Lead
+            </button>
+          </div>
           <button
             onClick={() => { setShowTrash(!showTrash); setSelectedIds(new Set()); }}
             className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center ${showTrash ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -281,6 +309,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
       />
 
       <LeadsTable
+        filterMode={filterMode}
         leads={sorted}
         lists={lists}
         selectedIds={selectedIds}

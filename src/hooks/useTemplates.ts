@@ -5,6 +5,8 @@ import type {
   WhatsAppTemplateList,
   EmailTemplate,
   EmailTemplateList,
+  CallTemplate,
+  CallTemplateList,
 } from '../types';
 
 // ---------- WhatsApp Templates ----------
@@ -127,7 +129,7 @@ export function useEmailTemplateLists() {
     const templates = await db.emailTemplates.where('templateListIds').equals(id).toArray();
     for (const t of templates) {
       await db.emailTemplates.update(t.id!, {
-        templateListIds: t.templateListIds.filter((lid) => lid !== id),
+        templateListIds: t.templateListIds.filter((lid: number) => lid !== id),
       });
     }
     await db.emailTemplateLists.delete(id);
@@ -136,9 +138,73 @@ export function useEmailTemplateLists() {
   return { getAll, save, remove };
 }
 
+// ---------- Call Templates ----------
+export function useCallTemplates() {
+  const getAll = useCallback(async (): Promise<CallTemplate[]> => {
+    return db.callTemplates.orderBy('nombre').toArray();
+  }, []);
+
+  const getByList = useCallback(async (listId: number): Promise<CallTemplate[]> => {
+    return db.callTemplates.where('templateListIds').equals(listId).toArray();
+  }, []);
+
+  const save = useCallback(async (t: CallTemplate): Promise<number> => {
+    const template = {
+      ...t,
+      templateListIds: t.templateListIds || [],
+      leadIds: t.leadIds || [],
+      leadListIds: t.leadListIds || [],
+    };
+    if (template.id) {
+      await db.callTemplates.update(template.id, template);
+      return template.id;
+    }
+    const now = new Date().toISOString();
+    const { id: _u2, ...rest } = template;
+    const id = await db.callTemplates.add({ ...rest, createdAt: now });
+    return id as number;
+  }, []);
+
+  const remove = useCallback(async (id: number): Promise<void> => {
+    await db.callTemplates.delete(id);
+  }, []);
+
+  return { getAll, getByList, save, remove };
+}
+
+// ---------- Call Template Lists ----------
+export function useCallTemplateLists() {
+  const getAll = useCallback(async (): Promise<CallTemplateList[]> => {
+    return db.callTemplateLists.orderBy('name').toArray();
+  }, []);
+
+  const save = useCallback(async (l: CallTemplateList): Promise<number> => {
+    if (l.id) {
+      await db.callTemplateLists.update(l.id, l);
+      return l.id;
+    }
+    const now = new Date().toISOString();
+    const { id: _u3, ...rest } = l;
+    const id = await db.callTemplateLists.add({ ...rest, createdAt: now });
+    return id as number;
+  }, []);
+
+  const remove = useCallback(async (id: number): Promise<void> => {
+    const templates = await db.callTemplates.where('templateListIds').equals(id).toArray();
+    for (const t of templates) {
+      await db.callTemplates.update(t.id!, {
+        templateListIds: t.templateListIds.filter((lid: number) => lid !== id),
+      });
+    }
+    await db.callTemplateLists.delete(id);
+  }, []);
+
+  return { getAll, save, remove };
+}
+
 // ---------- Helper: get leads assigned to a template (direct + from lists) ----------
 export async function getAssignedLeads(
-  template: WhatsAppTemplate | EmailTemplate
+  template: WhatsAppTemplate | EmailTemplate | CallTemplate
 ): Promise<{ directIds: number[]; fromListsIds: number[]; allIds: number[] }> {
   const directIds = template.leadIds || [];
 

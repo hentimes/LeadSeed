@@ -5,6 +5,7 @@ import {
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
   faRotateLeft, faChevronDown, faChevronRight, faArrowsUpDown,
   faCaretUp, faCaretDown, faEnvelope, faGripVertical,
+  faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -41,6 +42,13 @@ export const Icon = {
   Help: () => <I icon={faQuestion} className="text-sm" />,
   Restore: () => <I icon={faRotateLeft} className="text-xs" />,
   Email: () => <I icon={faEnvelope} className="text-xs" />,
+  Palette: () => <I icon={faPalette} className="text-xs" />,
+  Database: () => <I icon={faDatabase} className="text-xs" />,
+  Bullseye: () => <I icon={faBullseye} className="text-xs" />,
+  Phone: () => <I icon={faPhone} className="text-xs" />,
+  ChartPie: () => <I icon={faChartPie} className="text-xs" />,
+  Warning: () => <I icon={faExclamationTriangle} className="text-xs" />,
+  Paperclip: () => <I icon={faPaperclip} className="text-xs" />,
 
   // UI
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,

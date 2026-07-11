@@ -38,7 +38,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [taskCount, setTaskCount] = useState(0);
   const [visibleCols, setVisibleCols] = useState<ColumnDef[]>(DEFAULT_COLUMNS);
-  const [highlightTemplate, setHighlightTemplate] = useState<{ type: 'whatsapp' | 'email'; id: number } | null>(null);
+  const [highlightTemplate, setHighlightTemplate] = useState<{ type: 'whatsapp' | 'email' | 'call'; id: number } | null>(null);
 
   // Atajos de teclado
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function App() {
       case 'send': return <SendPage />;
       case 'history': return <SendHistoryPage onNavigate={setPage} onViewTemplate={(type, id) => { setHighlightTemplate({ type, id }); setPage('templates'); }} />;
       case 'tasks': return <TasksPage onTasksChanged={loadTaskCount} />;
-      case 'dashboard': return <DashboardPage />;
+      case 'dashboard': return <DashboardPage onNavigate={setPage} />;
       case 'pipeline': return <PipelinePage />;
       case 'settings': return <SettingsPage compactMode={compactMode} onCompactModeChange={handleCompactModeChange} darkMode={darkMode} onDarkModeChange={handleDarkModeChange} visibleCols={visibleCols} onColsChange={handleColsChange} />;
       default: return <LeadsPage compactMode={compactMode} visibleCols={visibleCols} />;

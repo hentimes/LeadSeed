@@ -4,6 +4,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import type { SortConfig, SortField } from '../hooks/useSort';
 import type { ColumnDef } from './ColumnSelector';
 import { Icon } from '../utils/icons';
+import { useSendCounts } from '../hooks/useSendCounts';
 
 interface Props {
   leads: Lead[];
@@ -17,6 +18,7 @@ interface Props {
   onDelete: (id: number) => void;
   onRestore?: (id: number) => void;
   isTrash?: boolean;
+  filterMode?: string | null;
   filterListId: number | null;
   onFilterChange: (listId: number | null) => void;
   filterStatus: LeadStatus | null;
@@ -54,11 +56,13 @@ function shortName(full: string): string {
 
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
-  onEdit, onView, onDelete, onRestore, isTrash, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
+  onEdit, onView, onDelete, onRestore, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, visibleCols, onColsChange,
   compactMode, lastClickedIndex, onSetLastClicked,
   onReorderCols,
 }: Props) {
+  const sendCounts = useSendCounts();
+  
   const nameVis = visibleCols.find((c) => c.key === 'name')?.visible ?? true;
   const rutVis = visibleCols.find((c) => c.key === 'rut')?.visible ?? true;
   const phoneVis = visibleCols.find((c) => c.key === 'phone')?.visible ?? true;
@@ -243,7 +247,24 @@ export default function LeadsTable({
                 <tr key={lead.id} data-row-index={idx} data-lead-id={lead.id!} className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${selectedIds.has(lead.id!) ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`}>
                   <td className="px-2 py-1.5"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedIds.has(lead.id!) ? 'bg-blue-600 border-blue-600' : 'border-gray-300 dark:border-gray-600 bg-white'}`}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.has(lead.id!) ? 1 : 0}/></svg></div></td>
                   <td className="px-2 py-1.5">
-                    <div className="font-medium text-xs">{shortName(lead.name)}</div>
+                    <div className="font-medium text-xs flex items-center gap-1.5">
+                      {shortName(lead.name)}
+                      {sendCounts[lead.id!]?.whatsapp > 0 && (
+                        <span onClick={(e) => { e.stopPropagation(); onView(lead); }} className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full cursor-pointer hover:bg-green-600 shadow-sm" title={`${sendCounts[lead.id!].whatsapp} WhatsApp(s) enviado(s)`}>
+                          {sendCounts[lead.id!].whatsapp}
+                        </span>
+                      )}
+                      {sendCounts[lead.id!]?.email > 0 && (
+                        <span onClick={(e) => { e.stopPropagation(); onView(lead); }} className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 shadow-sm" title={`${sendCounts[lead.id!].email} Email(s) enviado(s)`}>
+                          {sendCounts[lead.id!].email}
+                        </span>
+                      )}
+                      {filterMode === 'olvidados' && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 whitespace-nowrap">
+                          {Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 3600 * 24))} días olv.
+                        </span>
+                      )}
+                    </div>
                     {rutVis && lead.rut && <div className="text-xs text-gray-500 font-mono">RUT: {lead.rut}</div>}
                     {nameVis && !rutVis && !lead.rut && <div className="text-xs text-gray-400">-</div>}
                   </td>
@@ -285,7 +306,26 @@ export default function LeadsTable({
               leads.map((lead, idx) => (
                 <tr key={lead.id} data-row-index={idx} data-lead-id={lead.id!} className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${selectedIds.has(lead.id!) ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`}>
                   <td className="px-2 py-1.5"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedIds.has(lead.id!) ? 'bg-blue-600 border-blue-600' : 'border-gray-300 dark:border-gray-600 bg-white'}`}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.has(lead.id!) ? 1 : 0}/></svg></div></td>
-                  {nameVis && <td className="px-2 py-1.5 font-medium text-xs">{lead.name}</td>}
+                  {nameVis && <td className="px-2 py-1.5 font-medium text-xs">
+                    <div className="flex items-center gap-1.5">
+                      {lead.name}
+                      {sendCounts[lead.id!]?.whatsapp > 0 && (
+                        <span onClick={(e) => { e.stopPropagation(); onView(lead); }} className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full cursor-pointer hover:bg-green-600 shadow-sm" title={`${sendCounts[lead.id!].whatsapp} WhatsApp(s) enviado(s)`}>
+                          {sendCounts[lead.id!].whatsapp}
+                        </span>
+                      )}
+                      {sendCounts[lead.id!]?.email > 0 && (
+                        <span onClick={(e) => { e.stopPropagation(); onView(lead); }} className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 shadow-sm" title={`${sendCounts[lead.id!].email} Email(s) enviado(s)`}>
+                          {sendCounts[lead.id!].email}
+                        </span>
+                      )}
+                      {filterMode === 'olvidados' && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 whitespace-nowrap">
+                          {Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 3600 * 24))} días olv.
+                        </span>
+                      )}
+                    </div>
+                  </td>}
                   {phoneVis && <td className="px-2 py-1.5 text-xs">{lead.phone}</td>}
                   {emailVis && <td className="px-2 py-1.5 text-xs text-blue-600">{lead.email ? <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title={`Enviar email a ${lead.email}`}>{lead.email.length > 13 ? <span title={lead.email}>{lead.email.slice(0, 10)}...</span> : lead.email}</a> : '-'}</td>}
                   {companyVis && <td className="px-2 py-1.5 text-xs">{lead.company || '-'}</td>}

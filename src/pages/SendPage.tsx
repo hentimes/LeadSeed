@@ -6,6 +6,8 @@ import {
   useWhatsAppTemplateLists,
   useEmailTemplates,
   useEmailTemplateLists,
+  useCallTemplates,
+  useCallTemplateLists,
 } from '../hooks/useTemplates';
 import type {
   Lead,
@@ -14,11 +16,15 @@ import type {
   WhatsAppTemplateList,
   EmailTemplate,
   EmailTemplateList,
+  CallTemplate,
+  CallTemplateList,
 } from '../types';
 import WhatsAppSender from '../components/WhatsAppSender';
 import EmailSender from '../components/EmailSender';
+import CallSender from '../components/CallSender';
+import { Icon } from '../utils/icons';
 
-type Tab = 'whatsapp' | 'email';
+type Tab = 'whatsapp' | 'email' | 'call';
 
 export default function SendPage() {
   const [tab, setTab] = useState<Tab>('whatsapp');
@@ -28,6 +34,8 @@ export default function SendPage() {
   const waLists = useWhatsAppTemplateLists();
   const emailTemplates = useEmailTemplates();
   const emailLists = useEmailTemplateLists();
+  const callTemplates = useCallTemplates();
+  const callLists = useCallTemplateLists();
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadLists, setLeadLists] = useState<LeadList[]>([]);
@@ -35,6 +43,8 @@ export default function SendPage() {
   const [waListData, setWaListData] = useState<WhatsAppTemplateList[]>([]);
   const [emailData, setEmailData] = useState<EmailTemplate[]>([]);
   const [emailListData, setEmailListData] = useState<EmailTemplateList[]>([]);
+  const [callData, setCallData] = useState<CallTemplate[]>([]);
+  const [callListData, setCallListData] = useState<CallTemplateList[]>([]);
 
   const load = async () => {
     setLeads(await getAll());
@@ -43,6 +53,8 @@ export default function SendPage() {
     setWaListData(await waLists.getAll());
     setEmailData(await emailTemplates.getAll());
     setEmailListData(await emailLists.getAll());
+    setCallData(await callTemplates.getAll());
+    setCallListData(await callLists.getAll());
   };
 
   useEffect(() => { load(); }, []);
@@ -54,34 +66,53 @@ export default function SendPage() {
       <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
         <button
           onClick={() => setTab('whatsapp')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-            tab === 'whatsapp' ? 'bg-white shadow-sm text-green-700' : 'text-gray-600 hover:text-gray-900'
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+            tab === 'whatsapp' ? 'bg-white shadow text-green-700' : 'text-gray-600 hover:bg-white/50'
           }`}
         >
-          💬 WhatsApp
+          <Icon.Messages /> WhatsApp
         </button>
         <button
           onClick={() => setTab('email')}
-          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-            tab === 'email' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-600 hover:text-gray-900'
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+            tab === 'email' ? 'bg-white shadow text-blue-700' : 'text-gray-600 hover:bg-white/50'
           }`}
         >
-          ✉️ Email
+          <Icon.Email /> Email
+        </button>
+        <button
+          onClick={() => setTab('call')}
+          className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+            tab === 'call' ? 'bg-white shadow text-amber-700' : 'text-gray-600 hover:bg-white/50'
+          }`}
+        >
+          <Icon.Phone /> Llamadas
         </button>
       </div>
 
-      {tab === 'whatsapp' ? (
+      {tab === 'whatsapp' && (
         <WhatsAppSender
           leads={leads}
           templates={waData}
           templateLists={waListData}
           leadLists={leadLists}
         />
-      ) : (
+      )}
+
+      {tab === 'email' && (
         <EmailSender
           leads={leads}
           templates={emailData}
           templateLists={emailListData}
+          leadLists={leadLists}
+        />
+      )}
+
+      {tab === 'call' && (
+        <CallSender
+          leads={leads}
+          templates={callData}
+          templateLists={callListData}
           leadLists={leadLists}
         />
       )}
