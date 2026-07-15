@@ -9,14 +9,21 @@ import TasksPage from './pages/TasksPage';
 import DashboardPage from './pages/DashboardPage';
 import PipelinePage from './pages/PipelinePage';
 import SettingsPage from './pages/SettingsPage';
-import { db, getSettings, saveSettings } from './db/database';
+import LoginPage from './pages/LoginPage';
+import OnboardingPlanSelect from './components/onboarding/OnboardingPlanSelect';
+import { getSettings, saveSettings } from './db/database';
+import { supabase } from './lib/supabaseClient';
 import { checkTaskNotifications } from './utils/taskNotifications';
-import { seedTemplatesIfEmpty } from './utils/seedTemplates';
+
 import { sendEmailToLeads } from './utils/emailSender';
 import type { ColumnDef } from './components/ColumnSelector';
+import { useAuth } from './contexts/AuthContext';
+import { primaryRoutes, secondaryRoutes } from './config/routes';
 
 import type { Page } from './types';
 import AppLayout from './components/layout/AppLayout';
+import AdminLayout from './pages/admin/AdminLayout';
+// Chat flotante temporalmente removido
 
 const DEFAULT_COLUMNS: ColumnDef[] = [
   { key: 'name', label: 'Nombre', visible: true },
@@ -31,6 +38,7 @@ const DEFAULT_COLUMNS: ColumnDef[] = [
 ];
 
 export default function App() {
+  const { session, user, profile, loading: authLoading, hasFeature } = useAuth();
   const [page, setPage] = useState<Page>('leads');
   const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState('');
@@ -67,9 +75,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    db.open()
-      .then(async () => {
-        console.log('DB lista');
+    (async () => {
+      try {
+        console.log('App lista');
         // Intentar cargar desde chrome.storage.sync primero, luego IndexedDB
         let settings = await getSettings();
         try {
@@ -90,27 +98,36 @@ export default function App() {
           }));
         }
         setDbReady(true);
-        seedTemplatesIfEmpty();
         processScheduledEmails();
         loadTaskCount();
-        // Limpiar badge al abrir
         try { chrome.action.setBadgeText({ text: '' }); } catch { /* noop */ }
         purgeTrash();
-      })
-      .catch((err) => { console.error('DB error', err); setDbError(err instanceof Error ? err.message : String(err)); });
+      } catch (err) {
+        console.error('App error', err);
+        setDbError(err instanceof Error ? err.message : String(err));
+      }
+    })();
   }, []);
 
   const loadTaskCount = async () => {
-    const tasks = await db.tasks.where('status').equals('pendiente').toArray();
-    const today = new Date().toISOString().slice(0, 10);
-    const count = tasks.filter((t) => t.fechaVencimiento && t.fechaVencimiento.slice(0, 10) <= today).length;
-    setTaskCount(count);
+    if (!session?.user) return;
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('due_date')
+      .eq('status', 'pendiente')
+      .eq('user_id', session.user.id);
+      
+    if (tasks) {
+      const today = new Date().toISOString().slice(0, 10);
+      const count = tasks.filter((t: any) => t.due_date && t.due_date.slice(0, 10) <= today).length;
+      setTaskCount(count);
+    }
   };
 
   const purgeTrash = async () => {
+    if (!session?.user) return;
     const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
-    const old = await db.leads.filter((l) => !!(l.deletedAt && l.deletedAt < cutoff)).toArray();
-    for (const l of old) await db.leads.delete(l.id!);
+    await supabase.from('leads').delete().lt('deleted_at', cutoff).eq('user_id', session.user.id);
   };
 
   const syncSettings = (updates: Record<string, any>) => {
@@ -119,37 +136,48 @@ export default function App() {
 
   const processScheduledEmails = async () => {
     const now = new Date().toISOString();
-    const pending = await db.sendLog.toArray();
-    const due = pending.filter((l) => l.scheduledFor && l.scheduledFor <= now);
-    const toSend = due.filter((l) => l.templateType === 'email');
-    if (toSend.length === 0) {
+    
+    // 1. Fetch pending emails from Supabase
+    const { data: due } = await supabase
+      .from('send_logs')
+      .select('*')
+      .eq('template_type', 'email')
+      .lte('scheduled_for', now);
+      
+    if (!due || due.length === 0) {
       try { chrome.storage.local.set({ hasScheduledEmails: false }); } catch { /* noop */ }
       return;
     }
+    
     // Agrupar por templateId
-    const grouped = new Map<number, typeof toSend>();
-    for (const log of toSend) {
-      if (!grouped.has(log.templateId)) grouped.set(log.templateId, []);
-      grouped.get(log.templateId)!.push(log);
+    const grouped = new Map<any, typeof due>();
+    for (const log of due) {
+      if (!grouped.has(log.template_id)) grouped.set(log.template_id, []);
+      grouped.get(log.template_id)!.push(log);
     }
+    
     for (const [tplId, logs] of grouped) {
-      const template = await db.emailTemplates.get(tplId);
+      const { data: template } = await supabase.from('templates').select('*').eq('id', tplId).single();
       if (!template) continue;
-      const leads = await db.leads.bulkGet(logs.map((l) => l.leadId));
-      const validLeads = leads.filter((l): l is NonNullable<typeof l> => l != null);
-      if (validLeads.length === 0) continue;
-      await sendEmailToLeads(validLeads, template.asunto, template.contenido, template.isHtml);
+      
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('*')
+        .in('id', logs.map((l: any) => l.lead_id));
+        
+      if (!leads || leads.length === 0) continue;
+      
+      const validLeads = leads.map(l => ({ ...l, createdAt: l.created_at, updatedAt: l.updated_at, deletedAt: l.deleted_at, listaIds: l.lista_ids || [] }));
+      await sendEmailToLeads(validLeads as any, template.subject || '', template.content, template.is_html);
+      
       // Actualizar logs: marcar como enviados
       const realNow = new Date().toISOString();
-      for (const log of logs) {
-        await db.sendLog.update(log.id!, { sentAt: realNow, scheduledFor: undefined });
-      }
-      // Marcar leads como contactados
-      for (const l of validLeads) {
-        await db.leads.update(l.id!, { status: 'contactado' });
-      }
+      await supabase.from('send_logs').update({ sent_at: realNow, scheduled_for: null }).in('id', logs.map((l: any) => l.id));
+      
+      // Marcar leads como contactados en Supabase
+      await supabase.from('leads').update({ status: 'contactado' }).in('id', leads.map(l => l.id));
     }
-    try { chrome.storage.local.set({ hasScheduledEmails: due.length > toSend.length }); } catch { /* noop */ }
+    try { chrome.storage.local.set({ hasScheduledEmails: false }); } catch { /* noop */ }
   };
 
   const handleCompactModeChange = (v: boolean) => {
@@ -174,11 +202,38 @@ export default function App() {
   if (dbError) {
     return <div className="p-8 bg-red-50 h-screen"><h1 className="text-red-700 font-bold text-lg mb-2">Error de base de datos</h1><p className="text-red-600 text-sm">{dbError}</p></div>;
   }
-  if (!dbReady) {
+  
+  if (!dbReady || authLoading) {
     return <div className="p-8 bg-gray-50 h-screen flex items-center justify-center"><p className="text-gray-500">Inicializando...</p></div>;
   }
 
+  const isAdmin = user?.email === 'planespro.cl@gmail.com';
+  const needsOnboarding = session && profile && !profile.plan_id && !isAdmin;
+
+  if (!session) {
+    return <LoginPage />;
+  }
+
+  if (needsOnboarding) {
+    return <OnboardingPlanSelect />;
+  }
+
   const renderPage = () => {
+    const routeDef = [...primaryRoutes, ...secondaryRoutes].find(r => r.page === page);
+    if (routeDef?.requiredFeature && !session?.user?.email?.includes('planespro.cl@gmail.com') && !hasFeature(routeDef.requiredFeature)) {
+      return (
+        <div className="flex h-full items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <div className="text-4xl text-amber-500 mb-4 flex justify-center">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800">Funcionalidad no disponible</h2>
+            <p className="text-gray-500 mt-2">Tu plan actual no incluye acceso a <strong>{routeDef.label}</strong>. Contacta al administrador para mejorar tu plan o solicitar una prueba gratuita.</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (page) {
       case 'leads': return <LeadsPage compactMode={compactMode} visibleCols={visibleCols} />;
       case 'lists': return <ListsPage />;
@@ -189,13 +244,17 @@ export default function App() {
       case 'dashboard': return <DashboardPage onNavigate={setPage} />;
       case 'pipeline': return <PipelinePage />;
       case 'settings': return <SettingsPage compactMode={compactMode} onCompactModeChange={handleCompactModeChange} darkMode={darkMode} onDarkModeChange={handleDarkModeChange} visibleCols={visibleCols} onColsChange={handleColsChange} />;
+      case 'admin': return <AdminLayout />;
       default: return <LeadsPage compactMode={compactMode} visibleCols={visibleCols} />;
     }
   };
 
   return (
-    <AppLayout currentPage={page} onNavigate={setPage} taskCount={taskCount}>
-      {renderPage()}
-    </AppLayout>
+    <>
+      <AppLayout currentPage={page} onNavigate={setPage} taskCount={taskCount} isAdmin={isAdmin}>
+        {renderPage()}
+      </AppLayout>
+      {/* El chat interno será refactorizado en una sala global posteriormente */}
+    </>
   );
 }

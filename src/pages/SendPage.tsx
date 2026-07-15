@@ -19,9 +19,9 @@ import type {
   CallTemplate,
   CallTemplateList,
 } from '../types';
-import WhatsAppSender from '../components/WhatsAppSender';
-import EmailSender from '../components/EmailSender';
-import CallSender from '../components/CallSender';
+import WhatsAppSender from '../components/send/WhatsAppSender';
+import EmailSender from '../components/send/EmailSender';
+import CallSender from '../components/send/CallSender';
 import { Icon } from '../utils/icons';
 
 type Tab = 'whatsapp' | 'email' | 'call';

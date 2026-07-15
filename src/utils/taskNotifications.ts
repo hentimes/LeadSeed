@@ -1,7 +1,16 @@
-import { db } from '../db/database';
+import { supabase } from '../lib/supabaseClient';
 
 export async function checkTaskNotifications(): Promise<void> {
-  const tasks = await db.tasks.where('status').equals('pendiente').toArray();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+  if (!userId) return;
+  
+  const { data: dbTasks } = await supabase.from('tasks').select('*').eq('user_id', userId).eq('status', 'pendiente');
+  const tasks = (dbTasks || []).map(t => ({
+    titulo: t.title,
+    fechaVencimiento: t.due_date
+  }));
+  
   const today = new Date().toISOString().slice(0, 10);
 
   const overdue = tasks.filter((t) => t.fechaVencimiento && t.fechaVencimiento.slice(0, 10) < today);

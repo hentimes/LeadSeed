@@ -1,4 +1,5 @@
-import { db } from './db/database';
+
+import { supabase } from './lib/supabaseClient';
 
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
@@ -6,14 +7,24 @@ chrome.sidePanel
 
 async function updateBadge() {
   try {
-    const tasks = await db.tasks.where('status').equals('pendiente').toArray();
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session) return;
+    
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('status', 'pendiente')
+      .eq('user_id', sessionData.session.user.id);
+      
+    if (!tasks) return;
+    
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
     const tomorrow = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
 
-    const overdue = tasks.filter((t) => t.fechaVencimiento && t.fechaVencimiento.slice(0, 10) < today);
-    const todayTasks = tasks.filter((t) => t.fechaVencimiento && t.fechaVencimiento.slice(0, 10) === today);
-    const upcoming = tasks.filter((t) => t.fechaVencimiento && t.fechaVencimiento.slice(0, 10) === tomorrow);
+    const overdue = tasks.filter((t: any) => t.due_date && t.due_date.slice(0, 10) < today);
+    const todayTasks = tasks.filter((t: any) => t.due_date && t.due_date.slice(0, 10) === today);
+    const upcoming = tasks.filter((t: any) => t.due_date && t.due_date.slice(0, 10) === tomorrow);
     const total = overdue.length + todayTasks.length + upcoming.length;
 
     if (total > 0) {
@@ -33,7 +44,7 @@ async function updateBadge() {
           type: 'basic',
           iconUrl: 'icons/icon128.png',
           title: 'LeadSeed - Tareas vencidas',
-          message: `${overdue.length} tarea(s) vencida(s): ${overdue.map((t) => t.titulo).join(', ').slice(0, 100)}`,
+          message: `${overdue.length} tarea(s) vencida(s): ${overdue.map((t: any) => t.title).join(', ').slice(0, 100)}`,
           priority: 2,
         });
         chrome.storage.local.set({ lastOverdueNotify: today });
@@ -54,8 +65,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     // Revisar emails programados
     try {
       const now = new Date().toISOString();
-      const pending = await db.sendLog.toArray();
-      const due = pending.filter((l) => l.scheduledFor && l.scheduledFor <= now && l.templateType === 'email');
+      const { data: logsData } = await supabase.from('send_logs').select('*').eq('template_type', 'email');
+      const due = (logsData || []).filter((l) => l.scheduled_for && l.scheduled_for <= now);
       if (due.length > 0) {
         chrome.storage.local.set({ hasScheduledEmails: true });
       }

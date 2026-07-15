@@ -1,43 +1,70 @@
-import { useCallback } from 'react';
-import { db } from '../db/database';
+import { useCallback, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 import type { LeadList } from '../types';
 
 export function useLists() {
+  const { user } = useAuth();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('public:lists')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lists' }, () => {
+        setRefreshKey(k => k + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   const getAll = useCallback(async (): Promise<LeadList[]> => {
-    return db.leadLists.orderBy('name').toArray();
-  }, []);
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('lists')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('name');
+      
+    if (error) return [];
+    return data.map(r => ({
+      id: r.id,
+      name: r.name,
+      color: r.color,
+      createdAt: r.created_at
+    })) as unknown as LeadList[];
+  }, [user]);
 
   const save = useCallback(async (list: LeadList): Promise<number> => {
-    console.log('useLists.save called with:', list);
-    try {
-      if (list.id) {
-        await db.leadLists.update(list.id, list);
-        console.log('useLists.save: updated', list.id);
-        return list.id;
-      }
-      const now = new Date().toISOString();
-      const { id: _unused, ...rest } = list;
-      const obj = { ...rest, createdAt: now };
-      console.log('useLists.save: adding', obj);
-      const id = await db.leadLists.add(obj);
-      console.log('useLists.save: added with id', id);
-      return id as number;
-    } catch (e) {
-      console.error('useLists.save error:', e);
-      throw e;
+    if (!user) throw new Error("No autenticado");
+    
+    if (list.id) {
+      const { error } = await supabase.from('lists').update({
+        name: list.name,
+        color: list.color,
+        updated_at: new Date().toISOString()
+      }).eq('id', list.id);
+      if (error) throw error;
+      setRefreshKey(k => k + 1);
+      return list.id as number;
+    } else {
+      const { data, error } = await supabase.from('lists').insert({
+        user_id: user.id,
+        name: list.name,
+        color: list.color,
+        created_at: new Date().toISOString()
+      }).select().single();
+      if (error) throw error;
+      setRefreshKey(k => k + 1);
+      return data.id as number;
     }
-  }, []);
+  }, [user]);
 
   const remove = useCallback(async (id: number): Promise<void> => {
-    await db.leadLists.delete(id);
-    // Quitar esta lista de todos los leads que la tengan
-    const leads = await db.leads.where('listaIds').equals(id).toArray();
-    for (const lead of leads) {
-      await db.leads.update(lead.id!, {
-        listaIds: lead.listaIds.filter((lid) => lid !== id),
-      });
-    }
-  }, []);
+    if (!user) return;
+    await supabase.from('lists').delete().eq('id', id);
+    setRefreshKey(k => k + 1);
+  }, [user]);
 
-  return { getAll, save, remove };
+  return { getAll, save, remove, refreshKey };
 }

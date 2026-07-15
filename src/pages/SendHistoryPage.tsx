@@ -1,5 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
-import { db } from '../db/database';
+
+import { supabase } from '../lib/supabaseClient';
+import { useLeads } from '../hooks/useLeads';
+import { useWhatsAppTemplates, useEmailTemplates } from '../hooks/useTemplates';
 import type { SendLog, WhatsAppTemplate, EmailTemplate, LeadNote, Lead } from '../types';
 import type { Page } from '../types';
 import { Icon } from '../utils/icons';
@@ -33,20 +36,44 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
   const [tab, setTab] = useState<'envios' | 'actividad'>('envios');
   const [page, setPage] = useState(0);
 
-  useEffect(() => { loadData(); }, []);
+  const { getAll: getLeads } = useLeads();
+  const { getAll: getWaTemplates } = useWhatsAppTemplates();
+  const { getAll: getEmailTemplates } = useEmailTemplates();
+
+  useEffect(() => { loadData(); }, [getLeads, getWaTemplates, getEmailTemplates]);
 
   const loadData = async () => {
-    const [rawLogs, waTemplates, emailTemplates, notes, leads] = await Promise.all([
-      db.sendLog.orderBy('sentAt').reverse().toArray(),
-      db.whatsappTemplates.toArray(),
-      db.emailTemplates.toArray(),
-      db.leadNotes.orderBy('createdAt').reverse().toArray(),
-      db.leads.toArray(),
+    // 1. Cargar datos base asíncronamente
+    const [{ data: dbLogs }, { data: dbNotes }, waTemplates, emailTemplates, leads] = await Promise.all([
+      supabase.from('send_logs').select('*').order('sent_at', { ascending: false }).limit(100),
+      supabase.from('lead_notes').select('*').order('created_at', { ascending: false }).limit(100),
+      getWaTemplates(),
+      getEmailTemplates(),
+      getLeads()
     ]);
 
-    const waMap = new Map<number, WhatsAppTemplate>();
+    // Format Cloud logs
+    const rawLogs = (dbLogs || []).map(l => ({
+      id: l.id,
+      templateId: l.template_id,
+      templateType: l.template_type,
+      leadId: l.lead_id,
+      leadName: l.lead_name || '',
+      leadPhone: l.lead_phone || '',
+      sentAt: l.sent_at,
+      scheduledFor: l.scheduled_for
+    }));
+
+    const notes = (dbNotes || []).map(n => ({
+      id: n.id,
+      leadId: n.lead_id,
+      createdAt: n.created_at,
+      content: n.content
+    }));
+
+    const waMap = new Map<any, WhatsAppTemplate>();
     for (const t of waTemplates) waMap.set(t.id!, t);
-    const emailMap = new Map<number, EmailTemplate>();
+    const emailMap = new Map<any, EmailTemplate>();
     for (const t of emailTemplates) emailMap.set(t.id!, t);
 
     const enriched: EnrichedLog[] = rawLogs.map((log) => {
@@ -136,7 +163,7 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
                   <span className="font-medium truncate">{log.leadName}</span>
                   <span className="text-gray-400 truncate hidden sm:inline">{log.leadPhone}</span>
                   <span className="text-gray-400">·</span>
-                  <button onClick={() => { if (log.templateContenido) onViewTemplate(log.templateType as 'whatsapp' | 'email' | 'call', log.templateId); }}
+                  <button onClick={() => { if (log.templateContenido) onViewTemplate(log.templateType as 'whatsapp' | 'email' | 'call', log.templateId as any); }}
                     className={`${log.templateContenido ? 'text-blue-600 hover:text-blue-800 underline' : 'text-gray-400 cursor-default'}`}>
                     {log.templateNombre}
                   </button>

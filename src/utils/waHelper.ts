@@ -18,7 +18,7 @@ export function normalizePhone(phone: string): string {
   return `+569${digits.slice(-8)}`;
 }
 
-export function buildWaLink(phone: string, message: string): string {
+function buildWaLink(phone: string, message: string): string {
   const clean = phone.replace(/[^+\d]/g, '');
   const encoded = encodeURIComponent(message);
   return `https://wa.me/${clean}?text=${encoded}`;
@@ -39,7 +39,7 @@ export function replaceVariables(text: string, lead: Lead): string {
     .replace(/\{notes\}/gi, lead.notes);
 }
 
-export function openWhatsApp(phone: string, message: string): void {
+function openWhatsApp(phone: string, message: string): void {
   const link = buildWaLink(phone, message);
   window.open(link, '_blank');
 }

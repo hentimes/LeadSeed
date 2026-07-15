@@ -4,16 +4,18 @@ import { useLeads } from '../hooks/useLeads';
 import { Icon } from '../utils/icons';
 import type { Lead, LeadList } from '../types';
 import { useSort } from '../hooks/useSort';
+import { useAuth } from '../contexts/AuthContext';
 import ListEditor from '../components/lists/ListEditor';
 import ListLeadsTable from '../components/lists/ListLeadsTable';
 
 export default function ListsPage() {
+  const { hasFeature } = useAuth();
   const { getAll: getLists, save, remove: removeList } = useLists();
   const { getAll: getLeads, addToList, removeFromList, remove: deleteLead } = useLeads();
   const [lists, setLists] = useState<LeadList[]>([]);
   const [allLeads, setAllLeads] = useState<Lead[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(new Set());
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [leadSearch, setLeadSearch] = useState('');
   
   const [creating, setCreating] = useState(false);
@@ -60,7 +62,7 @@ export default function ListsPage() {
     load();
   };
 
-  const handleRemoveLead = async (leadId: number) => {
+  const handleRemoveLead = async (leadId: string) => {
     await removeFromList(leadId, expandedId!);
     setSelectedLeadIds((prev) => { const n = new Set(prev); n.delete(leadId); return n; });
     load();
@@ -81,13 +83,13 @@ export default function ListsPage() {
     load();
   };
 
-  const handleAddLead = async (leadId: number) => {
+  const handleAddLead = async (leadId: string) => {
     await addToList(leadId, expandedId!);
     setLeadSearch('');
     load();
   };
 
-  const toggleLead = (id: number) => {
+  const toggleLead = (id: string) => {
     setSelectedLeadIds((prev) => {
       const n = new Set(prev);
       n.has(id) ? n.delete(id) : n.add(id);
@@ -108,7 +110,14 @@ export default function ListsPage() {
           <p className="text-sm text-gray-500 mt-1">Organiza tus contactos en grupos para campañas masivas.</p>
         </div>
         <button 
-          onClick={() => { setCreating(true); setEditingList(null); }}
+          onClick={() => {
+            if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
+              alert('🔒 Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
+              return;
+            }
+            setCreating(true); 
+            setEditingList(null); 
+          }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
         >
           {Icon.Plus()} Nueva lista
@@ -232,7 +241,14 @@ export default function ListsPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-1">No tienes listas aún</h3>
             <p className="text-gray-500 text-sm mb-4">Crea tu primera lista para organizar tus contactos.</p>
             <button 
-              onClick={() => { setCreating(true); setEditingList(null); }}
+              onClick={() => {
+                if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
+                  alert('🔒 Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
+                  return;
+                }
+                setCreating(true); 
+                setEditingList(null); 
+              }}
               className="text-blue-600 font-medium hover:text-blue-800"
             >
               Crear lista ahora →

@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { db } from '../db/database';
+import { useCallback, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 import type {
   WhatsAppTemplate,
   WhatsAppTemplateList,
@@ -9,212 +10,151 @@ import type {
   CallTemplateList,
 } from '../types';
 
-// ---------- WhatsApp Templates ----------
-export function useWhatsAppTemplates() {
-  const getAll = useCallback(async (): Promise<WhatsAppTemplate[]> => {
-    return db.whatsappTemplates.orderBy('nombre').toArray();
-  }, []);
+// En Supabase, usamos una única tabla 'templates' con la columna 'type' ('whatsapp', 'email', 'call')
+// Mapeos para adaptar el frontend (camelCase) a la BD (snake_case)
 
-  const getByList = useCallback(async (listId: number): Promise<WhatsAppTemplate[]> => {
-    return db.whatsappTemplates.where('templateListIds').equals(listId).toArray();
-  }, []);
+const mapToFrontend = (row: any) => {
+  return {
+    id: row.id,
+    nombre: row.name,
+    contenido: row.content,
+    asunto: row.subject, // Solo para email
+    isHtml: row.is_html || false, // Solo para email
+    templateListIds: row.template_list_ids || [],
+    leadIds: row.lead_ids || [],
+    leadListIds: row.lead_list_ids || [],
+    createdAt: row.created_at
+  };
+};
 
-  const save = useCallback(async (t: WhatsAppTemplate): Promise<number> => {
-    const template = {
-      ...t,
-      templateListIds: t.templateListIds || [],
-      leadIds: t.leadIds || [],
-      leadListIds: t.leadListIds || [],
-    };
-    if (template.id) {
-      await db.whatsappTemplates.update(template.id, template);
-      return template.id;
+const mapToDb = (t: any, type: string, userId: string) => {
+  return {
+    user_id: userId,
+    type: type,
+    name: t.nombre,
+    content: t.contenido || t.texto || '', // Soporte legacy
+    subject: t.asunto || null,
+    is_html: t.isHtml || false,
+    template_list_ids: t.templateListIds || [],
+    lead_ids: t.leadIds || [],
+    lead_list_ids: t.leadListIds || [],
+    updated_at: new Date().toISOString()
+  };
+};
+
+// ---------- Hooks Base Genérico ----------
+function useGenericTemplates<T>(type: 'whatsapp' | 'email' | 'call') {
+  const { user } = useAuth();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`public:templates:${type}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'templates', filter: `type=eq.${type}` }, () => {
+        setRefreshKey(k => k + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, type]);
+
+  const getAll = useCallback(async (): Promise<T[]> => {
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .eq('type', type)
+      .order('name');
+    if (error) return [];
+    return data.map(mapToFrontend) as unknown as T[];
+  }, [user, type]);
+
+  const getByList = useCallback(async (listId: number): Promise<T[]> => {
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .eq('type', type)
+      .contains('template_list_ids', [listId])
+      .order('name');
+    if (error) return [];
+    return data.map(mapToFrontend) as unknown as T[];
+  }, [user, type]);
+
+  const save = useCallback(async (t: any): Promise<string> => {
+    if (!user) throw new Error("No autenticado");
+    const payload = mapToDb(t, type, user.id);
+    
+    if (t.id && typeof t.id === 'string') {
+      const { error } = await supabase.from('templates').update(payload).eq('id', t.id);
+      if (error) throw error;
+      setRefreshKey(k => k + 1);
+      return t.id;
+    } else {
+      // Create
+      const { data, error } = await supabase.from('templates').insert({
+        ...payload,
+        created_at: new Date().toISOString()
+      }).select().single();
+      if (error) throw error;
+      setRefreshKey(k => k + 1);
+      return data.id;
     }
-    const now = new Date().toISOString();
-    const { id: _u1, ...rest } = template;
-    const id = await db.whatsappTemplates.add({ ...rest, createdAt: now });
-    return id as number;
-  }, []);
+  }, [user, type]);
 
-  const remove = useCallback(async (id: number): Promise<void> => {
-    await db.whatsappTemplates.delete(id);
-  }, []);
+  const remove = useCallback(async (id: string | number): Promise<void> => {
+    if (!user) return;
+    await supabase.from('templates').delete().eq('id', id);
+    setRefreshKey(k => k + 1);
+  }, [user]);
 
-  return { getAll, getByList, save, remove };
+  return { getAll, getByList, save, remove, refreshKey };
 }
 
-// ---------- WhatsApp Template Lists ----------
-export function useWhatsAppTemplateLists() {
-  const getAll = useCallback(async (): Promise<WhatsAppTemplateList[]> => {
-    return db.whatsappTemplateLists.orderBy('name').toArray();
-  }, []);
 
-  const save = useCallback(async (l: WhatsAppTemplateList): Promise<number> => {
-    if (l.id) {
-      await db.whatsappTemplateLists.update(l.id, l);
-      return l.id;
-    }
-    const now = new Date().toISOString();
-    const { id: _u, ...rest } = l;
-    const id = await db.whatsappTemplateLists.add({ ...rest, createdAt: now });
-    return id as number;
-  }, []);
-
-  const remove = useCallback(async (id: number): Promise<void> => {
-    // Quitar esta categoría de todos los templates que la tengan
-    const templates = await db.whatsappTemplates.where('templateListIds').equals(id).toArray();
-    for (const t of templates) {
-      await db.whatsappTemplates.update(t.id!, {
-        templateListIds: t.templateListIds.filter((lid) => lid !== id),
-      });
-    }
-    await db.whatsappTemplateLists.delete(id);
-  }, []);
-
-  return { getAll, save, remove };
+// ---------- WhatsApp Templates ----------
+export function useWhatsAppTemplates() {
+  return useGenericTemplates<WhatsAppTemplate>('whatsapp');
 }
 
 // ---------- Email Templates ----------
 export function useEmailTemplates() {
-  const getAll = useCallback(async (): Promise<EmailTemplate[]> => {
-    return db.emailTemplates.orderBy('nombre').toArray();
-  }, []);
-
-  const getByList = useCallback(async (listId: number): Promise<EmailTemplate[]> => {
-    return db.emailTemplates.where('templateListIds').equals(listId).toArray();
-  }, []);
-
-  const save = useCallback(async (t: EmailTemplate): Promise<number> => {
-    const template = {
-      ...t,
-      templateListIds: t.templateListIds || [],
-      leadIds: t.leadIds || [],
-      leadListIds: t.leadListIds || [],
-    };
-    if (template.id) {
-      await db.emailTemplates.update(template.id, template);
-      return template.id;
-    }
-    const now = new Date().toISOString();
-    const { id: _u2, ...rest } = template;
-    const id = await db.emailTemplates.add({ ...rest, createdAt: now });
-    return id as number;
-  }, []);
-
-  const remove = useCallback(async (id: number): Promise<void> => {
-    await db.emailTemplates.delete(id);
-  }, []);
-
-  return { getAll, getByList, save, remove };
-}
-
-// ---------- Email Template Lists ----------
-export function useEmailTemplateLists() {
-  const getAll = useCallback(async (): Promise<EmailTemplateList[]> => {
-    return db.emailTemplateLists.orderBy('name').toArray();
-  }, []);
-
-  const save = useCallback(async (l: EmailTemplateList): Promise<number> => {
-    if (l.id) {
-      await db.emailTemplateLists.update(l.id, l);
-      return l.id;
-    }
-    const now = new Date().toISOString();
-    const { id: _u3, ...rest } = l;
-    const id = await db.emailTemplateLists.add({ ...rest, createdAt: now });
-    return id as number;
-  }, []);
-
-  const remove = useCallback(async (id: number): Promise<void> => {
-    const templates = await db.emailTemplates.where('templateListIds').equals(id).toArray();
-    for (const t of templates) {
-      await db.emailTemplates.update(t.id!, {
-        templateListIds: t.templateListIds.filter((lid: number) => lid !== id),
-      });
-    }
-    await db.emailTemplateLists.delete(id);
-  }, []);
-
-  return { getAll, save, remove };
+  return useGenericTemplates<EmailTemplate>('email');
 }
 
 // ---------- Call Templates ----------
 export function useCallTemplates() {
-  const getAll = useCallback(async (): Promise<CallTemplate[]> => {
-    return db.callTemplates.orderBy('nombre').toArray();
-  }, []);
-
-  const getByList = useCallback(async (listId: number): Promise<CallTemplate[]> => {
-    return db.callTemplates.where('templateListIds').equals(listId).toArray();
-  }, []);
-
-  const save = useCallback(async (t: CallTemplate): Promise<number> => {
-    const template = {
-      ...t,
-      templateListIds: t.templateListIds || [],
-      leadIds: t.leadIds || [],
-      leadListIds: t.leadListIds || [],
-    };
-    if (template.id) {
-      await db.callTemplates.update(template.id, template);
-      return template.id;
-    }
-    const now = new Date().toISOString();
-    const { id: _u2, ...rest } = template;
-    const id = await db.callTemplates.add({ ...rest, createdAt: now });
-    return id as number;
-  }, []);
-
-  const remove = useCallback(async (id: number): Promise<void> => {
-    await db.callTemplates.delete(id);
-  }, []);
-
-  return { getAll, getByList, save, remove };
+  return useGenericTemplates<CallTemplate>('call');
 }
 
-// ---------- Call Template Lists ----------
+// ---------- Mock Hooks para las Listas (Carpetas) por ahora ----------
+// Como no hemos migrado template_lists a Supabase aún, 
+// devolveremos arreglos vacíos temporalmente para que no crashee la UI.
+export function useWhatsAppTemplateLists() {
+  return { getAll: async () => [], save: async (v: any) => 1, remove: async (id: any) => {} };
+}
+export function useEmailTemplateLists() {
+  return { getAll: async () => [], save: async (v: any) => 1, remove: async (id: any) => {} };
+}
 export function useCallTemplateLists() {
-  const getAll = useCallback(async (): Promise<CallTemplateList[]> => {
-    return db.callTemplateLists.orderBy('name').toArray();
-  }, []);
-
-  const save = useCallback(async (l: CallTemplateList): Promise<number> => {
-    if (l.id) {
-      await db.callTemplateLists.update(l.id, l);
-      return l.id;
-    }
-    const now = new Date().toISOString();
-    const { id: _u3, ...rest } = l;
-    const id = await db.callTemplateLists.add({ ...rest, createdAt: now });
-    return id as number;
-  }, []);
-
-  const remove = useCallback(async (id: number): Promise<void> => {
-    const templates = await db.callTemplates.where('templateListIds').equals(id).toArray();
-    for (const t of templates) {
-      await db.callTemplates.update(t.id!, {
-        templateListIds: t.templateListIds.filter((lid: number) => lid !== id),
-      });
-    }
-    await db.callTemplateLists.delete(id);
-  }, []);
-
-  return { getAll, save, remove };
+  return { getAll: async () => [], save: async (v: any) => 1, remove: async (id: any) => {} };
 }
 
-// ---------- Helper: get leads assigned to a template (direct + from lists) ----------
+// ---------- Helper: get leads assigned to a template ----------
 export async function getAssignedLeads(
-  template: WhatsAppTemplate | EmailTemplate | CallTemplate
-): Promise<{ directIds: number[]; fromListsIds: number[]; allIds: number[] }> {
+  template: any
+): Promise<{ directIds: string[]; fromListsIds: string[]; allIds: string[] }> {
   const directIds = template.leadIds || [];
-
-  const listLeadIds: number[] = [];
+  const listLeadIds: string[] = [];
+  
   if (template.leadListIds && template.leadListIds.length > 0) {
-    const leads = await db.leads.toArray();
-    for (const lead of leads) {
-      if (lead.listaIds.some((lid) => template.leadListIds.includes(lid))) {
-        if (!directIds.includes(lead.id!)) {
-          listLeadIds.push(lead.id!);
+    const { data: leads } = await supabase.from('leads').select('id, lista_ids');
+    if (leads) {
+      for (const lead of leads) {
+        if (lead.lista_ids && lead.lista_ids.some((lid: number) => template.leadListIds.includes(lid))) {
+          if (!directIds.includes(lead.id)) {
+            listLeadIds.push(lead.id);
+          }
         }
       }
     }

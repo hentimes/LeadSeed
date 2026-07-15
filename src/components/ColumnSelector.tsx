@@ -11,7 +11,7 @@ interface Props {
   onChange: (columns: ColumnDef[]) => void;
 }
 
-export default function ColumnSelector({ columns, onChange }: Props) {
+function ColumnSelector({ columns, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

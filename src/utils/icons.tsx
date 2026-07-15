@@ -5,7 +5,7 @@ import {
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
   faRotateLeft, faChevronDown, faChevronRight, faArrowsUpDown,
   faCaretUp, faCaretDown, faEnvelope, faGripVertical,
-  faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip,
+  faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -25,6 +25,7 @@ export const Icon = {
   Messages: () => <I icon={faMessage} className="text-sm" />,
   History: () => <I icon={faClockRotateLeft} className="text-sm" />,
   Settings: () => <I icon={faGear} className="text-sm" />,
+  Admin: () => <I icon={faShieldHalved} className="text-sm" />,
   More: () => <I icon={faEllipsis} className="text-sm" />,
 
   // Actions
@@ -41,6 +42,7 @@ export const Icon = {
   Close: () => <I icon={faTimes} className="text-xs" />,
   Help: () => <I icon={faQuestion} className="text-sm" />,
   Restore: () => <I icon={faRotateLeft} className="text-xs" />,
+  Logout: () => <I icon={faArrowRightFromBracket} className="text-sm" />,
   Email: () => <I icon={faEnvelope} className="text-xs" />,
   Palette: () => <I icon={faPalette} className="text-xs" />,
   Database: () => <I icon={faDatabase} className="text-xs" />,
@@ -49,6 +51,7 @@ export const Icon = {
   ChartPie: () => <I icon={faChartPie} className="text-xs" />,
   Warning: () => <I icon={faExclamationTriangle} className="text-xs" />,
   Paperclip: () => <I icon={faPaperclip} className="text-xs" />,
+  Copy: () => <I icon={faCopy} className="text-xs" />,
 
   // UI
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,

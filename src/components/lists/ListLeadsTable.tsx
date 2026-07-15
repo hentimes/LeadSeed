@@ -4,10 +4,10 @@ import { useSendCounts } from '../../hooks/useSendCounts';
 
 interface Props {
   leads: Lead[];
-  selectedIds: Set<number>;
-  onToggleLead: (id: number) => void;
+  selectedIds: Set<string>;
+  onToggleLead: (id: string) => void;
   onSelectAll: () => void;
-  onRemoveLead: (id: number) => void;
+  onRemoveLead: (id: string) => void;
   sort: { field: string; dir: 'asc' | 'desc' };
   onSort: (field: any) => void;
 }

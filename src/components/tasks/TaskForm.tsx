@@ -12,7 +12,7 @@ interface TaskFormProps {
 export default function TaskForm({ task, leads, lists, onSave, onCancel }: TaskFormProps) {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [leadIds, setLeadIds] = useState<number[]>([]);
+  const [leadIds, setLeadIds] = useState<string[]>([]);
   const [leadListIds, setLeadListIds] = useState<number[]>([]);
   const [fechaVencimiento, setFechaVencimiento] = useState('');
 

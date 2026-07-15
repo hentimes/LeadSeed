@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 export type SortField = 'createdAt' | 'name' | 'rut';
-export type SortDir = 'asc' | 'desc';
+type SortDir = 'asc' | 'desc';
 
 export interface SortConfig {
   field: SortField;

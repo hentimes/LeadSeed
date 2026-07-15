@@ -1,4 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
+import { Icon } from '../../utils/icons';
+import type { Lead, LeadList, LeadStatus } from '../../types';
 import {
   parseJSONFile,
   parseExcelFile,
@@ -7,7 +9,7 @@ import {
   findDuplicatesInBatch,
   type ParsedRow,
   type DuplicateInfo,
-} from '../utils/importParser';
+} from '../../utils/importParser';
 
 interface Props {
   existingRuts: Set<string>;

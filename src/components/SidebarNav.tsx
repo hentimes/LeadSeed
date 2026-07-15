@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react';
 import type { Page } from '../types';
-import { primaryRoutes, secondaryRoutes } from '../config/routes';
+import { primaryRoutes, secondaryRoutes, RouteDef } from '../config/routes';
+import { Icon } from '../utils/icons';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Props {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   taskCount?: number;
+  isAdmin?: boolean;
 }
 
 function NavButton({
@@ -49,11 +52,17 @@ function NavButton({
   );
 }
 
-export default function SidebarNav({ currentPage, onNavigate, taskCount }: Props) {
+export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin }: Props) {
+  const { hasFeature, loading, user, signOut } = useAuth();
+  const adminRoutes: RouteDef[] = isAdmin ? [{ page: 'admin' as Page, label: 'Admin SaaS', icon: Icon.Admin }] : [];
+  
+  if (loading) return null;
   return (
     <aside className="flex h-full w-[68px] shrink-0 flex-col items-center justify-between border-l border-gray-200 bg-white/50 backdrop-blur-md px-2 py-4 dark:border-gray-800 dark:bg-gray-950/50 z-40 relative">
       <div className="flex w-full flex-col items-center gap-2">
-        {primaryRoutes.map(({ page, label, icon, badge }) => (
+        {primaryRoutes
+          .filter(route => !route.requiredFeature || hasFeature(route.requiredFeature))
+          .map(({ page, label, icon, badge }) => (
           <NavButton
             key={page}
             active={currentPage === page}
@@ -66,7 +75,9 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount }: Props
       </div>
 
       <div className="flex w-full flex-col items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-800">
-        {secondaryRoutes.map(({ page, label, icon }) => (
+        {[...adminRoutes, ...secondaryRoutes]
+          .filter(route => !route.requiredFeature || hasFeature(route.requiredFeature))
+          .map(({ page, label, icon }) => (
           <NavButton
             key={page}
             active={currentPage === page}
@@ -75,6 +86,24 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount }: Props
             onClick={() => onNavigate(page)}
           />
         ))}
+
+        {/* User Profile & Logout */}
+        <div className="mt-2 flex flex-col items-center gap-2 w-full pt-2 border-t border-gray-100 dark:border-gray-800/50">
+          {user?.user_metadata?.avatar_url ? (
+             <img src={user.user_metadata.avatar_url} alt="Profile" className="w-8 h-8 rounded-full border border-gray-200 shadow-sm" title={user.user_metadata.full_name || user.email} />
+          ) : (
+             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold" title={user?.email}>
+               {user?.email?.charAt(0).toUpperCase()}
+             </div>
+          )}
+          <button 
+            onClick={() => signOut()}
+            title="Cerrar Sesión"
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+          >
+            <Icon.Logout />
+          </button>
+        </div>
       </div>
     </aside>
   );

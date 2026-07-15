@@ -4,6 +4,12 @@ import { useDuplicates } from '../../hooks/useDuplicates';
 import { getSettings, saveSettings } from '../../db/database';
 import type { ExportFormat } from '../../types';
 import { Icon } from '../../utils/icons';
+import { supabase } from '../../lib/supabaseClient';
+import ImportModal from '../leads/ImportModal';
+
+import { exportToJSON, exportToExcel } from '../../utils/exportData';
+import { useLeads } from '../../hooks/useLeads';
+import type { ParsedRow } from '../../utils/importParser';
 
 interface Props {
   exportFormat: ExportFormat;
@@ -12,8 +18,40 @@ interface Props {
 
 export default function DataManagement({ exportFormat, onExportFormatChange }: Props) {
   const [restoreMsg, setRestoreMsg] = useState('');
+  const [showImport, setShowImport] = useState(false);
+  const [existingRuts, setExistingRuts] = useState<Set<string>>(new Set());
+  const [existingPhones, setExistingPhones] = useState<Set<string>>(new Set());
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { duplicates, mergeMsg, findDuplicates, mergeLeads } = useDuplicates();
+  const { importLeads } = useLeads();
+
+  const handleOpenImport = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: allLeads } = await supabase.from('leads').select('*').eq('user_id', sessionData?.session?.user?.id);
+    const ruts = new Set<string>();
+    const phones = new Set<string>();
+    for (const l of (allLeads || [])) {
+      if (l.rut) ruts.add(l.rut);
+      if (l.phone) phones.add(l.phone.replace(/[^+\d]/g, ''));
+    }
+    setExistingRuts(ruts);
+    setExistingPhones(phones);
+    setShowImport(true);
+  };
+
+  const handleImport = async (rows: ParsedRow[]) => {
+    await importLeads(rows as any);
+    alert('Leads importados correctamente.');
+  };
+
+  const handleExportLeads = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: allLeads } = await supabase.from('leads').select('*').eq('user_id', sessionData?.session?.user?.id);
+    const formatted = (allLeads || []).map(l => ({ ...l, createdAt: l.created_at, updatedAt: l.updated_at, deletedAt: l.deleted_at, listaIds: l.lista_ids || [] }));
+    if (exportFormat === 'excel') exportToExcel(formatted);
+    else exportToJSON(formatted);
+  };
 
   const handleExportFormatChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const fmt = e.target.value as ExportFormat;
@@ -85,6 +123,37 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
           {restoreMsg && <p className={`mt-3 text-sm font-medium ${restoreMsg.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>{restoreMsg}</p>}
         </div>
       </div>
+
+      {/* Importar y Exportar Leads */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Importar y Exportar Leads</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Añade nuevos leads desde un archivo Excel/CSV o exporta tu lista actual de contactos de forma individual.
+        </p>
+        <div className="flex gap-3 items-center flex-wrap">
+          <button
+            onClick={handleExportLeads}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2"
+          >
+            <Icon.Download /> Exportar Leads
+          </button>
+          <button
+            onClick={handleOpenImport}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+          >
+            <Icon.Upload /> Importar Leads
+          </button>
+        </div>
+      </div>
+
+      {showImport && (
+        <ImportModal
+          existingRuts={existingRuts}
+          existingPhones={existingPhones}
+          onImport={handleImport as any}
+          onClose={() => setShowImport(false)}
+        />
+      )}
 
       {/* Importar */}
       <div>

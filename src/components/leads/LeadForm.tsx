@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { Lead, LeadList, LeadStatus } from '../types';
-import { STATUS_LABELS } from '../types';
-import { normalizePhone } from '../utils/waHelper';
+import type { Lead, LeadList, LeadStatus } from '../../types';
+import { STATUS_LABELS } from '../../types';
+import { normalizePhone } from '../../utils/waHelper';
 
 interface Props {
   lead?: Lead | null;
@@ -56,7 +56,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
     if (!name.trim()) { setError('El nombre es obligatorio.'); return; }
     if (!phone.trim() && !email.trim()) { setError('Debe tener teléfono o email.'); return; }
     onSave({
-      id: lead?.id || 0,
+      id: lead?.id || undefined,
       name: name.trim(),
       phone: normalizePhone(phone),
       email: email.trim(),
@@ -64,6 +64,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
       rut: rut.trim(),
       notes: notes.trim(),
       status,
+      score: lead?.score || 0,
       listaIds,
       createdAt: lead?.createdAt || '',
       updatedAt: new Date().toISOString(),
@@ -156,16 +157,16 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
           <div className="flex flex-wrap gap-2">
             {lists.map((list) => (
               <button
-                key={list.id}
+                key={list.id!}
                 type="button"
-                onClick={() => toggleList(list.id!)}
+                onClick={() => toggleList(list.id!!)}
                 className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                  listaIds.includes(list.id!)
+                  listaIds.includes(list.id!!)
                     ? 'text-white border-transparent'
                     : 'text-gray-600 border-gray-300 dark:border-gray-600 hover:border-gray-400'
                 }`}
                 style={
-                  listaIds.includes(list.id!)
+                  listaIds.includes(list.id!!)
                     ? { backgroundColor: list.color }
                     : {}
                 }

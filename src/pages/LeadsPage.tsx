@@ -3,11 +3,11 @@ import { useLeads } from '../hooks/useLeads';
 import { useLists } from '../hooks/useLists';
 import { useLeadFilters } from '../hooks/useLeadFilters';
 import type { ExportFormat, Lead, LeadList, LeadStatus } from '../types';
-import { db } from '../db/database';
-import LeadsTable from '../components/LeadsTable';
-import LeadForm from '../components/LeadForm';
-import LeadDetail from '../components/LeadDetail';
-import ImportModal from '../components/ImportModal';
+import { supabase } from '../lib/supabaseClient';
+import LeadsTable from '../components/leads/LeadsTable';
+import LeadForm from '../components/leads/LeadForm';
+import LeadDetail from '../components/leads/LeadDetail';
+import ImportModal from '../components/leads/ImportModal';
 import BulkActionBar from '../components/leads/BulkActionBar';
 import { useSort } from '../hooks/useSort';
 import type { ColumnDef } from '../components/ColumnSelector';
@@ -15,6 +15,7 @@ import { ParsedRow } from '../utils/importParser';
 import { exportToJSON, exportToExcel } from '../utils/exportData';
 import { getSettings } from '../db/database';
 import { Icon } from '../utils/icons';
+import { useAuth } from '../contexts/AuthContext';
 
 function extractRut(lead: Lead): string {
   return lead.rut || '';
@@ -42,16 +43,18 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [lists, setLists] = useState<LeadList[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [editing, setEditing] = useState<Lead | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [viewing, setViewing] = useState<Lead | null>(null);
-  const [toast, setToast] = useState<{ id: number; name: string } | null>(null);
+  const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
   
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
+  
+  const { hasFeature } = useAuth();
 
   const { filtered, filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters(leads);
 
@@ -81,11 +84,15 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
     let data = showTrash ? await getDeleted() : await getAll();
     
     if (!showTrash && filterMode === 'olvidados') {
-      const logs = await db.sendLog.toArray();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      const { data: logsData } = await supabase.from('send_logs').select('lead_id').eq('user_id', userId);
+      const logLeadIds = new Set((logsData || []).map(l => l.lead_id));
+      
       data = data.filter(l => {
         const daysSince = Math.floor((Date.now() - new Date(l.createdAt).getTime()) / (1000 * 3600 * 24));
         if (daysSince <= 7) return false;
-        return !logs.some((log: any) => log.leadId === l.id);
+        return !logLeadIds.has(l.id);
       });
     }
 
@@ -108,7 +115,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
     rut: (l) => extractRut(l),
   });
 
-  const toggleSelect = useCallback((id: number) => {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -157,7 +164,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
     loadLeads();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     const lead = leads.find((l) => l.id === id);
     if (showTrash) {
       if (!confirm('¿Eliminar definitivamente?')) return;
@@ -177,13 +184,13 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
     loadLeads();
   };
 
-  const handleUndoDelete = async (id: number) => {
+  const handleUndoDelete = async (id: string) => {
     await restore(id);
     setToast(null);
     loadLeads();
   };
 
-  const handleRestore = async (id: number) => {
+  const handleRestore = async (id: string) => {
     await restore(id);
     setSelectedIds(new Set());
     loadLeads();
@@ -237,8 +244,22 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
   };
 
   const handleImport = async (rows: ParsedRow[]) => {
-    await importLeads(rows);
+    // Si no tiene límite ilimitado, verificar que la suma no pase de 100
+    if (!hasFeature('pro:unlimited_leads') && leads.length + rows.length > 100) {
+      alert('Has superado el límite de 100 prospectos del plan Free. Actualiza tu plan para poder importar más leads.');
+      return;
+    }
+    await importLeads(rows as any);
     loadLeads();
+  };
+
+  const handleNewLeadClick = () => {
+    if (!hasFeature('pro:unlimited_leads') && leads.length >= 100) {
+      alert('Has superado el límite de 100 prospectos del plan Free. ¡Mejora tu plan para tener leads ilimitados!');
+      return;
+    }
+    setEditing(null);
+    setShowForm(true);
   };
 
   return (
@@ -246,19 +267,6 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-bold">Leads</h2>
         <div className="flex gap-2 items-center">
-          <button
-            onClick={handleExport}
-            title={`Exportar ${selectedIds.size > 0 ? 'seleccionados' : filterListId || filterStatus || filterDate || search.trim() ? 'vista actual' : 'todos'} como ${exportFormat.toUpperCase()}`}
-            className="bg-green-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-green-700 transition-colors"
-          >
-            Exportar
-          </button>
-          <button
-            onClick={() => setShowImport(true)}
-            className="bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
-          >
-            Importar
-          </button>
           <div className="flex gap-2 mb-0 items-center">
             {filterMode === 'olvidados' && (
               <span className="bg-red-600 text-white text-xs px-2.5 py-1.5 rounded font-medium flex items-center gap-1.5 shadow-sm">
@@ -267,7 +275,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
               </span>
             )}
             <button
-              onClick={() => { setEditing(null); setShowForm(true); }}
+              onClick={handleNewLeadClick}
               className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
             >
               + Lead
@@ -353,7 +361,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
         <ImportModal
           existingRuts={existingRuts}
           existingPhones={existingPhones}
-          onImport={handleImport}
+          onImport={handleImport as any}
           onClose={() => setShowImport(false)}
         />
       )}

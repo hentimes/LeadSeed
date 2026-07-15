@@ -1,4 +1,4 @@
-export type Page = 'leads' | 'lists' | 'templates' | 'send' | 'history' | 'tasks' | 'dashboard' | 'pipeline' | 'settings';
+export type Page = 'leads' | 'lists' | 'templates' | 'send' | 'history' | 'tasks' | 'dashboard' | 'pipeline' | 'settings' | 'admin';
 
 export type LeadStatus = 'nuevo' | 'contactado' | 'interesado' | 'convertido' | 'descartado';
 
@@ -19,7 +19,7 @@ export const STATUS_COLORS: Record<LeadStatus, string> = {
 };
 
 export interface Lead {
-  id?: number;
+  id?: string;
   name: string;
   phone: string;       // normalizado: +569XXXXXXXX
   email: string;
@@ -28,6 +28,25 @@ export interface Lead {
   notes: string;
   status: LeadStatus;
   listaIds: number[];
+  score: number;
+
+  // Campos de Negocio y Marketing (Nuevos)
+  scheduledAt?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+
+  // Métricas de Rendimiento (Nuevos)
+  assignedAt?: string;
+  firstContactedAt?: string;
+  closedAt?: string;
+  estimatedValue?: number;
+  
+  // Datos variables (JSONB)
+  metadata?: Record<string, any>;
+
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -41,11 +60,11 @@ export interface LeadList {
 }
 
 export interface WhatsAppTemplate {
-  id?: number;
+  id?: string | number;
   templateListIds: number[];   // N:M - múltiples categorías
   nombre: string;
   contenido: string;
-  leadIds: number[];            // leads asignados directamente
+  leadIds: string[];            // leads asignados directamente
   leadListIds: number[];        // listas de leads asignadas
   createdAt: string;
 }
@@ -58,13 +77,13 @@ export interface WhatsAppTemplateList {
 }
 
 export interface EmailTemplate {
-  id?: number;
+  id?: string | number;
   templateListIds: number[];   // N:M - múltiples categorías
   nombre: string;
   asunto: string;
   contenido: string;
   isHtml: boolean;
-  leadIds: number[];            // leads asignados directamente
+  leadIds: string[];            // leads asignados directamente
   leadListIds: number[];        // listas de leads asignadas
   createdAt: string;
 }
@@ -77,11 +96,11 @@ export interface EmailTemplateList {
 }
 
 export interface CallTemplate {
-  id?: number;
+  id?: string | number;
   templateListIds: number[];   // N:M - múltiples categorías
   nombre: string;
   contenido: string;            // el script de la llamada
-  leadIds: number[];            // leads asignados directamente
+  leadIds: string[];            // leads asignados directamente
   leadListIds: number[];        // listas de leads asignadas
   createdAt: string;
 }
@@ -119,16 +138,11 @@ export interface AppSettings {
 
 export type TaskStatus = 'pendiente' | 'completada';
 
-export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-  pendiente: 'Pendiente',
-  completada: 'Completada',
-};
-
 export interface Task {
-  id?: number;
+  id?: string;
   titulo: string;
   descripcion: string;
-  leadIds: number[];
+  leadIds: string[];
   leadListIds: number[];
   fechaVencimiento: string;  // ISO date
   status: TaskStatus;
@@ -137,18 +151,65 @@ export interface Task {
 
 export interface LeadNote {
   id?: number;
-  leadId: number;
+  leadId: string;
   content: string;
   createdAt: string;
 }
 
 export interface SendLog {
   id?: number;
-  templateId: number;
+  templateId: string | number;
   templateType: 'whatsapp' | 'email' | 'call';
-  leadId: number;
+  leadId: string;
   leadName: string;
   leadPhone: string;
   sentAt: string;
   scheduledFor?: string;
+}
+
+// SaaS Entitlements
+export interface Plan {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Feature {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  trial_days: number;
+  created_at: string;
+}
+
+export interface PlanFeature {
+  plan_id: string;
+  feature_id: string;
+}
+
+export interface Profile {
+  id: string;           // UUID del usuario (auth.users)
+  email: string;
+  plan_id?: string;
+  role: 'admin' | 'user';
+  full_name?: string;
+  avatar_url?: string;
+  last_seen_at?: string;
+  created_at: string;
+  
+  // Billing / Pasarelas de Pago (Mercado Pago, Flow, Stripe)
+  gateway_customer_id?: string;
+  subscription_id?: string;
+  subscription_status?: 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete';
+  subscription_end_date?: string;
+}
+
+export interface UserFeatureOverride {
+  user_id: string;
+  feature_id: string;
+  expires_at?: string;  // Null = permanente
+  created_at: string;
 }

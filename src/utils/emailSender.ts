@@ -8,7 +8,7 @@ export interface EmailAttachment {
   content: string;
 }
 
-export async function sendEmail(
+async function sendEmail(
   lead: Lead,
   asunto: string,
   contenido: string,

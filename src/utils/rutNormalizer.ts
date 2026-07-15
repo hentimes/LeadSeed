@@ -9,7 +9,7 @@
  *   - "12,345,6789" (comas + DV pegado) → "12345678-9"
  */
 
-export interface RutParts {
+interface RutParts {
   rut: string;    // número base (sin DV)
   dv: string;     // dígito verificador
 }
@@ -79,7 +79,7 @@ export function normalizeRut(rutStr: string, dvStr?: string): string | null {
   return `${body}-${dv}`;
 }
 
-export function parseRut(rutStr: string, dvStr?: string): RutParts | null {
+function parseRut(rutStr: string, dvStr?: string): RutParts | null {
   const normalized = normalizeRut(rutStr, dvStr);
   if (!normalized) return null;
 
@@ -90,7 +90,7 @@ export function parseRut(rutStr: string, dvStr?: string): RutParts | null {
   };
 }
 
-export function formatRutDisplay(rut: string): string {
+function formatRutDisplay(rut: string): string {
   // Formatea como 12.345.678-9
   const clean = rut.replace(/[^0-9kK-]/g, '');
   const dashIdx = clean.lastIndexOf('-');

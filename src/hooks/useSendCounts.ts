@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react';
-import { db } from '../db/database';
+import { supabase } from '../lib/supabaseClient';
 
 export function useSendCounts() {
-  const [counts, setCounts] = useState<Record<number, { whatsapp: number; email: number }>>({});
+  const [counts, setCounts] = useState<Record<string, { whatsapp: number; email: number }>>({});
 
   useEffect(() => {
     (async () => {
-      const sendLogs = await db.sendLog.toArray();
-      const newCounts: Record<number, { whatsapp: number; email: number }> = {};
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
       
-      for (const log of sendLogs) {
-        if (!newCounts[log.leadId]) {
-          newCounts[log.leadId] = { whatsapp: 0, email: 0 };
+      const { data: sendLogs } = await supabase
+        .from('send_logs')
+        .select('*')
+        .eq('user_id', userId);
+        
+      const newCounts: Record<string, { whatsapp: number; email: number }> = {};
+      
+      for (const log of (sendLogs || [])) {
+        if (!newCounts[log.lead_id]) {
+          newCounts[log.lead_id] = { whatsapp: 0, email: 0 };
         }
-        if (log.templateType === 'whatsapp') {
-          newCounts[log.leadId].whatsapp++;
-        } else if (log.templateType === 'email') {
-          newCounts[log.leadId].email++;
+        if (log.template_type === 'whatsapp') {
+          newCounts[log.lead_id].whatsapp++;
+        } else if (log.template_type === 'email') {
+          newCounts[log.lead_id].email++;
         }
       }
       

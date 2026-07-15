@@ -4,9 +4,10 @@ import {
   useEmailTemplates, useEmailTemplateLists,
   useCallTemplates, useCallTemplateLists,
 } from '../hooks/useTemplates';
-import { db } from '../db/database';
-import type { LeadList, SendLog } from '../types';
-import TemplateEditor from '../components/TemplateEditor';
+import { supabase } from '../lib/supabaseClient';
+import type { WhatsAppTemplate, EmailTemplate, LeadList, SendLog } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import TemplateEditor from '../components/templates/TemplateEditor';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function TemplatesPage({ highlightTemplate, onClearHighlight }: Props = {}) {
+  const { hasFeature } = useAuth();
   const [tab, setTab] = useState<Tab>(highlightTemplate?.type || 'whatsapp');
   const waT = useWhatsAppTemplates(); const waL = useWhatsAppTemplateLists();
   const emT = useEmailTemplates(); const emL = useEmailTemplateLists();
@@ -46,7 +48,6 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
   const [showCatManager, setShowCatManager] = useState(false);
 
   const load = async () => {
-    setLeadLists(await db.leadLists.toArray());
     if (tab === 'whatsapp') {
       setTemplates(await waT.getAll());
       setTplLists(await waL.getAll());
@@ -139,8 +140,18 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
   const handleShowLog = async (templateId: number) => {
     if (showLog === templateId) { setShowLog(null); return; }
     setShowLog(templateId);
-    const logs = await db.sendLog.where('templateId').equals(templateId).toArray();
-    setSendLogs(logs);
+    const { data: logs } = await supabase.from('send_logs').select('*').eq('template_id', templateId).order('sent_at', { ascending: false });
+    const formatted = (logs || []).map(l => ({
+      id: l.id,
+      templateId: l.template_id,
+      templateType: l.template_type,
+      leadId: l.lead_id,
+      leadName: l.lead_name,
+      leadPhone: l.lead_phone,
+      sentAt: l.sent_at,
+      scheduledFor: l.scheduled_for
+    }));
+    setSendLogs(formatted);
   };
 
   const filtered = filterCatId ? templates.filter((t) => (t.templateListIds || []).includes(filterCatId)) : templates;
@@ -158,8 +169,18 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-1 mb-2 items-center">
-        <button onClick={() => { setEditing({ nombre: '', contenido: '', asunto: '', isHtml: false }); }}
-          className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">+ Nueva plantilla</button>
+        <button 
+          onClick={() => {
+            if (templates.length >= 3 && !hasFeature('pro:unlimited_templates')) {
+              alert(`🔒 Límite Alcanzado: El Plan Free solo permite crear 3 plantillas de ${tab}. Actualiza al Plan Pro para crear plantillas ilimitadas.`);
+              return;
+            }
+            setEditing({ nombre: '', contenido: '', asunto: '', isHtml: false });
+          }}
+          className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+        >
+          + Nueva plantilla
+        </button>
 
         {/* Category filter */}
         <select value={filterCatId ?? ''} onChange={(e) => setFilterCatId(e.target.value ? Number(e.target.value) : null)}

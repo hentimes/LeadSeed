@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../types';
-import { db } from '../db/database';
-import { getAssignedLeads } from '../hooks/useTemplates';
-import { Icon } from '../utils/icons';
+import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../../types';
+import { supabase } from '../../lib/supabaseClient';
+import { getAssignedLeads } from '../../hooks/useTemplates';
+import { Icon } from '../../utils/icons';
 
 interface Props {
   leads: Lead[];
@@ -14,8 +14,8 @@ interface Props {
 export default function CallSender({ leads, templates, templateLists, leadLists }: Props) {
   const [selectedListId, setSelectedListId] = useState<number | 'all'>('all');
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | ''>('');
-  const [assignedLeadIds, setAssignedLeadIds] = useState<number[]>([]);
-  const [selectedLeadId, setSelectedLeadId] = useState<number | ''>('');
+  const [assignedLeadIds, setAssignedLeadIds] = useState<string[]>([]);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | ''>('');
   
   const [logging, setLogging] = useState(false);
   const [message, setMessage] = useState('');
@@ -37,7 +37,7 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
     if (tpl) {
       const { allIds } = await getAssignedLeads(tpl);
       setAssignedLeadIds(allIds);
-      if (!allIds.includes(Number(selectedLeadId))) setSelectedLeadId('');
+      if (!allIds.includes(String(selectedLeadId))) setSelectedLeadId('');
     }
   };
 
@@ -55,14 +55,21 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
     
     // Solo registrar en la DB, no enviamos nada real
     try {
-      await db.sendLog.add({
-        templateId: selectedTemplate.id!,
-        templateType: 'call',
-        leadId: selectedLead.id!,
-        leadName: selectedLead.name,
-        leadPhone: selectedLead.phone,
-        sentAt: new Date().toISOString(),
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      await supabase.from('send_logs').insert({
+        user_id: userId,
+        template_id: selectedTemplate.id!,
+        template_type: 'call',
+        lead_id: selectedLead.id!,
+        lead_name: selectedLead.name,
+        lead_phone: selectedLead.phone,
+        sent_at: new Date().toISOString(),
       });
+      
+      await supabase.from('leads').update({ status: 'contactado' }).eq('id', selectedLead.id!);
+      
       setMessage('Llamada registrada con éxito');
     } catch (e) {
       setMessage('Error al registrar llamada');
@@ -72,7 +79,7 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
   };
 
   return (
-    <div className="bg-white border rounded-lg p-4 max-w-2xl">
+    <div>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">1. Categoría de Llamada</label>
         <select
@@ -110,7 +117,7 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
         <label className="block text-sm font-medium text-gray-700 mb-1">3. Lead a llamar</label>
         <select
           value={selectedLeadId}
-          onChange={(e) => setSelectedLeadId(e.target.value ? Number(e.target.value) : '')}
+          onChange={(e) => setSelectedLeadId(e.target.value || '')}
           disabled={!selectedTemplateId}
           className="w-full border border-gray-300 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100"
         >
@@ -124,9 +131,10 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
         )}
       </div>
 
-      {selectedTemplate && selectedLead && (
-        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <h4 className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-2">Guion Activo</h4>
+      {selectedTemplate && (
+        /* 1. Selección de Plantilla (Guión) */
+        <div className="mb-4 border-b border-gray-100 pb-4">
+          <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">1. Seleccionar Guión</h3>
           <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedTemplate.contenido}</p>
         </div>
       )}

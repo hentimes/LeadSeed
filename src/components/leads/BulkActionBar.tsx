@@ -2,7 +2,7 @@ import type { LeadList, LeadStatus, ExportFormat } from '../../types';
 import { STATUS_LABELS } from '../../types';
 
 interface BulkActionBarProps {
-  selectedIds: Set<number>;
+  selectedIds: Set<string>;
   showTrash: boolean;
   exportFormat: ExportFormat;
   lists: LeadList[];

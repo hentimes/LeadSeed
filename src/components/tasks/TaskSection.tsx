@@ -10,7 +10,7 @@ interface TaskSectionProps {
   tomorrow: string;
   onToggleComplete: (task: Task) => void;
   onEdit: (task: Task) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function TaskSection({

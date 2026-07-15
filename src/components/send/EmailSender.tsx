@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { Lead, EmailTemplate, EmailTemplateList, LeadList, SendLog } from '../types';
-import { replaceVariables } from '../utils/waHelper';
-import { sendEmailToLeads, type EmailAttachment } from '../utils/emailSender';
-import { db } from '../db/database';
-import { Icon } from '../utils/icons';
-import VariableDropdown from './VariableDropdown';
-import { insertTextAtCursor } from '../utils/textHelper';
+import type { Lead, EmailTemplate, EmailTemplateList, LeadList, SendLog } from '../../types';
+import { replaceVariables } from '../../utils/waHelper';
+import { sendEmailToLeads, type EmailAttachment } from '../../utils/emailSender';
+import { supabase } from '../../lib/supabaseClient';
+import { Icon } from '../../utils/icons';
+import EmailEditor from './EmailEditor';
+import EmailScheduler from './EmailScheduler';
 
 interface Props {
   leads: Lead[];
@@ -26,7 +26,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const [customBody, setCustomBody] = useState('');
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(new Set());
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [selectedListIds, setSelectedListIds] = useState<Set<number>>(new Set());
   
   const [leadSearch, setLeadSearch] = useState('');
@@ -49,7 +49,20 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
   useEffect(() => {
     if (selectedTemplate) {
-      db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray().then(setSentLog);
+      supabase.from('send_logs')
+        .select('*')
+        .eq('template_id', selectedTemplate.id)
+        .order('sent_at', { ascending: false })
+        .then(({ data }) => setSentLog((data || []).map(l => ({
+          id: l.id,
+          templateId: l.template_id,
+          templateType: l.template_type,
+          leadId: l.lead_id,
+          leadName: l.lead_name,
+          leadPhone: l.lead_phone,
+          sentAt: l.sent_at,
+          scheduledFor: l.scheduled_for
+        }))));
       setCustomSubject(selectedTemplate.asunto || '');
       setCustomBody(selectedTemplate.contenido || '');
       setAttachments([]);
@@ -64,7 +77,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
   const recipients = useMemo(() => {
-    const ids = new Set<number>(selectedLeadIds);
+    const ids = new Set<string>(selectedLeadIds);
     for (const listId of selectedListIds) {
       leads.filter((l) => l.listaIds.includes(listId)).forEach((l) => ids.add(l.id!));
     }
@@ -78,7 +91,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     }
   }, [recipients, previewLead]);
 
-  const toggleLead = (id: number) => {
+  const toggleLead = (id: string) => {
     setSelectedLeadIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
   const toggleList = (id: number) => {
@@ -97,22 +110,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     return result;
   }, [leads, selectedListIds, leadSearch]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const base64String = (ev.target?.result as string).split(',')[1];
-        setAttachments(prev => [...prev, { filename: file.name, content: base64String }]);
-      };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = '';
-  };
 
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
 
   const preConfirmSend = () => {
     if (!selectedTemplate || recipients.length === 0) return;
@@ -124,21 +122,34 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     if (!selectedTemplate || recipients.length === 0) return;
     const now = new Date().toISOString();
 
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+
     if (schedule && scheduledDate && scheduledTime) {
       const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
       const logs = recipients.map((l) => ({
-        templateId: selectedTemplate.id!, templateType: 'email' as const,
-        leadId: l.id!, leadName: l.name, leadPhone: l.phone || l.email,
-        sentAt: now, scheduledFor,
+        user_id: userId,
+        template_id: selectedTemplate.id!, 
+        template_type: 'email' as const,
+        lead_id: l.id!, 
+        lead_name: l.name, 
+        lead_phone: l.phone || l.email,
+        sent_at: now, 
+        scheduled_for: scheduledFor,
       }));
-      await db.sendLog.bulkAdd(logs);
+      await supabase.from('send_logs').insert(logs);
       try { chrome.storage.local.set({ hasScheduledEmails: true }); } catch { /* noop */ }
       setSchedule(false);
       setScheduledDate('');
       setScheduledTime('');
       setResult({ total: recipients.length, sent: 0, errors: [`${recipients.length} email(s) programados para ${new Date(scheduledFor).toLocaleString('es-CL')}`] });
-      const updated = await db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray();
-      setSentLog(updated);
+      const { data: updatedLogs } = await supabase.from('send_logs')
+        .select('*')
+        .eq('template_id', selectedTemplate.id)
+        .order('sent_at', { ascending: false });
+      setSentLog((updatedLogs || []).map(l => ({
+        id: l.id, templateId: l.template_id, templateType: l.template_type, leadId: l.lead_id, leadName: l.lead_name, leadPhone: l.lead_phone, sentAt: l.sent_at, scheduledFor: l.scheduled_for
+      })));
       return;
     }
 
@@ -147,15 +158,24 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     const res = await sendEmailToLeads(recipients, customSubject, customBody, selectedTemplate.isHtml, attachments);
     setResult(res);
     const logs = recipients.map((l) => ({
-      templateId: selectedTemplate.id!, templateType: 'email' as const,
-      leadId: l.id!, leadName: l.name, leadPhone: l.phone || l.email, sentAt: now,
+      user_id: userId,
+      template_id: selectedTemplate.id!, 
+      template_type: 'email' as const,
+      lead_id: l.id!, 
+      lead_name: l.name, 
+      lead_phone: l.phone || l.email, 
+      sent_at: now,
     }));
-    await db.sendLog.bulkAdd(logs);
-    for (const l of recipients) {
-      await db.leads.update(l.id!, { status: 'contactado' });
-    }
-    const updated = await db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray();
-    setSentLog(updated);
+    await supabase.from('send_logs').insert(logs);
+    await supabase.from('leads').update({ status: 'contactado' }).in('id', recipients.map(l => l.id));
+    
+    const { data: updatedLogs } = await supabase.from('send_logs')
+      .select('*')
+      .eq('template_id', selectedTemplate.id)
+      .order('sent_at', { ascending: false });
+    setSentLog((updatedLogs || []).map(l => ({
+        id: l.id, templateId: l.template_id, templateType: l.template_type, leadId: l.lead_id, leadName: l.lead_name, leadPhone: l.lead_phone, sentAt: l.sent_at, scheduledFor: l.scheduled_for
+      })));
     setSending(false);
   };
 
@@ -163,8 +183,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     <div className="space-y-4 relative">
       
       {/* 1. Selección de Plantilla (Fila unificada) */}
-      <div className="bg-white border rounded-lg p-3 shadow-sm">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">1. Seleccionar Plantilla</h3>
+      <div className="mb-4 border-b border-gray-100 pb-4">
+        <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">1. Seleccionar Plantilla</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] text-gray-500 mb-1">Categoría</label>
@@ -193,70 +213,21 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
       {/* 2. Edición Dinámica (Al Vuelo) */}
       {selectedTemplate && (
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 shadow-sm">
-           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xs font-semibold text-blue-800 uppercase tracking-wider">2. Edición al Vuelo</h3>
-            {selectedTemplate.isHtml && (
-              <button onClick={() => setShowPreviewModal(true)} className="bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded text-xs font-medium hover:bg-blue-100 flex items-center gap-1 shadow-sm">
-                <Icon.View /> Ver Vista Previa
-              </button>
-            )}
-           </div>
-           
-           <div className="space-y-2">
-              <div>
-                <div className="flex justify-between items-end mb-0.5">
-                  <label className="block text-[11px] text-blue-600">Asunto (Puedes editarlo para este envío)</label>
-                  <VariableDropdown onSelect={(val) => insertTextAtCursor(subjectRef, customSubject, val, setCustomSubject)} />
-                </div>
-                <input 
-                  ref={subjectRef}
-                  type="text" 
-                  value={customSubject} 
-                  onChange={(e) => setCustomSubject(e.target.value)}
-                  className="w-full border border-blue-200 rounded px-2 py-1.5 text-sm outline-none focus:border-blue-500" 
-                />
-              </div>
-              <div>
-                <div className="flex justify-between items-end mb-0.5">
-                  <label className="block text-[11px] text-blue-600">Contenido (Edición temporal)</label>
-                  <VariableDropdown onSelect={(val) => insertTextAtCursor(bodyRef, customBody, val, setCustomBody)} />
-                </div>
-                <textarea 
-                  ref={bodyRef}
-                  value={customBody} 
-                  onChange={(e) => setCustomBody(e.target.value)}
-                  rows={4}
-                  className={`w-full border border-blue-200 rounded px-2 py-1.5 text-sm outline-none focus:border-blue-500 ${selectedTemplate.isHtml ? 'font-mono text-xs' : ''}`} 
-                />
-              </div>
-              
-              <div className="mt-2 border-t border-blue-100 pt-2">
-                <label className="block text-[11px] text-blue-600 mb-0.5">Archivos Adjuntos (Opcional)</label>
-                <input 
-                  type="file" 
-                  multiple 
-                  onChange={handleFileChange} 
-                  className="text-xs text-blue-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer mb-2"
-                />
-                {attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {attachments.map((att, i) => (
-                      <span key={i} className="bg-white border border-blue-200 text-blue-700 px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1.5 shadow-sm">
-                        <Icon.Paperclip /> <span className="max-w-[120px] truncate" title={att.filename}>{att.filename}</span>
-                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full w-4 h-4 flex items-center justify-center font-bold">×</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-           </div>
-        </div>
+        <EmailEditor 
+          selectedTemplate={selectedTemplate}
+          customSubject={customSubject}
+          setCustomSubject={setCustomSubject}
+          customBody={customBody}
+          setCustomBody={setCustomBody}
+          attachments={attachments}
+          setAttachments={setAttachments}
+          setShowPreviewModal={setShowPreviewModal}
+        />
       )}
 
       {/* 3. Selección de Destinatarios (Dos columnas) */}
-      <div className="bg-white border rounded-lg p-3 shadow-sm">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">3. Destinatarios ({recipients.length})</h3>
+      <div className="mb-4 border-b border-gray-100 pb-4">
+        <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">3. Destinatarios ({recipients.length})</h3>
         
         <div className="grid grid-cols-2 gap-3">
           {/* Columna Izquierda: Listas */}
@@ -309,46 +280,19 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       </div>
 
       {/* 4. Enviar */}
-      <div className="bg-white border rounded-lg p-3 shadow-sm">
-        <div className="flex justify-between items-center mb-3">
-          <label className="flex items-center gap-2 text-xs cursor-pointer text-gray-600">
-            <input type="checkbox" checked={schedule} onChange={(e) => setSchedule(e.target.checked)} className="rounded" />
-            Programar envío automático
-          </label>
-          
-          {schedule && (
-            <div className="flex gap-2">
-              <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)}
-                className="border rounded px-2 py-1 text-xs outline-none focus:border-blue-500" />
-              <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)}
-                className="border rounded px-2 py-1 text-xs outline-none focus:border-blue-500" />
-            </div>
-          )}
-        </div>
-
-        <button onClick={preConfirmSend} disabled={!selectedTemplate || recipients.length === 0 || sending || (schedule && (!scheduledDate || !scheduledTime))}
-          className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-[0.98]">
-          {sending ? 'Enviando mensajes...' : schedule ? `Programar envío a ${recipients.length} lead(s)` : `Enviar Ahora a ${recipients.length} lead(s)`}
-        </button>
-
-        {result && (
-          <div className={`mt-3 p-2.5 rounded-lg text-sm flex items-start gap-2 ${result.errors.length ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
-            <span className="text-lg">{result.errors.length ? <Icon.Warning /> : <Icon.Check />}</span>
-            <div>
-              <div className={`font-semibold ${result.errors.length ? 'text-yellow-800' : 'text-green-800'}`}>
-                {result.sent} de {result.total} enviados con éxito
-              </div>
-              {result.errors.length > 0 && (
-                <div className="mt-1 space-y-1 text-xs text-red-600">
-                  {result.errors.map((err, i) => (
-                    <div key={i}>• {err}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      <EmailScheduler 
+        schedule={schedule}
+        setSchedule={setSchedule}
+        scheduledDate={scheduledDate}
+        setScheduledDate={setScheduledDate}
+        scheduledTime={scheduledTime}
+        setScheduledTime={setScheduledTime}
+        preConfirmSend={preConfirmSend}
+        sending={sending}
+        selectedTemplate={selectedTemplate}
+        recipients={recipients}
+        result={result}
+      />
 
       {/* 5. Historial Compacto */}
       {sentLog.length > 0 && (
@@ -387,7 +331,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             <div className="p-3 border-b bg-white">
                <div className="text-xs mb-2">
                  <span className="font-semibold text-gray-600">Previsualizar como:</span>
-                 <select value={previewLead?.id ?? ''} onChange={(e) => setPreviewLead(leads.find((l) => l.id === Number(e.target.value)) || null)}
+                 <select value={previewLead?.id ?? ''} onChange={(e) => setPreviewLead(leads.find((l) => l.id === e.target.value) || null)}
                     className="ml-2 border rounded px-2 py-1 bg-gray-50 outline-none focus:border-blue-400">
                     <option value="">Elegir destinatario...</option>
                     {recipients.slice(0,20).map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}

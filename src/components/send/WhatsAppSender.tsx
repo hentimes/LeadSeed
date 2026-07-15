@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../types';
-import { replaceVariables, openWhatsAppForLeads } from '../utils/waHelper';
-import { db } from '../db/database';
-import { Icon } from '../utils/icons';
-import VariableDropdown from './VariableDropdown';
-import { insertTextAtCursor } from '../utils/textHelper';
+import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
+import { replaceVariables, openWhatsAppForLeads } from '../../utils/waHelper';
+import { supabase } from '../../lib/supabaseClient';
+import { Icon } from '../../utils/icons';
+import VariableDropdown from '../VariableDropdown';
+import { insertTextAtCursor } from '../../utils/textHelper';
 
 interface Props {
   leads: Lead[];
@@ -21,7 +21,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   // Edición dinámica al vuelo
   const [customBody, setCustomBody] = useState('');
   
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(new Set());
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [selectedListIds, setSelectedListIds] = useState<Set<number>>(new Set());
   
   const [leadSearch, setLeadSearch] = useState('');
@@ -37,7 +37,20 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   useEffect(() => {
     if (selectedTemplate) {
-      db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray().then(setSentLog);
+      supabase.from('send_logs')
+        .select('*')
+        .eq('template_id', selectedTemplate.id)
+        .order('sent_at', { ascending: false })
+        .then(({ data }) => setSentLog((data || []).map(l => ({
+          id: l.id,
+          templateId: l.template_id,
+          templateType: l.template_type,
+          leadId: l.lead_id,
+          leadName: l.lead_name,
+          leadPhone: l.lead_phone,
+          sentAt: l.sent_at,
+          scheduledFor: l.scheduled_for
+        }))));
       setCustomBody(selectedTemplate.contenido || '');
     } else {
       setSentLog([]);
@@ -48,7 +61,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
   const recipients = useMemo(() => {
-    const ids = new Set<number>(selectedLeadIds);
+    const ids = new Set<string>(selectedLeadIds);
     for (const listId of selectedListIds) {
       leads.filter((l) => l.listaIds.includes(listId)).forEach((l) => ids.add(l.id!));
     }
@@ -62,7 +75,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     }
   }, [recipients, previewLead]);
 
-  const toggleLead = (id: number) => {
+  const toggleLead = (id: string) => {
     setSelectedLeadIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
   const toggleList = (id: number) => {
@@ -91,23 +104,37 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     if (!selectedTemplate || recipients.length === 0) return;
     
     const now = new Date().toISOString();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    
     const logs = recipients.map((l) => ({
-      templateId: selectedTemplate.id!,
-      templateType: 'whatsapp' as const,
-      leadId: l.id!,
-      leadName: l.name,
-      leadPhone: l.phone,
-      sentAt: now,
+      user_id: userId,
+      template_id: selectedTemplate.id!,
+      template_type: 'whatsapp' as const,
+      lead_id: l.id!,
+      lead_name: l.name,
+      lead_phone: l.phone,
+      sent_at: now,
     }));
     
-    await db.sendLog.bulkAdd(logs);
+    await supabase.from('send_logs').insert(logs);
+    await supabase.from('leads').update({ status: 'contactado' }).in('id', recipients.map(l => l.id));
     
-    for (const l of recipients) {
-      await db.leads.update(l.id!, { status: 'contactado' });
-    }
-    
-    const updated = await db.sendLog.where('templateId').equals(selectedTemplate.id!).toArray();
-    setSentLog(updated);
+    const { data: updatedLogs } = await supabase.from('send_logs')
+      .select('*')
+      .eq('template_id', selectedTemplate.id)
+      .order('sent_at', { ascending: false });
+      
+    setSentLog((updatedLogs || []).map(l => ({
+      id: l.id,
+      templateId: l.template_id,
+      templateType: l.template_type,
+      leadId: l.lead_id,
+      leadName: l.lead_name,
+      leadPhone: l.lead_phone,
+      sentAt: l.sent_at,
+      scheduledFor: l.scheduled_for
+    })));
     
     openWhatsAppForLeads(recipients, customBody);
   };
@@ -116,8 +143,8 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     <div className="space-y-4 relative">
       
       {/* 1. Selección de Plantilla */}
-      <div className="bg-white border rounded-lg p-3 shadow-sm">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">1. Seleccionar Plantilla</h3>
+      <div className="mb-4 border-b border-gray-100 pb-4">
+        <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">1. Seleccionar Plantilla</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] text-gray-500 mb-1">Categoría</label>
@@ -146,14 +173,14 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
       {/* 2. Edición Dinámica y Previsualización Integrada */}
       {selectedTemplate && (
-        <div className="bg-green-50 border border-green-100 rounded-lg p-3 shadow-sm">
-           <h3 className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-2">2. Edición al Vuelo</h3>
+        <div className="mb-4 border-b border-gray-100 pb-4">
+           <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">2. Edición al Vuelo</h3>
            
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <div className="flex justify-between items-end mb-0.5">
                   <label className="block text-[11px] text-green-700">Contenido (Edición temporal)</label>
-                  <VariableDropdown onSelect={(val) => insertTextAtCursor(bodyRef, customBody, val, setCustomBody)} />
+                  <VariableDropdown onSelect={(val: string) => insertTextAtCursor(bodyRef, customBody, val, setCustomBody)} />
                 </div>
                 <textarea 
                   ref={bodyRef}
@@ -167,7 +194,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
               <div className="flex flex-col">
                  <div className="flex justify-between items-center mb-0.5">
                    <label className="block text-[11px] text-green-700">Previsualizar como:</label>
-                   <select value={previewLead?.id ?? ''} onChange={(e) => setPreviewLead(leads.find((l) => l.id === Number(e.target.value)) || null)}
+                   <select value={previewLead?.id ?? ''} onChange={(e) => setPreviewLead(leads.find((l) => l.id === e.target.value) || null)}
                       className="border border-green-200 rounded px-1 text-[10px] bg-white outline-none">
                       <option value="">Elegir...</option>
                       {recipients.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
@@ -188,8 +215,8 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       )}
 
       {/* 3. Selección de Destinatarios */}
-      <div className="bg-white border rounded-lg p-3 shadow-sm">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">3. Destinatarios ({recipients.length})</h3>
+      <div className="mb-4 border-b border-gray-100 pb-4">
+        <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">3. Destinatarios ({recipients.length})</h3>
         
         <div className="grid grid-cols-2 gap-3">
           {/* Columna Izquierda: Listas */}
@@ -241,7 +268,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       </div>
 
       {/* 4. Enviar */}
-      <div className="bg-white border rounded-lg p-3 shadow-sm">
+      <div className="pt-2">
         <button onClick={preConfirmSend} disabled={!selectedTemplate || recipients.length === 0}
           className="w-full bg-[#25D366] text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-[#1DA851] disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-[0.98]">
           Abrir WhatsApp para {recipients.length} lead(s)

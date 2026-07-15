@@ -1,105 +1,84 @@
-import Dexie, { Table } from 'dexie';
-import type {
-  Lead,
-  LeadList,
-  LeadNote,
-  Task,
-  WhatsAppTemplate,
-  WhatsAppTemplateList,
-  EmailTemplate,
-  EmailTemplateList,
-  CallTemplate,
-  CallTemplateList,
-  AppSettings,
-  SendLog,
-} from '../types';
+import { supabase } from '../lib/supabaseClient';
+import type { AppSettings } from '../types';
 
-class LeadsDatabase extends Dexie {
-  leads!: Table<Lead, number>;
-  leadLists!: Table<LeadList, number>;
-  whatsappTemplates!: Table<WhatsAppTemplate, number>;
-  whatsappTemplateLists!: Table<WhatsAppTemplateList, number>;
-  emailTemplates!: Table<EmailTemplate, number>;
-  emailTemplateLists!: Table<EmailTemplateList, number>;
-  callTemplates!: Table<CallTemplate, number>;
-  callTemplateLists!: Table<CallTemplateList, number>;
-  settings!: Table<AppSettings, string>;
-  tasks!: Table<Task, number>;
-  leadNotes!: Table<LeadNote, number>;
-  sendLog!: Table<SendLog, number>;
-
-  constructor() {
-    super('LeadsCRM3');
-
-    this.version(1).stores({
-      leads: '++id, name, email, phone, company, rut, createdAt, *listaIds',
-      leadLists: '++id, name, createdAt',
-      whatsappTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      whatsappTemplateLists: '++id, name, createdAt',
-      emailTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      emailTemplateLists: '++id, name, createdAt',
-      settings: '&emailJSUserId',
-      tasks: '++id, fechaVencimiento, status, *leadIds, *leadListIds',
-      leadNotes: '++id, leadId, createdAt',
-      sendLog: '++id, templateId, leadId, sentAt',
-    });
-
-    this.version(2).stores({
-      leads: '++id, name, email, phone, company, rut, status, createdAt, *listaIds',
-      leadLists: '++id, name, createdAt',
-      whatsappTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      whatsappTemplateLists: '++id, name, createdAt',
-      emailTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      emailTemplateLists: '++id, name, createdAt',
-      settings: '&emailJSUserId',
-      tasks: '++id, fechaVencimiento, status, *leadIds, *leadListIds',
-      leadNotes: '++id, leadId, createdAt',
-      sendLog: '++id, templateId, leadId, sentAt',
-    });
-
-    this.version(3).stores({
-      leads: '++id, name, email, phone, company, rut, status, createdAt, *listaIds',
-      leadLists: '++id, name, createdAt',
-      whatsappTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      whatsappTemplateLists: '++id, name, createdAt',
-      emailTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      emailTemplateLists: '++id, name, createdAt',
-      callTemplates: '++id, *templateListIds, *leadIds, *leadListIds, nombre, createdAt',
-      callTemplateLists: '++id, name, createdAt',
-      settings: '&emailJSUserId',
-      tasks: '++id, fechaVencimiento, status, *leadIds, *leadListIds',
-      leadNotes: '++id, leadId, createdAt',
-      sendLog: '++id, templateId, leadId, sentAt',
-    });
-  }
-}
-
-export const db = new LeadsDatabase();
+export const db = {} as any; // Mock para evitar que rompan imports perdidos temporalmente
 
 // Inicializar settings por defecto
 export async function getSettings(): Promise<AppSettings> {
-  const settings = await db.settings.get('default');
-  return (
-    settings || {
-      emailProvider: 'emailjs',
-      resendApiKey: '',
-      resendFromName: 'Acme',
-      resendFromEmail: 'onboarding@resend.dev',
-      emailJSUserId: '',
-      emailJSServiceId: '',
-      emailJSTemplateId: '',
-      exportFormat: 'json',
-      compactMode: true,
-      darkMode: false,
-      visibleCols: [],
-      dailyGoalWhatsApp: 30,
-      dailyGoalEmail: 20,
-      dailyGoalCalls: 5,
-      dashboardComparePeriod: 'yesterday',
+  const defaultSettings: AppSettings = {
+    emailProvider: 'emailjs',
+    resendApiKey: '',
+    resendFromName: 'Acme',
+    resendFromEmail: 'onboarding@resend.dev',
+    emailJSUserId: '',
+    emailJSServiceId: '',
+    emailJSTemplateId: '',
+    exportFormat: 'json',
+    compactMode: true,
+    darkMode: false,
+    visibleCols: [],
+    dailyGoalWhatsApp: 30,
+    dailyGoalEmail: 20,
+    dailyGoalCalls: 5,
+    dashboardComparePeriod: 'yesterday',
+  };
+
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user) {
+      return defaultSettings;
     }
-  );
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('compact_mode, dark_mode, visible_cols, email_provider, resend_api_key, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period')
+      .eq('id', session.session.user.id)
+      .single();
+
+    if (data) {
+      return {
+        ...defaultSettings,
+        compactMode: data.compact_mode ?? defaultSettings.compactMode,
+        darkMode: data.dark_mode ?? defaultSettings.darkMode,
+        visibleCols: data.visible_cols ?? defaultSettings.visibleCols,
+        emailProvider: data.email_provider ?? defaultSettings.emailProvider,
+        resendApiKey: data.resend_api_key ?? defaultSettings.resendApiKey,
+        resendFromName: data.resend_from_name ?? defaultSettings.resendFromName,
+        resendFromEmail: data.resend_from_email ?? defaultSettings.resendFromEmail,
+        exportFormat: data.export_format ?? defaultSettings.exportFormat,
+        dailyGoalWhatsApp: data.daily_goal_whatsapp ?? defaultSettings.dailyGoalWhatsApp,
+        dailyGoalEmail: data.daily_goal_email ?? defaultSettings.dailyGoalEmail,
+        dailyGoalCalls: data.daily_goal_calls ?? defaultSettings.dailyGoalCalls,
+        dashboardComparePeriod: data.dashboard_compare_period ?? defaultSettings.dashboardComparePeriod,
+      };
+    }
+  } catch (e) {
+    console.error("Error fetching remote settings:", e);
+  }
+
+  return defaultSettings;
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
-  await db.settings.put({ ...settings, emailJSUserId: 'default' });
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (session?.session?.user) {
+      await supabase.from('profiles').update({
+        compact_mode: settings.compactMode,
+        dark_mode: settings.darkMode,
+        visible_cols: settings.visibleCols,
+        email_provider: settings.emailProvider,
+        resend_api_key: settings.resendApiKey,
+        resend_from_name: settings.resendFromName,
+        resend_from_email: settings.resendFromEmail,
+        export_format: settings.exportFormat,
+        daily_goal_whatsapp: settings.dailyGoalWhatsApp,
+        daily_goal_email: settings.dailyGoalEmail,
+        daily_goal_calls: settings.dailyGoalCalls,
+        dashboard_compare_period: settings.dashboardComparePeriod,
+      }).eq('id', session.session.user.id);
+    }
+  } catch (e) {
+    console.error("Error saving remote settings:", e);
+  }
 }

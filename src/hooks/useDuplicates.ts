@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { db } from '../db/database';
+import { supabase } from '../lib/supabaseClient';
 import type { Lead } from '../types';
 
 export interface DuplicatePair {
@@ -13,8 +13,14 @@ export function useDuplicates() {
   const [mergeMsg, setMergeMsg] = useState('');
 
   const findDuplicates = useCallback(async () => {
-    const leads = await db.leads.toArray();
-    const active = leads.filter((l) => !l.deletedAt);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    if (!userId) return;
+
+    const { data: leadsData } = await supabase.from('leads').select('*').eq('user_id', userId).is('deleted_at', null);
+    
+    const active = (leadsData || []).map(l => ({ ...l, id: l.id, name: l.name, phone: l.phone, rut: l.rut, listaIds: l.lista_ids }));
+    
     const found: DuplicatePair[] = [];
     const seenRut = new Map<string, number>();
     const seenPhone = new Map<string, number>();
@@ -51,17 +57,15 @@ export function useDuplicates() {
       updatedAt: new Date().toISOString(),
     };
     
-    await db.leads.update(lead1.id!, best);
+    await supabase.from('leads').update(best).eq('id', lead1.id);
     
     // Merge Notes
-    const notes2 = await db.leadNotes.where('leadId').equals(lead2.id!).toArray();
-    for (const n of notes2) await db.leadNotes.update(n.id!, { leadId: lead1.id! });
+    await supabase.from('lead_notes').update({ lead_id: lead1.id }).eq('lead_id', lead2.id);
     
     // Merge Send Logs
-    const logs2 = await db.sendLog.where('leadId').equals(lead2.id!).toArray();
-    for (const sl of logs2) await db.sendLog.update(sl.id!, { leadId: lead1.id! });
+    await supabase.from('send_logs').update({ lead_id: lead1.id }).eq('lead_id', lead2.id);
     
-    await db.leads.delete(lead2.id!);
+    await supabase.from('leads').delete().eq('id', lead2.id);
     
     setMergeMsg(`Unidos: ${lead2.name} → ${lead1.name}`);
     setTimeout(() => setMergeMsg(''), 3000);

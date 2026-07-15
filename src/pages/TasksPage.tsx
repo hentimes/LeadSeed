@@ -1,10 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
-import { db } from '../db/database';
+import { useLeads } from '../hooks/useLeads';
+import { useLists } from '../hooks/useLists';
+import { supabase } from '../lib/supabaseClient';
 import type { Task, TaskStatus, Lead, LeadList } from '../types';
 import { Icon } from '../utils/icons';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskSection from '../components/tasks/TaskSection';
 import TaskCard from '../components/tasks/TaskCard';
+import { useAuth } from '../contexts/AuthContext';
 
 const STATUS_TABS: { key: TaskStatus | 'todas'; label: string; color: string }[] = [
   { key: 'pendiente', label: 'Pendientes', color: 'text-amber-600' },
@@ -13,6 +16,10 @@ const STATUS_TABS: { key: TaskStatus | 'todas'; label: string; color: string }[]
 ];
 
 export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => void }) {
+  const { user } = useAuth();
+  const { getAll: getLeads } = useLeads();
+  const { getAll: getLists } = useLists();
+  
   const [tasks, setTasks] = useState<Task[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [lists, setLists] = useState<LeadList[]>([]);
@@ -20,17 +27,36 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
   const [editing, setEditing] = useState<Task | null>(null);
   const [filter, setFilter] = useState<TaskStatus | 'todas'>('pendiente');
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { 
+    if (user) loadData(); 
+  }, [user]);
 
   const loadData = async () => {
-    const [t, l, lst] = await Promise.all([
-      db.tasks.orderBy('fechaVencimiento').reverse().toArray(),
-      db.leads.toArray(),
-      db.leadLists.toArray(),
-    ]);
-    setTasks(t);
-    setLeads(l);
-    setLists(lst);
+    if (!user) return;
+    
+    const dbTasks = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('due_date', { ascending: false });
+      
+    const fetchedLeads = await getLeads();
+    const fetchedLists = await getLists();
+    
+    const mappedTasks: Task[] = (dbTasks.data || []).map(t => ({
+      id: t.id,
+      titulo: t.title,
+      descripcion: t.description || '',
+      status: t.status as TaskStatus,
+      fechaVencimiento: t.due_date || '',
+      leadIds: t.lead_id ? [t.lead_id] : [],
+      leadListIds: t.lead_list_ids || [],
+      createdAt: t.created_at
+    }));
+
+    setTasks(mappedTasks);
+    setLeads(fetchedLeads);
+    setLists(fetchedLists);
     onTasksChanged?.();
   };
 
@@ -41,31 +67,40 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
   };
 
   const handleSave = async (data: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
+    if (!user) return;
     const now = new Date().toISOString();
-    const taskData = {
-      ...data,
-      status: editing?.status || 'pendiente' as const,
-      createdAt: editing?.createdAt || now,
+    
+    const dbRow = {
+      title: data.titulo,
+      description: data.descripcion,
+      status: editing?.status || 'pendiente',
+      due_date: data.fechaVencimiento || null,
+      lead_id: data.leadIds.length > 0 ? data.leadIds[0] : null,
+      lead_list_ids: data.leadListIds || [],
+      user_id: user.id
     };
+
     if (editing?.id) {
-      await db.tasks.update(editing.id, taskData);
+      await supabase.from('tasks').update(dbRow).eq('id', editing.id);
     } else {
-      await db.tasks.add(taskData);
+      await supabase.from('tasks').insert({ ...dbRow, created_at: now });
     }
+    
     setShowForm(false);
     setEditing(null);
     loadData();
   };
 
   const toggleComplete = async (task: Task) => {
+    if (!user) return;
     const newStatus: TaskStatus = task.status === 'completada' ? 'pendiente' : 'completada';
-    await db.tasks.update(task.id!, { status: newStatus });
+    await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id!);
     loadData();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar esta tarea?')) return;
-    await db.tasks.delete(id);
+  const handleDelete = async (id: string | number) => {
+    if (!user || !confirm('¿Eliminar esta tarea?')) return;
+    await supabase.from('tasks').delete().eq('id', id);
     loadData();
   };
 
@@ -111,7 +146,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
           </div>
         </div>
         <button onClick={openNew} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
-          {Icon.Plus()} Nueva Tarea
+          {Icon.Plus()} Tarea
         </button>
       </div>
 
@@ -151,16 +186,16 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         {filter === 'pendiente' && (
           <>
             {stats.overdue.length > 0 && (
-              <TaskSection title="Vencidas" color="red" tasks={stats.overdue} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete} />
+              <TaskSection title="Vencidas" color="red" tasks={stats.overdue} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete as any} />
             )}
             {stats.dueToday.length > 0 && (
-              <TaskSection title="Hoy" color="amber" tasks={stats.dueToday} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete} />
+              <TaskSection title="Hoy" color="amber" tasks={stats.dueToday} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete as any} />
             )}
             {stats.dueTomorrow.length > 0 && (
-              <TaskSection title="Mañana" color="blue" tasks={stats.dueTomorrow} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete} />
+              <TaskSection title="Mañana" color="blue" tasks={stats.dueTomorrow} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete as any} />
             )}
             {stats.later.length > 0 && (
-              <TaskSection title="Pendientes" color="gray" tasks={stats.later} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete} />
+              <TaskSection title="Pendientes" color="gray" tasks={stats.later} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete as any} />
             )}
             {stats.pending.length === 0 && (
               <p className="text-center text-gray-400 py-8">No hay tareas pendientes.</p>
@@ -172,7 +207,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
             <p className="text-center text-gray-400 py-8">No hay tareas completadas.</p>
           ) : (
             stats.completed.map((task) => (
-              <TaskCard key={task.id} task={task} isOverdue={false} isToday={false} tomorrow={tomorrow} leads={leads} lists={lists} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete} />
+              <TaskCard key={task.id} task={task} isOverdue={false} isToday={false} tomorrow={tomorrow} leads={leads} lists={lists} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete as any} />
             ))
           )
         )}
@@ -184,7 +219,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
               const isOverdue = !!(task.status === 'pendiente' && task.fechaVencimiento && task.fechaVencimiento.slice(0, 10) < today);
               const isToday = !!(task.status === 'pendiente' && task.fechaVencimiento && task.fechaVencimiento.slice(0, 10) === today);
               return (
-                <TaskCard key={task.id} task={task} isOverdue={isOverdue} isToday={isToday} tomorrow={tomorrow} leads={leads} lists={lists} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete} />
+                <TaskCard key={task.id} task={task} isOverdue={isOverdue} isToday={isToday} tomorrow={tomorrow} leads={leads} lists={lists} onToggleComplete={toggleComplete} onEdit={openEdit} onDelete={handleDelete as any} />
               );
             })
           )

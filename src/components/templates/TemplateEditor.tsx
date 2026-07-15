@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import VariableDropdown from './VariableDropdown';
-import { insertTextAtCursor } from '../utils/textHelper';
-import { Icon } from '../utils/icons';
+import VariableDropdown from '../VariableDropdown';
+import { insertTextAtCursor } from '../../utils/textHelper';
+import { Icon } from '../../utils/icons';
 
 interface Props {
   template?: {
@@ -126,7 +126,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
           <div>
             <div className="flex justify-between items-end mb-1">
               <label className="block text-sm font-medium text-gray-700">Asunto *</label>
-              <VariableDropdown onSelect={(val) => insertTextAtCursor(asuntoRef, asunto, val, setAsunto)} />
+              <VariableDropdown onSelect={(val: string) => insertTextAtCursor(asuntoRef, asunto, val, setAsunto)} />
             </div>
             <div className="flex gap-2">
               <input
@@ -140,7 +140,8 @@ export default function TemplateEditor({ template, type, categories = [], onSave
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          
+          <div className="flex justify-between items-center">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -171,12 +172,12 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       )}
 
       <div>
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-sm font-medium text-gray-700">
+        <div className="flex-1 flex flex-col mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Contenido *
           </label>
           <div className="flex gap-1">
-            <VariableDropdown onSelect={(val) => insertTextAtCursor(contenidoRef, contenido, val, setContenido)} />
+            <VariableDropdown onSelect={(val: string) => insertTextAtCursor(contenidoRef, contenido, val, setContenido)} />
             {type === 'email' && isHtml && (
               <button
                 type="button"
