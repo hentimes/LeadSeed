@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import PipelinePage from './pages/PipelinePage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import CommunityPage from './pages/CommunityPage';
 import OnboardingPlanSelect from './components/onboarding/OnboardingPlanSelect';
 import { getSettings, saveSettings } from './db/database';
 import { supabase } from './lib/supabaseClient';
@@ -38,7 +39,7 @@ const DEFAULT_COLUMNS: ColumnDef[] = [
 ];
 
 export default function App() {
-  const { session, user, profile, loading: authLoading, hasFeature } = useAuth();
+  const { session, user, profile, loading: authLoading, hasFeature, isAdmin } = useAuth();
   const [page, setPage] = useState<Page>('leads');
   const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState('');
@@ -207,7 +208,6 @@ export default function App() {
     return <div className="p-8 bg-gray-50 h-screen flex items-center justify-center"><p className="text-gray-500">Inicializando...</p></div>;
   }
 
-  const isAdmin = user?.email === 'planespro.cl@gmail.com';
   const needsOnboarding = session && profile && !profile.plan_id && !isAdmin;
 
   if (!session) {
@@ -220,7 +220,7 @@ export default function App() {
 
   const renderPage = () => {
     const routeDef = [...primaryRoutes, ...secondaryRoutes].find(r => r.page === page);
-    if (routeDef?.requiredFeature && !session?.user?.email?.includes('planespro.cl@gmail.com') && !hasFeature(routeDef.requiredFeature)) {
+    if (routeDef?.requiredFeature && !isAdmin && !hasFeature(routeDef.requiredFeature)) {
       return (
         <div className="flex h-full items-center justify-center p-8">
           <div className="text-center max-w-md">
@@ -244,6 +244,7 @@ export default function App() {
       case 'dashboard': return <DashboardPage onNavigate={setPage} />;
       case 'pipeline': return <PipelinePage />;
       case 'settings': return <SettingsPage compactMode={compactMode} onCompactModeChange={handleCompactModeChange} darkMode={darkMode} onDarkModeChange={handleDarkModeChange} visibleCols={visibleCols} onColsChange={handleColsChange} />;
+      case 'community': return <CommunityPage />;
       case 'admin': return <AdminLayout />;
       default: return <LeadsPage compactMode={compactMode} visibleCols={visibleCols} />;
     }

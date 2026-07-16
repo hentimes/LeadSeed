@@ -1,8 +1,10 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import SidebarNav from '../SidebarNav';
+import ProfileModal from '../profile/ProfileModal';
 import type { Page } from '../../types';
 import { usePresence } from '../../hooks/usePresence';
 import { useTelemetry } from '../../hooks/useTelemetry';
+import SupportFloatingChat from '../support/SupportFloatingChat';
 
 interface Props {
   currentPage: Page;
@@ -15,6 +17,7 @@ interface Props {
 export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin, children }: Props) {
   // Inicializar rastreo de telemetría y presencia global en la app
   useTelemetry(currentPage);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-[#f8f9fa] dark:bg-gray-900 dark:text-gray-100 overflow-hidden font-sans">
@@ -23,7 +26,10 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
           {children}
         </div>
       </main>
-      <SidebarNav currentPage={currentPage} onNavigate={onNavigate} taskCount={taskCount} isAdmin={isAdmin} />
+      <SidebarNav currentPage={currentPage} onNavigate={onNavigate} taskCount={taskCount} isAdmin={isAdmin} onOpenProfile={() => setIsProfileModalOpen(true)} />
+      <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
+      {/* Ventana de soporte asíncrona/flotante */}
+      <SupportFloatingChat />
     </div>
   );
 }

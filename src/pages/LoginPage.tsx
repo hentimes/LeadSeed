@@ -5,14 +5,66 @@ import { Icon } from '../utils/icons';
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const isExtension = window.location.protocol === 'chrome-extension:';
+      const redirectUrl = isExtension && chrome.identity ? chrome.identity.getRedirectURL() : window.location.origin + window.location.pathname;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
-          scopes: 'https://www.googleapis.com/auth/calendar'
+          redirectTo: redirectUrl,
+          scopes: 'https://www.googleapis.com/auth/calendar',
+          skipBrowserRedirect: isExtension
         }
       });
       if (error) throw error;
+      
+      // En Chrome Extensions, usamos el flujo nativo de autenticación sin abrir pestañas completas
+      if (isExtension && data?.url && chrome.identity) {
+        chrome.identity.launchWebAuthFlow(
+          { url: data.url as string, interactive: true },
+          async (callbackUrl) => {
+            if (chrome.runtime.lastError || !callbackUrl) {
+              alert('Error nativo de Chrome: ' + chrome.runtime.lastError?.message);
+              return;
+            }
+            
+            // alert('Callback de Chrome recibido. Procesando...');
+            
+            // Supabase devuelve los tokens en el hash de la URL
+            const url = new URL(callbackUrl);
+            const hash = url.hash;
+            
+            if (hash) {
+              const params = new URLSearchParams(hash.substring(1));
+              const access_token = params.get('access_token');
+              const refresh_token = params.get('refresh_token');
+              
+              if (access_token && refresh_token) {
+                const { error } = await supabase.auth.setSession({ 
+                  access_token: access_token as string, 
+                  refresh_token: refresh_token as string 
+                });
+                if (error) {
+                  alert('Error al guardar sesión en Supabase: ' + error.message);
+                } else {
+                  // alert('¡Sesión guardada con éxito!');
+                  window.location.reload();
+                }
+              } else {
+                // Podría ser un error de OAuth (error=server_error&error_description=...)
+                const errDesc = params.get('error_description');
+                if (errDesc) {
+                   alert('Error OAuth devuelto por Google: ' + errDesc);
+                } else {
+                   alert('Faltan tokens en el hash de la respuesta.');
+                }
+              }
+            } else {
+               alert('Falta el hash en la URL de respuesta.');
+            }
+          }
+        );
+      }
     } catch (error) {
       console.error('Error al iniciar sesión con Google:', error);
       alert('Hubo un error al iniciar sesión. Revisa la consola.');

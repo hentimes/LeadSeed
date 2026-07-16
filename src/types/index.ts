@@ -1,4 +1,4 @@
-export type Page = 'leads' | 'lists' | 'templates' | 'send' | 'history' | 'tasks' | 'dashboard' | 'pipeline' | 'settings' | 'admin';
+export type Page = 'leads' | 'lists' | 'templates' | 'send' | 'history' | 'tasks' | 'dashboard' | 'pipeline' | 'settings' | 'community' | 'support' | 'admin';
 
 export type LeadStatus = 'nuevo' | 'contactado' | 'interesado' | 'convertido' | 'descartado';
 
@@ -200,6 +200,13 @@ export interface Profile {
   last_seen_at?: string;
   created_at: string;
   
+  // Comunidad y Gamificación
+  bio?: string;
+  show_premium_frame?: boolean;
+  is_invisible?: boolean;
+  badges?: string[];
+  is_helper?: boolean;
+  
   // Billing / Pasarelas de Pago (Mercado Pago, Flow, Stripe)
   gateway_customer_id?: string;
   subscription_id?: string;
@@ -212,4 +219,28 @@ export interface UserFeatureOverride {
   feature_id: string;
   expires_at?: string;  // Null = permanente
   created_at: string;
+}
+
+export type RequirementType = 'soporte' | 'facturacion' | 'bug' | 'sugerencia' | 'otro';
+export type RequirementStatus = 'open' | 'in_progress' | 'closed' | 'claim' | 'archived';
+export type RequirementRating = 'up' | 'down';
+
+export interface Requirement {
+  id: string;
+  ticket_code?: string;
+  user_id: string;
+  helper_id?: string;
+  type: RequirementType;
+  content: string;
+  status: RequirementStatus;
+  rating?: RequirementRating;
+  claim_reason?: string;
+  bump_count?: number;
+  last_bumped_at?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Relaciones cargadas por Supabase
+  user_profile?: Profile;
+  helper_profile?: Profile;
 }

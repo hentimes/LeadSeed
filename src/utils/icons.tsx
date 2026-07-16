@@ -5,7 +5,8 @@ import {
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
   faRotateLeft, faChevronDown, faChevronRight, faArrowsUpDown,
   faCaretUp, faCaretDown, faEnvelope, faGripVertical,
-  faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket
+  faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
+  faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -27,6 +28,9 @@ export const Icon = {
   Settings: () => <I icon={faGear} className="text-sm" />,
   Admin: () => <I icon={faShieldHalved} className="text-sm" />,
   More: () => <I icon={faEllipsis} className="text-sm" />,
+  Users: () => <I icon={faUsers} className="text-sm" />,
+  Inbox: () => <I icon={faInbox} className="text-sm" />,
+  Bot: () => <I icon={faRobot} className="text-sm" />,
 
   // Actions
   View: () => <I icon={faEye} className="text-xs" />,
@@ -42,6 +46,8 @@ export const Icon = {
   Close: () => <I icon={faTimes} className="text-xs" />,
   Help: () => <I icon={faQuestion} className="text-sm" />,
   Restore: () => <I icon={faRotateLeft} className="text-xs" />,
+  ArrowLeft: () => <I icon={faArrowLeft} className="text-xs" />,
+  CheckCircle: () => <I icon={faCheckCircle} className="text-xs" />,
   Logout: () => <I icon={faArrowRightFromBracket} className="text-sm" />,
   Email: () => <I icon={faEnvelope} className="text-xs" />,
   Palette: () => <I icon={faPalette} className="text-xs" />,
@@ -62,4 +68,6 @@ export const Icon = {
   Grip: () => <I icon={faGripVertical} className="text-[10px] text-gray-400" />,
   Moon: () => <I icon={faMoon} className="text-xs" />,
   Sun: () => <I icon={faSun} className="text-xs" />,
+  ThumbUp: () => <I icon={faThumbsUp} className="text-xs" />,
+  ThumbDown: () => <I icon={faThumbsDown} className="text-xs" />,
 };

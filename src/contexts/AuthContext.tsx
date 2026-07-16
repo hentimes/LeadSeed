@@ -12,6 +12,7 @@ interface AuthContextType {
   activeFeatures: string[];
   hasFeature: (feat: string) => boolean;
   refreshProfile: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   activeFeatures: [],
   hasFeature: () => false,
   refreshProfile: async () => {},
+  isAdmin: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -104,13 +106,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  const isAdmin = profile?.role === 'admin';
+
   const hasFeature = (feat: string) => {
-    if (user?.email === 'planespro.cl@gmail.com') return true;
+    if (isAdmin) return true;
     return activeFeatures.includes(feat);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, signOut, loading, activeFeatures, hasFeature, refreshProfile }}>
+    <AuthContext.Provider value={{ session, user, profile, signOut, loading, activeFeatures, hasFeature, refreshProfile, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

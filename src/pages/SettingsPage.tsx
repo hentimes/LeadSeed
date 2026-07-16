@@ -6,6 +6,7 @@ import DisplaySettings from '../components/settings/DisplaySettings';
 import DataManagement from '../components/settings/DataManagement';
 import EmailSettings from '../components/settings/EmailSettings';
 import GoalsSettings from '../components/settings/GoalsSettings';
+import SupportTicketsSettings from '../components/settings/SupportTicketsSettings';
 import { Icon } from '../utils/icons';
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
   onColsChange: (cols: ColumnDef[]) => void;
 }
 
-type Tab = 'display' | 'data' | 'email' | 'goals';
+type Tab = 'display' | 'data' | 'email' | 'goals' | 'support';
 
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
   const [tab, setTab] = useState<Tab>('display');
@@ -71,6 +72,14 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         >
           <Icon.Bullseye /> Metas
         </button>
+        <button
+          onClick={() => setTab('support')}
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'support' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          <Icon.Messages /> Ayuda VIP
+        </button>
       </div>
 
       {/* Content */}
@@ -99,6 +108,10 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         
         {tab === 'goals' && (
           <GoalsSettings />
+        )}
+
+        {tab === 'support' && (
+          <SupportTicketsSettings />
         )}
       </div>
     </div>

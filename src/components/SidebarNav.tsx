@@ -3,23 +3,28 @@ import type { Page } from '../types';
 import { primaryRoutes, secondaryRoutes, RouteDef } from '../config/routes';
 import { Icon } from '../utils/icons';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
+import { useEffect, useState } from 'react';
 
 interface Props {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   taskCount?: number;
   isAdmin?: boolean;
+  onOpenProfile: () => void;
 }
 
 function NavButton({
   active,
   badge,
+  badgeColor = 'bg-red-500',
   icon,
   label,
   onClick,
 }: {
   active: boolean;
   badge?: number;
+  badgeColor?: string;
   icon: ReactNode;
   label: string;
   onClick: () => void;
@@ -40,7 +45,7 @@ function NavButton({
       >
         <span className="text-lg leading-none">{icon}</span>
         {badge ? (
-          <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+          <span className={`absolute -right-1 -top-1 min-w-[18px] rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none text-white ${badgeColor} animate-pulse shadow-sm`}>
             {badge > 99 ? '99+' : badge}
           </span>
         ) : null}
@@ -52,9 +57,51 @@ function NavButton({
   );
 }
 
-export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin }: Props) {
-  const { hasFeature, loading, user, signOut } = useAuth();
-  const adminRoutes: RouteDef[] = isAdmin ? [{ page: 'admin' as Page, label: 'Admin SaaS', icon: Icon.Admin }] : [];
+export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin, onOpenProfile }: Props) {
+  const { hasFeature, loading, user, profile, signOut } = useAuth();
+  const adminRoutes: RouteDef[] = (isAdmin || profile?.is_helper) ? [{ page: 'admin' as Page, label: isAdmin ? 'Admin SaaS' : 'Soporte', icon: Icon.Admin }] : [];
+  const [unreadAdminMessages, setUnreadAdminMessages] = useState(0);
+  const [openReqsCount, setOpenReqsCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin || !user) return;
+    const fetchUnread = async () => {
+      const { count } = await supabase
+        .from('internal_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false);
+      setUnreadAdminMessages(count || 0);
+    };
+    
+    const fetchOpenReqs = async () => {
+      const { count } = await supabase
+        .from('requirements')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'open');
+      setOpenReqsCount(count || 0);
+    };
+    
+    fetchUnread();
+    fetchOpenReqs();
+    
+    const channelMsgs = supabase.channel('sidebar_unread')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'internal_messages', filter: `receiver_id=eq.${user.id}` }, () => {
+        fetchUnread();
+      })
+      .subscribe();
+
+    const channelReqs = supabase.channel('sidebar_reqs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'requirements' }, () => {
+        fetchOpenReqs();
+      })
+      .subscribe();
+      
+    return () => { 
+      supabase.removeChannel(channelMsgs); 
+      supabase.removeChannel(channelReqs);
+    };
+  }, [isAdmin, user]);
   
   if (loading) return null;
   return (
@@ -81,6 +128,8 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin
           <NavButton
             key={page}
             active={currentPage === page}
+            badge={page === 'admin' ? (unreadAdminMessages + openReqsCount) : undefined}
+            badgeColor={page === 'admin' && openReqsCount > 0 ? 'bg-red-500' : (page === 'admin' ? 'bg-purple-600' : 'bg-red-500')}
             icon={icon()}
             label={label}
             onClick={() => onNavigate(page)}
@@ -88,14 +137,20 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin
         ))}
 
         {/* User Profile & Logout */}
-        <div className="mt-2 flex flex-col items-center gap-2 w-full pt-2 border-t border-gray-100 dark:border-gray-800/50">
-          {user?.user_metadata?.avatar_url ? (
-             <img src={user.user_metadata.avatar_url} alt="Profile" className="w-8 h-8 rounded-full border border-gray-200 shadow-sm" title={user.user_metadata.full_name || user.email} />
-          ) : (
-             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold" title={user?.email}>
-               {user?.email?.charAt(0).toUpperCase()}
-             </div>
-          )}
+        <div className="mt-2 flex flex-col items-center gap-2 w-full pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
+          <button
+            onClick={onOpenProfile}
+            title="Editar Perfil"
+            className={`relative rounded-full transition-all duration-200 hover:scale-105 ${profile?.show_premium_frame && hasFeature('premium_aesthetics') ? 'ring-2 ring-yellow-400 p-[2px]' : ''}`}
+          >
+            {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
+               <img src={profile?.avatar_url || user?.user_metadata?.avatar_url} alt="Profile" className="w-8 h-8 rounded-full border border-gray-200 shadow-sm object-cover" title={profile?.full_name || user?.user_metadata?.full_name || user?.email} />
+            ) : (
+               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold" title={user?.email}>
+                 {user?.email?.charAt(0).toUpperCase()}
+               </div>
+            )}
+          </button>
           <button 
             onClick={() => signOut()}
             title="Cerrar Sesión"

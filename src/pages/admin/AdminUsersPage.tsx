@@ -3,14 +3,18 @@ import { useSaaS } from '../../hooks/useSaaS';
 import type { Profile, Plan, UserFeatureOverride, Feature } from '../../types';
 import { Icon } from '../../utils/icons';
 import { usePresence } from '../../hooks/usePresence';
+import { supabase } from '../../lib/supabaseClient';
 
 import AdminUserLicenses from '../../components/admin/AdminUserLicenses';
 import AdminUserTelemetry from '../../components/admin/AdminUserTelemetry';
 import AdminUserInventory from '../../components/admin/AdminUserInventory';
-import AdminUserReassign from '../../components/admin/AdminUserReassign';
+import AdminUserBase from '../../components/admin/AdminUserBase';
 import AdminUserHeatmap from '../../components/admin/AdminUserHeatmap';
+import AdminSupportChat from '../../components/admin/AdminSupportChat';
+import AdminUserHelperStats from '../../components/admin/AdminUserHelperStats';
+import { useAuth } from '../../contexts/AuthContext';
 
-type AdminTab = 'licencias' | 'telemetria' | 'inventario' | 'reasignacion' | 'heatmap';
+type AdminTab = 'licencias' | 'telemetria' | 'inventario' | 'base' | 'heatmap' | 'soporte' | 'helper';
 
 export default function AdminUsersPage() {
   const { getProfiles, getPlans, getFeatures, getUserOverrides, assignFeatureToUser, removeFeatureFromUser, updateProfile } = useSaaS();
@@ -20,9 +24,32 @@ export default function AdminUsersPage() {
   const [features, setFeatures] = useState<Feature[]>([]);
   
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [userOverrides, setUserOverrides] = useState<UserFeatureOverride[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<AdminTab>('licencias');
+  
+  const { session, profile: currentUserProfile, isAdmin } = useAuth();
+  
+  const [activeTab, setActiveTab] = useState<AdminTab>(isAdmin ? 'licencias' : 'soporte');
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+
+  const loadUnreadCounts = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const { data } = await supabase
+      .from('internal_messages')
+      .select('sender_id')
+      .eq('receiver_id', session.user.id)
+      .eq('is_read', false);
+      
+    if (data) {
+      const counts: Record<string, number> = {};
+      data.forEach(msg => {
+        counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1;
+      });
+      setUnreadCounts(counts);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -33,13 +60,82 @@ export default function AdminUsersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { 
+    loadData(); 
+    loadUnreadCounts();
+
+    const channel = supabase.channel('admin_profiles_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setProfiles(prev => [payload.new as Profile, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setProfiles(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+        }
+      })
+      .subscribe();
+
+    const msgChannel = supabase.channel('admin_unread_msgs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'internal_messages' }, () => {
+        loadUnreadCounts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(msgChannel);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'soporte' && selectedUser) {
+      // Limpiar cuenta localmente para que el badge rojo desaparezca inmediatamente al estar en el chat
+      setUnreadCounts(prev => ({ ...prev, [selectedUser.id]: 0 }));
+    }
+  }, [activeTab, selectedUser]); // Se quita messages porque no existe en este componente
 
   const handleSelectUser = async (user: Profile) => {
     setSelectedUser(user);
     setActiveTab('licencias'); // Reset tab on user change
     const overrides = await getUserOverrides(user.id);
     setUserOverrides(overrides);
+  };
+
+  const handleToggleUserSelection = (e: React.MouseEvent | React.ChangeEvent<HTMLInputElement>, userId: string) => {
+    e.stopPropagation();
+    setSelectedUserIds(prev => 
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedUserIds.length === profiles.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(profiles.map(p => p.id));
+    }
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedUserIds.length === 0) return;
+    
+    if (action === 'helper' || action === 'remove_helper') {
+      const isHelper = action === 'helper';
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_helper: isHelper })
+        .in('id', selectedUserIds);
+        
+      if (!error) {
+        setProfiles(profiles.map(p => selectedUserIds.includes(p.id) ? { ...p, is_helper: isHelper } : p));
+        alert(`Rol de helper actualizado para ${selectedUserIds.length} usuarios.`);
+      } else {
+        alert('Error: ' + error.message);
+      }
+    } else {
+      alert(`Acción "${action}" seleccionada para ${selectedUserIds.length} usuarios. (Implementación futura)`);
+    }
+    
+    // setSelectedUserIds([]); // Opcional, limpiar selección
   };
 
   const handleUpdatePlan = async (planId: string) => {
@@ -74,8 +170,43 @@ export default function AdminUsersPage() {
     <div className="flex gap-6 h-full">
       {/* Lista de Usuarios */}
       <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="font-bold text-gray-800">Usuarios del Sistema</h3>
+        <div className="p-3 border-b border-gray-200 bg-gray-50 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <input 
+                  type="checkbox" 
+                  checked={profiles.length > 0 && selectedUserIds.length === profiles.length}
+                  onChange={handleToggleSelectAll}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 cursor-pointer"
+                />
+              )}
+              <h3 className="font-bold text-gray-800 text-sm">Usuarios ({profiles.length})</h3>
+            </div>
+            
+            {isAdmin && selectedUserIds.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  {selectedUserIds.length} sel.
+                </span>
+                <div className="relative group">
+                  <button className="text-xs bg-gray-800 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-gray-700 transition-colors shadow-sm">
+                    Acciones <Icon.ChevronDown />
+                  </button>
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                    <button onClick={() => handleBulkAction('helper')} className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"><Icon.CheckCircle /> Hacer Helper</button>
+                    <button onClick={() => handleBulkAction('remove_helper')} className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-red-600"><Icon.Close /> Quitar Helper</button>
+                    <div className="h-px bg-gray-100 my-1"></div>
+                    <button onClick={() => handleBulkAction('ban')} className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-gray-400"><Icon.Warning /> Banear Usuarios</button>
+                    <button onClick={() => handleBulkAction('promo')} className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-gray-400"><Icon.Plus /> Añadir Promoción</button>
+                    <button onClick={() => handleBulkAction('banner')} className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-gray-400"><Icon.View /> Activar Banners</button>
+                    <div className="h-px bg-gray-100 my-1"></div>
+                    <button onClick={() => handleBulkAction('group')} className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-gray-400"><Icon.Users /> Crear Grupo/Lista</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="overflow-y-auto flex-1">
           {profiles.length === 0 ? (
@@ -89,31 +220,52 @@ export default function AdminUsersPage() {
                 <div 
                   key={p.id} 
                   onClick={() => handleSelectUser(p)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === p.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'border-l-4 border-l-transparent'}`}
+                  className={`p-2.5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-3 ${selectedUser?.id === p.id ? 'bg-blue-50/50' : ''}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      {p.avatar_url ? (
-                        <img src={p.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full border border-gray-200" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                          {p.email.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      {/* Punto de estado online/offline */}
-                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} title={isOnline ? 'Online' : 'Offline'}></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 truncate">{p.full_name || p.email.split('@')[0]}</p>
-                      <p className="text-xs text-gray-500 truncate" title={p.email}>{p.email}</p>
-                    </div>
-                  </div>
+                  {isAdmin && (
+                    <input 
+                      type="checkbox"
+                      checked={selectedUserIds.includes(p.id)}
+                      onChange={(e) => { e.stopPropagation(); handleToggleUserSelection(e, p.id); }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 cursor-pointer"
+                    />
+                  )}
                   
-                  <div className="flex justify-between items-center mt-3 text-xs">
-                    <span className="text-gray-500">Rol: <span className="font-semibold text-gray-700">{p.role}</span></span>
-                    <span className={`px-2 py-0.5 rounded-full font-medium ${plan ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-600'}`}>
-                      {plan ? plan.name : 'Sin Plan'}
-                    </span>
+                  <div className="flex-1 min-w-0 flex justify-between items-center">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="relative shrink-0">
+                        {p.avatar_url ? (
+                          <img src={p.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full border border-gray-200" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                            {p.email.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        {/* Punto de estado online/offline */}
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} title={isOnline ? 'Online' : 'Offline'}></div>
+                      </div>
+                      <div className="flex flex-col justify-center min-w-0 pr-2">
+                        <div className="flex items-center">
+                          <p className="text-[13px] font-bold text-gray-900 truncate leading-tight">{p.full_name || p.email.split('@')[0]}</p>
+                          {unreadCounts[p.id] > 0 && (
+                            <span className="bg-purple-600 text-white text-[9px] font-bold px-1 py-0.5 rounded-full shadow-sm animate-pulse ml-1 shrink-0">
+                              {unreadCounts[p.id]}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-500 truncate leading-tight mt-0.5" title={p.email}>{p.email}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                      <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${plan ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {plan ? plan.name : 'Sin Plan'}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-medium capitalize">
+                        {p.role === 'admin' ? 'Admin' : p.is_helper ? 'Helper' : (p.role === 'user' ? 'Vendedor' : p.role)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -149,51 +301,29 @@ export default function AdminUsersPage() {
           </div>
           
           {/* TABS NAVIGATION */}
-          <div className="flex border-b border-gray-200 bg-white px-4 pt-2 gap-4">
-            <button
-              onClick={() => setActiveTab('licencias')}
-              className={`pb-3 px-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-                activeTab === 'licencias' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              <span>{Icon.Settings()}</span> Licencias
+          <div className="flex gap-2 p-3 border-b border-gray-200 bg-gray-50/50">
+            {isAdmin && (
+              <>
+                <button onClick={() => setActiveTab('licencias')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'licencias' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>Licencias</button>
+                <button onClick={() => setActiveTab('telemetria')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'telemetria' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>Actividad</button>
+                <button onClick={() => setActiveTab('heatmap')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'heatmap' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>Heatmap</button>
+                <button onClick={() => setActiveTab('inventario')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'inventario' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>Inventario</button>
+                <button onClick={() => setActiveTab('base')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'base' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>Base</button>
+              </>
+            )}
+            <button onClick={() => setActiveTab('soporte')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'soporte' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>
+              Mensajes
+              {unreadCounts[selectedUser.id] > 0 && activeTab !== 'soporte' && <span className="absolute top-0 right-0 w-2 h-2 bg-purple-600 rounded-full animate-ping"></span>}
             </button>
-            <button
-              onClick={() => setActiveTab('telemetria')}
-              className={`pb-3 px-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-                activeTab === 'telemetria' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              <span>{Icon.Dashboard()}</span> Telemetría
-            </button>
-            <button
-              onClick={() => setActiveTab('heatmap')}
-              className={`pb-3 px-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-                activeTab === 'heatmap' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              <span>{Icon.ChartPie()}</span> Mapa Calor
-            </button>
-            <button
-              onClick={() => setActiveTab('inventario')}
-              className={`pb-3 px-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-                activeTab === 'inventario' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              <span>{Icon.Database()}</span> Inventario
-            </button>
-            <button
-              onClick={() => setActiveTab('reasignacion')}
-              className={`pb-3 px-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-                activeTab === 'reasignacion' ? 'border-red-600 text-red-700' : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              <span>{Icon.Send()}</span> Reasignar
-            </button>
+            {(selectedUser.is_helper || selectedUser.role === 'admin') && (
+              <button onClick={() => setActiveTab('helper')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'helper' ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-200'}`}>
+                Helper Stats
+              </button>
+            )}
           </div>
 
           <div className="p-6 overflow-y-auto flex-1">
-            {activeTab === 'licencias' && (
+            {activeTab === 'licencias' && isAdmin && (
               <AdminUserLicenses 
                 selectedUser={selectedUser} 
                 plans={plans} 
@@ -204,12 +334,15 @@ export default function AdminUsersPage() {
                 onRemoveFeature={handleRemoveFeature} 
               />
             )}
-            {activeTab === 'telemetria' && <AdminUserTelemetry selectedUser={selectedUser} />}
-            {activeTab === 'heatmap' && <AdminUserHeatmap selectedUser={selectedUser} />}
-            {activeTab === 'inventario' && <AdminUserInventory selectedUser={selectedUser} />}
-            {activeTab === 'reasignacion' && <AdminUserReassign selectedUser={selectedUser} profiles={profiles} />}
+            {activeTab === 'telemetria' && isAdmin && <AdminUserTelemetry selectedUser={selectedUser} />}
+            {activeTab === 'heatmap' && isAdmin && <AdminUserHeatmap selectedUser={selectedUser} />}
+            {activeTab === 'inventario' && isAdmin && <AdminUserInventory selectedUser={selectedUser} />}
+            {activeTab === 'base' && isAdmin && <AdminUserBase selectedUser={selectedUser} profiles={profiles} />}
+            {activeTab === 'soporte' && <AdminSupportChat selectedUser={selectedUser} />}
+            {activeTab === 'helper' && (selectedUser.is_helper || selectedUser.role === 'admin') && <AdminUserHelperStats selectedUser={selectedUser} />}
           </div>
-        </div>      ) : (
+        </div>
+      ) : (
         <div className="flex-1 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <div className="text-4xl text-gray-300 mb-2">{Icon.Leads()}</div>
