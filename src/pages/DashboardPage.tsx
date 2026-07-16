@@ -184,11 +184,11 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
     <div className="w-full pb-6 px-1 flex flex-col">
       {/* Header y Botones Superiores */}
       <div className="flex justify-between items-center shrink-0 mb-4">
-        <h2 className="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
+        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200 tracking-tight flex items-center gap-2">
           <Icon.Dashboard /> Panel Analítico
         </h2>
         <div className="flex gap-2">
-          <button onClick={() => { window.location.hash = '#leads?action=new'; if (onNavigate) onNavigate('leads'); }} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-none text-xs font-semibold transition-colors flex items-center gap-1.5 border border-gray-300">
+          <button onClick={() => { window.location.hash = '#leads?action=new'; if (onNavigate) onNavigate('leads'); }} className="bg-slate-100 dark:bg-slate-800 hover:bg-gray-200 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-none text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-300 dark:border-slate-600/50">
             <Icon.Plus /> Lead
           </button>
           <button onClick={() => { if (onNavigate) onNavigate('send'); }} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-none text-xs font-semibold transition-colors flex items-center gap-1.5 border border-blue-700">
@@ -198,11 +198,11 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
       </div>
 
       {/* Tabs - Header Style */}
-      <div className="flex border-b border-gray-200 mb-5 gap-6">
+      <div className="flex border-b border-slate-200 dark:border-slate-700/50 mb-5 gap-6">
         <button
           onClick={() => setTab('overview')}
           className={`pb-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'overview' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'overview' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.ChartPie /> Overview
@@ -210,7 +210,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         <button
           onClick={() => setTab('pipeline')}
           className={`pb-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'pipeline' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'pipeline' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Pipeline /> Pipeline
@@ -218,7 +218,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         <button
           onClick={() => setTab('tasks')}
           className={`pb-2 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'tasks' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'tasks' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Tasks /> Tareas
@@ -231,16 +231,16 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
           <div className="flex flex-col gap-5">
             
             {/* Metas Diarias */}
-            <div className="bg-transparent border-t border-b border-gray-200 py-3">
-              <h3 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center justify-between">
+            <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
+              <h3 className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between">
                 <span>Progreso de Metas (Hoy)</span>
-                <span className="text-[9px] text-gray-500 font-medium">{compareLabel}</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">{compareLabel}</span>
               </h3>
               <div className="grid grid-cols-3 gap-1">
                 
                 {/* Meta WhatsApp */}
-                <div className="flex flex-col items-center group hover:bg-gray-50 transition-colors py-2 px-1 rounded">
-                  <div className="text-[9px] text-gray-600 font-bold uppercase tracking-wider flex items-center gap-1 mb-2"><Icon.Messages /> WA</div>
+                <div className="flex flex-col items-center group hover:bg-slate-50 dark:bg-slate-900 transition-colors py-2 px-1 rounded">
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1 mb-2"><Icon.Messages /> WA</div>
                   <div className="w-24 h-24 relative mb-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -251,12 +251,12 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-[11px] font-bold text-gray-700">{waPct}%</span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{waPct}%</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-sm font-black text-gray-800 leading-none">{waToday}</span>
+                      <span className="text-sm font-black text-slate-700 dark:text-slate-200 leading-none">{waToday}</span>
                       <span className="text-[9px] text-gray-400 font-medium">/ {settings.dailyGoalWhatsApp}</span>
                     </div>
                     <span className={`text-[8px] font-bold mt-1 ${waDiff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -266,8 +266,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                 </div>
 
                 {/* Meta Email */}
-                <div className="flex flex-col items-center group hover:bg-gray-50 transition-colors py-2 px-1 rounded">
-                  <div className="text-[9px] text-gray-600 font-bold uppercase tracking-wider flex items-center gap-1 mb-2"><Icon.Email /> Email</div>
+                <div className="flex flex-col items-center group hover:bg-slate-50 dark:bg-slate-900 transition-colors py-2 px-1 rounded">
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1 mb-2"><Icon.Email /> Email</div>
                   <div className="w-24 h-24 relative mb-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -278,12 +278,12 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-[11px] font-bold text-gray-700">{emailPct}%</span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{emailPct}%</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-sm font-black text-gray-800 leading-none">{emailToday}</span>
+                      <span className="text-sm font-black text-slate-700 dark:text-slate-200 leading-none">{emailToday}</span>
                       <span className="text-[9px] text-gray-400 font-medium">/ {settings.dailyGoalEmail}</span>
                     </div>
                     <span className={`text-[8px] font-bold mt-1 ${emailDiff >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
@@ -293,8 +293,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                 </div>
 
                 {/* Meta Llamadas */}
-                <div className="flex flex-col items-center group hover:bg-gray-50 transition-colors py-2 px-1 rounded">
-                  <div className="text-[9px] text-gray-600 font-bold uppercase tracking-wider flex items-center gap-1 mb-2"><Icon.Phone /> Llamar</div>
+                <div className="flex flex-col items-center group hover:bg-slate-50 dark:bg-slate-900 transition-colors py-2 px-1 rounded">
+                  <div className="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1 mb-2"><Icon.Phone /> Llamar</div>
                   <div className="w-24 h-24 relative mb-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -305,15 +305,15 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-[11px] font-bold text-gray-700">{callPct}%</span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{callPct}%</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-center">
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-sm font-black text-gray-800 leading-none">{callToday}</span>
+                      <span className="text-sm font-black text-slate-700 dark:text-slate-200 leading-none">{callToday}</span>
                       <span className="text-[9px] text-gray-400 font-medium">/ {settings.dailyGoalCalls}</span>
                     </div>
-                    <span className={`text-[8px] font-bold mt-1 ${callDiff >= 0 ? 'text-gray-600' : 'text-red-500'}`}>
+                    <span className={`text-[8px] font-bold mt-1 ${callDiff >= 0 ? 'text-slate-500 dark:text-slate-400' : 'text-red-500'}`}>
                       {callDiff >= 0 ? '+' : ''}{callDiff} vs {compareLabel.split(' ')[1]}
                     </span>
                   </div>
@@ -324,8 +324,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
 
             {/* Conversión y Tareas de Hoy (Overview) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-transparent border-t border-b border-gray-200 py-3">
-                <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-3">Conversión Global</h3>
+              <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
+                <h3 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3">Conversión Global</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between text-xs font-semibold">
                     <span className="text-blue-600">{contactRate}% Contactados</span>
@@ -335,22 +335,22 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                     <div className="bg-blue-500 h-full transition-all" style={{ width: `${contactRate}%` }} />
                     <div className="bg-green-500 h-full transition-all" style={{ width: `${conversionRate}%` }} />
                   </div>
-                  <div className="flex justify-between text-[10px] text-gray-500 font-medium uppercase tracking-wide">
+                  <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">
                     <span>{contacted} de {leads.length} leads</span>
                     <span>{converted} leads</span>
                   </div>
                 </div>
               </div>
-              <div className="bg-transparent border-t border-b border-gray-200 py-3">
-                <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-3">Rendimiento Hoy</h3>
+              <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
+                <h3 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3">Rendimiento Hoy</h3>
                 <div className="flex justify-around items-center h-full pb-2">
                   <div className="text-center group cursor-default">
                     <p className="text-2xl font-black text-emerald-600 group-hover:scale-110 transition-transform">{completedToday}</p>
-                    <p className="text-[10px] text-gray-500 uppercase font-semibold mt-1">Tareas Hechas</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold mt-1">Tareas Hechas</p>
                   </div>
                   <div className="text-center group cursor-default">
                     <p className="text-2xl font-black text-blue-600 group-hover:scale-110 transition-transform">{logsToday.length}</p>
-                    <p className="text-[10px] text-gray-500 uppercase font-semibold mt-1">Total Envíos</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold mt-1">Total Envíos</p>
                   </div>
                 </div>
               </div>
@@ -377,8 +377,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         {/* ======================= PIPELINE ======================= */}
         {tab === 'pipeline' && (
           <div className="flex flex-col gap-6">
-            <div className="bg-transparent border-t border-b border-gray-200 py-3">
-              <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-4">Embudo de Ventas</h3>
+            <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
+              <h3 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4">Embudo de Ventas</h3>
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={pipelineData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
@@ -395,8 +395,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
               </div>
             </div>
 
-            <div className="bg-transparent border-t border-b border-gray-200 py-3">
-              <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-4">Adquisición Mensual</h3>
+            <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
+              <h3 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4">Adquisición Mensual</h3>
               <div className="h-48 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={monthlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
@@ -421,37 +421,37 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         {tab === 'tasks' && (
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-transparent border-t border-b border-gray-200 py-3">
+              <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
                 <h3 className="text-[11px] font-bold text-red-700 uppercase tracking-wider mb-3">Vencidas / Urgentes</h3>
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-black text-red-600">{overdueTasks.length}</div>
-                  <div className="text-xs text-gray-600 font-medium">Tienes tareas que ya superaron su fecha límite. Revisa la pestaña de tareas.</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tienes tareas que ya superaron su fecha límite. Revisa la pestaña de tareas.</div>
                 </div>
               </div>
-              <div className="bg-transparent border-t border-b border-gray-200 py-3">
+              <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
                 <h3 className="text-[11px] font-bold text-amber-600 uppercase tracking-wider mb-3">Para Hoy</h3>
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-black text-amber-500">{todayTasks.length}</div>
-                  <div className="text-xs text-gray-600 font-medium">Tareas programadas para ser completadas el día de hoy.</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tareas programadas para ser completadas el día de hoy.</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-transparent border-t border-b border-gray-200 py-3">
-              <h3 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-4">Eficiencia Histórica</h3>
+            <div className="bg-transparent border-t border-b border-slate-200 dark:border-slate-700/50 py-3">
+              <h3 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4">Eficiencia Histórica</h3>
               {(() => {
                 const completed = tasks.filter((t) => t.status === 'completada').length;
                 const rate = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
                 return (
                   <div className="space-y-3">
                     <div className="flex justify-between items-end mb-1">
-                      <span className="text-xs font-semibold text-gray-600">Completadas</span>
-                      <span className="text-sm font-bold text-gray-800">{rate}%</span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Completadas</span>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{rate}%</span>
                     </div>
                     <div className="bg-gray-200 h-1 overflow-hidden">
                       <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${rate}%` }} />
                     </div>
-                    <p className="text-[10px] font-bold text-gray-500 tracking-wide uppercase">{completed} DE {tasks.length} TAREAS</p>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wide uppercase">{completed} DE {tasks.length} TAREAS</p>
                   </div>
                 );
               })()}

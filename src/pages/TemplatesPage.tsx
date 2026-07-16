@@ -172,7 +172,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
         <button 
           onClick={() => {
             if (templates.length >= 3 && !hasFeature('pro:unlimited_templates')) {
-              alert(`🔒 Límite Alcanzado: El Plan Free solo permite crear 3 plantillas de ${tab}. Actualiza al Plan Pro para crear plantillas ilimitadas.`);
+              alert(` Límite Alcanzado: El Plan Free solo permite crear 3 plantillas de ${tab}. Actualiza al Plan Pro para crear plantillas ilimitadas.`);
               return;
             }
             setEditing({ nombre: '', contenido: '', asunto: '', isHtml: false });
@@ -190,7 +190,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
         </select>
 
         <button onClick={() => setShowCatManager(!showCatManager)}
-          className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showCatManager ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+          className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showCatManager ? 'bg-gray-200 text-slate-600 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-gray-200'}`}>
           Gestionar categorías
         </button>
 
@@ -200,12 +200,12 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
           </button>
         )}
 
-        <span className="text-xs text-gray-500 ml-auto">{templates.length} plantillas</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">{templates.length} plantillas</span>
       </div>
 
       {/* Category manager */}
       {showCatManager && (
-        <div className="border rounded p-2 mb-2 bg-gray-50">
+        <div className="border rounded p-2 mb-2 bg-slate-50 dark:bg-slate-900">
           <h3 className="text-xs font-medium mb-1">Categorías</h3>
           <form onSubmit={handleCreateCategory} className="flex gap-1 mb-2">
             <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)}
@@ -229,7 +229,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
       {/* Template editor */}
       {editing && (
-        <div className="border rounded-lg p-3 mb-3 bg-gray-50">
+        <div className="border rounded-lg p-3 mb-3 bg-slate-50 dark:bg-slate-900">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-sm font-medium">{editing.id ? 'Editar' : 'Nueva'} Plantilla</h3>
             <button onClick={() => setEditing(null)} className="text-gray-400 text-sm">x</button>
@@ -243,7 +243,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
       <div className="space-y-1">
         {filtered.map((t) => (
           <div key={t.id}>
-            <div className={`border rounded p-2 hover:bg-gray-50 flex items-start gap-2 ${selectedIds.has(t.id!) ? 'bg-blue-50' : ''}`}>
+            <div className={`border rounded p-2 hover:bg-slate-50 dark:bg-slate-900 flex items-start gap-2 ${selectedIds.has(t.id!) ? 'bg-blue-50' : ''}`}>
               <input type="checkbox" checked={selectedIds.has(t.id!)} onChange={() => toggleSel(t.id!)} className="rounded mt-0.5" />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
@@ -270,8 +270,8 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
             {/* Send log for this template */}
             {showLog === t.id && (
-              <div className="ml-6 border rounded p-2 mb-1 bg-gray-50 text-xs">
-                <h4 className="font-medium text-gray-600 mb-1">Historial de envíos</h4>
+              <div className="ml-6 border rounded p-2 mb-1 bg-slate-50 dark:bg-slate-900 text-xs">
+                <h4 className="font-medium text-slate-500 dark:text-slate-400 mb-1">Historial de envíos</h4>
                 {sendLogs.length === 0 ? (
                   <p className="text-gray-400">No se ha enviado este mensaje aún.</p>
                 ) : (

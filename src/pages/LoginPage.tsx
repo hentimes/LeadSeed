@@ -72,24 +72,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">LeadSeed CRM</h1>
-          <p className="text-gray-600">Inicia sesión para gestionar tus leads</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">LeadSeed CRM</h1>
+          <p className="text-slate-500 dark:text-slate-400">Inicia sesión para gestionar tus leads</p>
         </div>
 
         <div className="space-y-4">
           <button 
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 dark:border-slate-600/50 rounded-lg text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md hover:bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
           >
             <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
             <span className="font-medium">Continuar con Google</span>
           </button>
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-500">
+        <p className="mt-8 text-center text-sm text-slate-400 dark:text-slate-500">
           Al iniciar sesión aceptas nuestros términos de servicio y políticas de privacidad.
         </p>
       </div>

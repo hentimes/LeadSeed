@@ -71,18 +71,18 @@ export default function CommunityPage() {
     });
   };
 
-  if (loading) return <div className="p-8 flex justify-center text-gray-500"><Icon.Settings /> Cargando sala...</div>;
+  if (loading) return <div className="p-8 flex justify-center text-slate-400 dark:text-slate-500"><Icon.Settings /> Cargando sala...</div>;
 
   return (
     <div className="flex h-full gap-4 max-w-6xl mx-auto p-4">
       {/* Sala de Chat (Centro) */}
-      <div className="flex-1 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm flex flex-col overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
           <h2 className="font-bold text-lg flex items-center gap-2"><Icon.Leads /> Sala Global de Comunidad</h2>
           <p className="text-sm text-blue-100 opacity-90">Conversa con otros usuarios, comparte tips y cierra negocios.</p>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
               <Icon.Messages />
@@ -101,11 +101,11 @@ export default function CommunityPage() {
                     <img src={avatar} alt={name} className="w-8 h-8 rounded-full border-2 border-white object-cover" />
                   </div>
                   <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
-                    <span className="text-xs text-gray-500 mb-1">{isMe ? 'Tú' : name}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 mb-1">{isMe ? 'Tú' : name}</span>
                     <div className={`px-4 py-2 rounded-2xl text-sm shadow-sm ${
                       isMe 
                         ? 'bg-blue-600 text-white rounded-tr-none' 
-                        : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
+                        : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 rounded-tl-none'
                     }`}>
                       {msg.message}
                     </div>
@@ -117,13 +117,13 @@ export default function CommunityPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-200 flex gap-2">
+        <form onSubmit={handleSend} className="p-4 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-t border-slate-200 dark:border-slate-700/50 flex gap-2">
           <input 
             type="text" 
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
             placeholder="Escribe un mensaje a la comunidad..."
-            className="flex-1 border border-gray-300 rounded-full px-5 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+            className="flex-1 border border-slate-300 dark:border-slate-600/50 rounded-full px-5 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
           />
           <button 
             type="submit" 
@@ -136,9 +136,9 @@ export default function CommunityPage() {
       </div>
 
       {/* Directorio en Vivo (Derecha) */}
-      <div className="w-72 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col hidden md:flex">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
-          <h3 className="font-bold text-gray-800 flex items-center justify-between">
+      <div className="w-72 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm flex flex-col hidden md:flex">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 rounded-t-2xl">
+          <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
             En Línea
             <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full animate-pulse">
               {Object.keys(activeUsers).length}
@@ -147,7 +147,7 @@ export default function CommunityPage() {
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           {Object.values(activeUsers).map((u: any) => (
-            <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors">
+            <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-900 rounded-xl cursor-pointer transition-colors">
               <div className="relative">
                 <img 
                   src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.email)}&background=random`} 
@@ -157,8 +157,8 @@ export default function CommunityPage() {
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-gray-900 truncate">{u.full_name || u.email.split('@')[0]}</p>
-                <p className="text-xs text-gray-500 truncate">{u.bio || 'Conectado ahora'}</p>
+                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">{u.full_name || u.email.split('@')[0]}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{u.bio || 'Conectado ahora'}</p>
               </div>
             </div>
           ))}

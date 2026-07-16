@@ -108,17 +108,17 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
-      <div className="flex border-b border-gray-200">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-800/80 dark:backdrop-blur-md relative">
+      <div className="flex border-b border-slate-200 dark:border-slate-700/50">
         <button 
           onClick={() => setActiveTab('leads')} 
-          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'leads' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'leads' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900'}`}
         >
           Leads ({leads.length})
         </button>
         <button 
           onClick={() => setActiveTab('templates')} 
-          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'templates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'templates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900'}`}
         >
           Plantillas ({templates.length})
         </button>
@@ -127,27 +127,27 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
       <div className="flex-1 overflow-y-auto p-4 pb-28">
         {loading ? (
           <div className="flex justify-center items-center py-10">
-            <p className="text-gray-500 text-sm font-medium flex items-center gap-2">
+            <p className="text-slate-400 dark:text-slate-500 text-sm font-medium flex items-center gap-2">
               <Icon.Settings /> Cargando base de datos...
             </p>
           </div>
         ) : activeTab === 'leads' ? (
           <div>
-            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors" onClick={toggleAllLeads}>
+            <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors" onClick={toggleAllLeads}>
               <input type="checkbox" checked={selectedLeads.size === leads.length && leads.length > 0} readOnly className="rounded text-blue-600 w-4 h-4 cursor-pointer" />
-              <span className="text-sm font-bold text-gray-700">Seleccionar Todos los Leads</span>
+              <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Seleccionar Todos los Leads</span>
             </div>
             
             {leads.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm py-8">Este usuario no tiene leads registrados.</p>
+              <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-8">Este usuario no tiene leads registrados.</p>
             ) : (
               <div className="space-y-2">
                 {leads.map(lead => (
                   <div key={lead.id} className="flex items-center gap-4 p-3 border border-gray-100 rounded-xl hover:bg-blue-50/50 cursor-pointer transition-colors" onClick={() => toggleLead(lead.id as string)}>
                     <input type="checkbox" checked={selectedLeads.has(lead.id as string)} readOnly className="rounded text-blue-600 w-4 h-4 cursor-pointer" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-gray-900 truncate">{lead.name || 'Sin Nombre'}</p>
-                      <p className="text-xs text-gray-500 truncate">{lead.phone || 'Sin teléfono'} • {lead.status}</p>
+                      <p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{lead.name || 'Sin Nombre'}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{lead.phone || 'Sin teléfono'} • {lead.status}</p>
                     </div>
                   </div>
                 ))}
@@ -156,16 +156,16 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
           </div>
         ) : activeTab === 'templates' ? (
           <div>
-            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => {
+            <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => {
               if (selectedTemplates.size === templates.length) setSelectedTemplates(new Set());
               else setSelectedTemplates(new Set(templates.map(t => t.id as string)));
             }}>
               <input type="checkbox" checked={selectedTemplates.size === templates.length && templates.length > 0} readOnly className="rounded text-blue-600 w-4 h-4 cursor-pointer" />
-              <span className="text-sm font-bold text-gray-700">Seleccionar Todas las Plantillas</span>
+              <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Seleccionar Todas las Plantillas</span>
             </div>
             
             {templates.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm py-8">Este usuario no tiene plantillas registradas.</p>
+              <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-8">Este usuario no tiene plantillas registradas.</p>
             ) : (
               <div className="space-y-2">
                 {templates.map(template => (
@@ -177,8 +177,8 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
                   }}>
                     <input type="checkbox" checked={selectedTemplates.has(template.id as string)} readOnly className="rounded text-blue-600 w-4 h-4 cursor-pointer" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-gray-900 truncate">{template.nombre || 'Sin Nombre'}</p>
-                      <p className="text-xs text-gray-500 truncate">{template.contenido || ''}</p>
+                      <p className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{template.nombre || 'Sin Nombre'}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{template.contenido || ''}</p>
                     </div>
                   </div>
                 ))}
@@ -189,9 +189,9 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
       </div>
 
       {/* Barra de Acciones (Fijada abajo) */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-t border-slate-200 dark:border-slate-700/50 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="text-sm font-bold text-gray-800 whitespace-nowrap">
+          <div className="text-sm font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
             {selectedLeads.size} Leads | {selectedTemplates.size} Plantillas
           </div>
           
@@ -199,7 +199,7 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
             <select 
               value={targetUserId} 
               onChange={e => setTargetUserId(e.target.value)}
-              className="border border-gray-300 bg-gray-50 rounded-lg px-3 py-2 text-sm w-full md:w-64 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-medium text-gray-700"
+              className="border border-slate-300 dark:border-slate-600/50 bg-slate-50 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm w-full md:w-64 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-medium text-slate-600 dark:text-slate-300"
             >
               <option value="">Transferir a usuario...</option>
               {profiles.filter(p => p.id !== selectedUser.id).map(p => (

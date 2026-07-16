@@ -22,7 +22,7 @@ export default function EmailScheduler({
   return (
     <div className="pt-2">
       <div className="flex justify-between items-center mb-3">
-        <label className="flex items-center gap-2 text-xs cursor-pointer text-gray-600">
+        <label className="flex items-center gap-2 text-xs cursor-pointer text-slate-500 dark:text-slate-400">
           <input type="checkbox" checked={schedule} onChange={(e) => setSchedule(e.target.checked)} className="rounded" />
           Programar envío automático
         </label>

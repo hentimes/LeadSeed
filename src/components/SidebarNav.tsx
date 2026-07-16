@@ -40,7 +40,7 @@ function NavButton({
           'relative flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-150',
           active
             ? 'border-blue-500 bg-blue-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)]'
-            : 'border-transparent bg-white text-gray-500 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 dark:hover:border-gray-700',
+            : 'border-transparent bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-400 dark:text-slate-500 hover:border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:bg-slate-900 hover:text-slate-800 dark:text-slate-100 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 dark:hover:border-gray-700',
         ].join(' ')}
       >
         <span className="text-lg leading-none">{icon}</span>
@@ -105,7 +105,7 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin
   
   if (loading) return null;
   return (
-    <aside className="flex h-full w-[68px] shrink-0 flex-col items-center justify-between border-l border-gray-200 bg-white/50 backdrop-blur-md px-2 py-4 dark:border-gray-800 dark:bg-gray-950/50 z-40 relative">
+    <aside className="flex h-full w-[68px] shrink-0 flex-col items-center justify-between border-l border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/50 backdrop-blur-md px-2 py-4 dark:border-gray-800 dark:bg-gray-950/50 z-40 relative">
       <div className="flex w-full flex-col items-center gap-2">
         {primaryRoutes
           .filter(route => !route.requiredFeature || hasFeature(route.requiredFeature))
@@ -121,7 +121,7 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin
         ))}
       </div>
 
-      <div className="flex w-full flex-col items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-800">
+      <div className="flex w-full flex-col items-center gap-2 border-t border-slate-200 dark:border-slate-700/50 pt-3 dark:border-gray-800">
         {[...adminRoutes, ...secondaryRoutes]
           .filter(route => !route.requiredFeature || hasFeature(route.requiredFeature))
           .map(({ page, label, icon }) => (
@@ -144,7 +144,7 @@ export default function SidebarNav({ currentPage, onNavigate, taskCount, isAdmin
             className={`relative rounded-full transition-all duration-200 hover:scale-105 ${profile?.show_premium_frame && hasFeature('premium_aesthetics') ? 'ring-2 ring-yellow-400 p-[2px]' : ''}`}
           >
             {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
-               <img src={profile?.avatar_url || user?.user_metadata?.avatar_url} alt="Profile" className="w-8 h-8 rounded-full border border-gray-200 shadow-sm object-cover" title={profile?.full_name || user?.user_metadata?.full_name || user?.email} />
+               <img src={profile?.avatar_url || user?.user_metadata?.avatar_url} alt="Profile" className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700/50 shadow-sm object-cover" title={profile?.full_name || user?.user_metadata?.full_name || user?.email} />
             ) : (
                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold" title={user?.email}>
                  {user?.email?.charAt(0).toUpperCase()}

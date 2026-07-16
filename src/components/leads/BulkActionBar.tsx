@@ -36,21 +36,21 @@ export default function BulkActionBar({
       <button
         onClick={onExport}
         title={`Exportar seleccionados como ${exportFormat.toUpperCase()}`}
-        className="bg-white border border-gray-200 text-gray-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-gray-50 transition-colors"
+        className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 px-1.5 py-1 rounded text-xs font-medium hover:bg-slate-50 dark:bg-slate-900 transition-colors"
       >
         Exportar
       </button>
       {showTrash ? (
         <>
-          <button onClick={onRestore} className="bg-white border border-green-200 text-green-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-green-50 transition-colors">
+          <button onClick={onRestore} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-green-200 text-green-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-green-50 transition-colors">
             Restaurar
           </button>
-          <button onClick={onDelete} className="bg-white border border-red-200 text-red-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-red-50 transition-colors">
+          <button onClick={onDelete} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-red-200 text-red-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-red-50 transition-colors">
             Eliminar def.
           </button>
         </>
       ) : (
-        <button onClick={onDelete} className="bg-white border border-red-200 text-red-600 px-1.5 py-1 rounded text-xs font-medium hover:bg-red-50 transition-colors flex items-center gap-1">
+        <button onClick={onDelete} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-red-200 text-red-600 px-1.5 py-1 rounded text-xs font-medium hover:bg-red-50 transition-colors flex items-center gap-1">
           Eliminar
         </button>
       )}
@@ -58,7 +58,7 @@ export default function BulkActionBar({
         <>
           <select
             onChange={(e) => { if (e.target.value) onStatusChange(e.target.value as LeadStatus); e.target.value = ''; }}
-            className="border border-gray-200 rounded px-1.5 py-1 text-xs bg-white text-gray-700 outline-none focus:border-blue-300"
+            className="border border-slate-200 dark:border-slate-700/50 rounded px-1.5 py-1 text-xs bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-600 dark:text-slate-300 outline-none focus:border-blue-300"
             defaultValue=""
           >
             <option value="" disabled>Estado...</option>
@@ -68,7 +68,7 @@ export default function BulkActionBar({
           </select>
           <select
             onChange={(e) => { if (e.target.value) onAddToList(Number(e.target.value)); e.target.value = ''; }}
-            className="border border-gray-200 rounded px-1.5 py-1 text-xs bg-white text-gray-700 outline-none focus:border-blue-300"
+            className="border border-slate-200 dark:border-slate-700/50 rounded px-1.5 py-1 text-xs bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-600 dark:text-slate-300 outline-none focus:border-blue-300"
             defaultValue=""
           >
             <option value="" disabled>Lista...</option>
@@ -80,7 +80,7 @@ export default function BulkActionBar({
       )}
       <button
         onClick={onClearSelection}
-        className="text-xs text-gray-500 hover:text-gray-700 ml-auto underline decoration-dotted"
+        className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 ml-auto underline decoration-dotted"
       >
         Deseleccionar
       </button>

@@ -81,7 +81,7 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
   return (
     <div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">1. Categoría de Llamada</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">1. Categoría de Llamada</label>
         <select
           value={selectedListId}
           onChange={(e) => {
@@ -90,7 +90,7 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
             setAssignedLeadIds([]);
             setSelectedLeadId('');
           }}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
+          className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
         >
           <option value="all">Todas las categorías</option>
           {templateLists.map((l) => (
@@ -100,11 +100,11 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">2. Guion / Script</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">2. Guion / Script</label>
         <select
           value={selectedTemplateId}
           onChange={handleTemplateChange}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
+          className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
         >
           <option value="">-- Seleccionar Guion --</option>
           {filteredTemplates.map((t) => (
@@ -114,12 +114,12 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">3. Lead a llamar</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">3. Lead a llamar</label>
         <select
           value={selectedLeadId}
           onChange={(e) => setSelectedLeadId(e.target.value || '')}
           disabled={!selectedTemplateId}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100"
+          className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-slate-100 dark:bg-slate-800"
         >
           <option value="">-- Seleccionar Lead --</option>
           {validLeads.map((l) => (
@@ -134,8 +134,8 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
       {selectedTemplate && (
         /* 1. Selección de Plantilla (Guión) */
         <div className="mb-4 border-b border-gray-100 pb-4">
-          <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">1. Seleccionar Guión</h3>
-          <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedTemplate.contenido}</p>
+          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">1. Seleccionar Guión</h3>
+          <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{selectedTemplate.contenido}</p>
         </div>
       )}
 

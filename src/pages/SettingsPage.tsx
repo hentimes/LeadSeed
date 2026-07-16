@@ -34,16 +34,16 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
     <div className="max-w-2xl mx-auto space-y-8">
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Ajustes</h2>
-        <p className="text-sm text-gray-500 mt-1">Configura la extensión, gestiona tus datos y conecta proveedores.</p>
+        <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Ajustes</h2>
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Configura la extensión, gestiona tus datos y conecta proveedores.</p>
       </div>
 
       {/* Tabs - Header Style */}
-      <div className="flex border-b border-gray-200 mb-6 px-2 gap-6">
+      <div className="flex border-b border-slate-200 dark:border-slate-700/50 mb-6 px-2 gap-6">
         <button
           onClick={() => setTab('display')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'display' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'display' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Palette /> Apariencia
@@ -51,7 +51,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         <button
           onClick={() => setTab('data')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'data' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'data' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Database /> Datos
@@ -59,7 +59,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         <button
           onClick={() => setTab('email')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'email' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'email' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Email /> Email
@@ -67,7 +67,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         <button
           onClick={() => setTab('goals')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'goals' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'goals' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Bullseye /> Metas
@@ -75,7 +75,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         <button
           onClick={() => setTab('support')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'support' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800'
+            tab === 'support' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
           }`}
         >
           <Icon.Messages /> Ayuda VIP

@@ -67,7 +67,7 @@ export default function SendPage() {
         <button
           onClick={() => setTab('whatsapp')}
           className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
-            tab === 'whatsapp' ? 'bg-white shadow text-green-700' : 'text-gray-600 hover:bg-white/50'
+            tab === 'whatsapp' ? 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md shadow text-green-700' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/50'
           }`}
         >
           <Icon.Messages /> WhatsApp
@@ -75,7 +75,7 @@ export default function SendPage() {
         <button
           onClick={() => setTab('email')}
           className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
-            tab === 'email' ? 'bg-white shadow text-blue-700' : 'text-gray-600 hover:bg-white/50'
+            tab === 'email' ? 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md shadow text-blue-700' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/50'
           }`}
         >
           <Icon.Email /> Email
@@ -83,7 +83,7 @@ export default function SendPage() {
         <button
           onClick={() => setTab('call')}
           className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
-            tab === 'call' ? 'bg-white shadow text-amber-700' : 'text-gray-600 hover:bg-white/50'
+            tab === 'call' ? 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md shadow text-amber-700' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/50'
           }`}
         >
           <Icon.Phone /> Llamadas

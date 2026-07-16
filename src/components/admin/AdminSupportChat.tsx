@@ -242,12 +242,12 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando historial de chat...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando historial de chat...</div>;
 
   return (
     <div className="w-full h-[600px]">
       {/* Columna de Chat */}
-      <div className="w-full h-full flex flex-col bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="w-full h-full flex flex-col bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm overflow-hidden">
         <div className="bg-indigo-600 p-4 text-white flex items-center justify-between">
           <div>
             <h2 className="font-bold text-lg">Chat Maestro</h2>
@@ -263,14 +263,14 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
         
         {activeRequirement && (
           <div className={`px-4 py-3 flex items-center justify-between shadow-sm z-10 border-b
-            ${activeRequirement.status === 'open' ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-200'}`}>
+            ${activeRequirement.status === 'open' ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700/50'}`}>
             <div className="flex items-center gap-2">
               <Icon.Inbox />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Requerimiento activo: <strong className="uppercase text-blue-700">{activeRequirement.type}</strong>
               </span>
             </div>
-            <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${activeRequirement.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${activeRequirement.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-slate-500 dark:text-slate-400'}`}>
               {activeRequirement.status === 'open' ? 'ABIERTO' : 'CERRADO'}
             </span>
           </div>
@@ -278,7 +278,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
         
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#e5ddd5]">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+          <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
             <Icon.Messages />
             <p className="mt-2 text-sm font-medium">Inicia la conversación</p>
           </div>
@@ -302,7 +302,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
               <div key={msg.id}>
                 {showDate && (
                   <div className="flex justify-center mb-4 mt-2">
-                    <span className="bg-white/80 text-gray-500 text-[11px] font-bold px-3 py-1 rounded-lg uppercase shadow-sm">
+                    <span className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/80 text-slate-400 dark:text-slate-500 text-[11px] font-bold px-3 py-1 rounded-lg uppercase shadow-sm">
                       {formatMessageDate(msg.created_at)}
                     </span>
                   </div>
@@ -310,8 +310,8 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
                 <div className={`flex flex-col max-w-[80%] ${isMe ? 'self-end items-end ml-auto' : 'self-start items-start'}`}>
                   <div className={`px-3 pt-2 pb-1.5 rounded-xl text-[14px] shadow-sm leading-relaxed ${
                     isMe 
-                      ? 'bg-[#dcf8c6] text-gray-900 rounded-tr-none' 
-                      : 'bg-white text-gray-900 rounded-tl-none border border-gray-100'
+                      ? 'bg-[#dcf8c6] text-slate-800 dark:text-slate-100 rounded-tr-none' 
+                      : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-800 dark:text-slate-100 rounded-tl-none border border-gray-100'
                   }`}>
                     {!isMe && (
                       <div className="text-xs font-bold text-indigo-500 mb-1 flex items-center gap-1">
@@ -326,11 +326,11 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
                       </div>
                     )}
                     <div className="break-all whitespace-pre-wrap">{msg.message}</div>
-                    <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 text-gray-500`}>
+                    <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 text-slate-400 dark:text-slate-500`}>
                       {formatMessageTime(msg.created_at)}
                       {isMe && (
                         <span className={msg.is_read ? 'text-blue-500' : 'text-gray-400'}>
-                          ✓✓
+                          
                         </span>
                       )}
                     </div>
@@ -342,7 +342,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
         )}
         {isUserTyping && (
           <div className="flex justify-start mb-4">
-            <div className="bg-white border border-gray-100 text-gray-500 rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm text-xs italic flex items-center gap-1.5">
+            <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 text-slate-400 dark:text-slate-500 rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm text-xs italic flex items-center gap-1.5">
               <span className="flex gap-1">
                 <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
                 <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
@@ -355,13 +355,13 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
         <div ref={messagesEndRef} />
       </div>
 
-        <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-200 flex gap-2">
+        <form onSubmit={handleSend} className="p-4 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-t border-slate-200 dark:border-slate-700/50 flex gap-2">
           <input 
             type="text" 
             value={newMessage}
             onChange={handleTyping}
             placeholder="Enviar un mensaje directo (abrirá su ventana)..."
-            className="flex-1 border border-gray-300 rounded-full px-5 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+            className="flex-1 border border-slate-300 dark:border-slate-600/50 rounded-full px-5 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
           />
           <button 
             type="submit" 

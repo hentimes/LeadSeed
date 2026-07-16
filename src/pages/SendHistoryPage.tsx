@@ -133,14 +133,14 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
       {/* Search + tabs */}
       <div className="flex gap-2 mb-3 items-center flex-wrap">
         <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-          placeholder="Buscar lead, plantilla, email..." className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm w-44" />
+          placeholder="Buscar lead, plantilla, email..." className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-2 py-1.5 text-sm w-44" />
         <div className="flex gap-0 border rounded overflow-hidden">
-          <button onClick={() => { setTab('envios'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'envios' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600'}`}>Envíos ({filteredLogs.length})</button>
-          <button onClick={() => { setTab('actividad'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'actividad' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600'}`}>Actividad ({filteredActivity.length})</button>
+          <button onClick={() => { setTab('envios'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'envios' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 text-slate-500 dark:text-slate-400'}`}>Envíos ({filteredLogs.length})</button>
+          <button onClick={() => { setTab('actividad'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'actividad' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 text-slate-500 dark:text-slate-400'}`}>Actividad ({filteredActivity.length})</button>
         </div>
         {tab === 'envios' && (
           <select value={filter} onChange={(e) => { setFilter(e.target.value as typeof filter); setPage(0); }}
-            className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-xs">
+            className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-2 py-1.5 text-xs">
             <option value="todos">Todos</option>
             <option value="whatsapp">WhatsApp</option>
             <option value="email">Email</option>
@@ -176,7 +176,7 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
                   )}
                 </div>
                 {expandedId === log.id && log.templateContenido && (
-                  <div className="px-3 pb-2 text-xs border-t dark:border-gray-700 bg-white dark:bg-gray-900 max-h-40 overflow-y-auto">
+                  <div className="px-3 pb-2 text-xs border-t dark:border-gray-700 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-900 max-h-40 overflow-y-auto">
                     {log.isHtml ? <div dangerouslySetInnerHTML={{ __html: log.templateContenido }} /> : <div className="whitespace-pre-wrap">{log.templateContenido}</div>}
                   </div>
                 )}
@@ -192,7 +192,7 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
             pagedActivity.map((a, i) => (
               <div key={i} className="px-3 py-1.5 text-xs flex items-center gap-2 border-b last:border-0 dark:border-gray-700">
                 <span className={a.type === 'send' ? 'text-green-500' : 'text-blue-500'}>{a.type === 'send' ? 'WA/@' : 'N'}</span>
-                <span className="text-gray-600 dark:text-gray-400 truncate">{a.text}</span>
+                <span className="text-slate-500 dark:text-slate-400 dark:text-gray-400 truncate">{a.text}</span>
                 <span className="text-gray-400 ml-auto shrink-0">{new Date(a.time).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             ))
@@ -205,7 +205,7 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
         <div className="flex items-center justify-center gap-2 mt-3">
           <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
             className="px-2 py-1 text-xs border rounded disabled:opacity-30 dark:border-gray-600">{'‹'}</button>
-          <span className="text-xs text-gray-500">{page + 1} / {totalPages}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">{page + 1} / {totalPages}</span>
           <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
             className="px-2 py-1 text-xs border rounded disabled:opacity-30 dark:border-gray-600">{'›'}</button>
         </div>

@@ -31,17 +31,17 @@ export default function LeadsTableControls({
       <div className="flex justify-between items-center mb-3">
         <div className="flex-1 max-w-sm">
           <input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Buscar nombre, teléfono, email, RUT..." className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 rounded px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none" />
+            placeholder="Buscar nombre, teléfono, email, RUT..." className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-900 rounded px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none" />
         </div>
         
         <div className="flex items-center gap-3 shrink-0 ml-2">
-          <span className="text-xs text-gray-500 hidden sm:inline-block">
+          <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline-block">
             {visibleCount !== totalCount ? `${visibleCount}/${totalCount} leads` : `${totalCount} leads`}
             {selectedCount > 0 && <span className="ml-1 text-blue-600 font-medium">{selectedCount} sel.</span>}
           </span>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'}`}
+            className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-slate-300 dark:border-slate-600/50 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'}`}
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
             Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}
@@ -50,11 +50,11 @@ export default function LeadsTableControls({
       </div>
 
       {showFilters && (
-        <div className="flex gap-2 mb-3 items-center flex-wrap bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded p-2 animate-toast-in">
-          <span className="text-xs font-semibold text-gray-500 mr-1">Filtrar por:</span>
+        <div className="flex gap-2 mb-3 items-center flex-wrap bg-slate-50 dark:bg-slate-900 dark:bg-gray-800/50 border border-slate-200 dark:border-slate-700/50 dark:border-gray-700 rounded p-2 animate-toast-in">
+          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 mr-1">Filtrar por:</span>
           
           <select value={filterType} onChange={(e) => setFilterType(e.target.value as any)}
-            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+            className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="listas">Listas</option>
             <option value="estados">Estados</option>
             <option value="fechas">Fechas</option>
@@ -62,14 +62,14 @@ export default function LeadsTableControls({
 
           {filterType === 'listas' && (
             <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
-              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="">Todas las listas</option>
               {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           )}
           {filterType === 'estados' && (
             <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
-              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="">Todos los estados</option>
               {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
                 <option key={s} value={s}>{STATUS_LABELS[s]}</option>
@@ -78,7 +78,7 @@ export default function LeadsTableControls({
           )}
           {filterType === 'fechas' && (
             <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
-              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="">Todas las fechas</option>
               <option value="7d">Última semana</option>
               <option value="30d">Último mes</option>

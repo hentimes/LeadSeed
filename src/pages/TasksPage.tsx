@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 const STATUS_TABS: { key: TaskStatus | 'todas'; label: string; color: string }[] = [
   { key: 'pendiente', label: 'Pendientes', color: 'text-amber-600' },
   { key: 'completada', label: 'Completadas', color: 'text-green-600' },
-  { key: 'todas', label: 'Todas', color: 'text-gray-600' },
+  { key: 'todas', label: 'Todas', color: 'text-slate-500 dark:text-slate-400' },
 ];
 
 export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => void }) {
@@ -130,8 +130,8 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Tareas</h2>
-            <p className="text-sm text-gray-500 mt-1">Gestiona tus seguimientos y recordatorios.</p>
+            <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Tareas</h2>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Gestiona tus seguimientos y recordatorios.</p>
           </div>
           <div className="flex gap-1.5 self-start mt-1">
             {stats.overdue.length > 0 && (
@@ -157,7 +157,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
             key={key}
             onClick={() => setFilter(key)}
             className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors ${
-              filter === key ? `border-current ${color}` : 'border-transparent text-gray-400 hover:text-gray-600'
+              filter === key ? `border-current ${color}` : 'border-transparent text-gray-400 hover:text-slate-500 dark:text-slate-400'
             }`}
           >
             {label}

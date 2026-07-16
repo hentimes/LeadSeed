@@ -22,8 +22,8 @@ export default function VariableDropdown({ onSelect, direction = 'down' }: Props
   const variables = ['nombre', 'telefono', 'email', 'empresa', 'notas', 'rut'];
 
   const dropdownClass = direction === 'up' 
-    ? "absolute right-0 bottom-full mb-1 w-32 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 text-xs"
-    : "absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 text-xs";
+    ? "absolute right-0 bottom-full mb-1 w-32 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-lg shadow-xl z-50 py-1 text-xs"
+    : "absolute right-0 top-full mt-1 w-32 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-lg shadow-xl z-50 py-1 text-xs";
 
   return (
     <div className="relative inline-block" ref={containerRef}>
@@ -48,7 +48,7 @@ export default function VariableDropdown({ onSelect, direction = 'down' }: Props
                 onSelect(`{${v}}`);
                 setOpen(false);
               }}
-              className="w-full text-left px-3 py-1.5 hover:bg-blue-50 text-gray-700 font-mono transition-colors"
+              className="w-full text-left px-3 py-1.5 hover:bg-blue-50 text-slate-600 dark:text-slate-300 font-mono transition-colors"
             >
               {`{${v}}`}
             </button>

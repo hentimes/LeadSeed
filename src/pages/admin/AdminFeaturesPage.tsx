@@ -40,14 +40,14 @@ export default function AdminFeaturesPage() {
     setEditingFeature(null);
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando funcionalidades...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando funcionalidades...</div>;
 
   return (
-    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-sm">
-      <div className="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Catálogo de Funcionalidades</h2>
-          <p className="text-sm text-gray-500 mt-1">Administra las características del sistema y promociones globales (Trials).</p>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Catálogo de Funcionalidades</h2>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Administra las características del sistema y promociones globales (Trials).</p>
         </div>
         <button 
           onClick={() => setEditingFeature({ name: '', description: '', trial_days: 0, is_active: true })} 
@@ -60,16 +60,16 @@ export default function AdminFeaturesPage() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map(f => (
-            <div key={f.id} className="border border-gray-200 rounded-xl p-5 hover:border-gray-300 transition-colors bg-white flex flex-col justify-between">
+            <div key={f.id} className="border border-slate-200 dark:border-slate-700/50 rounded-xl p-5 hover:border-slate-300 dark:border-slate-600/50 transition-colors bg-white dark:bg-slate-800/80 dark:backdrop-blur-md flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-gray-900">{f.name}</h3>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100">{f.name}</h3>
                   <div className="flex gap-2">
                     {!f.is_active && <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full">INACTIVO</span>}
                     {f.trial_days > 0 && <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">TRIAL {f.trial_days} DÍAS</span>}
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mb-4">{f.description || 'Sin descripción'}</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 mb-4">{f.description || 'Sin descripción'}</p>
               </div>
               <div className="flex justify-end border-t border-gray-100 pt-3">
                 <button 
@@ -86,41 +86,41 @@ export default function AdminFeaturesPage() {
 
       {editingFeature && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in">
+          <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in">
             <div className="p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">{editingFeature.id ? 'Editar' : 'Nueva'} Funcionalidad</h3>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{editingFeature.id ? 'Editar' : 'Nueva'} Funcionalidad</h3>
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Código de Funcionalidad (name)</label>
+                <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Código de Funcionalidad (name)</label>
                 <input 
                   type="text" 
                   required 
                   value={editingFeature.name || ''} 
                   onChange={e => setEditingFeature({...editingFeature, name: e.target.value})} 
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full border border-slate-300 dark:border-slate-600/50 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   placeholder="ej. envios_masivos_whatsapp" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Descripción</label>
                 <textarea 
                   value={editingFeature.description || ''} 
                   onChange={e => setEditingFeature({...editingFeature, description: e.target.value})} 
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full border border-slate-300 dark:border-slate-600/50 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   placeholder="Permite enviar..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Días de Prueba Gratis (Trial Global)</label>
+                <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Días de Prueba Gratis (Trial Global)</label>
                 <input 
                   type="number" 
                   min="0"
                   value={editingFeature.trial_days || 0} 
                   onChange={e => setEditingFeature({...editingFeature, trial_days: parseInt(e.target.value) || 0})} 
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full border border-slate-300 dark:border-slate-600/50 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                 />
-                <p className="text-xs text-gray-500 mt-1">Si es mayor a 0, cualquier usuario sin plan premium podrá activar una prueba temporal de esta función.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Si es mayor a 0, cualquier usuario sin plan premium podrá activar una prueba temporal de esta función.</p>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input 
@@ -128,13 +128,13 @@ export default function AdminFeaturesPage() {
                   id="isActive"
                   checked={editingFeature.is_active !== false} 
                   onChange={e => setEditingFeature({...editingFeature, is_active: e.target.checked})} 
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 dark:border-slate-600/50 focus:ring-blue-500"
                 />
-                <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Funcionalidad Activa</label>
+                <label htmlFor="isActive" className="text-sm font-medium text-slate-600 dark:text-slate-300">Funcionalidad Activa</label>
               </div>
               
               <div className="pt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setEditingFeature(null)} className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancelar</button>
+                <button type="button" onClick={() => setEditingFeature(null)} className="px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:text-slate-100 transition-colors">Cancelar</button>
                 <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors">Guardar</button>
               </div>
             </form>

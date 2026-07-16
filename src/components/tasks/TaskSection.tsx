@@ -28,13 +28,13 @@ export default function TaskSection({
     red: 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10',
     amber: 'border-l-amber-500 bg-amber-50/50 dark:bg-amber-900/10',
     blue: 'border-l-blue-500 bg-blue-50/50 dark:bg-blue-900/10',
-    gray: 'border-l-gray-400 bg-gray-50/50 dark:bg-gray-800/50',
+    gray: 'border-l-gray-400 bg-slate-50 dark:bg-slate-900/50 dark:bg-gray-800/50',
   };
 
   return (
     <div>
       <div className={`border-l-4 ${colors[color]} pl-3 py-1 mb-2 rounded-r`}>
-        <h3 className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">{title} ({tasks.length})</h3>
+        <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-gray-300 uppercase tracking-wide">{title} ({tasks.length})</h3>
       </div>
       <div className="space-y-2">
         {tasks.map((task) => {

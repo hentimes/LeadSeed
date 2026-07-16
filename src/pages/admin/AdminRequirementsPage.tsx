@@ -129,21 +129,21 @@ export default function AdminRequirementsPage() {
   };
 
   if (loading && requirements.length === 0) {
-    return <div className="p-8 text-center text-gray-500">Cargando requerimientos...</div>;
+    return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando requerimientos...</div>;
   }
 
   // Si hay un requerimiento seleccionado, mostramos el chat y detalles
   if (selectedReq) {
     return (
       <div className="flex h-full gap-4">
-        <div className="w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col">
-          <button onClick={() => setSelectedReq(null)} className="flex items-center gap-2 text-gray-500 hover:text-blue-600 mb-6 transition-colors">
+        <div className="w-1/3 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 p-6 flex flex-col">
+          <button onClick={() => setSelectedReq(null)} className="flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 mb-6 transition-colors">
             <Icon.ArrowLeft /> Volver
           </button>
           
           <div className="flex items-center gap-3 mb-6">
             {selectedReq.user_profile?.avatar_url ? (
-              <img src={selectedReq.user_profile.avatar_url} className="w-12 h-12 rounded-full object-cover border border-gray-200" />
+              <img src={selectedReq.user_profile.avatar_url} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-700/50" />
             ) : (
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
                 {selectedReq.user_profile?.email?.[0].toUpperCase()}
@@ -151,29 +151,29 @@ export default function AdminRequirementsPage() {
             )}
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-gray-900">{selectedReq.user_profile?.full_name || selectedReq.user_profile?.email}</h3>
+                <h3 className="font-bold text-slate-800 dark:text-slate-100">{selectedReq.user_profile?.full_name || selectedReq.user_profile?.email}</h3>
                 {selectedReq.ticket_code && (
                   <span className="text-xs font-mono font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded border border-purple-200">
                     {selectedReq.ticket_code}
                   </span>
                 )}
               </div>
-              <span className="text-xs text-gray-500 capitalize px-2 py-1 bg-gray-100 rounded-md mt-1 inline-block">
+              <span className="text-xs text-slate-400 dark:text-slate-500 capitalize px-2 py-1 bg-gray-100 rounded-md mt-1 inline-block">
                 {selectedReq.type}
               </span>
             </div>
           </div>
           
           <div className="flex-1 overflow-y-auto mb-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Mensaje Original</h4>
-            <div className="bg-gray-50 p-4 rounded-xl text-gray-600 text-sm whitespace-pre-wrap border border-gray-100">
+            <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">Mensaje Original</h4>
+            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl text-slate-500 dark:text-slate-400 text-sm whitespace-pre-wrap border border-gray-100">
               {selectedReq.content}
             </div>
             
             <div className="mt-6 flex flex-col gap-2">
               <div className="text-xs text-gray-400">Estado actual</div>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium w-fit ${
-                selectedReq.status === 'open' ? 'bg-gray-100 text-gray-800' : 
+                selectedReq.status === 'open' ? 'bg-gray-100 text-slate-700 dark:text-slate-200' : 
                 selectedReq.status === 'in_progress' ? 'bg-amber-100 text-amber-800' :
                 selectedReq.status === 'claim' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
               }`}>
@@ -190,11 +190,11 @@ export default function AdminRequirementsPage() {
               )}
               
               {selectedReq.rating && (
-                <div className="mt-4 p-4 rounded-xl border border-gray-200 bg-white shadow-sm flex items-center gap-3">
+                <div className="mt-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md shadow-sm flex items-center gap-3">
                   <span className={`text-2xl ${selectedReq.rating === 'up' ? 'text-green-500' : 'text-red-500'}`}>
                     {selectedReq.rating === 'up' ? <Icon.Check /> : <Icon.Close />}
                   </span>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
                     El usuario calificó esta solución como {selectedReq.rating === 'up' ? 'positiva' : 'negativa'}.
                   </div>
                 </div>
@@ -203,7 +203,7 @@ export default function AdminRequirementsPage() {
               {selectedReq.rating === 'up' && selectedReq.status === 'closed' && (
                 <button 
                   onClick={() => handleArchiveRequirement(selectedReq)}
-                  className="mt-4 w-full py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 border border-gray-200"
+                  className="mt-4 w-full py-2.5 bg-gray-100 text-slate-600 dark:text-slate-300 font-semibold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700/50"
                 >
                   <Icon.Inbox />
                   Archivar Ticket
@@ -232,7 +232,7 @@ export default function AdminRequirementsPage() {
             </div>
           )}
         </div>
-        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="flex-1 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
           {/* Injectamos el chat completo aquí */}
           {selectedReq.user_profile && (
             <AdminSupportChat selectedUser={selectedReq.user_profile} activeRequirement={selectedReq} />
@@ -246,15 +246,15 @@ export default function AdminRequirementsPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Requerimientos de Soporte</h2>
-          <p className="text-sm text-gray-500">Gestiona y resuelve los tickets de tus usuarios</p>
+          <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">Requerimientos de Soporte</h2>
+          <p className="text-sm text-slate-400 dark:text-slate-500">Gestiona y resuelve los tickets de tus usuarios</p>
         </div>
         <button
           onClick={() => setShowArchived(!showArchived)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
             showArchived 
               ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-700' 
-              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:bg-slate-900'
           }`}
         >
           {showArchived ? 'Ocultar Archivados' : 'Ver Archivados'}
@@ -262,10 +262,10 @@ export default function AdminRequirementsPage() {
       </div>
 
       {requirements.filter(r => showArchived ? r.status === 'archived' : r.status !== 'archived').length === 0 ? (
-        <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-300">
+        <div className="text-center p-12 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-2xl border border-dashed border-slate-300 dark:border-slate-600/50">
           <div className="flex justify-center text-gray-400 mb-4"><Icon.Inbox /></div>
-          <h3 className="text-lg font-bold text-gray-700">No hay requerimientos {showArchived ? 'archivados' : ''}</h3>
-          <p className="text-gray-500 text-sm">Todo está en orden por ahora.</p>
+          <h3 className="text-lg font-bold text-slate-600 dark:text-slate-300">No hay requerimientos {showArchived ? 'archivados' : ''}</h3>
+          <p className="text-slate-400 dark:text-slate-500 text-sm">Todo está en orden por ahora.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -276,8 +276,8 @@ export default function AdminRequirementsPage() {
               <div 
                 key={req.id} 
                 onClick={() => !isLockedForMe && setSelectedReq(req)}
-                className={`group bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm transition-all relative overflow-hidden flex flex-col justify-center h-[60px] ${
-                  isLockedForMe ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:shadow-md hover:border-blue-300 cursor-pointer'
+                className={`group bg-white dark:bg-slate-800/80 dark:backdrop-blur-md p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm transition-all relative overflow-hidden flex flex-col justify-center h-[60px] ${
+                  isLockedForMe ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-900' : 'hover:shadow-md hover:border-blue-300 cursor-pointer'
                 }`}
               >
                 {req.status === 'open' && !isLockedForMe && (
@@ -292,13 +292,13 @@ export default function AdminRequirementsPage() {
                     {req.user_profile?.avatar_url ? (
                       <img src={req.user_profile.avatar_url} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-100" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-[11px] shrink-0 border border-gray-200">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-400 dark:text-slate-500 font-bold text-[11px] shrink-0 border border-slate-200 dark:border-slate-700/50">
                         {req.user_profile?.email?.[0].toUpperCase()}
                       </div>
                     )}
                     <div className="flex flex-col min-w-0 pr-2">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <h4 className="font-bold text-gray-900 text-xs line-clamp-1 leading-none">{req.user_profile?.full_name || req.user_profile?.email?.split('@')[0]}</h4>
+                        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs line-clamp-1 leading-none">{req.user_profile?.full_name || req.user_profile?.email?.split('@')[0]}</h4>
                         {req.ticket_code && (
                           <span className="text-[8px] font-mono font-bold text-gray-400 leading-none">
                             #{req.ticket_code}
@@ -306,7 +306,7 @@ export default function AdminRequirementsPage() {
                         )}
                         {req.bump_count && req.bump_count > 0 && (
                           <span className="text-[8px] font-bold text-red-600 bg-red-50 px-1 py-0.5 rounded leading-none flex items-center gap-0.5 border border-red-100" title="Reenviado sin respuesta">
-                            🔥 x{req.bump_count}
+                             x{req.bump_count}
                           </span>
                         )}
                       </div>
@@ -341,7 +341,7 @@ export default function AdminRequirementsPage() {
                     </div>
                     {isAdmin && (
                       <select 
-                        className="text-[9px] border border-gray-200 rounded p-0.5 outline-none focus:border-indigo-400 bg-gray-50 text-gray-600 mt-1 max-w-[100px]"
+                        className="text-[9px] border border-slate-200 dark:border-slate-700/50 rounded p-0.5 outline-none focus:border-indigo-400 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 mt-1 max-w-[100px]"
                         onChange={(e) => { 
                           e.stopPropagation(); 
                           if(e.target.value) assignCase(req.id, e.target.value);

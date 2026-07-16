@@ -138,7 +138,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold">Importar Leads</h2>
@@ -148,7 +148,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
               title="Formato de columnas aceptado"
             >?</button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">
+          <button onClick={onClose} className="text-gray-400 hover:text-slate-500 dark:text-slate-400 text-xl">
             x
           </button>
         </div>
@@ -168,7 +168,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                   ['Estado', 'estado, status'],
                   ['Notas', 'notas, notes, comentarios (u otras columnas)'],
                 ].map(([label, cols]) => (
-                  <div key={label}><span className="font-medium">{label}:</span> <span className="text-gray-600">{cols}</span></div>
+                  <div key={label}><span className="font-medium">{label}:</span> <span className="text-slate-500 dark:text-slate-400">{cols}</span></div>
                 ))}
               </div>
             </div>
@@ -177,9 +177,9 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
             <div
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-400 transition-colors"
+              className="border-2 border-dashed border-slate-300 dark:border-slate-600/50 rounded-lg p-12 text-center hover:border-blue-400 transition-colors"
             >
-              <p className="text-gray-500 mb-4">
+              <p className="text-slate-400 dark:text-slate-500 mb-4">
                 Arrastra un archivo JSON o Excel aquí
               </p>
               <p className="text-gray-400 text-sm mb-4">o</p>
@@ -192,7 +192,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                   className="hidden"
                 />
               </label>
-              {loading && <p className="mt-4 text-gray-500">Procesando...</p>}
+              {loading && <p className="mt-4 text-slate-400 dark:text-slate-500">Procesando...</p>}
               {error && <p className="mt-4 text-red-500 text-sm">{error}</p>}
             </div>
           )}
@@ -202,7 +202,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
               {/* Header with stats and actions */}
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     <strong>{fileName}</strong> — {preview.length} registros
                   </p>
                   <div className="flex gap-4 mt-1">
@@ -249,10 +249,10 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
               {/* Column mapping info */}
               <details className="mb-4">
-                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                <summary className="text-xs text-slate-400 dark:text-slate-500 cursor-pointer hover:text-slate-600 dark:text-slate-300">
                   Ver mapeo de columnas ({columns.length} columnas detectadas)
                 </summary>
-                <div className="mt-2 p-2 bg-gray-50 rounded text-xs grid grid-cols-2 gap-1">
+                <div className="mt-2 p-2 bg-slate-50 dark:bg-slate-900 rounded text-xs grid grid-cols-2 gap-1">
                   {detectedMapping.map((col) => (
                     <div key={col.original} className="flex items-center gap-1">
                       <span className="text-gray-400 truncate max-w-[140px]" title={col.original}>
@@ -270,7 +270,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
               {/* Table */}
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
                     <tr>
                       <th className="w-8 px-2 py-2">
                         <input
@@ -298,7 +298,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                         <tr
                           key={i}
                           className={`border-t ${
-                            isDup ? 'bg-red-50' : isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
+                            isDup ? 'bg-red-50' : isSelected ? 'bg-blue-50' : 'hover:bg-slate-50 dark:bg-slate-900'
                           }`}
                         >
                           <td className="px-2 py-1.5">
@@ -343,7 +343,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
               {/* Bottom actions */}
               <div className="flex gap-2 justify-end mt-4 items-center">
-                <p className="text-sm text-gray-500 mr-auto">
+                <p className="text-sm text-slate-400 dark:text-slate-500 mr-auto">
                   {selectedCount} de {preview.length} leads seleccionados
                 </p>
                 <button

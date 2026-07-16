@@ -45,14 +45,14 @@ export default function SupportTicketsSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
         <div className="flex items-center gap-4 flex-col sm:flex-row">
           <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
             <Icon.Messages />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 mb-1">Centro de Ayuda</h3>
-            <p className="text-sm text-gray-500 max-w-md">
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-1">Centro de Ayuda</h3>
+            <p className="text-sm text-slate-400 dark:text-slate-500 max-w-md">
               ¿Tienes un problema técnico, duda de facturación o una sugerencia? Levanta un requerimiento oficial.
             </p>
           </div>
@@ -73,17 +73,17 @@ export default function SupportTicketsSettings() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50/50">
-          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/50">
+          <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <Icon.Lists /> Mis Requerimientos
           </h3>
         </div>
         <div className="p-4">
           {loading ? (
-            <div className="text-center p-8 text-gray-500">Cargando tus tickets...</div>
+            <div className="text-center p-8 text-slate-400 dark:text-slate-500">Cargando tus tickets...</div>
           ) : requirements.length === 0 ? (
-            <div className="text-center p-8 text-gray-500 flex flex-col items-center">
+            <div className="text-center p-8 text-slate-400 dark:text-slate-500 flex flex-col items-center">
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-3">
                 <Icon.Inbox />
               </div>
@@ -92,7 +92,7 @@ export default function SupportTicketsSettings() {
           ) : (
             <div className="space-y-4">
               {requirements.map(req => (
-                <div key={req.id} className="border border-gray-100 rounded-xl p-4 bg-gray-50/30 hover:bg-gray-50 transition-colors">
+                <div key={req.id} className="border border-gray-100 rounded-xl p-4 bg-slate-50 dark:bg-slate-900/30 hover:bg-slate-50 dark:bg-slate-900 transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
@@ -106,18 +106,18 @@ export default function SupportTicketsSettings() {
                       <span className="text-xs text-gray-400 ml-1">{new Date(req.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                      req.status === 'open' ? 'bg-gray-100 text-gray-600' : 
+                      req.status === 'open' ? 'bg-gray-100 text-slate-500 dark:text-slate-400' : 
                       req.status === 'in_progress' ? 'bg-amber-100 text-amber-800' : 
                       'bg-green-100 text-green-800'
                     }`}>
                       {req.status === 'open' ? 'Pendiente' : req.status === 'in_progress' ? 'En Revisión' : 'Resuelto'}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 mt-3">{req.content}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-3">{req.content}</p>
                   
                   {req.status === 'closed' && (
                     <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-500">
+                      <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
                         {req.rating ? '¡Gracias por calificar!' : '¿Qué te pareció la atención?'}
                       </span>
                       <div className="flex gap-2">
@@ -126,7 +126,7 @@ export default function SupportTicketsSettings() {
                             disabled={!!req.rating}
                             onClick={() => handleRate(req.id, 'down')}
                             className={`p-1.5 rounded-lg border flex items-center gap-1 text-xs font-medium transition-all
-                              ${req.rating === 'down' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-400 border-gray-200 hover:text-red-500 hover:border-red-200'}`}
+                              ${req.rating === 'down' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-gray-400 border-slate-200 dark:border-slate-700/50 hover:text-red-500 hover:border-red-200'}`}
                           >
                             <Icon.Close /> {req.rating === 'down' && 'Mala'}
                           </button>
@@ -136,7 +136,7 @@ export default function SupportTicketsSettings() {
                             disabled={!!req.rating}
                             onClick={() => handleRate(req.id, 'up')}
                             className={`p-1.5 rounded-lg border flex items-center gap-1 text-xs font-medium transition-all
-                              ${req.rating === 'up' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-gray-400 border-gray-200 hover:text-green-500 hover:border-green-200'}`}
+                              ${req.rating === 'up' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-gray-400 border-slate-200 dark:border-slate-700/50 hover:text-green-500 hover:border-green-200'}`}
                           >
                             <Icon.Check /> {req.rating === 'up' && 'Buena'}
                           </button>

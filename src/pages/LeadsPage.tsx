@@ -271,7 +271,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
             {filterMode === 'olvidados' && (
               <span className="bg-red-600 text-white text-xs px-2.5 py-1.5 rounded font-medium flex items-center gap-1.5 shadow-sm">
                 Olvidados
-                <button onClick={() => { setFilterMode(null); window.location.hash = '#leads'; }} className="opacity-80 hover:opacity-100 transition-opacity font-bold ml-1">✕</button>
+                <button onClick={() => { setFilterMode(null); window.location.hash = '#leads'; }} className="opacity-80 hover:opacity-100 transition-opacity font-bold ml-1"></button>
               </span>
             )}
             <button
@@ -283,7 +283,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
           </div>
           <button
             onClick={() => { setShowTrash(!showTrash); setSelectedIds(new Set()); }}
-            className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center ${showTrash ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center ${showTrash ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}
             title={showTrash ? 'Volver a leads' : 'Papelera'}
           >
             {showTrash ? 'Salir de papelera' : Icon.Trash()}
@@ -292,7 +292,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange }: { 
       </div>
 
       {showForm && (
-        <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+        <div className="mb-6 p-4 border rounded-lg bg-slate-50 dark:bg-slate-900">
           <h3 className="text-base font-semibold mb-3">{editing ? 'Editar Lead' : 'Nuevo Lead'}</h3>
           <LeadForm
             lead={editing}

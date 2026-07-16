@@ -136,7 +136,7 @@ export default function PipelinePage() {
       >
         <div className="flex items-center justify-center gap-1.5">
           <span className="uppercase tracking-wider">NUEVO</span>
-          <span className="text-[10px] px-1.5 rounded bg-white/70 text-gray-800 shadow-sm">{total}</span>
+          <span className="text-[10px] px-1.5 rounded bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/70 text-slate-700 dark:text-slate-200 shadow-sm">{total}</span>
         </div>
       </button>
     );
@@ -153,7 +153,7 @@ export default function PipelinePage() {
         onDragOver={(e) => { e.preventDefault(); setDragOver(s); }}
         onDragLeave={() => setDragOver(null)}
         onDrop={(e) => { e.preventDefault(); handleDrop(s); }}
-        className={`flex flex-col rounded-xl border-2 transition-all cursor-pointer overflow-hidden h-[160px] sm:h-[180px] bg-white dark:bg-gray-800 ${
+        className={`flex flex-col rounded-xl border-2 transition-all cursor-pointer overflow-hidden h-[160px] sm:h-[180px] bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 ${
           isDragOver ? 'scale-105 shadow-xl z-10' : 
           isActive ? 'shadow-md ring-2 ring-offset-2 dark:ring-offset-gray-900' : 'opacity-90 hover:opacity-100 hover:shadow-md'
         }`}
@@ -165,7 +165,7 @@ export default function PipelinePage() {
       >
         <div className="flex items-center justify-between px-3 py-2 border-b" style={{ backgroundColor: `${STATUS_COLORS[s]}15`, borderColor: `${STATUS_COLORS[s]}30` }}>
           <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: STATUS_COLORS[s] }}>{STATUS_LABELS[s]}</span>
-          <span className="text-[10px] font-bold bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-800 dark:text-gray-200 shadow-sm">{items.length}</span>
+          <span className="text-[10px] font-bold bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-700 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-200 dark:text-gray-200 shadow-sm">{items.length}</span>
         </div>
         <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
           {items.map((lead) => (
@@ -177,10 +177,10 @@ export default function PipelinePage() {
                  handleDragStart(e, lead);
                }}
                onDragEnd={handleDragEnd}
-               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white/5 rounded text-gray-700 dark:text-gray-300 font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
+               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/5 rounded text-slate-600 dark:text-slate-300 dark:text-gray-300 font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
              >
                <span className="truncate">{lead.name}</span>
-               <span className="text-[10px] text-gray-300 group-hover/item:text-gray-500 opacity-0 group-hover/item:opacity-100 font-mono tracking-tighter ml-1">|||</span>
+               <span className="text-[10px] text-gray-300 group-hover/item:text-slate-400 dark:text-slate-500 opacity-0 group-hover/item:opacity-100 font-mono tracking-tighter ml-1">|||</span>
              </div>
           ))}
           {items.length === 0 && (
@@ -205,10 +205,10 @@ export default function PipelinePage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar nombre, teléfono, email, RUT..."
-            className="w-full border border-gray-300 rounded h-full px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-300 dark:border-slate-600/50 rounded h-full px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           />
           {searchLower && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">{totalInSearch} encontrados</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500">{totalInSearch} encontrados</span>
           )}
         </div>
         <div className="w-1/4 min-w-[100px] flex">
@@ -216,12 +216,12 @@ export default function PipelinePage() {
         </div>
       </div>
 
-      <div className="flex flex-col max-h-[250px] min-h-[150px] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-5 bg-white dark:bg-gray-800 shadow-sm">
-        <div className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between items-center shrink-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 flex items-center gap-2">
+      <div className="flex flex-col max-h-[250px] min-h-[150px] border border-slate-200 dark:border-slate-700/50 dark:border-gray-700 rounded-lg overflow-hidden mb-5 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 shadow-sm">
+        <div className="bg-slate-50 dark:bg-slate-900 dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700/50 dark:border-gray-700 px-3 py-2 flex justify-between items-center shrink-0">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 dark:text-gray-300 flex items-center gap-2">
             Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span>
           </span>
-          <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">
+          <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 dark:text-gray-300">
             {grouped[activeTab].length} items
           </span>
         </div>
@@ -242,7 +242,7 @@ export default function PipelinePage() {
                 className="border-b border-gray-100 dark:border-gray-700 last:border-0 px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center transition-colors group"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <span className="font-medium text-gray-800 dark:text-gray-200 text-xs group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{lead.name}</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-200 dark:text-gray-200 text-xs group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{lead.name}</span>
                   {(lead.company || lead.phone || lead.email) && (
                     <span className="text-gray-400 text-[10px] truncate flex items-center gap-2">
                       {lead.company && <span className="flex items-center gap-1"><div className="w-3">{Icon.Messages()}</div> {lead.company}</span>}
@@ -299,7 +299,7 @@ export default function PipelinePage() {
             </div>
           )}
           <div className="flex gap-2 justify-end">
-            <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5">
+            <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 px-2 py-1.5">
               Omitir
             </button>
             <button onClick={createTask} className="bg-amber-600 text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-amber-700 shadow-sm">

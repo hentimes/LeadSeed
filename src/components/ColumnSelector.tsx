@@ -35,18 +35,18 @@ function ColumnSelector({ columns, onChange }: Props) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="border border-gray-300 rounded px-3 py-2 text-sm bg-white hover:bg-gray-50 flex items-center gap-1"
+        className="border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm bg-white dark:bg-slate-800/80 dark:backdrop-blur-md hover:bg-slate-50 dark:bg-slate-900 flex items-center gap-1"
       >
         Columnas ({visibleCount}/{columns.length})
         <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 left-0 bg-white border rounded-lg shadow-lg z-20 p-2 min-w-[180px]">
+        <div className="absolute top-full mt-1 left-0 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-lg shadow-lg z-20 p-2 min-w-[180px]">
           {columns.map((col) => (
             <label
               key={col.key}
-              className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm"
+              className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 dark:bg-slate-900 rounded cursor-pointer text-sm"
             >
               <input
                 type="checkbox"

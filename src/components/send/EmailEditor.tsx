@@ -42,9 +42,9 @@ export default function EmailEditor({
   return (
     <div className="mb-4 border-b border-gray-100 pb-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">2. Edición al Vuelo</h3>
+        <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">2. Edición al Vuelo</h3>
         {selectedTemplate.isHtml && (
-          <button onClick={() => setShowPreviewModal(true)} className="bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded text-xs font-medium hover:bg-blue-100 flex items-center gap-1 shadow-sm">
+          <button onClick={() => setShowPreviewModal(true)} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-blue-200 text-blue-600 px-2 py-1 rounded text-xs font-medium hover:bg-blue-100 flex items-center gap-1 shadow-sm">
             <Icon.View /> Ver Vista Previa
           </button>
         )}
@@ -89,7 +89,7 @@ export default function EmailEditor({
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {attachments.map((att, i) => (
-                <span key={i} className="bg-white border border-blue-200 text-blue-700 px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1.5 shadow-sm">
+                <span key={i} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-blue-200 text-blue-700 px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1.5 shadow-sm">
                   <Icon.Paperclip /> <span className="max-w-[120px] truncate" title={att.filename}>{att.filename}</span>
                   <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full w-4 h-4 flex items-center justify-center font-bold">×</button>
                 </span>

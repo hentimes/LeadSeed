@@ -74,12 +74,12 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Nombre *</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           required
           autoFocus
         />
@@ -87,52 +87,52 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono (+569XXXXXXXX)</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Teléfono (+569XXXXXXXX)</label>
           <input
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="12345678 o +56912345678"
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Empresa</label>
           <input
             type="text"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">RUT</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">RUT</label>
           <input
             type="text"
             value={rut}
             onChange={(e) => setRut(e.target.value)}
             placeholder="12345678-9"
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Estado</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as LeadStatus)}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
               <option key={s} value={s}>{STATUS_LABELS[s]}</option>
@@ -142,18 +142,18 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Notas</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
-          className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
       {lists.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Listas</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Listas</label>
           <div className="flex flex-wrap gap-2">
             {lists.map((list) => (
               <button
@@ -163,7 +163,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
                 className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                   listaIds.includes(list.id!!)
                     ? 'text-white border-transparent'
-                    : 'text-gray-600 border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                    : 'text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600/50 dark:border-gray-600 hover:border-gray-400'
                 }`}
                 style={
                   listaIds.includes(list.id!!)
@@ -190,7 +190,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-300"
+          className="bg-gray-200 text-slate-600 dark:text-slate-300 px-4 py-2 rounded text-sm font-medium hover:bg-gray-300"
         >
           Cancelar
         </button>

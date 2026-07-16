@@ -39,10 +39,10 @@ const LeadsTableRow = ({
   onView, onEdit, onDelete, onRestore, getScore, shortName
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
-  const trClass = `border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`;
+  const trClass = `border-t dark:border-gray-700 hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-gray-800 cursor-pointer ${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`;
   
   const checkboxBox = (
-    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300 dark:border-gray-600 bg-white'}`}>
+    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md'}`}>
       <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
         <path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={isSelected ? 1 : 0}/>
       </svg>
@@ -93,7 +93,7 @@ const LeadsTableRow = ({
         <td className="px-2 py-1.5">{checkboxBox}</td>
         <td className="px-2 py-1.5">
           {renderNameWithBadges(true)}
-          {rutVis && lead.rut && <div className="text-xs text-gray-500 font-mono">RUT: {lead.rut}</div>}
+          {rutVis && lead.rut && <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">RUT: {lead.rut}</div>}
           {nameVis && !rutVis && !lead.rut && <div className="text-xs text-gray-400">-</div>}
         </td>
         {companyVis && <td className="px-2 py-1.5 text-xs">{lead.company || '-'}</td>}
@@ -101,7 +101,7 @@ const LeadsTableRow = ({
           {phoneVis && <div className="text-xs">{lead.phone ? <a href={`https://wa.me/${lead.phone.replace(/[^+\d]/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title="Abrir WhatsApp">{isSelected ? lead.phone : `...${lead.phone.slice(-4)}`}</a> : '-'}</div>}
           {emailVis && <div className="text-xs text-blue-600">{lead.email ? <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title={`Enviar email a ${lead.email}`}>{lead.email.length > 13 ? <span title={lead.email}>{lead.email.slice(0, 10)}...</span> : lead.email}</a> : '-'}</div>}
         </td>
-        {dateVis && <td className="px-2 py-1.5 text-xs text-gray-500">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</td>}
+        {dateVis && <td className="px-2 py-1.5 text-xs text-slate-400 dark:text-slate-500">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</td>}
         {listsVis && <td className="px-2 py-1.5">
           <div className="flex gap-0.5 flex-wrap">
             {lead.listaIds.map((lid) => {
@@ -110,7 +110,7 @@ const LeadsTableRow = ({
             })}
           </div></td>}
         {statusVis && <td className="px-2 py-1.5"><span className="px-1.5 py-0.5 rounded-full text-xs text-white font-medium" style={{ backgroundColor: STATUS_COLORS[lead.status || 'nuevo'] }}>{STATUS_LABELS[lead.status || 'nuevo']}</span></td>}
-        {scoreVis && <td className="px-2 py-1.5 text-xs text-amber-500">{'★'.repeat(getScore(lead))}{'☆'.repeat(5 - getScore(lead))}</td>}
+        {scoreVis && <td className="px-2 py-1.5 text-xs text-amber-500">{''.repeat(getScore(lead))}{''.repeat(5 - getScore(lead))}</td>}
         <td className="px-1 py-1.5">{actions}</td>
       </tr>
     );
@@ -125,7 +125,7 @@ const LeadsTableRow = ({
       {emailVis && <td className="px-2 py-1.5 text-xs text-blue-600">{lead.email ? <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title={`Enviar email a ${lead.email}`}>{lead.email.length > 13 ? <span title={lead.email}>{lead.email.slice(0, 10)}...</span> : lead.email}</a> : '-'}</td>}
       {companyVis && <td className="px-2 py-1.5 text-xs">{lead.company || '-'}</td>}
       {rutVis && <td className="px-2 py-1.5 text-xs font-mono">{lead.rut || '-'}</td>}
-      {dateVis && <td className="px-2 py-1.5 text-xs text-gray-500">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</td>}
+      {dateVis && <td className="px-2 py-1.5 text-xs text-slate-400 dark:text-slate-500">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</td>}
       {listsVis && <td className="px-2 py-1.5">
         <div className="flex gap-0.5 flex-wrap">
           {lead.listaIds.map((lid) => {

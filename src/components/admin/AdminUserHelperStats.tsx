@@ -49,7 +49,7 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
   }, [selectedUser]);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Cargando estadísticas del Helper...</div>;
+    return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando estadísticas del Helper...</div>;
   }
 
   const score = stats.resolved > 0 ? Math.round((stats.upVotes / stats.resolved) * 100) : 0;
@@ -64,18 +64,18 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm text-center">
-          <div className="text-3xl font-black text-gray-800">{stats.totalAssigned}</div>
+        <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 rounded-xl p-5 shadow-sm text-center">
+          <div className="text-3xl font-black text-slate-700 dark:text-slate-200">{stats.totalAssigned}</div>
           <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Casos Totales</div>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm text-center">
+        <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 rounded-xl p-5 shadow-sm text-center">
           <div className="text-3xl font-black text-blue-600">{stats.active}</div>
           <div className="text-xs font-bold text-blue-400 uppercase tracking-wide mt-1">En Progreso</div>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-        <h3 className="font-bold text-gray-800 text-sm mb-4 border-b border-gray-100 pb-2">Calidad de Atención</h3>
+      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 rounded-xl p-5 shadow-sm">
+        <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm mb-4 border-b border-gray-100 pb-2">Calidad de Atención</h3>
         
         <div className="flex items-center justify-between mb-4">
           <div className="text-center flex-1">
@@ -95,7 +95,7 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
 
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="flex justify-between text-xs font-bold mb-1">
-            <span className="text-gray-500">Satisfacción (Resueltos)</span>
+            <span className="text-slate-400 dark:text-slate-500">Satisfacción (Resueltos)</span>
             <span className={score >= 80 ? 'text-green-500' : score >= 50 ? 'text-amber-500' : 'text-red-500'}>{score}%</span>
           </div>
           <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">

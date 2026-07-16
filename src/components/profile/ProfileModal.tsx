@@ -96,10 +96,10 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800/80 dark:backdrop-blur-md p-6 shadow-2xl dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Editar Perfil</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 dark:text-white">Editar Perfil</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-slate-500 dark:text-slate-400 dark:hover:text-gray-300">
             <Icon.Close />
           </button>
         </div>
@@ -118,7 +118,7 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
 
         <div className="flex flex-col items-center gap-4 mb-6">
           <div className="relative group">
-            <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 ${showFrame && isPro ? 'ring-4 ring-yellow-400 p-1' : 'border border-gray-200'}`}>
+            <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 ${showFrame && isPro ? 'ring-4 ring-yellow-400 p-1' : 'border border-slate-200 dark:border-slate-700/50'}`}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
               ) : (
@@ -133,15 +133,15 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
           </div>
           
           <div className="text-center">
-            <h3 className="font-semibold text-gray-900 dark:text-white">{profile?.full_name || user?.email}</h3>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-100 dark:text-white">{profile?.full_name || user?.email}</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500">{user?.email}</p>
           </div>
         </div>
 
         <div className="space-y-4 mb-6">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 dark:text-gray-300">
                 Biografía corta
               </label>
               {!isEditingBio && (
@@ -163,7 +163,7 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
                   placeholder="Hola, soy experto..."
                   rows={3}
                   maxLength={140}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950/50 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-gray-100 resize-none"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 dark:border-gray-800 bg-slate-50 dark:bg-slate-900 dark:bg-gray-950/50 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-800 dark:text-slate-100 dark:text-gray-100 resize-none"
                 />
                 <div className="flex items-center justify-between">
                   <span className={`text-xs ${bio.length === 140 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
@@ -178,35 +178,35 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-950/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800 min-h-[46px] flex items-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-gray-400 bg-slate-50 dark:bg-slate-900 dark:bg-gray-950/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800 min-h-[46px] flex items-center">
                 {bio || <span className="italic text-gray-400">Sin descripción. Haz clic en el lápiz para añadir una.</span>}
               </p>
             )}
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-slate-50 dark:bg-slate-900 dark:bg-gray-900">
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Marco Premium</p>
-              <p className="text-xs text-gray-500">Destaca tu perfil en la comunidad</p>
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100 dark:text-white">Marco Premium</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Destaca tu perfil en la comunidad</p>
             </div>
             {isPro ? (
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" className="sr-only peer" checked={showFrame} onChange={(e) => setShowFrame(e.target.checked)} />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md after:border-slate-300 dark:border-slate-600/50 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
               </label>
             ) : (
               <span className="text-xs font-semibold px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md">Pro</span>
             )}
           </div>
-          <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-slate-50 dark:bg-slate-900 dark:bg-gray-900">
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Modo Fantasma</p>
-              <p className="text-xs text-gray-500">Oculta tu estado de conexión en la comunidad</p>
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100 dark:text-white">Modo Fantasma</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Oculta tu estado de conexión en la comunidad</p>
             </div>
             {isPro ? (
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" className="sr-only peer" checked={isInvisible} onChange={(e) => setIsInvisible(e.target.checked)} />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md after:border-slate-300 dark:border-slate-600/50 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
               </label>
             ) : (
               <span className="text-xs font-semibold px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md">Pro</span>
@@ -217,7 +217,7 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="px-4 py-2 rounded-xl font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 dark:text-gray-400 dark:hover:bg-gray-800"
           >
             Cancelar
           </button>

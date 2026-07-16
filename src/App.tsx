@@ -205,7 +205,7 @@ export default function App() {
   }
   
   if (!dbReady || authLoading) {
-    return <div className="p-8 bg-gray-50 h-screen flex items-center justify-center"><p className="text-gray-500">Inicializando...</p></div>;
+    return <div className="p-8 bg-slate-50 dark:bg-slate-900 h-screen flex items-center justify-center"><p className="text-slate-400 dark:text-slate-500">Inicializando...</p></div>;
   }
 
   const needsOnboarding = session && profile && !profile.plan_id && !isAdmin;
@@ -227,8 +227,8 @@ export default function App() {
             <div className="text-4xl text-amber-500 mb-4 flex justify-center">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-800">Funcionalidad no disponible</h2>
-            <p className="text-gray-500 mt-2">Tu plan actual no incluye acceso a <strong>{routeDef.label}</strong>. Contacta al administrador para mejorar tu plan o solicitar una prueba gratuita.</p>
+            <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">Funcionalidad no disponible</h2>
+            <p className="text-slate-400 dark:text-slate-500 mt-2">Tu plan actual no incluye acceso a <strong>{routeDef.label}</strong>. Contacta al administrador para mejorar tu plan o solicitar una prueba gratuita.</p>
           </div>
         </div>
       );

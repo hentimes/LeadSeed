@@ -110,13 +110,13 @@ export default function TemplateEditor({ template, type, categories = [], onSave
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de plantilla *</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Nombre de plantilla *</label>
         <input
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Ej: Mensaje de bienvenida"
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           required
         />
       </div>
@@ -125,7 +125,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
         <>
           <div>
             <div className="flex justify-between items-end mb-1">
-              <label className="block text-sm font-medium text-gray-700">Asunto *</label>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">Asunto *</label>
               <VariableDropdown onSelect={(val: string) => insertTextAtCursor(asuntoRef, asunto, val, setAsunto)} />
             </div>
             <div className="flex gap-2">
@@ -135,7 +135,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                 value={asunto}
                 onChange={(e) => setAsunto(e.target.value)}
                 placeholder="Ej: Hola {nombre}, sobre tu plan de salud..."
-                className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -157,7 +157,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                 onClick={handleImportHtml}
                 className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
-                📄 Importar HTML
+                 Importar HTML
               </button>
             )}
             <input
@@ -173,7 +173,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
 
       <div>
         <div className="flex-1 flex flex-col mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
             Contenido *
           </label>
           <div className="flex gap-1">
@@ -186,7 +186,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                   showPreview ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
-                👁 Preview
+                 Preview
               </button>
             )}
           </div>
@@ -200,7 +200,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
               onChange={(e) => setContenido(e.target.value)}
               rows={showPreview ? 12 : 8}
               placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  <h1>Hola {nombre}</h1>\n  <p>Te escribo para...</p>\n</body>\n</html>'}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           ) : (
@@ -211,10 +211,10 @@ export default function TemplateEditor({ template, type, categories = [], onSave
               rows={6}
               placeholder={
                 type === 'whatsapp'
-                  ? 'Hola {nombre} 😊, te escribo de...'
+                  ? 'Hola {nombre} , te escribo de...'
                   : 'Hola {nombre},\n\nTe escribo para...'
               }
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           )}
@@ -222,7 +222,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
           {/* Preview panel */}
           {showPreview && isHtml && (
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-2 py-1 border-b text-xs text-gray-500 font-medium">
+              <div className="bg-slate-50 dark:bg-slate-900 px-2 py-1 border-b text-xs text-slate-400 dark:text-slate-500 font-medium">
                 Vista previa
               </div>
               <div className="p-3 overflow-y-auto max-h-[300px] text-sm">
@@ -238,9 +238,9 @@ export default function TemplateEditor({ template, type, categories = [], onSave
 
           {/* WhatsApp preview */}
           {type === 'whatsapp' && contenido && (
-            <div className="bg-white border rounded-lg overflow-hidden flex flex-col h-full shadow-sm sticky top-4">
+            <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-lg overflow-hidden flex flex-col h-full shadow-sm sticky top-4">
               <div className="bg-gray-100 px-4 py-2 border-b flex items-center gap-2">
-                <span className="text-green-600"><Icon.Messages /></span> <span className="text-sm font-semibold text-gray-700">Vista previa WhatsApp</span>
+                <span className="text-green-600"><Icon.Messages /></span> <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Vista previa WhatsApp</span>
               </div>
               <div className="p-4 bg-[#efeae2] flex-1 overflow-y-auto" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.9 }}>
                   {replaceVars(contenido)}
@@ -251,7 +251,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       </div>
 
       <div className="pt-2">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Categorías</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Categorías</label>
         <div className="flex flex-wrap gap-1">
           {categories.map((c) => {
             const on = selectedCategories.has(c.id);
@@ -264,7 +264,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                   n.has(c.id) ? n.delete(c.id) : n.add(c.id);
                   setSelectedCategories(n);
                 }}
-                className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-gray-600 border-gray-300'}`}
+                className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600/50'}`}
                 style={on ? { backgroundColor: c.color } : {}}
               >
                 {c.name}
@@ -285,7 +285,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-300"
+          className="bg-gray-200 text-slate-600 dark:text-slate-300 px-4 py-2 rounded text-sm font-medium hover:bg-gray-300"
         >
           Cancelar
         </button>

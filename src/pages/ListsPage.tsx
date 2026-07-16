@@ -106,13 +106,13 @@ export default function ListsPage() {
     <div className="max-w-4xl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Listas</h2>
-          <p className="text-sm text-gray-500 mt-1">Organiza tus contactos en grupos para campañas masivas.</p>
+          <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Listas</h2>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Organiza tus contactos en grupos para campañas masivas.</p>
         </div>
         <button 
           onClick={() => {
             if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
-              alert('🔒 Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
+              alert(' Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
               return;
             }
             setCreating(true); 
@@ -147,22 +147,22 @@ export default function ListsPage() {
           const isExpanded = expandedId === list.id;
 
           return (
-            <div key={list.id} className="bg-white border rounded-xl shadow-sm overflow-hidden transition-all duration-200">
+            <div key={list.id} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-xl shadow-sm overflow-hidden transition-all duration-200">
               <div
                 onClick={() => { setExpandedId(isExpanded ? null : list.id!); setSelectedLeadIds(new Set()); setLeadSearch(''); }}
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50/80 transition-colors"
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:bg-slate-900/80 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <span className="w-4 h-4 rounded-full shadow-sm" style={{ backgroundColor: list.color }} />
-                  <span className="font-semibold text-gray-800">{list.name}</span>
-                  <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">{count} leads</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">{list.name}</span>
+                  <span className="bg-gray-100 text-slate-500 dark:text-slate-400 text-xs px-2 py-0.5 rounded-full font-medium">{count} leads</span>
                 </div>
                 <div className="flex gap-2">
                   <button 
                     onClick={(e) => { e.stopPropagation(); setEditingList(list); setCreating(false); }}
                     className="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                   >
-                    ✏️
+                    ️
                   </button>
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id!); }}
@@ -177,7 +177,7 @@ export default function ListsPage() {
               </div>
 
               {isExpanded && (
-                <div className="border-t bg-gray-50/50 p-4">
+                <div className="border-t bg-slate-50 dark:bg-slate-900/50 p-4">
                   {selectedLeadIds.size > 0 && (
                     <div className="flex gap-3 mb-4 items-center bg-blue-50 border border-blue-100 p-2.5 rounded-lg text-sm">
                       <span className="text-blue-800 font-semibold">{selectedLeadIds.size} seleccionados</span>
@@ -188,7 +188,7 @@ export default function ListsPage() {
                       <button onClick={handleBulkDelete} className="text-red-700 font-medium hover:text-red-900 flex items-center gap-1">
                         Eliminar permanentemente
                       </button>
-                      <button onClick={() => setSelectedLeadIds(new Set())} className="text-gray-500 font-medium ml-auto hover:text-gray-700">
+                      <button onClick={() => setSelectedLeadIds(new Set())} className="text-slate-400 dark:text-slate-500 font-medium ml-auto hover:text-slate-600 dark:text-slate-300">
                         Deseleccionar todo
                       </button>
                     </div>
@@ -200,18 +200,18 @@ export default function ListsPage() {
                       value={leadSearch} 
                       onChange={(e) => setLeadSearch(e.target.value)}
                       placeholder="Buscar y agregar lead a la lista..." 
-                      className="w-full border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm outline-none" 
+                      className="w-full border-slate-300 dark:border-slate-600/50 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm outline-none" 
                     />
                     
                     {leadSearch && filteredNotInList.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         {filteredNotInList.slice(0, 15).map((lead) => (
                           <button 
                             key={lead.id} 
                             onClick={() => handleAddLead(lead.id!)}
                             className="w-full text-left px-4 py-2 hover:bg-blue-50 border-b last:border-0 text-sm flex justify-between items-center transition-colors"
                           >
-                            <span className="font-medium text-gray-800">
+                            <span className="font-medium text-slate-700 dark:text-slate-200">
                               {lead.name} <span className="text-gray-400 font-normal ml-2">{lead.phone}</span>
                             </span>
                             <span className="text-blue-600 bg-blue-100 w-6 h-6 rounded-full flex items-center justify-center font-bold">+</span>
@@ -236,14 +236,14 @@ export default function ListsPage() {
           );
         })}
         {lists.length === 0 && (
-          <div className="text-center py-12 bg-white border rounded-xl border-dashed">
-            <span className="text-4xl mb-3 block">📋</span>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No tienes listas aún</h3>
-            <p className="text-gray-500 text-sm mb-4">Crea tu primera lista para organizar tus contactos.</p>
+          <div className="text-center py-12 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-xl border-dashed">
+            <span className="text-4xl mb-3 block"></span>
+            <h3 className="text-lg font-medium text-slate-800 dark:text-slate-100 mb-1">No tienes listas aún</h3>
+            <p className="text-slate-400 dark:text-slate-500 text-sm mb-4">Crea tu primera lista para organizar tus contactos.</p>
             <button 
               onClick={() => {
                 if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
-                  alert('🔒 Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
+                  alert(' Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
                   return;
                 }
                 setCreating(true); 

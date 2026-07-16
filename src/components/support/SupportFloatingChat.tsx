@@ -329,7 +329,7 @@ export default function SupportFloatingChat() {
 
       {/* Ventana de chat */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 h-96 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-purple-100 animate-fade-in">
+        <div className="fixed bottom-6 right-6 w-80 h-96 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-purple-100 animate-fade-in">
           
           {/* Header del Chat Principal */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 text-white flex justify-between items-center shadow-md z-10 relative">
@@ -343,7 +343,7 @@ export default function SupportFloatingChat() {
           </div>
           
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-gray-50/50">
+          <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-slate-50 dark:bg-slate-900/50">
             {messages.length === 0 ? (
               <p className="text-xs text-center text-gray-400 mt-4">Esperando mensajes...</p>
             ) : (
@@ -356,7 +356,7 @@ export default function SupportFloatingChat() {
                   <div key={msg.id}>
                     {showDate && (
                       <div className="flex justify-center mb-4 mt-2">
-                        <span className="bg-gray-200/60 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        <span className="bg-gray-200/60 text-slate-400 dark:text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                           {formatMessageDate(msg.created_at)}
                         </span>
                       </div>
@@ -365,7 +365,7 @@ export default function SupportFloatingChat() {
                       <div className={`px-3 pt-2 pb-1.5 rounded-2xl text-[13px] shadow-sm leading-relaxed ${
                         isMe 
                           ? 'bg-purple-600 text-white rounded-br-sm' 
-                          : 'bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm'
+                          : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 text-slate-700 dark:text-slate-200 rounded-bl-sm shadow-sm'
                       }`}>
                         {!isMe && (
                           <div className="text-[10px] font-bold text-purple-600 mb-0.5">
@@ -377,12 +377,12 @@ export default function SupportFloatingChat() {
                             <strong>Ref: Ticket {msg.context_ticket_code ? `#${msg.context_ticket_code}` : ''}</strong> {msg.context_ticket_type ? `(${msg.context_ticket_type})` : ''}
                           </div>
                         )}
-                        <div className={`break-all whitespace-pre-wrap ${msg.context_req_id ? 'font-mono text-[10px] text-gray-600 bg-gray-50/80 p-2 rounded-md border border-gray-100 mt-1' : ''}`}>{msg.message}</div>
+                        <div className={`break-all whitespace-pre-wrap ${msg.context_req_id ? 'font-mono text-[10px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/80 p-2 rounded-md border border-gray-100 mt-1' : ''}`}>{msg.message}</div>
                         <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
                           {formatMessageTime(msg.created_at)}
                           {isMe && (
                             <span className={msg.is_read ? 'text-blue-300' : 'text-purple-300 opacity-70'}>
-                              ✓✓
+                              
                             </span>
                           )}
                         </div>
@@ -394,7 +394,7 @@ export default function SupportFloatingChat() {
             )}
             {isAdminTyping && (
               <div className="flex justify-start mb-2">
-                <div className="bg-white border border-gray-100 text-gray-500 rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm text-[10px] italic flex items-center gap-1.5">
+                <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 text-slate-400 dark:text-slate-500 rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm text-[10px] italic flex items-center gap-1.5">
                   <span className="flex gap-1">
                     <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></span>
                     <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
@@ -409,11 +409,11 @@ export default function SupportFloatingChat() {
             {/* Inline System Message for Rating */}
             {pendingRatingReq && (
               <div className="flex flex-col items-center my-4 animate-fade-in">
-                <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm text-center max-w-[90%]">
-                  <p className="text-[11px] font-bold text-gray-800 mb-1">
+                <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-xl p-3 shadow-sm text-center max-w-[90%]">
+                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
                     Soporte ha marcado el ticket {pendingRatingReq.ticket_code ? `#${pendingRatingReq.ticket_code}` : ''} como resuelto.
                   </p>
-                  <p className="text-[10px] text-gray-500 mb-3">Por favor califica el resultado de la atención.</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">Por favor califica el resultado de la atención.</p>
                   
                   {activeClaimId === pendingRatingReq.id ? (
                     <div className="flex flex-col gap-2">
@@ -421,20 +421,20 @@ export default function SupportFloatingChat() {
                         value={claimReason}
                         onChange={(e) => setClaimReason(e.target.value)}
                         placeholder="Motivo del reclamo..."
-                        className="w-full text-xs p-2 border border-red-200 rounded-lg focus:ring-1 focus:ring-red-400 outline-none resize-none bg-gray-50"
+                        className="w-full text-xs p-2 border border-red-200 rounded-lg focus:ring-1 focus:ring-red-400 outline-none resize-none bg-slate-50 dark:bg-slate-900"
                         rows={2}
                       />
                       <div className="flex gap-2 justify-end mt-1">
-                        <button onClick={() => setActiveClaimId(null)} className="text-[10px] text-gray-500 hover:text-gray-700 px-2 font-medium">Cancelar</button>
+                        <button onClick={() => setActiveClaimId(null)} className="text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 px-2 font-medium">Cancelar</button>
                         <button onClick={() => handleSubmitClaim(pendingRatingReq.id)} className="bg-red-500 text-white text-[10px] px-3 py-1.5 rounded-lg hover:bg-red-600 font-bold shadow-sm">Enviar Reclamo</button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex gap-3 justify-center">
-                      <button onClick={() => handleRate(pendingRatingReq.id, 'up')} className="group flex items-center justify-center w-9 h-9 rounded-full bg-gray-50 border border-gray-100 hover:bg-green-50 hover:border-green-200 transition-all shadow-sm">
+                      <button onClick={() => handleRate(pendingRatingReq.id, 'up')} className="group flex items-center justify-center w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-900 border border-gray-100 hover:bg-green-50 hover:border-green-200 transition-all shadow-sm">
                         <svg className="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.514"></path></svg>
                       </button>
-                      <button onClick={() => handleRate(pendingRatingReq.id, 'down')} className="group flex items-center justify-center w-9 h-9 rounded-full bg-gray-50 border border-gray-100 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm">
+                      <button onClick={() => handleRate(pendingRatingReq.id, 'down')} className="group flex items-center justify-center w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-900 border border-gray-100 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm">
                         <svg className="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.514"></path></svg>
                       </button>
                     </div>
@@ -460,14 +460,14 @@ export default function SupportFloatingChat() {
               )}
           </div>
 
-          <form onSubmit={handleSend} className="p-3 border-t border-gray-100 bg-white">
+          <form onSubmit={handleSend} className="p-3 border-t border-gray-100 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md">
               <div className="flex gap-2 items-center">
                 <input 
                   type="text" 
                   value={newMessage}
                   onChange={handleTyping}
                   placeholder="Escribe aquí..."
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-xs outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all text-gray-700"
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-full px-4 py-2 text-xs outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all text-slate-600 dark:text-slate-300"
                 />
             <button 
               type="submit" 

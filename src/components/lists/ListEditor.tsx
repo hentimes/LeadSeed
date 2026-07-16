@@ -36,7 +36,7 @@ export default function ListEditor({ initialData, onSave, onCancel, submitLabel 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 mb-3 bg-white p-2 border rounded-lg shadow-sm">
+    <form onSubmit={handleSubmit} className="flex gap-2 mb-3 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md p-2 border rounded-lg shadow-sm">
       <input
         type="text"
         value={name}
@@ -64,7 +64,7 @@ export default function ListEditor({ initialData, onSave, onCancel, submitLabel 
       <button
         type="button"
         onClick={onCancel}
-        className="text-gray-500 hover:text-gray-700 text-sm font-medium px-2"
+        className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 text-sm font-medium px-2"
       >
         Cancelar
       </button>

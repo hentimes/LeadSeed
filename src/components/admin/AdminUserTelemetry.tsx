@@ -49,7 +49,7 @@ export default function AdminUserTelemetry({ selectedUser }: Props) {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500 animate-pulse">Cargando telemetría...</div>;
+    return <div className="p-8 text-center text-slate-400 dark:text-slate-500 animate-pulse">Cargando telemetría...</div>;
   }
 
   return (
@@ -77,31 +77,31 @@ export default function AdminUserTelemetry({ selectedUser }: Props) {
 
       {/* Detalle por Secciones */}
       <div>
-        <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Tiempo por Sección</h3>
+        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 uppercase tracking-wider">Tiempo por Sección</h3>
         
         {telemetry.length === 0 ? (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-            <p className="text-sm text-gray-500">Aún no hay telemetría registrada para este usuario.</p>
+          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-lg p-6 text-center">
+            <p className="text-sm text-slate-400 dark:text-slate-500">Aún no hay telemetría registrada para este usuario.</p>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-lg shadow-sm overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-slate-50 dark:bg-slate-900">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sección App</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tiempo Invertido</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Última Visita</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">% del Total</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">Sección App</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">Tiempo Invertido</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">Última Visita</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">% del Total</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md divide-y divide-gray-200">
                 {telemetry.map(row => {
                   const percentage = totalSecondsAll > 0 ? ((row.total_seconds / totalSecondsAll) * 100).toFixed(1) : '0';
                   return (
-                    <tr key={row.section} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900">{row.section}</td>
+                    <tr key={row.section} className="hover:bg-slate-50 dark:bg-slate-900">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-100">{row.section}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-600 font-mono font-medium">{formatTime(row.total_seconds)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-400 dark:text-slate-500">
                         {new Date(row.last_updated_at).toLocaleString('es-CL')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -109,7 +109,7 @@ export default function AdminUserTelemetry({ selectedUser }: Props) {
                           <div className="w-full bg-gray-200 rounded-full h-2 w-24">
                             <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
                           </div>
-                          <span className="text-xs text-gray-500 font-medium">{percentage}%</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{percentage}%</span>
                         </div>
                       </td>
                     </tr>
