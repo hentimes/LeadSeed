@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../../types';
-import { supabase } from '../../lib/supabaseClient';
 import { getAssignedLeads } from '../../hooks/useTemplates';
 import { Icon } from '../../utils/icons';
+import { getCurrentSession } from '../../services/authService';
+import { logCallSend } from '../../services/sendService';
 
 interface Props {
   leads: Lead[];
@@ -11,90 +12,91 @@ interface Props {
   leadLists: LeadList[];
 }
 
-export default function CallSender({ leads, templates, templateLists, leadLists }: Props) {
+export default function CallSender({ leads, templates, templateLists }: Props) {
   const [selectedListId, setSelectedListId] = useState<number | 'all'>('all');
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | ''>('');
   const [assignedLeadIds, setAssignedLeadIds] = useState<string[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | ''>('');
-  
   const [logging, setLogging] = useState(false);
   const [message, setMessage] = useState('');
 
   const filteredTemplates = useMemo(() => {
     if (selectedListId === 'all') return templates;
-    return templates.filter((t) => (t.templateListIds || []).includes(selectedListId));
+    return templates.filter((template) => (template.templateListIds || []).includes(selectedListId));
   }, [templates, selectedListId]);
 
-  const handleTemplateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSelectedTemplateId(val === '' ? '' : Number(val));
-    if (!val) {
+  const handleTemplateChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setSelectedTemplateId(value === '' ? '' : Number(value));
+    if (!value) {
       setAssignedLeadIds([]);
       setSelectedLeadId('');
       return;
     }
-    const tpl = templates.find((t) => t.id === Number(val));
-    if (tpl) {
-      const { allIds } = await getAssignedLeads(tpl);
+
+    const template = templates.find((item) => item.id === Number(value));
+    if (template) {
+      const session = await getCurrentSession();
+      const userId = session?.user?.id;
+      if (!userId) return;
+      
+      const { allIds } = await getAssignedLeads(template, userId);
       setAssignedLeadIds(allIds);
-      if (!allIds.includes(String(selectedLeadId))) setSelectedLeadId('');
+      if (!allIds.includes(String(selectedLeadId))) {
+        setSelectedLeadId('');
+      }
     }
   };
 
   const validLeads = useMemo(() => {
     if (!selectedTemplateId) return [];
-    return leads.filter((l) => assignedLeadIds.includes(l.id!));
+    return leads.filter((lead) => assignedLeadIds.includes(lead.id!));
   }, [leads, assignedLeadIds, selectedTemplateId]);
 
-  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
-  const selectedLead = validLeads.find(l => l.id === selectedLeadId);
+  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId);
+  const selectedLead = validLeads.find((lead) => lead.id === selectedLeadId);
 
   const handleLogCall = async () => {
     if (!selectedTemplate || !selectedLead) return;
     setLogging(true);
-    
-    // Solo registrar en la DB, no enviamos nada real
+
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      
-      await supabase.from('send_logs').insert({
-        user_id: userId,
-        template_id: selectedTemplate.id!,
-        template_type: 'call',
-        lead_id: selectedLead.id!,
-        lead_name: selectedLead.name,
-        lead_phone: selectedLead.phone,
-        sent_at: new Date().toISOString(),
-      });
-      
-      await supabase.from('leads').update({ status: 'contactado' }).eq('id', selectedLead.id!);
-      
-      setMessage('Llamada registrada con éxito');
-    } catch (e) {
+      const session = await getCurrentSession();
+      const userId = session?.user?.id;
+      if (!userId) {
+        setMessage('Sesion no disponible');
+        return;
+      }
+
+      await logCallSend(userId, selectedTemplate.id!, selectedLead);
+      setMessage('Llamada registrada con exito');
+    } catch {
       setMessage('Error al registrar llamada');
+    } finally {
+      setLogging(false);
+      setTimeout(() => setMessage(''), 3000);
     }
-    setLogging(false);
-    setTimeout(() => setMessage(''), 3000);
   };
 
   return (
     <div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">1. Categoría de Llamada</label>
+        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">1. Categoria de Llamada</label>
         <select
           value={selectedListId}
-          onChange={(e) => {
-            setSelectedListId(e.target.value === 'all' ? 'all' : Number(e.target.value));
+          onChange={(event) => {
+            setSelectedListId(event.target.value === 'all' ? 'all' : Number(event.target.value));
             setSelectedTemplateId('');
             setAssignedLeadIds([]);
             setSelectedLeadId('');
           }}
           className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
         >
-          <option value="all">Todas las categorías</option>
-          {templateLists.map((l) => (
-            <option key={l.id} value={l.id}>{l.name}</option>
+          <option value="all">Todas las categorias</option>
+          {templateLists.map((list) => (
+            <option key={list.id} value={list.id}>
+              {list.name}
+            </option>
           ))}
         </select>
       </div>
@@ -107,8 +109,10 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
           className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
         >
           <option value="">-- Seleccionar Guion --</option>
-          {filteredTemplates.map((t) => (
-            <option key={t.id} value={t.id}>{t.nombre}</option>
+          {filteredTemplates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.nombre}
+            </option>
           ))}
         </select>
       </div>
@@ -117,13 +121,15 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
         <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">3. Lead a llamar</label>
         <select
           value={selectedLeadId}
-          onChange={(e) => setSelectedLeadId(e.target.value || '')}
+          onChange={(event) => setSelectedLeadId(event.target.value || '')}
           disabled={!selectedTemplateId}
           className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-slate-100 dark:bg-slate-800"
         >
           <option value="">-- Seleccionar Lead --</option>
-          {validLeads.map((l) => (
-            <option key={l.id} value={l.id}>{l.name} ({l.phone || 'Sin número'})</option>
+          {validLeads.map((lead) => (
+            <option key={lead.id} value={lead.id}>
+              {lead.name} ({lead.phone || 'Sin numero'})
+            </option>
           ))}
         </select>
         {selectedTemplateId && validLeads.length === 0 && (
@@ -132,9 +138,8 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
       </div>
 
       {selectedTemplate && (
-        /* 1. Selección de Plantilla (Guión) */
         <div className="mb-4 border-b border-gray-100 pb-4">
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">1. Seleccionar Guión</h3>
+          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">1. Seleccionar Guion</h3>
           <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{selectedTemplate.contenido}</p>
         </div>
       )}
@@ -144,12 +149,20 @@ export default function CallSender({ leads, templates, templateLists, leadLists 
         disabled={!selectedTemplateId || !selectedLeadId || logging}
         className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {logging ? 'Registrando...' : <><Icon.Phone /> Registrar Llamada Completada</>}
+        {logging ? 'Registrando...' : (
+          <>
+            <Icon.Phone /> Registrar Llamada Completada
+          </>
+        )}
       </button>
 
       {message && (
-        <div className={`mt-3 p-2 rounded text-sm text-center font-medium flex items-center justify-center gap-1.5 ${message.includes('éxito') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-          {message.includes('éxito') ? <Icon.Check /> : <Icon.Warning />} {message}
+        <div
+          className={`mt-3 p-2 rounded text-sm text-center font-medium flex items-center justify-center gap-1.5 ${
+            message.includes('exito') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          }`}
+        >
+          {message.includes('exito') ? <Icon.Check /> : <Icon.Warning />} {message}
         </div>
       )}
     </div>

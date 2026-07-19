@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { getSettings } from '../db/database';
-import { supabase } from '../lib/supabaseClient';
 import { useLeads } from '../hooks/useLeads';
 import { useAuth } from '../contexts/AuthContext';
 import type { Lead, Task, SendLog, AppSettings, Page } from '../types';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Icon } from '../utils/icons';
+import { fetchDashboardOperationalData } from '../services/dashboardService';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   AreaChart, Area, PieChart, Pie, Cell
@@ -48,51 +48,21 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
 
   useEffect(() => {
     (async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      
-      const [ { data: logsData }, s ] = await Promise.all([
-        supabase.from('send_logs').select('*').eq('user_id', userId),
-        getSettings()
+      const [s, dashboardData] = await Promise.all([
+        getSettings(),
+        user ? fetchDashboardOperationalData(user.id) : Promise.resolve({ logs: [], tasks: [] }),
       ]);
-      
-      const logs = (logsData || []).map(l => ({
-        id: l.id,
-        templateId: l.template_id,
-        templateType: l.template_type,
-        leadId: l.lead_id,
-        leadName: l.lead_name,
-        leadPhone: l.lead_phone,
-        sentAt: l.sent_at,
-        scheduledFor: l.scheduled_for
-      }));
-      
+
       let fetchedLeads: Lead[] = [];
-      let fetchedTasks: Task[] = [];
+      let fetchedTasks: Task[] = dashboardData.tasks;
       
       if (user) {
         fetchedLeads = await getLeads();
-        
-        const { data: dbTasks } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        fetchedTasks = (dbTasks || []).map(t => ({
-          id: t.id,
-          titulo: t.title,
-          descripcion: t.description || '',
-          status: t.status as 'pendiente' | 'completada',
-          fechaVencimiento: t.due_date || '',
-          leadIds: t.lead_id ? [t.lead_id] : [],
-          leadListIds: t.lead_list_ids || [],
-          createdAt: t.created_at
-        }));
       }
 
       setLeads(fetchedLeads);
       setTasks(fetchedTasks);
-      setAllLogs(logs);
+      setAllLogs(dashboardData.logs);
       setSettings(s);
     })();
   }, [user, getLeads]);

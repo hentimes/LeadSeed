@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Icon } from '../../utils/icons';
-import { supabase } from '../../lib/supabaseClient';
 import type { Profile, Lead } from '../../types';
+import { loadAdminUserInventory } from '../../services/adminService';
 
 interface Props {
   selectedUser: Profile;
@@ -14,49 +14,22 @@ export default function AdminUserInventory({ selectedUser }: Props) {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadInventory = async () => {
       setLoading(true);
-      
-      // 1. Cargar Leads
-      const { data: leadsData } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('user_id', selectedUser.id)
-        .order('created_at', { ascending: false })
-        .limit(50); // Mostrar últimos 50 por rendimiento
-        
-      const mappedLeads: Lead[] = (leadsData || []).map((row: any) => ({
-        ...row,
-        name: row.name || `${row.first_name || ''} ${row.last_name || ''}`.trim(),
-        createdAt: row.created_at || row.createdAt,
-        updatedAt: row.updated_at || row.updatedAt
-      } as unknown as Lead));
-        
-      // 2. Cargar Conteo de Plantillas
-      const { data: templatesData } = await supabase
-        .from('templates')
-        .select('type')
-        .eq('user_id', selectedUser.id);
-        
+      const { leads: mappedLeads, templatesCount: nextTemplatesCount } = await loadAdminUserInventory(selectedUser.id);
+
       if (!isMounted) return;
 
       setLeads(mappedLeads);
-      
-      const counts = { whatsapp: 0, email: 0, call: 0 };
-      if (templatesData) {
-        templatesData.forEach(t => {
-          if (t.type === 'whatsapp') counts.whatsapp++;
-          else if (t.type === 'email') counts.email++;
-          else if (t.type === 'call') counts.call++;
-        });
-      }
-      setTemplatesCount(counts);
+      setTemplatesCount(nextTemplatesCount);
       setLoading(false);
     };
 
-    loadInventory();
-    return () => { isMounted = false; };
+    void loadInventory();
+    return () => {
+      isMounted = false;
+    };
   }, [selectedUser.id]);
 
   if (loading) {
@@ -65,7 +38,6 @@ export default function AdminUserInventory({ selectedUser }: Props) {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Resumen de Plantillas */}
       <div>
         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 uppercase tracking-wider flex items-center gap-2">
           <span className="text-indigo-500">{Icon.Database()}</span> Plantillas Creadas
@@ -86,12 +58,11 @@ export default function AdminUserInventory({ selectedUser }: Props) {
         </div>
       </div>
 
-      {/* Listado de Leads */}
       <div>
         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 uppercase tracking-wider flex items-center gap-2">
-          <span className="text-blue-500">{Icon.Leads()}</span> Últimos Leads Asignados ({leads.length})
+          <span className="text-blue-500">{Icon.Leads()}</span> Ultimos Leads Asignados ({leads.length})
         </h3>
-        
+
         {leads.length === 0 ? (
           <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-lg p-6 text-center">
             <p className="text-sm text-slate-400 dark:text-slate-500">Este usuario no tiene leads asignados en la nube.</p>
@@ -108,7 +79,7 @@ export default function AdminUserInventory({ selectedUser }: Props) {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md divide-y divide-gray-200">
-                {leads.map(lead => (
+                {leads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-slate-50 dark:bg-slate-900">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-800 dark:text-slate-100">{lead.name || 'Sin nombre'}</div>

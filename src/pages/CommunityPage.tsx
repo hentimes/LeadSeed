@@ -1,44 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { usePresence } from '../hooks/usePresence';
+import {
+  fetchCommunityMessages,
+  sendCommunityMessage,
+  subscribeToCommunityMessages,
+  type CommunityMessage,
+} from '../services/communityService';
 import { Icon } from '../utils/icons';
-import type { Profile } from '../types';
-
-interface Message {
-  id: string;
-  sender_id: string;
-  message: string;
-  created_at: string;
-  sender_profile?: { email: string; full_name?: string; avatar_url?: string; show_premium_frame?: boolean };
-}
 
 export default function CommunityPage() {
   const { user } = useAuth();
   const { onlineUsers: activeUsers } = usePresence();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<CommunityMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    loadMessages();
+    void loadMessages();
 
-    const channel = supabase
-      .channel('public:internal_messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'internal_messages' }, (payload) => {
-        const msg = payload.new as Message;
-        if (!payload.new.receiver_id) { // Solo mensajes de grupo
-          supabase.from('profiles').select('email, full_name, avatar_url, show_premium_frame').eq('id', msg.sender_id).single().then(({ data }) => {
-            msg.sender_profile = data || undefined;
-            setMessages(prev => [...prev, msg]);
-          });
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    return subscribeToCommunityMessages((message) => {
+      setMessages((prev) => [...prev, message]);
+    });
   }, [user]);
 
   useEffect(() => {
@@ -46,16 +31,7 @@ export default function CommunityPage() {
   }, [messages]);
 
   const loadMessages = async () => {
-    const { data } = await supabase
-      .from('internal_messages')
-      .select('*, sender_profile:profiles!internal_messages_sender_id_fkey(email, full_name, avatar_url, show_premium_frame)')
-      .is('receiver_id', null)
-      .order('created_at', { ascending: false })
-      .limit(50);
-      
-    if (data) {
-      setMessages((data as Message[]).reverse());
-    }
+    setMessages(await fetchCommunityMessages());
     setLoading(false);
   };
 
@@ -64,11 +40,7 @@ export default function CommunityPage() {
     if (!newMessage.trim() || !user) return;
     const text = newMessage.trim();
     setNewMessage('');
-    await supabase.from('internal_messages').insert({
-      sender_id: user.id,
-      receiver_id: null,
-      message: text
-    });
+    await sendCommunityMessage(user.id, text);
   };
 
   if (loading) return <div className="p-8 flex justify-center text-slate-400 dark:text-slate-500"><Icon.Settings /> Cargando sala...</div>;

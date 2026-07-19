@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabaseClient';
+import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types';
+import { getCurrentSession, logoutCurrentUser, mapSessionToUser, onAuthSessionChange, persistGoogleCalendarConnectionFromSession } from '../services/authService';
+import { loadActiveFeatures, loadUserProfile } from '../services/profileService';
 
 interface AuthContextType {
   session: Session | null;
@@ -37,36 +38,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeFeatures, setActiveFeatures] = useState<string[]>([]);
 
   const loadFeatures = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_my_features');
-      if (error) throw error;
-      setActiveFeatures(data || []);
-    } catch (err) {
-      console.error('Error fetching user features:', err);
-      setActiveFeatures([]);
-    }
+    setActiveFeatures(await loadActiveFeatures());
   };
 
-  const refreshProfile = async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (!error && data) {
-        setProfile(data);
-      }
-    } catch (err) {
-      console.error('Error fetching profile:', err);
+  const refreshProfile = async (targetUserId = user?.id) => {
+    if (!targetUserId) return;
+    const nextProfile = await loadUserProfile(targetUserId);
+    if (nextProfile) {
+      setProfile(nextProfile);
     }
   };
 
   useEffect(() => {
-    // Obtener sesión actual
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('AuthContext - getSession:', session, error);
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session) {
-        loadFeatures();
+    getCurrentSession().then((nextSession) => {
+      console.log('AuthContext - getSession:', nextSession);
+      setSession(nextSession);
+      setUser(mapSessionToUser(nextSession));
+      if (nextSession) {
+        void persistGoogleCalendarConnectionFromSession(nextSession).catch((error) => {
+          console.warn('No se pudo guardar la conexion Google Calendar:', error);
+        });
+        void loadFeatures();
       } else {
         setActiveFeatures([]);
         setProfile(null);
@@ -74,13 +66,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Escuchar cambios en la autenticación (login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('AuthContext - onAuthStateChange event:', _event, 'session:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session) {
-        loadFeatures();
+    const subscription = onAuthSessionChange((event, nextSession) => {
+      console.log('AuthContext - onAuthStateChange event:', event, 'session:', nextSession);
+      setSession(nextSession);
+      setUser(mapSessionToUser(nextSession));
+      if (nextSession) {
+        void persistGoogleCalendarConnectionFromSession(nextSession).catch((error) => {
+          console.warn('No se pudo guardar la conexion Google Calendar:', error);
+        });
+        void loadFeatures();
       } else {
         setActiveFeatures([]);
         setProfile(null);
@@ -93,17 +87,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Cargar perfil una vez que tenemos el user (y refrescar si cambia)
   useEffect(() => {
     if (user) {
-      refreshProfile().finally(() => setLoading(false));
+      refreshProfile(user.id).finally(() => setLoading(false));
     }
   }, [user]);
 
   const signOut = async () => {
     setActiveFeatures([]);
     setProfile(null);
-    await supabase.auth.signOut();
+    await logoutCurrentUser();
   };
 
   const isAdmin = profile?.role === 'admin';
@@ -114,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, signOut, loading, activeFeatures, hasFeature, refreshProfile, isAdmin }}>
+    <AuthContext.Provider value={{ session, user, profile, signOut, loading, activeFeatures, hasFeature, refreshProfile: () => refreshProfile(), isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -79,6 +79,31 @@ export function normalizeRut(rutStr: string, dvStr?: string): string | null {
   return `${body}-${dv}`;
 }
 
+export function calculateRutDv(body: string): string | null {
+  const digits = body.replace(/\D/g, '');
+  if (digits.length < 6 || digits.length > 9) return null;
+
+  let sum = 0;
+  let multiplier = 2;
+
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    sum += Number(digits[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+
+  const remainder = 11 - (sum % 11);
+  if (remainder === 11) return '0';
+  if (remainder === 10) return 'K';
+  return String(remainder);
+}
+
+export function isValidRut(rutStr: string, dvStr?: string): boolean {
+  const parts = parseRut(rutStr, dvStr);
+  if (!parts || !parts.dv) return false;
+  const expectedDv = calculateRutDv(parts.rut);
+  return expectedDv === parts.dv.toUpperCase();
+}
+
 function parseRut(rutStr: string, dvStr?: string): RutParts | null {
   const normalized = normalizeRut(rutStr, dvStr);
   if (!normalized) return null;
@@ -90,7 +115,7 @@ function parseRut(rutStr: string, dvStr?: string): RutParts | null {
   };
 }
 
-function formatRutDisplay(rut: string): string {
+export function formatRutDisplay(rut: string): string {
   // Formatea como 12.345.678-9
   const clean = rut.replace(/[^0-9kK-]/g, '');
   const dashIdx = clean.lastIndexOf('-');

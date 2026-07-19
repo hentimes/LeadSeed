@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, EmailTemplate, EmailTemplateList, LeadList, SendLog } from '../../types';
 import { replaceVariables } from '../../utils/waHelper';
-import { sendEmailToLeads, type EmailAttachment } from '../../utils/emailSender';
-import { supabase } from '../../lib/supabaseClient';
+import type { EmailAttachment } from '../../utils/emailSender';
 import { Icon } from '../../utils/icons';
 import EmailEditor from './EmailEditor';
 import EmailScheduler from './EmailScheduler';
+import { getCurrentSession } from '../../services/authService';
+import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../../services/sendService';
 
 interface Props {
   leads: Lead[];
@@ -49,20 +50,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
   useEffect(() => {
     if (selectedTemplate) {
-      supabase.from('send_logs')
-        .select('*')
-        .eq('template_id', selectedTemplate.id)
-        .order('sent_at', { ascending: false })
-        .then(({ data }) => setSentLog((data || []).map(l => ({
-          id: l.id,
-          templateId: l.template_id,
-          templateType: l.template_type,
-          leadId: l.lead_id,
-          leadName: l.lead_name,
-          leadPhone: l.lead_phone,
-          sentAt: l.sent_at,
-          scheduledFor: l.scheduled_for
-        }))));
+      loadTemplateSendLog(selectedTemplate.id!).then(setSentLog);
       setCustomSubject(selectedTemplate.asunto || '');
       setCustomBody(selectedTemplate.contenido || '');
       setAttachments([]);
@@ -120,62 +108,33 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const executeSend = async () => {
     setShowConfirmModal(false);
     if (!selectedTemplate || recipients.length === 0) return;
-    const now = new Date().toISOString();
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData?.session?.user?.id;
+    const session = await getCurrentSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
 
     if (schedule && scheduledDate && scheduledTime) {
       const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
-      const logs = recipients.map((l) => ({
-        user_id: userId,
-        template_id: selectedTemplate.id!, 
-        template_type: 'email' as const,
-        lead_id: l.id!, 
-        lead_name: l.name, 
-        lead_phone: l.phone || l.email,
-        sent_at: now, 
-        scheduled_for: scheduledFor,
-      }));
-      await supabase.from('send_logs').insert(logs);
+      setSentLog(await scheduleEmailSend(userId, selectedTemplate.id!, recipients, scheduledFor));
       try { chrome.storage.local.set({ hasScheduledEmails: true }); } catch { /* noop */ }
       setSchedule(false);
       setScheduledDate('');
       setScheduledTime('');
       setResult({ total: recipients.length, sent: 0, errors: [`${recipients.length} email(s) programados para ${new Date(scheduledFor).toLocaleString('es-CL')}`] });
-      const { data: updatedLogs } = await supabase.from('send_logs')
-        .select('*')
-        .eq('template_id', selectedTemplate.id)
-        .order('sent_at', { ascending: false });
-      setSentLog((updatedLogs || []).map(l => ({
-        id: l.id, templateId: l.template_id, templateType: l.template_type, leadId: l.lead_id, leadName: l.lead_name, leadPhone: l.lead_phone, sentAt: l.sent_at, scheduledFor: l.scheduled_for
-      })));
       return;
     }
 
     setSending(true);
-    // Usar el asunto, cuerpo y adjuntos customizados al vuelo
-    const res = await sendEmailToLeads(recipients, customSubject, customBody, selectedTemplate.isHtml, attachments);
-    setResult(res);
-    const logs = recipients.map((l) => ({
-      user_id: userId,
-      template_id: selectedTemplate.id!, 
-      template_type: 'email' as const,
-      lead_id: l.id!, 
-      lead_name: l.name, 
-      lead_phone: l.phone || l.email, 
-      sent_at: now,
-    }));
-    await supabase.from('send_logs').insert(logs);
-    await supabase.from('leads').update({ status: 'contactado' }).in('id', recipients.map(l => l.id));
-    
-    const { data: updatedLogs } = await supabase.from('send_logs')
-      .select('*')
-      .eq('template_id', selectedTemplate.id)
-      .order('sent_at', { ascending: false });
-    setSentLog((updatedLogs || []).map(l => ({
-        id: l.id, templateId: l.template_id, templateType: l.template_type, leadId: l.lead_id, leadName: l.lead_name, leadPhone: l.lead_phone, sentAt: l.sent_at, scheduledFor: l.scheduled_for
-      })));
+    const { result: sendResult, sentLog: updatedLog } = await sendImmediateEmail(
+      userId,
+      selectedTemplate.id!,
+      recipients,
+      customSubject,
+      customBody,
+      selectedTemplate.isHtml,
+      attachments,
+    );
+    setResult(sendResult);
+    setSentLog(updatedLog);
     setSending(false);
   };
 

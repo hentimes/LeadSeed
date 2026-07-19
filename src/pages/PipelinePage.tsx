@@ -2,13 +2,13 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useLeads } from '../hooks/useLeads';
 import { useWhatsAppTemplates } from '../hooks/useTemplates';
 import { useLists } from '../hooks/useLists';
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import type { Lead, LeadStatus, WhatsAppTemplate, LeadList } from '../types';
 import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
+import { createFollowUpTaskForLead } from '../services/tasksService';
 
 const STATUS_ORDER: LeadStatus[] = ['nuevo', 'contactado', 'interesado', 'convertido', 'descartado'];
 
@@ -97,16 +97,14 @@ export default function PipelinePage() {
     const dueDate = taskDate && taskTime
       ? new Date(`${taskDate}T${taskTime}:00`).toISOString()
       : null;
-      
-    await supabase.from('tasks').insert({
-      title: taskTitle.trim(),
-      description: `Lead: ${taskPrompt.leadName} (${STATUS_LABELS[taskPrompt.newStatus]})`,
-      lead_id: taskPrompt.leadId,
-      lead_list_ids: [],
-      due_date: dueDate,
-      status: 'pendiente',
-      user_id: user.id,
-      created_at: new Date().toISOString(),
+
+    await createFollowUpTaskForLead({
+      userId: user.id,
+      leadId: taskPrompt.leadId,
+      leadName: taskPrompt.leadName,
+      newStatus: taskPrompt.newStatus,
+      title: taskTitle,
+      dueDateIso: dueDate,
     });
     
     setTaskPrompt(null);

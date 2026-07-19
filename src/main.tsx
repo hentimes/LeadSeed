@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { PresenceProvider } from './hooks/usePresence';
+import AppErrorBoundary from './components/app/AppErrorBoundary';
 
 const rootEl = document.getElementById('root');
 
@@ -12,13 +13,13 @@ if (!rootEl) {
 } else {
   try {
     ReactDOM.createRoot(rootEl).render(
-      <React.StrictMode>
+      <AppErrorBoundary>
         <AuthProvider>
           <PresenceProvider>
             <App />
           </PresenceProvider>
         </AuthProvider>
-      </React.StrictMode>
+      </AppErrorBoundary>
     );
     console.log('Leads CRM: React montado correctamente');
   } catch (e) {

@@ -52,6 +52,11 @@ const LeadsTableRow = ({
   const renderNameWithBadges = (isCompact: boolean) => (
     <div className={`font-medium text-xs flex items-center gap-1.5 ${isCompact ? '' : ''}`}>
       {isCompact ? shortName(lead.name) : lead.name}
+      {lead.hasUnreadCrossExecAlert && (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 whitespace-nowrap">
+          {Icon.Warning()} Cruce
+        </span>
+      )}
       {sendCounts[lead.id!]?.whatsapp > 0 && (
         <span onClick={(e) => { e.stopPropagation(); onView(lead); }} className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full cursor-pointer hover:bg-green-600 shadow-sm" title={`${sendCounts[lead.id!].whatsapp} WhatsApp(s) enviado(s)`}>
           {sendCounts[lead.id!].whatsapp}

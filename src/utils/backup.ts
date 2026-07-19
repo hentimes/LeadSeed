@@ -1,8 +1,9 @@
 import { supabase } from '../lib/supabaseClient';
+import { getCurrentSession } from '../services/authService';
 
 export async function exportBackup(): Promise<void> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData?.session?.user?.id;
+  const session = await getCurrentSession();
+  const userId = session?.user?.id;
   if (!userId) return;
 
   const [

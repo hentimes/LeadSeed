@@ -4,10 +4,10 @@ import {
   useEmailTemplates, useEmailTemplateLists,
   useCallTemplates, useCallTemplateLists,
 } from '../hooks/useTemplates';
-import { supabase } from '../lib/supabaseClient';
-import type { WhatsAppTemplate, EmailTemplate, LeadList, SendLog } from '../types';
+import type { SendLog } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
+import { fetchSendLogsForTemplate } from '../services/historyService';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -32,7 +32,6 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
   const [templates, setTemplates] = useState<any[]>([]);
   const [tplLists, setTplLists] = useState<any[]>([]);
-  const [leadLists, setLeadLists] = useState<LeadList[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -140,18 +139,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
   const handleShowLog = async (templateId: number) => {
     if (showLog === templateId) { setShowLog(null); return; }
     setShowLog(templateId);
-    const { data: logs } = await supabase.from('send_logs').select('*').eq('template_id', templateId).order('sent_at', { ascending: false });
-    const formatted = (logs || []).map(l => ({
-      id: l.id,
-      templateId: l.template_id,
-      templateType: l.template_type,
-      leadId: l.lead_id,
-      leadName: l.lead_name,
-      leadPhone: l.lead_phone,
-      sentAt: l.sent_at,
-      scheduledFor: l.scheduled_for
-    }));
-    setSendLogs(formatted);
+    setSendLogs(await fetchSendLogsForTemplate(templateId));
   };
 
   const filtered = filterCatId ? templates.filter((t) => (t.templateListIds || []).includes(filterCatId)) : templates;

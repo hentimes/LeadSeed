@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
 import { Requirement } from '../../types';
 import SupportTicketModal from '../support/SupportTicketModal';
+import { loadUserSupportRequirements, rateSupportRequirement, subscribeUserSupportRequirements } from '../../services/supportService';
 
 export default function SupportTicketsSettings() {
   const { user } = useAuth();
@@ -14,15 +14,7 @@ export default function SupportTicketsSettings() {
   const fetchRequirements = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('requirements')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    
-    if (data) {
-      setRequirements(data as Requirement[]);
-    }
+    setRequirements(await loadUserSupportRequirements(user.id));
     setLoading(false);
   };
 
@@ -30,17 +22,11 @@ export default function SupportTicketsSettings() {
     if (!user) return;
     fetchRequirements();
 
-    const channel = supabase.channel('settings_user_reqs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'requirements', filter: `user_id=eq.${user.id}` }, () => {
-        fetchRequirements();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    return subscribeUserSupportRequirements(user.id, 'settings_user_reqs', fetchRequirements);
   }, [user]);
 
   const handleRate = async (reqId: string, rating: 'up' | 'down') => {
-    await supabase.from('requirements').update({ rating }).eq('id', reqId);
+    await rateSupportRequirement(reqId, rating);
   };
 
   return (

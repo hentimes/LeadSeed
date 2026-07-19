@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { Requirement, Profile } from '../../types';
 import { Icon } from '../../utils/icons';
 import AdminSupportChat from '../../components/admin/AdminSupportChat';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+  archiveRequirement,
+  assignRequirementToHelper,
+  closeRequirement,
+  loadHelperProfiles,
+  loadRequirementsWithProfiles,
+  subscribeRequirementsFeed,
+} from '../../services/adminService';
 
 export default function AdminRequirementsPage() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -18,113 +25,65 @@ export default function AdminRequirementsPage() {
 
   const fetchRequirements = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('requirements')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
+    try {
+      setRequirements(await loadRequirementsWithProfiles());
+    } catch (error: any) {
       console.error('Error fetching requirements:', error);
-      alert('Error cargando requerimientos: ' + error.message);
-    }
-
-    if (data) {
-      // Obtener los perfiles manualmente para evitar errores de Foreign Key en Supabase
-      const profileIds = [...new Set([
-        ...data.map(r => r.user_id),
-        ...data.map(r => r.helper_id)
-      ].filter(Boolean))];
-      
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', profileIds);
-
-      const requirementsWithProfiles = data.map(req => ({
-        ...req,
-        user_profile: profiles?.find(p => p.id === req.user_id),
-        helper_profile: profiles?.find(p => p.id === req.helper_id)
-      }));
-
-      setRequirements(requirementsWithProfiles as Requirement[]);
+      alert('Error cargando requerimientos: ' + (error?.message || 'Error desconocido'));
     }
     setLoading(false);
   };
 
   const fetchHelpers = async () => {
-    const { data } = await supabase.from('profiles').select('*').or('is_helper.eq.true,role.eq.admin');
-    if (data) setHelpers(data as Profile[]);
+    setHelpers(await loadHelperProfiles() as Profile[]);
   };
 
   useEffect(() => {
-    fetchRequirements();
-    if (isAdmin) fetchHelpers();
-
-    const channel = supabase.channel('admin_req_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'requirements' }, () => {
-        fetchRequirements();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+    void fetchRequirements();
+    if (isAdmin) void fetchHelpers();
+    return subscribeRequirementsFeed(fetchRequirements);
+  }, [isAdmin]);
 
   const handleCloseRequirement = async (req: Requirement) => {
     if (!confirm('¿Estás seguro de cerrar este requerimiento?')) return;
-    const { error } = await supabase
-      .from('requirements')
-      .update({ status: 'closed' })
-      .eq('id', req.id);
-      
-    if (!error) {
+    try {
+      await closeRequirement(req.id);
       setSelectedReq(null);
-      fetchRequirements();
-    } else {
-      alert('Error cerrando requerimiento: ' + error.message);
+      await fetchRequirements();
+    } catch (error: any) {
+      alert('Error cerrando requerimiento: ' + (error?.message || 'Error desconocido'));
     }
   };
 
   const handleArchiveRequirement = async (req: Requirement) => {
     if (!confirm('¿Estás seguro de archivar este requerimiento? Ya no aparecerá en la bandeja principal.')) return;
-    const { error } = await supabase
-      .from('requirements')
-      .update({ status: 'archived' })
-      .eq('id', req.id);
-      
-    if (!error) {
+    try {
+      await archiveRequirement(req.id);
       setSelectedReq(null);
-      fetchRequirements();
-    } else {
-      alert('Error archivando requerimiento: ' + error.message);
+      await fetchRequirements();
+    } catch (error: any) {
+      alert('Error archivando requerimiento: ' + (error?.message || 'Error desconocido'));
     }
   };
 
   const handleTakeCase = async (req: Requirement) => {
     if (!currentUserId) return;
     
-    const { error } = await supabase
-      .from('requirements')
-      .update({ helper_id: currentUserId, status: 'in_progress' })
-      .eq('id', req.id);
-      
-    if (!error) {
+    try {
+      await assignRequirementToHelper(req.id, currentUserId);
       setSelectedReq({ ...req, helper_id: currentUserId, status: 'in_progress', helper_profile: profile || undefined });
-      fetchRequirements();
-    } else {
-      alert('Error tomando el caso: ' + error.message);
+      await fetchRequirements();
+    } catch (error: any) {
+      alert('Error tomando el caso: ' + (error?.message || 'Error desconocido'));
     }
   };
 
   const assignCase = async (reqId: string, helperId: string) => {
-    const { error } = await supabase
-      .from('requirements')
-      .update({ helper_id: helperId, status: 'in_progress' })
-      .eq('id', reqId);
-      
-    if (error) {
-      alert('Error asignando el caso: ' + error.message);
-    } else {
-      fetchRequirements();
+    try {
+      await assignRequirementToHelper(reqId, helperId);
+      await fetchRequirements();
+    } catch (error: any) {
+      alert('Error asignando el caso: ' + (error?.message || 'Error desconocido'));
     }
   };
 
@@ -312,8 +271,8 @@ export default function AdminRequirementsPage() {
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded leading-none ${
-                          req.type === 'facturación' || req.type?.toLowerCase().includes('factura') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
-                          req.type === 'fallo técnico' || req.type?.toLowerCase().includes('bug') ? 'bg-orange-50 text-orange-600 border border-orange-100' :
+                          req.type === 'facturacion' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                          req.type === 'bug' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
                           req.type === 'sugerencia' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
                           'bg-purple-50 text-purple-600 border border-purple-100'
                         }`}>

@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
 import AdminUsersPage from './AdminUsersPage';
 import AdminRolesPage from './AdminRolesPage';
 import AdminFeaturesPage from './AdminFeaturesPage';
 import AdminRequirementsPage from './AdminRequirementsPage';
+import { loadOpenRequirementsCount, subscribeOpenRequirementsCount } from '../../services/adminService';
 
 type AdminTab = 'users' | 'roles' | 'features' | 'support';
 
 export default function AdminLayout() {
-  const { session, profile, isAdmin } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const isHelper = profile?.is_helper === true;
   const [activeTab, setActiveTab] = useState<AdminTab>(isAdmin ? 'users' : 'support');
   const [openReqs, setOpenReqs] = useState(0);
@@ -19,19 +19,13 @@ export default function AdminLayout() {
     if (!isAdmin) return;
     
     const fetchOpenReqs = async () => {
-      const { count } = await supabase.from('requirements').select('*', { count: 'exact', head: true }).eq('status', 'open');
-      setOpenReqs(count || 0);
+      setOpenReqs(await loadOpenRequirementsCount());
     };
     
-    fetchOpenReqs();
-    
-    const channel = supabase.channel('admin_reqs_count')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'requirements' }, () => {
-        fetchOpenReqs();
-      })
-      .subscribe();
+    void fetchOpenReqs();
+    const unsubscribe = subscribeOpenRequirementsCount(fetchOpenReqs);
       
-    return () => { supabase.removeChannel(channel); };
+    return unsubscribe;
   }, [isAdmin]);
 
   if (!isAdmin && !isHelper) {

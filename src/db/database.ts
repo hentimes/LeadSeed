@@ -1,4 +1,8 @@
-import { supabase } from '../lib/supabaseClient';
+import {
+  fetchAuthenticatedUserId,
+  fetchProfileSettingsRow,
+  updateProfileSettingsRow,
+} from '../repositories/settingsRepository';
 import type { AppSettings } from '../types';
 
 export const db = {} as any; // Mock para evitar que rompan imports perdidos temporalmente
@@ -24,16 +28,12 @@ export async function getSettings(): Promise<AppSettings> {
   };
 
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user) {
+    const userId = await fetchAuthenticatedUserId();
+    if (!userId) {
       return defaultSettings;
     }
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('compact_mode, dark_mode, visible_cols, email_provider, resend_api_key, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period')
-      .eq('id', session.session.user.id)
-      .single();
+    const data = await fetchProfileSettingsRow(userId);
 
     if (data) {
       return {
@@ -61,9 +61,9 @@ export async function getSettings(): Promise<AppSettings> {
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (session?.session?.user) {
-      await supabase.from('profiles').update({
+    const userId = await fetchAuthenticatedUserId();
+    if (userId) {
+      await updateProfileSettingsRow(userId, {
         compact_mode: settings.compactMode,
         dark_mode: settings.darkMode,
         visible_cols: settings.visibleCols,
@@ -76,7 +76,7 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
         daily_goal_email: settings.dailyGoalEmail,
         daily_goal_calls: settings.dailyGoalCalls,
         dashboard_compare_period: settings.dashboardComparePeriod,
-      }).eq('id', session.session.user.id);
+      });
     }
   } catch (e) {
     console.error("Error saving remote settings:", e);

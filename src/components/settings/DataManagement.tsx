@@ -4,12 +4,13 @@ import { useDuplicates } from '../../hooks/useDuplicates';
 import { getSettings, saveSettings } from '../../db/database';
 import type { ExportFormat } from '../../types';
 import { Icon } from '../../utils/icons';
-import { supabase } from '../../lib/supabaseClient';
 import ImportModal from '../leads/ImportModal';
+import { fetchActiveLeads } from '../../services/leadsService';
 
 import { exportToJSON, exportToExcel } from '../../utils/exportData';
 import { useLeads } from '../../hooks/useLeads';
 import type { ParsedRow } from '../../utils/importParser';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   exportFormat: ExportFormat;
@@ -22,16 +23,17 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
   const [existingRuts, setExistingRuts] = useState<Set<string>>(new Set());
   const [existingPhones, setExistingPhones] = useState<Set<string>>(new Set());
   
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { duplicates, mergeMsg, findDuplicates, mergeLeads } = useDuplicates();
   const { importLeads } = useLeads();
 
   const handleOpenImport = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const { data: allLeads } = await supabase.from('leads').select('*').eq('user_id', sessionData?.session?.user?.id);
+    if (!user) return;
+    const allLeads = await fetchActiveLeads(user.id);
     const ruts = new Set<string>();
     const phones = new Set<string>();
-    for (const l of (allLeads || [])) {
+    for (const l of allLeads) {
       if (l.rut) ruts.add(l.rut);
       if (l.phone) phones.add(l.phone.replace(/[^+\d]/g, ''));
     }
@@ -41,16 +43,15 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
   };
 
   const handleImport = async (rows: ParsedRow[]) => {
-    await importLeads(rows as any);
+    await importLeads(rows.map((row) => ({ ...row, score: 0 })));
     alert('Leads importados correctamente.');
   };
 
   const handleExportLeads = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const { data: allLeads } = await supabase.from('leads').select('*').eq('user_id', sessionData?.session?.user?.id);
-    const formatted = (allLeads || []).map(l => ({ ...l, createdAt: l.created_at, updatedAt: l.updated_at, deletedAt: l.deleted_at, listaIds: l.lista_ids || [] }));
-    if (exportFormat === 'excel') exportToExcel(formatted);
-    else exportToJSON(formatted);
+    if (!user) return;
+    const allLeads = await fetchActiveLeads(user.id);
+    if (exportFormat === 'excel') exportToExcel(allLeads);
+    else exportToJSON(allLeads);
   };
 
   const handleExportFormatChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -64,7 +65,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
   const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!confirm('¿Restaurar respaldo? Se perderán todos los datos actuales y se reemplazarán con los del archivo.')) return;
+    if (!confirm('Restaurar respaldo? Se perderan todos los datos actuales y se reemplazaran con los del archivo.')) return;
     try {
       const msg = await importBackup(file);
       setRestoreMsg(msg);
@@ -150,7 +151,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
         <ImportModal
           existingRuts={existingRuts}
           existingPhones={existingPhones}
-          onImport={handleImport as any}
+          onImport={handleImport}
           onClose={() => setShowImport(false)}
         />
       )}
@@ -185,7 +186,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
                   </div>
                 </div>
                 <button 
-                  onClick={() => { if (confirm(`¿Unir los datos de ${d.lead2.name} en ${d.lead1.name}?`)) mergeLeads(d.lead1, d.lead2); }}
+                  onClick={() => { if (confirm(`Unir los datos de ${d.lead2.name} en ${d.lead1.name}?`)) mergeLeads(d.lead1, d.lead2); }}
                   className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-300 dark:border-slate-600/50 text-slate-600 dark:text-slate-300 px-4 py-1.5 rounded shadow-sm text-sm font-medium hover:bg-slate-50 dark:bg-slate-900 transition-colors shrink-0"
                 >
                   Unir leads

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Icon } from '../../utils/icons';
-import { supabase } from '../../lib/supabaseClient';
 import type { Profile } from '../../types';
+import { loadAdminUserHeatmap } from '../../services/adminService';
 
 interface Props {
   selectedUser: Profile;
@@ -19,60 +19,19 @@ export default function AdminUserHeatmap({ selectedUser }: Props) {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadHeatmap = async () => {
       setLoading(true);
-      
-      // 1. Obtener todos los perfiles para cruzar nombres
-      const { data: profilesData } = await supabase.from('profiles').select('*');
-      
-      // 2. Obtener mensajes donde el usuario es emisor o receptor
-      const { data: messagesData } = await supabase
-        .from('internal_messages')
-        .select('*')
-        .or(`sender_id.eq.${selectedUser.id},receiver_id.eq.${selectedUser.id}`);
-        
+      const nextHeatmap = await loadAdminUserHeatmap(selectedUser);
       if (!isMounted) return;
-
-      if (messagesData && profilesData) {
-        const interactionMap: Record<string, { count: number, lastMsg: string }> = {};
-
-        messagesData.forEach(msg => {
-          const otherUserId = msg.sender_id === selectedUser.id ? msg.receiver_id : msg.sender_id;
-          
-          if (!interactionMap[otherUserId]) {
-            interactionMap[otherUserId] = { count: 0, lastMsg: msg.created_at };
-          }
-          
-          interactionMap[otherUserId].count += 1;
-          
-          // Actualizar fecha del último mensaje
-          if (new Date(msg.created_at) > new Date(interactionMap[otherUserId].lastMsg)) {
-            interactionMap[otherUserId].lastMsg = msg.created_at;
-          }
-        });
-
-        // Convertir a array, enriquecer con perfil, ordenar y tomar Top 5
-        const heatmapArray: HeatmapEntry[] = Object.keys(interactionMap)
-          .map(userId => {
-            const profile = profilesData.find(p => p.id === userId);
-            return {
-              profile: profile || { id: userId, email: 'Usuario Eliminado', role: 'unknown' } as unknown as Profile,
-              messageCount: interactionMap[userId].count,
-              lastInteraction: interactionMap[userId].lastMsg
-            };
-          })
-          .sort((a, b) => b.messageCount - a.messageCount)
-          .slice(0, 5);
-
-        setHeatmap(heatmapArray);
-      }
-      
+      setHeatmap(nextHeatmap as HeatmapEntry[]);
       setLoading(false);
     };
 
-    loadHeatmap();
-    return () => { isMounted = false; };
+    void loadHeatmap();
+    return () => {
+      isMounted = false;
+    };
   }, [selectedUser.id]);
 
   if (loading) {
@@ -87,18 +46,17 @@ export default function AdminUserHeatmap({ selectedUser }: Props) {
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Top 5: Conexiones Frecuentes</h3>
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-          Personas con las que <strong>{selectedUser.full_name || selectedUser.email}</strong> intercambia más mensajes internos. (En tiempo real)
+          Personas con las que <strong>{selectedUser.full_name || selectedUser.email}</strong> intercambia mas mensajes internos.
         </p>
 
         {heatmap.length === 0 ? (
           <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-lg border border-orange-100 p-8 text-center">
             <div className="text-4xl text-gray-300 flex justify-center mb-3">{Icon.Messages()}</div>
-            <p className="text-sm text-slate-400 dark:text-slate-500">Este usuario aún no registra interacciones en el chat interno.</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">Este usuario aun no registra interacciones en el chat interno.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {heatmap.map((entry, index) => {
-              // Calor: Opacidad basada en la posición
               const heatOpacities = ['bg-orange-500', 'bg-orange-400', 'bg-orange-300', 'bg-orange-200', 'bg-orange-100'];
               const heatColor = heatOpacities[index] || 'bg-gray-100';
               const textColor = index < 2 ? 'text-white' : 'text-slate-700 dark:text-slate-200';
@@ -120,19 +78,12 @@ export default function AdminUserHeatmap({ selectedUser }: Props) {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{entry.profile.full_name || entry.profile.email.split('@')[0]}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">Última int: {new Date(entry.lastInteraction).toLocaleDateString('es-CL')}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Ultima int: {new Date(entry.lastInteraction).toLocaleDateString('es-CL')}</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm font-black text-slate-800 dark:text-slate-100">{entry.messageCount}</p>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Mensajes</p>
-                    </div>
-                    {/* Barra de calor visual */}
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black ${heatColor} ${textColor} shadow-inner`}>
-                      
-                    </div>
+
+                  <div className={`w-24 text-center px-3 py-2 rounded-lg font-black text-sm ${heatColor} ${textColor}`}>
+                    {entry.messageCount}
                   </div>
                 </div>
               );

@@ -3,7 +3,7 @@ import { useSaaS } from '../../hooks/useSaaS';
 import type { Profile, Plan, UserFeatureOverride, Feature } from '../../types';
 import { Icon } from '../../utils/icons';
 import { usePresence } from '../../hooks/usePresence';
-import { supabase } from '../../lib/supabaseClient';
+import { bulkSetUsersAsHelper, loadUnreadCountsForAdmin, subscribeAdminUsersRealtime } from '../../services/adminService';
 
 import AdminUserLicenses from '../../components/admin/AdminUserLicenses';
 import AdminUserTelemetry from '../../components/admin/AdminUserTelemetry';
@@ -34,21 +34,8 @@ export default function AdminUsersPage() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const loadUnreadCounts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    const { data } = await supabase
-      .from('internal_messages')
-      .select('sender_id')
-      .eq('receiver_id', session.user.id)
-      .eq('is_read', false);
-      
-    if (data) {
-      const counts: Record<string, number> = {};
-      data.forEach(msg => {
-        counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1;
-      });
-      setUnreadCounts(counts);
-    }
+    setUnreadCounts(await loadUnreadCountsForAdmin(session.user.id));
   };
 
   const loadData = async () => {
@@ -60,30 +47,22 @@ export default function AdminUsersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { 
-    loadData(); 
-    loadUnreadCounts();
+  useEffect(() => {
+    void loadData();
+    void loadUnreadCounts();
 
-    const channel = supabase.channel('admin_profiles_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+    return subscribeAdminUsersRealtime(
+      (payload) => {
         if (payload.eventType === 'INSERT') {
-          setProfiles(prev => [payload.new as Profile, ...prev]);
+          setProfiles((prev) => [payload.new as Profile, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
-          setProfiles(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+          setProfiles((prev) => prev.map((profile) => (profile.id === payload.new.id ? { ...profile, ...payload.new } : profile)));
         }
-      })
-      .subscribe();
-
-    const msgChannel = supabase.channel('admin_unread_msgs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'internal_messages' }, () => {
-        loadUnreadCounts();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-      supabase.removeChannel(msgChannel);
-    };
+      },
+      () => {
+        void loadUnreadCounts();
+      }
+    );
   }, []);
 
   useEffect(() => {
@@ -120,16 +99,12 @@ export default function AdminUsersPage() {
     
     if (action === 'helper' || action === 'remove_helper') {
       const isHelper = action === 'helper';
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_helper: isHelper })
-        .in('id', selectedUserIds);
-        
-      if (!error) {
+      try {
+        await bulkSetUsersAsHelper(selectedUserIds, isHelper);
         setProfiles(profiles.map(p => selectedUserIds.includes(p.id) ? { ...p, is_helper: isHelper } : p));
         alert(`Rol de helper actualizado para ${selectedUserIds.length} usuarios.`);
-      } else {
-        alert('Error: ' + error.message);
+      } catch (error: any) {
+        alert('Error: ' + (error?.message || 'Error desconocido'));
       }
     } else {
       alert(`Acción "${action}" seleccionada para ${selectedUserIds.length} usuarios. (Implementación futura)`);

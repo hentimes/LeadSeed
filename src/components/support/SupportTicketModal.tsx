@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
+import { createSupportTicket } from '../../services/supportService';
 
 interface Props {
   isOpen: boolean;
@@ -23,27 +23,9 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
     
     setLoading(true);
 
-    const generateTicketCode = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = '';
-      for (let i = 0; i < 4; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return `REQ-${result}`;
-    };
-
-    const { error } = await supabase.from('requirements').insert({
-      user_id: user.id,
-      ticket_code: generateTicketCode(),
-      type: category,
-      content: description,
-      status: 'open'
-    });
-
-    setLoading(false);
-    if (error) {
-      alert('Error al enviar el requerimiento.');
-    } else {
+    try {
+      await createSupportTicket(user.id, category, description);
+      setLoading(false);
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -51,6 +33,9 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
         setDescription('');
         onClose();
       }, 2000);
+    } catch {
+      setLoading(false);
+      alert('Error al enviar el requerimiento.');
     }
   };
 

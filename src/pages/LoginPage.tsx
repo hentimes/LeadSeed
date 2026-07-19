@@ -1,73 +1,40 @@
 import React from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { Icon } from '../utils/icons';
+import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       const isExtension = window.location.protocol === 'chrome-extension:';
-      const redirectUrl = isExtension && chrome.identity ? chrome.identity.getRedirectURL() : window.location.origin + window.location.pathname;
+      const redirectUrl =
+        isExtension && chrome.identity
+          ? chrome.identity.getRedirectURL()
+          : `${window.location.origin}${window.location.pathname}`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          scopes: 'https://www.googleapis.com/auth/calendar',
-          skipBrowserRedirect: isExtension
-        }
-      });
-      if (error) throw error;
-      
-      // En Chrome Extensions, usamos el flujo nativo de autenticación sin abrir pestañas completas
-      if (isExtension && data?.url && chrome.identity) {
+      const oauthUrl = await beginGoogleLogin(redirectUrl, isExtension);
+
+      if (isExtension && oauthUrl && chrome.identity) {
         chrome.identity.launchWebAuthFlow(
-          { url: data.url as string, interactive: true },
+          { url: oauthUrl, interactive: true },
           async (callbackUrl) => {
             if (chrome.runtime.lastError || !callbackUrl) {
-              alert('Error nativo de Chrome: ' + chrome.runtime.lastError?.message);
+              alert(`Error nativo de Chrome: ${chrome.runtime.lastError?.message}`);
               return;
             }
-            
-            // alert('Callback de Chrome recibido. Procesando...');
-            
-            // Supabase devuelve los tokens en el hash de la URL
-            const url = new URL(callbackUrl);
-            const hash = url.hash;
-            
-            if (hash) {
-              const params = new URLSearchParams(hash.substring(1));
-              const access_token = params.get('access_token');
-              const refresh_token = params.get('refresh_token');
-              
-              if (access_token && refresh_token) {
-                const { error } = await supabase.auth.setSession({ 
-                  access_token: access_token as string, 
-                  refresh_token: refresh_token as string 
-                });
-                if (error) {
-                  alert('Error al guardar sesión en Supabase: ' + error.message);
-                } else {
-                  // alert('¡Sesión guardada con éxito!');
-                  window.location.reload();
-                }
-              } else {
-                // Podría ser un error de OAuth (error=server_error&error_description=...)
-                const errDesc = params.get('error_description');
-                if (errDesc) {
-                   alert('Error OAuth devuelto por Google: ' + errDesc);
-                } else {
-                   alert('Faltan tokens en el hash de la respuesta.');
-                }
-              }
-            } else {
-               alert('Falta el hash en la URL de respuesta.');
+
+            try {
+              await completeGoogleExtensionLogin(callbackUrl);
+              window.location.reload();
+            } catch (callbackError) {
+              const message =
+                callbackError instanceof Error ? callbackError.message : 'No se pudo completar el login.';
+              alert(message);
             }
           }
         );
       }
     } catch (error) {
-      console.error('Error al iniciar sesión con Google:', error);
-      alert('Hubo un error al iniciar sesión. Revisa la consola.');
+      console.error('Error al iniciar sesion con Google:', error);
+      alert('Hubo un error al iniciar sesion. Revisa la consola.');
     }
   };
 
@@ -76,11 +43,11 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">LeadSeed CRM</h1>
-          <p className="text-slate-500 dark:text-slate-400">Inicia sesión para gestionar tus leads</p>
+          <p className="text-slate-500 dark:text-slate-400">Inicia sesion para gestionar tus leads</p>
         </div>
 
         <div className="space-y-4">
-          <button 
+          <button
             onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 dark:border-slate-600/50 rounded-lg text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md hover:bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
           >
@@ -90,7 +57,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-8 text-center text-sm text-slate-400 dark:text-slate-500">
-          Al iniciar sesión aceptas nuestros términos de servicio y políticas de privacidad.
+          Al iniciar sesion aceptas nuestros terminos de servicio y politicas de privacidad.
         </p>
       </div>
     </div>

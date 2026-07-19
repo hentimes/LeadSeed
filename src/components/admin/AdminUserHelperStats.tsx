@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { Profile, Requirement } from '../../types';
 import { Icon } from '../../utils/icons';
+import { loadAdminHelperStats } from '../../services/adminService';
 
 export default function AdminUserHelperStats({ selectedUser }: { selectedUser: Profile }) {
   const [loading, setLoading] = useState(true);
@@ -10,46 +10,40 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
     resolved: 0,
     upVotes: 0,
     downVotes: 0,
-    active: 0
+    active: 0,
   });
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchStats = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('requirements')
-        .select('*')
-        .eq('helper_id', selectedUser.id);
-        
-      if (!error && data && isMounted) {
+      const data = await loadAdminHelperStats(selectedUser.id);
+
+      if (data && isMounted) {
         const reqs = data as Requirement[];
         setStats({
           totalAssigned: reqs.length,
-          resolved: reqs.filter(r => r.status === 'closed' || r.status === 'archived').length,
-          active: reqs.filter(r => r.status === 'in_progress').length,
-          upVotes: reqs.filter(r => r.rating === 'up').length,
-          downVotes: reqs.filter(r => r.rating === 'down').length,
+          resolved: reqs.filter((req) => req.status === 'closed' || req.status === 'archived').length,
+          active: reqs.filter((req) => req.status === 'in_progress').length,
+          upVotes: reqs.filter((req) => req.rating === 'up').length,
+          downVotes: reqs.filter((req) => req.rating === 'down').length,
         });
       }
-      setLoading(false);
+
+      if (isMounted) {
+        setLoading(false);
+      }
     };
 
-    fetchStats();
-    
-    const channel = supabase.channel(`helper_stats_${selectedUser.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'requirements', filter: `helper_id=eq.${selectedUser.id}` }, fetchStats)
-      .subscribe();
-      
-    return () => { 
+    void fetchStats();
+    return () => {
       isMounted = false;
-      supabase.removeChannel(channel); 
     };
-  }, [selectedUser]);
+  }, [selectedUser.id]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando estadísticas del Helper...</div>;
+    return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando estadisticas del helper...</div>;
   }
 
   const score = stats.resolved > 0 ? Math.round((stats.upVotes / stats.resolved) * 100) : 0;
@@ -60,7 +54,7 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
         <h2 className="text-xl font-bold flex items-center gap-2 mb-2">
           <Icon.Bot /> Rendimiento de Helper
         </h2>
-        <p className="text-indigo-100 text-sm">Estadísticas de atención y soporte al cliente para {selectedUser.full_name || selectedUser.email}</p>
+        <p className="text-indigo-100 text-sm">Estadisticas de atencion y soporte al cliente para {selectedUser.full_name || selectedUser.email}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -75,8 +69,8 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
       </div>
 
       <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-gray-100 rounded-xl p-5 shadow-sm">
-        <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm mb-4 border-b border-gray-100 pb-2">Calidad de Atención</h3>
-        
+        <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm mb-4 border-b border-gray-100 pb-2">Calidad de Atencion</h3>
+
         <div className="flex items-center justify-between mb-4">
           <div className="text-center flex-1">
             <div className="text-2xl font-black text-green-500 flex justify-center items-center gap-1">
@@ -84,7 +78,7 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
             </div>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1">Positivos</div>
           </div>
-          <div className="w-px h-12 bg-gray-100 mx-4"></div>
+          <div className="w-px h-12 bg-gray-100 mx-4" />
           <div className="text-center flex-1">
             <div className="text-2xl font-black text-red-500 flex justify-center items-center gap-1">
               {stats.downVotes} <Icon.Close />
@@ -95,14 +89,11 @@ export default function AdminUserHelperStats({ selectedUser }: { selectedUser: P
 
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="flex justify-between text-xs font-bold mb-1">
-            <span className="text-slate-400 dark:text-slate-500">Satisfacción (Resueltos)</span>
+            <span className="text-slate-400 dark:text-slate-500">Satisfaccion (Resueltos)</span>
             <span className={score >= 80 ? 'text-green-500' : score >= 50 ? 'text-amber-500' : 'text-red-500'}>{score}%</span>
           </div>
           <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-            <div 
-              className={`h-full rounded-full ${score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
-              style={{ width: `${score}%` }}
-            ></div>
+            <div className={`h-full rounded-full ${score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${score}%` }} />
           </div>
         </div>
       </div>

@@ -7,6 +7,8 @@ import DataManagement from '../components/settings/DataManagement';
 import EmailSettings from '../components/settings/EmailSettings';
 import GoalsSettings from '../components/settings/GoalsSettings';
 import SupportTicketsSettings from '../components/settings/SupportTicketsSettings';
+import CaptureLinksSettings from '../components/settings/CaptureLinksSettings';
+import AgendaSettings from '../components/settings/AgendaSettings';
 import { Icon } from '../utils/icons';
 
 interface Props {
@@ -18,7 +20,7 @@ interface Props {
   onColsChange: (cols: ColumnDef[]) => void;
 }
 
-type Tab = 'display' | 'data' | 'email' | 'goals' | 'support';
+type Tab = 'display' | 'data' | 'links' | 'agenda' | 'email' | 'goals' | 'support';
 
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
   const [tab, setTab] = useState<Tab>('display');
@@ -39,7 +41,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
       </div>
 
       {/* Tabs - Header Style */}
-      <div className="flex border-b border-slate-200 dark:border-slate-700/50 mb-6 px-2 gap-6">
+      <div className="flex border-b border-slate-200 dark:border-slate-700/50 mb-6 px-2 gap-3 overflow-x-auto">
         <button
           onClick={() => setTab('display')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
@@ -63,6 +65,22 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
           }`}
         >
           <Icon.Email /> Email
+        </button>
+        <button
+          onClick={() => setTab('links')}
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'links' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
+          }`}
+        >
+          <Icon.Send /> Links
+        </button>
+        <button
+          onClick={() => setTab('agenda')}
+          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
+            tab === 'agenda' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
+          }`}
+        >
+          <Icon.History /> Config agenda
         </button>
         <button
           onClick={() => setTab('goals')}
@@ -104,6 +122,14 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         
         {tab === 'email' && (
           <EmailSettings />
+        )}
+
+        {tab === 'links' && (
+          <CaptureLinksSettings />
+        )}
+
+        {tab === 'agenda' && (
+          <AgendaSettings />
         )}
         
         {tab === 'goals' && (

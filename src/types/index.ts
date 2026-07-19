@@ -1,4 +1,4 @@
-export type Page = 'leads' | 'lists' | 'templates' | 'send' | 'history' | 'tasks' | 'dashboard' | 'pipeline' | 'settings' | 'community' | 'support' | 'admin';
+export type Page = 'leads' | 'lists' | 'templates' | 'send' | 'history' | 'tasks' | 'dashboard' | 'pipeline' | 'agenda' | 'settings' | 'community' | 'support' | 'admin' | 'chat';
 
 export type LeadStatus = 'nuevo' | 'contactado' | 'interesado' | 'convertido' | 'descartado';
 
@@ -17,6 +17,48 @@ export const STATUS_COLORS: Record<LeadStatus, string> = {
   convertido: '#10b981',
   descartado: '#ef4444',
 };
+
+export interface PlanesproLeadRawPayload {
+  sistema_actual?: string;
+  rango_renta?: string;
+  rango_edad?: string;
+  region?: string;
+  comuna?: string;
+  isapre_especifica?: string;
+  numero_cargas?: string;
+  edad_cargas?: string | number[] | string[];
+  contacto_preferencia?: string;
+  comentarios?: string;
+  comentario?: string;
+  cita_estado?: string;
+  cita_fecha_hora?: string;
+  [key: string]: unknown;
+}
+
+export interface PlanesproLeadMetadata {
+  source_system?: string;
+  source_channel?: string;
+  source_form_variant?: string;
+  source_hostname?: string;
+  source_path?: string;
+  source_url?: string;
+  capture_ref?: string | null;
+  first_touch_ref?: string | null;
+  capture_link_id?: string | number | null;
+  capture_link_name?: string | null;
+  capture_campaign?: string | null;
+  pdf_path?: string | null;
+  pdf_filename?: string | null;
+  pdf_content_type?: string | null;
+  pdf_size?: number | null;
+  appointment_status?: string | null;
+  contact_preference?: string | null;
+  advisor_id?: string | null;
+  raw_payload?: PlanesproLeadRawPayload;
+  [key: string]: unknown;
+}
+
+export type LeadMetadata = Record<string, unknown> & Partial<PlanesproLeadMetadata>;
 
 export interface Lead {
   id?: string;
@@ -45,11 +87,213 @@ export interface Lead {
   estimatedValue?: number;
   
   // Datos variables (JSONB)
-  metadata?: Record<string, any>;
+  metadata?: LeadMetadata;
+  crossExecAlerts?: LeadCrossExecEvent[];
+  hasUnreadCrossExecAlert?: boolean;
+  crossExecPriorityAt?: string;
 
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
+}
+
+export type LeadCrossExecEventKind = 'captured_previously' | 'contacted_other_executive';
+
+export interface LeadCrossExecEvent {
+  id: string;
+  leadId: string;
+  relatedLeadId: string;
+  eventKind: LeadCrossExecEventKind;
+  counterpartCapturedAt: string;
+  matchedBy: string[];
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface CaptureLink {
+  id: number;
+  refCode: string;
+  label: string;
+  campaignName: string;
+  isDefault: boolean;
+  isActive: boolean;
+  statsConfig: Record<string, unknown>;
+  totalLeads: number;
+  closedLeads: number;
+  closeRatePct: number;
+  captureLinksLimit: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CaptureLinkStats {
+  captureLinkId: number;
+  refCode: string;
+  linkName: string;
+  campaignName: string;
+  totalLeads: number;
+  closedLeads: number;
+  closeRatePct: number;
+  ageRange: string;
+  incomeRange: string;
+  region: string;
+  healthSystem: string;
+  healthProvider: string;
+  leadsCount: number;
+}
+
+export interface CaptureLinkInput {
+  label: string;
+  campaignName?: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+  statsConfig?: Record<string, unknown>;
+}
+
+export interface CalendarSettings {
+  userId: string;
+  timezone: string;
+  slotDurationMinutes: number;
+  slotBufferMinutes: number;
+  allowPublicBooking: boolean;
+  googleCalendarId: string;
+  updatedAt: string;
+}
+
+export interface CalendarConnectionStatus {
+  provider: string;
+  googleEmail: string;
+  calendarId: string;
+  connectedAt?: string;
+  tokenScope: string;
+  tokenExpiresAt?: string;
+  lastSyncStartedAt?: string;
+  lastSyncFinishedAt?: string;
+  lastSyncStatus: 'idle' | 'running' | 'ok' | 'error';
+  lastSyncError: string;
+  isConnected: boolean;
+}
+
+export interface GoogleCalendarSyncResult {
+  ok: boolean;
+  source: string;
+  calendarId: string;
+  from: string;
+  to: string;
+  busyCount: number;
+}
+
+export interface AvailabilityRule {
+  id: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface AvailabilityBlock {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  blockType: 'manual' | 'full_day' | 'google' | 'system';
+  note: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgendaAppointment {
+  id: string;
+  leadId?: string;
+  leadName: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+  sourceChannel: string;
+  captureRef?: string;
+  notes: string;
+  meetLink?: string;
+  googleEventId?: string;
+  googleSyncStatus?: string;
+  googleSyncError?: string;
+  googleSyncedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppointmentAuditEvent {
+  id: string;
+  appointmentId: string;
+  eventType: 'created_from_lead' | 'rescheduled' | 'cancelled' | 'google_sync_error' | 'participant_added' | 'participant_removed';
+  previousStatus?: string;
+  nextStatus?: string;
+  previousStartTime?: string;
+  nextStartTime?: string;
+  previousEndTime?: string;
+  nextEndTime?: string;
+  note: string;
+  createdAt: string;
+}
+
+export interface AppointmentParticipant {
+  id: string;
+  appointmentId: string;
+  email: string;
+  name: string;
+  participantRole: 'guest' | 'lead' | 'internal';
+  invitationStatus: 'pending' | 'synced' | 'error' | 'skipped';
+  googleSyncError: string;
+  googleSyncedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppointmentParticipantInput {
+  appointmentId: string;
+  email: string;
+  name?: string;
+  participantRole?: 'guest' | 'lead' | 'internal';
+}
+
+export interface LeadAppointmentInput {
+  leadId: string;
+  startsAt: string;
+  note?: string;
+}
+
+export interface GoogleCalendarCreateEventResult {
+  ok: boolean;
+  status: 'synced' | 'skipped' | 'error' | 'already_synced';
+  googleEventId?: string;
+  meetLink?: string;
+  reason?: string;
+}
+
+export interface GoogleCalendarAttendeesSyncResult {
+  ok: boolean;
+  status: 'synced' | 'skipped';
+  reason?: string;
+  attendeesCount: number;
+}
+
+export interface AppointmentMutationResult {
+  appointment: AgendaAppointment;
+  googleSyncStatus: 'synced' | 'skipped' | 'error';
+  googleSyncError?: string;
+}
+
+export interface AvailabilityRuleInput {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+}
+
+export interface AvailabilityBlockInput {
+  startsAt: string;
+  endsAt: string;
+  blockType?: 'manual' | 'full_day';
+  note?: string;
 }
 
 export interface LeadList {
@@ -243,4 +487,24 @@ export interface Requirement {
   // Relaciones cargadas por Supabase
   user_profile?: Profile;
   helper_profile?: Profile;
+}
+
+export interface ChatRoom {
+  id: string;
+  name: string;
+  created_by?: string;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  room_id: string;
+  user_id: string;
+  content: string;
+  reply_to_id?: string;
+  created_at: string;
+
+  // Joins
+  user_profile?: Profile;
+  reply_to_message?: ChatMessage;
 }

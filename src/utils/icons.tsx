@@ -6,7 +6,7 @@ import {
   faRotateLeft, faChevronDown, faChevronRight, faArrowsUpDown,
   faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
-  faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown
+  faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -58,6 +58,7 @@ export const Icon = {
   Warning: () => <I icon={faExclamationTriangle} className="text-xs" />,
   Paperclip: () => <I icon={faPaperclip} className="text-xs" />,
   Copy: () => <I icon={faCopy} className="text-xs" />,
+  Reply: () => <I icon={faReply} className="text-xs" />,
 
   // UI
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,

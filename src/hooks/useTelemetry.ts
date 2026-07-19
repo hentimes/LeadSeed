@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { trackPageTime } from '../services/telemetryService';
 import { Page } from '../types';
 
 export const useTelemetry = (currentPage: Page) => {
@@ -11,22 +11,15 @@ export const useTelemetry = (currentPage: Page) => {
   useEffect(() => {
     if (!user) return;
 
-    // Calcular y enviar tiempo al cambiar de sección
     if (prevPageRef.current !== currentPage) {
       const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      
+
       if (timeSpent > 0) {
-        // Enviar silenciosamente (RPC)
-        supabase.rpc('increment_telemetry', { 
-          p_user_id: user.id, 
-          p_section: prevPageRef.current, 
-          p_seconds: timeSpent 
-        }).then(({ error }) => {
-          if (error) console.error("Error telemetry:", error);
+        trackPageTime(user.id, prevPageRef.current, timeSpent).catch((error) => {
+          console.error('Error telemetry:', error);
         });
       }
 
-      // Reiniciar contadores para la nueva sección
       startTimeRef.current = Date.now();
       prevPageRef.current = currentPage;
     }

@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
 import { replaceVariables, openWhatsAppForLeads } from '../../utils/waHelper';
-import { supabase } from '../../lib/supabaseClient';
 import { Icon } from '../../utils/icons';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
+import { getCurrentSession } from '../../services/authService';
+import { loadTemplateSendLog, logWhatsAppSend } from '../../services/sendService';
 
 interface Props {
   leads: Lead[];
@@ -37,20 +38,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   useEffect(() => {
     if (selectedTemplate) {
-      supabase.from('send_logs')
-        .select('*')
-        .eq('template_id', selectedTemplate.id)
-        .order('sent_at', { ascending: false })
-        .then(({ data }) => setSentLog((data || []).map(l => ({
-          id: l.id,
-          templateId: l.template_id,
-          templateType: l.template_type,
-          leadId: l.lead_id,
-          leadName: l.lead_name,
-          leadPhone: l.lead_phone,
-          sentAt: l.sent_at,
-          scheduledFor: l.scheduled_for
-        }))));
+      loadTemplateSendLog(selectedTemplate.id!).then(setSentLog);
       setCustomBody(selectedTemplate.contenido || '');
     } else {
       setSentLog([]);
@@ -102,39 +90,11 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   const executeSend = async () => {
     setShowConfirmModal(false);
     if (!selectedTemplate || recipients.length === 0) return;
-    
-    const now = new Date().toISOString();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData?.session?.user?.id;
-    
-    const logs = recipients.map((l) => ({
-      user_id: userId,
-      template_id: selectedTemplate.id!,
-      template_type: 'whatsapp' as const,
-      lead_id: l.id!,
-      lead_name: l.name,
-      lead_phone: l.phone,
-      sent_at: now,
-    }));
-    
-    await supabase.from('send_logs').insert(logs);
-    await supabase.from('leads').update({ status: 'contactado' }).in('id', recipients.map(l => l.id));
-    
-    const { data: updatedLogs } = await supabase.from('send_logs')
-      .select('*')
-      .eq('template_id', selectedTemplate.id)
-      .order('sent_at', { ascending: false });
-      
-    setSentLog((updatedLogs || []).map(l => ({
-      id: l.id,
-      templateId: l.template_id,
-      templateType: l.template_type,
-      leadId: l.lead_id,
-      leadName: l.lead_name,
-      leadPhone: l.lead_phone,
-      sentAt: l.sent_at,
-      scheduledFor: l.scheduled_for
-    })));
+    const session = await getCurrentSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    setSentLog(await logWhatsAppSend(userId, selectedTemplate.id!, recipients));
     
     openWhatsAppForLeads(recipients, customBody);
   };
