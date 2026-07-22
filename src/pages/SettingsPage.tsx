@@ -33,15 +33,14 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Ajustes</h2>
+    <div className="max-w-2xl mx-auto space-y-4">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-[var(--color-text-strong)]">Ajustes</h2>
         <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Configura la extensión, gestiona tus datos y conecta proveedores.</p>
       </div>
 
       {/* Tabs - Header Style */}
-      <div className="flex border-b border-slate-200 dark:border-slate-700/50 mb-6 px-2 gap-3 overflow-x-auto">
+      <div className="flex border-b border-[var(--color-border)] mb-4 px-2 gap-3 overflow-x-auto">
         <button
           onClick={() => setTab('display')}
           className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${

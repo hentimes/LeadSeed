@@ -364,8 +364,8 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in pt-2 flex flex-col gap-4">
-      <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
+    <div className="max-w-2xl mx-auto animate-fade-in p-3 flex flex-col gap-3">
+      <div className="border-b border-[var(--color-border)] pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Agenda</h2>
@@ -374,7 +374,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
           <button
             type="button"
             onClick={() => onNavigate('settings')}
-            className="text-xs font-semibold text-blue-700 border border-blue-200 px-2.5 py-1.5 rounded hover:bg-blue-50"
+            className="btn btn-ghost btn-sm"
           >
             Configurar
           </button>
@@ -382,7 +382,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
       </div>
 
       {(message || error) && (
-        <div className={`text-xs px-3 py-2 rounded border ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
+        <div className={`text-xs p-2 rounded-[var(--radius-md)] border ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
           {error || message}
         </div>
       )}
@@ -394,7 +394,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
 
       <div className="flex flex-col gap-3">
         {activeAppointments.length === 0 ? (
-          <p className="text-xs text-slate-400 border-y border-slate-200/80 py-4">No hay citas activas en el rango revisado.</p>
+          <p className="text-xs text-slate-400 border-y border-[var(--color-border)] py-4">No hay citas activas en el rango revisado.</p>
         ) : (
           activeAppointments.map((appointment) => {
             const notice = getAppointmentNotice(appointment);
@@ -415,7 +415,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                 ref={(node) => {
                   appointmentRefs.current[appointment.id] = node;
                 }}
-                className={`border-l-2 pl-3 py-1 rounded-r ${isFocusedAppointment ? 'bg-blue-50/70 ring-1 ring-blue-200' : ''} ${notice ? 'border-l-amber-500' : 'border-l-blue-500'}`}
+                className={`border-l-2 pl-3 py-2 rounded-r bg-[var(--color-bg-base)] ${isFocusedAppointment ? 'bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border)]' : ''} ${notice ? 'border-l-amber-500' : 'border-l-[var(--color-primary)]'}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <button
@@ -453,7 +453,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                       <button
                         type="button"
                         onClick={() => openMeetLink(appointment.meetLink as string)}
-                        className="text-[10px] font-semibold text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded hover:bg-blue-50"
+                        className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)]"
                       >
                         Abrir Meet
                       </button>
@@ -472,19 +472,19 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                     type="date"
                     value={rescheduleForm.date}
                     onChange={(event) => updateRescheduleForm(appointment, { date: event.target.value })}
-                    className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1 text-[11px] bg-transparent"
+                    className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
                   />
                   <input
                     type="time"
                     value={rescheduleForm.time}
                     onChange={(event) => updateRescheduleForm(appointment, { time: event.target.value })}
-                    className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1 text-[11px] bg-transparent"
+                    className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
                   />
                   <button
                     type="button"
                     onClick={() => void handleRescheduleAppointment(appointment)}
                     disabled={isAppointmentBusy}
-                    className="text-[11px] font-semibold text-blue-700 border border-blue-200 px-2 py-1 rounded hover:bg-blue-50 disabled:opacity-40"
+                    className="btn btn-ghost btn-sm disabled:opacity-40"
                   >
                     Reprogramar
                   </button>
@@ -492,7 +492,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                     type="button"
                     onClick={() => void handleCancelAppointment(appointment)}
                     disabled={isAppointmentBusy}
-                    className="text-[11px] font-semibold text-red-700 border border-red-200 px-2 py-1 rounded hover:bg-red-50 disabled:opacity-40"
+                    className="btn btn-ghost btn-sm text-red-500 hover:text-red-400 disabled:opacity-40"
                   >
                     Cancelar
                   </button>
@@ -517,13 +517,13 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                   </div>
 
                   {participantsOpen && (
-                    <div className="mt-2 border-t border-slate-100 dark:border-slate-700/50 pt-2">
+                    <div className="mt-2 border-t border-[var(--color-border)] pt-2">
                       {appointmentParticipants.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           {appointmentParticipants.map((participant) => (
                             <span
                               key={participant.id}
-                              className="inline-flex items-center gap-1 text-[10px] border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300"
+                              className="inline-flex items-center gap-1 text-[10px] border border-[var(--color-border)] px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[var(--color-text)]"
                               title={participant.googleSyncError || participant.invitationStatus}
                             >
                               <span>{participant.name || participant.email}</span>
@@ -548,19 +548,19 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                           value={participantForm.name}
                           onChange={(event) => updateParticipantForm(appointment.id, { name: event.target.value })}
                           placeholder="Nombre"
-                          className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1 text-[11px] bg-transparent"
+                          className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
                         />
                         <input
                           value={participantForm.email}
                           onChange={(event) => updateParticipantForm(appointment.id, { email: event.target.value })}
                           placeholder="email@dominio.cl"
-                          className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1 text-[11px] bg-transparent"
+                          className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
                         />
                         <button
                           type="button"
                           onClick={() => void handleAddParticipant(appointment)}
                           disabled={participantActionId === appointment.id}
-                          className="text-[11px] font-semibold text-blue-700 border border-blue-200 px-2 py-1 rounded hover:bg-blue-50 disabled:opacity-40"
+                          className="btn btn-ghost btn-sm disabled:opacity-40"
                         >
                           Agregar
                         </button>
@@ -569,7 +569,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                   )}
 
                   {historyOpen && (
-                    <div className="mt-2 border-t border-slate-100 dark:border-slate-700/50 pt-2">
+                    <div className="mt-2 border-t border-[var(--color-border)] pt-2">
                       {appointmentAuditEvents.length === 0 ? (
                         <p className="text-[11px] text-slate-400">Sin cambios registrados todavia.</p>
                       ) : (
@@ -596,7 +596,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         )}
       </div>
 
-      <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
+      <div className="border-y border-[var(--color-border)] py-3">
         <button
           type="button"
           onClick={() => setShowCancelled((current) => !current)}
@@ -617,7 +617,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                   ref={(node) => {
                     appointmentRefs.current[appointment.id] = node;
                   }}
-                  className={`border-l-2 border-l-slate-300 pl-3 py-1 rounded-r ${focusedAppointmentId === appointment.id ? 'bg-slate-100/80 ring-1 ring-slate-200' : ''}`}
+                  className={`border-l-2 border-[var(--color-border)] pl-3 py-1 rounded-r ${focusedAppointmentId === appointment.id ? 'bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border)]' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <button
@@ -631,14 +631,14 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                       <button
                         type="button"
                         onClick={() => openFocusedAppointment(appointment.id)}
-                        className="text-[10px] font-semibold text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded hover:bg-slate-50"
+                        className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)]"
                       >
                         Ver
                       </button>
                       <button
                         type="button"
                         onClick={() => openLead(appointment.leadId)}
-                        className="text-[10px] font-semibold text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded hover:bg-blue-50"
+                        className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)]"
                       >
                         Agendar
                       </button>

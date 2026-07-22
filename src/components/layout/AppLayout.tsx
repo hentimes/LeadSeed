@@ -20,8 +20,8 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#f8f9fa] dark:bg-gray-900 dark:text-gray-100 overflow-hidden font-sans">
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-primary)' }}>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         <div className="flex-1 overflow-y-auto p-4 animate-fade-in">
           {children}
         </div>

@@ -33,16 +33,17 @@ interface Props {
   shortName: (full: string) => string;
 }
 
+
 const LeadsTableRow = ({
   lead, idx, selectedIds, sendCounts, listsMap, compactMode, filterMode, isTrash,
   nameVis, rutVis, phoneVis, emailVis, companyVis, dateVis, listsVis, statusVis, scoreVis,
   onView, onEdit, onDelete, onRestore, getScore, shortName
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
-  const trClass = `border-t dark:border-gray-700 hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-gray-800 cursor-pointer ${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : ''}`;
+  const trClass = `border-t border-[var(--color-border)] hover:bg-[var(--color-bg-surface-hover)] transition-colors cursor-pointer ${isSelected ? 'bg-[var(--color-primary-light)]' : 'bg-[var(--color-bg-base)]'}`;
   
   const checkboxBox = (
-    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md'}`}>
+    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-[var(--color-border)] bg-[var(--color-bg-surface)]'}`}>
       <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
         <path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={isSelected ? 1 : 0}/>
       </svg>

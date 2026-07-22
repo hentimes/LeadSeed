@@ -216,13 +216,13 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
       <div className="animate-fade-in">
         {tab === 'overview' && (
           <div className="flex flex-col gap-5">
-            <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+            <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)] mb-5">
               <h3 className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 <span>Progreso de Metas (Hoy)</span>
                 <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">{compareLabel}</span>
               </h3>
               <div className="grid grid-cols-3 gap-1">
-                <div className="group flex flex-col items-center rounded px-1 py-2 transition-colors hover:bg-slate-50 dark:bg-slate-900">
+                <div className="group flex flex-col items-center rounded px-1 py-2 transition-colors hover:bg-[var(--color-bg-surface-hover)] bg-[var(--color-bg-base)] border border-transparent hover:border-[var(--color-border)]">
                   <div className="mb-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <Icon.Messages /> WA
                   </div>
@@ -265,7 +265,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                   </div>
                 </div>
 
-                <div className="group flex flex-col items-center rounded px-1 py-2 transition-colors hover:bg-slate-50 dark:bg-slate-900">
+                <div className="group flex flex-col items-center rounded px-1 py-2 transition-colors hover:bg-[var(--color-bg-surface-hover)] bg-[var(--color-bg-base)] border border-transparent hover:border-[var(--color-border)]">
                   <div className="mb-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <Icon.Email /> Email
                   </div>
@@ -308,7 +308,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                   </div>
                 </div>
 
-                <div className="group flex flex-col items-center rounded px-1 py-2 transition-colors hover:bg-slate-50 dark:bg-slate-900">
+                <div className="group flex flex-col items-center rounded px-1 py-2 transition-colors hover:bg-[var(--color-bg-surface-hover)] bg-[var(--color-bg-base)] border border-transparent hover:border-[var(--color-border)]">
                   <div className="mb-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <Icon.Phone /> Llamar
                   </div>
@@ -354,7 +354,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+              <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)]">
                 <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Conversión Global</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between text-xs font-semibold">
@@ -371,7 +371,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
                   </div>
                 </div>
               </div>
-              <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+              <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)]">
                 <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Rendimiento Hoy</h3>
                 <div className="flex h-full items-center justify-around pb-2">
                   <div className="group cursor-default text-center">
@@ -410,7 +410,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
 
         {tab === 'pipeline' && (
           <div className="flex flex-col gap-6">
-            <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+            <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)]">
               <h3 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Embudo de Ventas</h3>
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -435,7 +435,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
               </div>
             </div>
 
-            <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+            <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)] mt-5">
               <h3 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Adquisición Mensual</h3>
               <div className="h-48 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -466,14 +466,14 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         {tab === 'tasks' && (
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+              <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)]">
                 <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-red-700">Vencidas / Urgentes</h3>
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-black text-red-600">{taskSummary.overdue}</div>
                   <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Tienes tareas que ya superaron su fecha límite. Revisa la pestaña de tareas.</div>
                 </div>
               </div>
-              <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+              <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)]">
                 <h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-amber-600">Para Hoy</h3>
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-black text-amber-500">{taskSummary.today}</div>
@@ -482,7 +482,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
               </div>
             </div>
 
-            <div className="border-t border-b border-slate-200 bg-transparent py-3 dark:border-slate-700/50">
+            <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-3 rounded-[var(--radius-md)] mt-5">
               <h3 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Eficiencia Histórica</h3>
               {(() => {
                 const completed = taskSummary.completedTotal;

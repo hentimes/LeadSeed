@@ -418,8 +418,8 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
 
   return (
     <div className="fixed inset-0 bg-black/30 z-40 flex items-start justify-center pt-4 overflow-hidden">
-      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-900 rounded-lg shadow-xl w-[92%] max-w-[340px] max-h-[90vh] flex flex-col mx-auto animate-scale-in">
-        <div className="flex items-center justify-between p-4 border-b shrink-0">
+      <div className="bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-premium w-[92%] max-w-[340px] max-h-[90vh] flex flex-col mx-auto animate-scale-in">
+        <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] shrink-0 bg-[var(--color-bg-surface)] rounded-t-[var(--radius-lg)]">
           <div>
             <h2 className="text-lg font-bold">{lead.name}</h2>
             <span
@@ -451,20 +451,20 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                 }
               }}
               id="copy-btn"
-              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 text-sm flex items-center gap-1"
+              className="btn btn-ghost btn-sm flex items-center gap-1"
             >
               <Icon.Copy /> Copiar
             </button>
-            <button onClick={() => { onEdit(lead); onClose(); }} className="text-blue-600 hover:text-blue-800 text-sm">
+            <button onClick={() => { onEdit(lead); onClose(); }} className="btn btn-ghost btn-sm text-blue-500 hover:text-blue-400">
               {Icon.Edit()} Editar
             </button>
-            <button onClick={onClose} className="text-gray-400 hover:text-slate-500 dark:text-slate-400 text-lg leading-none ml-2">
+            <button onClick={onClose} className="btn btn-ghost btn-sm text-lg leading-none ml-1 px-2">
               &times;
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {crossExecAlerts.length > 0 && (
             <div className="border border-amber-200 bg-amber-50/90 rounded-md p-3">
               <div className="flex items-center gap-2 text-[11px] font-semibold text-amber-800 mb-2">
@@ -493,7 +493,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
           {isPlanesproLead && (
             <div className="mt-2">
               <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Formulario PlanesPro</p>
-              <div className="bg-blue-50/50 rounded-md p-2 space-y-2 border border-blue-100">
+              <div className="bg-[var(--color-bg-surface)] rounded-md p-2 space-y-2 border border-[var(--color-border)]">
                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                   {planesproDetails.sistema && (
                     <div>
@@ -573,7 +573,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                   )}
                 </div>
                 {(planesproMetadata.pdf_path || pdfLoading || pdfError) && (
-                  <div className="rounded-md bg-white/80 p-2 text-xs">
+                  <div className="rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border)] p-2 text-xs mt-2">
                     <span className="text-blue-700/80">Adjunto PDF</span>
                     <div className="mt-1 flex items-center gap-2">
                       {planesproMetadata.pdf_path ? (
@@ -605,7 +605,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                   </div>
                 )}
                 {planesproDetails.comentario && (
-                  <div className="rounded-md bg-white/80 p-2 text-xs">
+                  <div className="rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border)] p-2 text-xs mt-2">
                     <span className="text-blue-700/80">Comentario</span>
                     <p className="mt-1 whitespace-pre-wrap text-slate-700">
                       {planesproDetails.comentario}
@@ -618,7 +618,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
 
           <div className="mt-2">
             <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Agenda</p>
-            <div className="border-l-2 border-blue-500 bg-slate-50/80 p-2 text-xs space-y-2">
+            <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-2 rounded-md text-xs space-y-2">
               {!canCreateAppointment && (
                 <div className="space-y-2">
                   <p className="text-slate-600">
@@ -657,20 +657,20 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                       type="date"
                       value={appointmentDate}
                       onChange={(event) => setAppointmentDate(event.target.value)}
-                      className="border rounded px-2 py-1.5 bg-white"
+                      className="border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5"
                     />
                     <input
                       type="time"
                       value={appointmentTime}
                       onChange={(event) => setAppointmentTime(event.target.value)}
-                      className="border rounded px-2 py-1.5 bg-white"
+                      className="border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5"
                     />
                   </div>
                   <textarea
                     value={appointmentNote}
                     onChange={(event) => setAppointmentNote(event.target.value)}
                     placeholder="Nota de la cita..."
-                    className="w-full border rounded px-2 py-1.5 bg-white min-h-[54px] resize-none"
+                    className="w-full border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5 min-h-[54px] resize-none"
                   />
                   <button
                     type="button"
@@ -690,7 +690,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
           {genericMetadataEntries.length > 0 && (
             <div className="mt-2">
               <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Informacion adicional</p>
-              <div className="bg-blue-50/50 rounded-md p-2 space-y-1.5 border border-blue-100">
+              <div className="bg-[var(--color-bg-surface)] rounded-md p-2 space-y-1.5 border border-[var(--color-border)]">
                 {genericMetadataEntries.map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center border-b border-blue-100/50 last:border-0 pb-1 last:pb-0 gap-2">
                     <span className="text-xs font-medium text-blue-800 capitalize">{key.replace(/_/g, ' ')}</span>
@@ -704,7 +704,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
           {lead.notes && !isPlanesproLead && (
             <div>
               <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Notas actuales</p>
-              <p className="text-sm bg-slate-50 dark:bg-slate-900 rounded p-2 whitespace-pre-wrap">{lead.notes}</p>
+              <p className="text-sm bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded p-2 whitespace-pre-wrap">{lead.notes}</p>
             </div>
           )}
 
@@ -727,7 +727,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
               value={newNote}
               onChange={(event) => setNewNote(event.target.value)}
               placeholder="Agregar nota..."
-              className="flex-1 border rounded px-2 py-1.5 text-xs"
+              className="flex-1 border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5 text-xs"
               onKeyDown={(event) => event.key === 'Enter' && addNote()}
             />
             <button onClick={addNote} className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700">
