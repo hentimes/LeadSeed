@@ -15,6 +15,7 @@ export interface AdminTelemetryRow {
 
 export interface AdminTemplateRow {
   id: string;
+  user_id?: string;
   name: string;
   content: string;
   template_list_ids?: number[];
@@ -30,7 +31,43 @@ export interface InteractionMessageRow {
   created_at: string;
 }
 
+export interface AdminLeadAlertRow {
+  observed_user_id: string;
+  unseen_new_leads_count: number | null;
+  latest_lead_created_at: string | null;
+}
+
+export interface AdminObservedAppointmentRow {
+  id: string;
+  lead_id: string | null;
+  lead_name: string | null;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  source_channel: string | null;
+  capture_ref: string | null;
+  notes: string | null;
+  meet_link: string | null;
+  google_event_id: string | null;
+  google_sync_status: string | null;
+  google_sync_error: string | null;
+  google_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminLeadEventRow {
+  id: string;
+  admin_user_id: string;
+  observed_user_id: string;
+  lead_id: string;
+  event_kind: 'lead_created';
+  created_at: string;
+}
+
 export type ProfileChangesPayload = RealtimePostgresChangesPayload<Profile>;
+export type LeadChangesPayload = RealtimePostgresChangesPayload<LeadRow>;
+export type AdminLeadEventChangesPayload = RealtimePostgresChangesPayload<AdminLeadEventRow>;
 
 export async function fetchUnreadAdminMessageRows(receiverId: string): Promise<AdminUnreadMessageRow[]> {
   const { data, error } = await supabase
@@ -57,6 +94,22 @@ export function subscribeToInternalMessageChanges(onChange: () => void): Realtim
   return supabase
     .channel('admin_unread_msgs')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'internal_messages' }, onChange)
+    .subscribe();
+}
+
+export function subscribeToLeadChanges(adminUserId: string, onChange: (payload: AdminLeadEventChangesPayload) => void): RealtimeChannel {
+  return supabase
+    .channel('admin_lead_alerts')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'admin_lead_events',
+        filter: `admin_user_id=eq.${adminUserId}`,
+      },
+      onChange,
+    )
     .subscribe();
 }
 
@@ -112,12 +165,42 @@ export async function updateRequirementRow(requirementId: string, payload: Recor
 }
 
 export async function fetchAdminUserLeadRows(userId: string): Promise<LeadRow[]> {
-  const { data } = await supabase.from('leads').select('*').eq('user_id', userId).is('deleted_at', null);
+  const { data, error } = await supabase.rpc('list_admin_user_leads', {
+    p_observed_user_id: userId,
+    p_limit: null,
+  });
+  if (error) throw error;
   return (data ?? []) as LeadRow[];
 }
 
+export async function fetchAdminLeadAlertRows(): Promise<AdminLeadAlertRow[]> {
+  const { data, error } = await supabase.rpc('list_admin_user_lead_alerts');
+  if (error) throw error;
+  return (data ?? []) as AdminLeadAlertRow[];
+}
+
+export async function markAdminObservedUserLeadsSeen(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_admin_user_leads_seen', {
+    p_observed_user_id: userId,
+  });
+  if (error) throw error;
+}
+
+export async function fetchAdminObservedAppointmentRows(userId: string, from: string, to: string): Promise<AdminObservedAppointmentRow[]> {
+  const { data, error } = await supabase.rpc('list_admin_user_appointments', {
+    p_observed_user_id: userId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw error;
+  return (data ?? []) as AdminObservedAppointmentRow[];
+}
+
 export async function fetchAdminUserTemplateRows(userId: string): Promise<AdminTemplateRow[]> {
-  const { data } = await supabase.from('templates').select('*').eq('user_id', userId);
+  const { data, error } = await supabase.rpc('list_admin_user_templates', {
+    p_observed_user_id: userId,
+  });
+  if (error) throw error;
   return (data ?? []) as AdminTemplateRow[];
 }
 
@@ -138,18 +221,20 @@ export async function transferAdminUserTemplates(targetUserId: string, templateI
 }
 
 export async function fetchAdminUserRecentLeadRows(userId: string): Promise<LeadRow[]> {
-  const { data } = await supabase
-    .from('leads')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(50);
+  const { data, error } = await supabase.rpc('list_admin_user_leads', {
+    p_observed_user_id: userId,
+    p_limit: 50,
+  });
+  if (error) throw error;
   return (data ?? []) as LeadRow[];
 }
 
 export async function fetchAdminUserTemplateTypeRows(userId: string): Promise<Array<Pick<AdminTemplateRow, 'type'>>> {
-  const { data } = await supabase.from('templates').select('type').eq('user_id', userId);
-  return (data ?? []) as Array<Pick<AdminTemplateRow, 'type'>>;
+  const { data, error } = await supabase.rpc('list_admin_user_templates', {
+    p_observed_user_id: userId,
+  });
+  if (error) throw error;
+  return ((data ?? []) as AdminTemplateRow[]).map((row) => ({ type: row.type }));
 }
 
 export async function fetchAdminTelemetryRows(userId: string): Promise<AdminTelemetryRow[]> {

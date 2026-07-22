@@ -1,21 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchRecentSendLogsForUser, buildLeadSendCounts } from '../services/historyService';
+import { fetchLeadSendCountsForUser } from '../services/historyService';
 
 export function useSendCounts() {
   const [counts, setCounts] = useState<Record<string, { whatsapp: number; email: number }>>({});
   const { user } = useAuth();
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!user) {
       setCounts({});
       return;
     }
 
     void (async () => {
-      const sendLogs = await fetchRecentSendLogsForUser(user.id);
-      setCounts(buildLeadSendCounts(sendLogs));
+      const nextCounts = await fetchLeadSendCountsForUser(user.id);
+      if (!cancelled) {
+        setCounts(nextCounts);
+      }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   return counts;

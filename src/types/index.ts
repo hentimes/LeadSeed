@@ -221,6 +221,12 @@ export interface AgendaAppointment {
   updatedAt: string;
 }
 
+export interface AdminObservedLeadAlert {
+  observedUserId: string;
+  unseenNewLeadsCount: number;
+  latestLeadCreatedAt?: string;
+}
+
 export interface AppointmentAuditEvent {
   id: string;
   appointmentId: string;
@@ -360,9 +366,39 @@ export type ExportFormat = 'json' | 'excel';
 
 export type ComparePeriod = 'yesterday' | 'lastWeek' | 'lastMonth' | 'lastYear';
 
+export type EmailProvider = 'emailjs' | 'resend' | 'gmail';
+
+export interface EmailChannelSummary {
+  id: string;
+  provider: string;
+  channelName: string;
+  fromName: string;
+  fromEmail: string;
+  isActive: boolean;
+  isDefault: boolean;
+  dailyLimit: number;
+  credentialsHint: string;
+  metadata: Record<string, unknown>;
+  lastTestedAt?: string | null;
+  lastTestStatus?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EmailDeliveryChannelOption {
+  id: string;
+  provider: EmailProvider;
+  label: string;
+  fromName: string;
+  fromEmail: string;
+  isConnected: boolean;
+  isDefault: boolean;
+  isActiveProvider: boolean;
+  dailyLimit?: number;
+}
+
 export interface AppSettings {
-  emailProvider: 'emailjs' | 'resend';
-  resendApiKey: string;
+  emailProvider: EmailProvider;
   resendFromName: string;
   resendFromEmail: string;
   emailJSUserId: string;

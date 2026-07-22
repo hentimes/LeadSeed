@@ -14,7 +14,7 @@ interface Props {
 
 export default function CallSender({ leads, templates, templateLists }: Props) {
   const [selectedListId, setSelectedListId] = useState<number | 'all'>('all');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number | ''>('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [assignedLeadIds, setAssignedLeadIds] = useState<string[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | ''>('');
   const [logging, setLogging] = useState(false);
@@ -25,16 +25,18 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
     return templates.filter((template) => (template.templateListIds || []).includes(selectedListId));
   }, [templates, selectedListId]);
 
+  const findTemplateById = (value: string) => templates.find((template) => String(template.id ?? '') === value) || null;
+
   const handleTemplateChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
-    setSelectedTemplateId(value === '' ? '' : Number(value));
+    setSelectedTemplateId(value);
     if (!value) {
       setAssignedLeadIds([]);
       setSelectedLeadId('');
       return;
     }
 
-    const template = templates.find((item) => item.id === Number(value));
+    const template = findTemplateById(value);
     if (template) {
       const session = await getCurrentSession();
       const userId = session?.user?.id;
@@ -53,7 +55,7 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
     return leads.filter((lead) => assignedLeadIds.includes(lead.id!));
   }, [leads, assignedLeadIds, selectedTemplateId]);
 
-  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId);
+  const selectedTemplate = findTemplateById(selectedTemplateId);
   const selectedLead = validLeads.find((lead) => lead.id === selectedLeadId);
 
   const handleLogCall = async () => {

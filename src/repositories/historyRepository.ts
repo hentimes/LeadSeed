@@ -18,6 +18,11 @@ export interface LeadNoteRow {
   created_at: string;
 }
 
+export interface SendLogCountRow {
+  lead_id: string;
+  template_type: 'whatsapp' | 'email' | 'call';
+}
+
 export async function fetchRecentSendLogRows(limit = 100): Promise<SendLogRow[]> {
   const { data, error } = await supabase
     .from('send_logs')
@@ -26,6 +31,9 @@ export async function fetchRecentSendLogRows(limit = 100): Promise<SendLogRow[]>
     .limit(limit);
 
   if (error || !data) {
+    if (error) {
+      console.error('fetchRecentSendLogRows failed', error);
+    }
     return [];
   }
 
@@ -39,10 +47,30 @@ export async function fetchSendLogRowsByUser(userId: string): Promise<SendLogRow
     .eq('user_id', userId);
 
   if (error || !data) {
+    if (error) {
+      console.error('fetchSendLogRowsByUser failed', error);
+    }
     return [];
   }
 
   return data as SendLogRow[];
+}
+
+export async function fetchSendLogCountRowsByUser(userId: string): Promise<SendLogCountRow[]> {
+  const { data, error } = await supabase
+    .from('send_logs')
+    .select('lead_id, template_type')
+    .eq('user_id', userId)
+    .in('template_type', ['whatsapp', 'email']);
+
+  if (error || !data) {
+    if (error) {
+      console.error('fetchSendLogCountRowsByUser failed', error);
+    }
+    return [];
+  }
+
+  return data as SendLogCountRow[];
 }
 
 export async function fetchSentLeadIdsByUser(userId: string): Promise<string[]> {
@@ -52,6 +80,9 @@ export async function fetchSentLeadIdsByUser(userId: string): Promise<string[]> 
     .eq('user_id', userId);
 
   if (error || !data) {
+    if (error) {
+      console.error('fetchSentLeadIdsByUser failed', error);
+    }
     return [];
   }
 
@@ -68,6 +99,9 @@ export async function fetchSendLogRowsByTemplateId(templateId: number): Promise<
     .order('sent_at', { ascending: false });
 
   if (error || !data) {
+    if (error) {
+      console.error('fetchSendLogRowsByTemplateId failed', error);
+    }
     return [];
   }
 
@@ -82,6 +116,9 @@ export async function fetchRecentLeadNoteRows(limit = 100): Promise<LeadNoteRow[
     .limit(limit);
 
   if (error || !data) {
+    if (error) {
+      console.error('fetchRecentLeadNoteRows failed', error);
+    }
     return [];
   }
 

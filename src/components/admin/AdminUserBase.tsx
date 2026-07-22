@@ -1,18 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Profile, Lead, WhatsAppTemplate } from '../../types';
 import { Icon } from '../../utils/icons';
 import { loadAdminUserBase, transferAdminUserAssets } from '../../services/adminService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   selectedUser: Profile;
   profiles: Profile[];
+  newLeadCount?: number;
+  liveInsertedLead?: Lead | null;
+  realtimeRefreshKey?: number;
 }
 
-export default function AdminUserBase({ selectedUser, profiles }: Props) {
+export default function AdminUserBase({
+  selectedUser,
+  profiles,
+  newLeadCount = 0,
+  liveInsertedLead = null,
+  realtimeRefreshKey = 0,
+}: Props) {
+  const { profile: currentUserProfile } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'leads' | 'templates'>('leads');
+  const [liveNotice, setLiveNotice] = useState<string>('');
+  const noticeTimeoutRef = useRef<number | null>(null);
 
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(new Set());
@@ -22,17 +36,67 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
 
   useEffect(() => {
     void loadBase();
-  }, [selectedUser.id]);
+  }, [currentUserProfile?.id, selectedUser.id]);
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimeoutRef.current !== null) {
+        window.clearTimeout(noticeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!liveInsertedLead?.id) return;
+
+    setLeads((current) => {
+      if (current.some((lead) => lead.id === liveInsertedLead.id)) {
+        return current;
+      }
+      return [liveInsertedLead, ...current];
+    });
+
+    setLiveNotice(liveInsertedLead.name || 'Nuevo lead');
+    if (noticeTimeoutRef.current !== null) {
+      window.clearTimeout(noticeTimeoutRef.current);
+    }
+    noticeTimeoutRef.current = window.setTimeout(() => {
+      setLiveNotice('');
+      noticeTimeoutRef.current = null;
+    }, 6000);
+  }, [liveInsertedLead]);
+
+  useEffect(() => {
+    if (realtimeRefreshKey <= 0) return;
+    void loadBase();
+  }, [realtimeRefreshKey]);
+
+  const resolveErrorMessage = (loadError: unknown): string => {
+    if (loadError instanceof Error && loadError.message) {
+      return loadError.message;
+    }
+    if (loadError && typeof loadError === 'object' && 'message' in loadError && typeof loadError.message === 'string') {
+      return loadError.message;
+    }
+    return 'No se pudo cargar la base observada';
+  };
 
   const loadBase = async () => {
     setLoading(true);
+    setError('');
     setSelectedLeads(new Set());
     setSelectedTemplates(new Set());
-
-    const { leads: nextLeads, templates: nextTemplates } = await loadAdminUserBase(selectedUser.id);
-    setLeads(nextLeads);
-    setTemplates(nextTemplates);
-    setLoading(false);
+    try {
+      const { leads: nextLeads, templates: nextTemplates } = await loadAdminUserBase(selectedUser.id, currentUserProfile?.id);
+      setLeads(nextLeads);
+      setTemplates(nextTemplates);
+    } catch (loadError) {
+      setLeads([]);
+      setTemplates([]);
+      setError(resolveErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleLead = (id: string) => {
@@ -84,8 +148,28 @@ export default function AdminUserBase({ selectedUser, profiles }: Props) {
     return <div className="p-8 text-center text-slate-400 dark:text-slate-500 animate-pulse">Cargando base del usuario...</div>;
   }
 
+  if (error) {
+    return <div className="p-6 text-sm text-red-600">{error}</div>;
+  }
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-800/80 dark:backdrop-blur-md relative">
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Base observada</p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          Leads y plantillas de {selectedUser.full_name || selectedUser.email}. Esta vista no cambia la agenda principal del superadmin.
+        </p>
+        {liveNotice && (
+          <p className="mt-2 inline-flex items-center gap-2 rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+            Nuevo lead en tiempo real: {liveNotice}
+          </p>
+        )}
+        {newLeadCount > 0 && (
+          <p className="mt-2 inline-flex items-center gap-2 rounded-md bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+            {newLeadCount} lead{newLeadCount === 1 ? '' : 's'} nuevo{newLeadCount === 1 ? '' : 's'} pendiente{newLeadCount === 1 ? '' : 's'} de revisar
+          </p>
+        )}
+      </div>
       <div className="flex border-b border-slate-200 dark:border-slate-700/50">
         <button
           onClick={() => setActiveTab('leads')}

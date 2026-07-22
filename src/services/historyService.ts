@@ -1,10 +1,12 @@
 import {
+  fetchSendLogCountRowsByUser,
   fetchSentLeadIdsByUser,
   fetchRecentLeadNoteRows,
   fetchRecentSendLogRows,
   fetchSendLogRowsByUser,
   fetchSendLogRowsByTemplateId,
   type LeadNoteRow,
+  type SendLogCountRow,
   type SendLogRow,
 } from '../repositories/historyRepository';
 import type { EmailTemplate, Lead, LeadNote, SendLog, WhatsAppTemplate } from '../types';
@@ -61,6 +63,13 @@ export async function fetchRecentSendLogsForUser(userId: string): Promise<SendLo
   return rows.map(mapSendLogRowToDomain);
 }
 
+export async function fetchLeadSendCountsForUser(
+  userId: string
+): Promise<Record<string, { whatsapp: number; email: number }>> {
+  const rows = await fetchSendLogCountRowsByUser(userId);
+  return buildLeadSendCounts(rows);
+}
+
 export async function fetchSendLogsForTemplate(templateId: number): Promise<SendLog[]> {
   const rows = await fetchSendLogRowsByTemplateId(templateId);
   return rows.map(mapSendLogRowToDomain);
@@ -72,19 +81,25 @@ export async function fetchSentLeadIdsSetForUser(userId: string): Promise<Set<st
 }
 
 export function buildLeadSendCounts(
-  logs: SendLog[]
+  logs: Array<Pick<SendLog, 'leadId' | 'templateType'> | SendLogCountRow>
 ): Record<string, { whatsapp: number; email: number }> {
   const counts: Record<string, { whatsapp: number; email: number }> = {};
 
   for (const log of logs) {
-    if (!counts[log.leadId]) {
-      counts[log.leadId] = { whatsapp: 0, email: 0 };
+    const leadId = 'leadId' in log ? log.leadId : log.lead_id;
+    if (!leadId) {
+      continue;
     }
 
-    if (log.templateType === 'whatsapp') {
-      counts[log.leadId].whatsapp += 1;
-    } else if (log.templateType === 'email') {
-      counts[log.leadId].email += 1;
+    if (!counts[leadId]) {
+      counts[leadId] = { whatsapp: 0, email: 0 };
+    }
+
+    const templateType = 'templateType' in log ? log.templateType : log.template_type;
+    if (templateType === 'whatsapp') {
+      counts[leadId].whatsapp += 1;
+    } else if (templateType === 'email') {
+      counts[leadId].email += 1;
     }
   }
 

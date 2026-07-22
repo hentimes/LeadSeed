@@ -71,6 +71,17 @@ async function fetchGoogleIdentity(providerToken: string) {
   }
 }
 
+async function fetchGrantedScopes(providerToken: string) {
+  const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(providerToken)}`)
+
+  if (!response.ok) {
+    return ''
+  }
+
+  const data = await response.json() as Record<string, unknown>
+  return typeof data.scope === 'string' ? data.scope.trim() : ''
+}
+
 Deno.serve(async (request) => {
   const origin = request.headers.get('origin')
   const headers = corsHeaders(origin)
@@ -108,7 +119,8 @@ Deno.serve(async (request) => {
     }
 
     const googleIdentity = providerToken ? await fetchGoogleIdentity(providerToken) : { email: '' }
-    const tokenScope = String(payload.scope || 'https://www.googleapis.com/auth/calendar').trim()
+    const grantedScope = providerToken ? await fetchGrantedScopes(providerToken) : ''
+    const tokenScope = String(grantedScope || payload.scope || 'https://www.googleapis.com/auth/calendar').trim()
     const tokenExpiresAt = providerToken ? expiresAt(payload.expires_in) : null
 
     const { data: existing } = await supabase

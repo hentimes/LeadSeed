@@ -8,6 +8,11 @@ interface Props {
   totalCount: number;
   visibleCount: number;
   selectedCount: number;
+  currentPage: number;
+  pageCount: number;
+  pageSize: number;
+  isLoadingPage?: boolean;
+  onPageChange: (page: number) => void;
   lists: LeadList[];
   filterListId: number | null;
   onFilterChange: (listId: number | null) => void;
@@ -19,6 +24,7 @@ interface Props {
 
 export default function LeadsTableControls({
   search, onSearchChange, totalCount, visibleCount, selectedCount,
+  currentPage, pageCount, pageSize, isLoadingPage, onPageChange,
   lists, filterListId, onFilterChange, filterStatus, onFilterStatusChange,
   filterDate, onFilterDateChange
 }: Props) {
@@ -39,6 +45,25 @@ export default function LeadsTableControls({
             {visibleCount !== totalCount ? `${visibleCount}/${totalCount} leads` : `${totalCount} leads`}
             {selectedCount > 0 && <span className="ml-1 text-blue-600 font-medium">{selectedCount} sel.</span>}
           </span>
+          <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || !!isLoadingPage}
+              className="rounded border border-slate-300 px-2 py-1 disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <span>
+              Pag. {currentPage}/{pageCount}
+            </span>
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= pageCount || !!isLoadingPage}
+              className="rounded border border-slate-300 px-2 py-1 disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-slate-300 dark:border-slate-600/50 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'}`}
@@ -95,6 +120,12 @@ export default function LeadsTableControls({
           )}
         </div>
       )}
+      <div className="sm:hidden mb-3 flex items-center justify-between text-xs text-slate-500">
+        <span>
+          Pag. {currentPage}/{pageCount}
+        </span>
+        <span>{pageSize} por pagina</span>
+      </div>
     </>
   );
 }

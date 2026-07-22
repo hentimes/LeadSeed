@@ -6,12 +6,17 @@ import {
   deleteLeadById,
   fetchCrossExecEventRowsByLeadIds,
   fetchDeletedLeadRows,
+  fetchForgottenLeadPageRows,
+  fetchLeadIdentityRows,
   fetchLeadListIds,
+  fetchLeadPageRows,
   fetchLeadRowById,
   fetchLeadRows,
   fetchLeadRowsByList,
   importLeadRows,
   purgeDeletedLeadRows,
+  type LeadIdentityRow,
+  type LeadPageQuery,
   type LeadCrossExecEventRow,
   type LeadRow,
   updateLead,
@@ -35,6 +40,14 @@ export const compareLeadPriority = (a: Lead, b: Lead) => {
   const bPriority = b.crossExecPriorityAt || b.createdAt;
   return Date.parse(bPriority) - Date.parse(aPriority);
 };
+
+export interface LeadPageResult {
+  items: Lead[];
+  filteredCount: number;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
 
 export const mapLeadRowToDomain = (row: LeadRow): Lead => ({
   id: row.id,
@@ -78,6 +91,10 @@ const mapCrossExecEventRow = (row: LeadCrossExecEventRow): LeadCrossExecEvent =>
 });
 
 export async function attachCrossExecAlerts(leads: Lead[]): Promise<Lead[]> {
+  return attachCrossExecAlertsToLeads(leads, true);
+}
+
+export async function attachCrossExecAlertsToLeads(leads: Lead[], sortByPriority = false): Promise<Lead[]> {
   const leadIds = leads.map((lead) => lead.id).filter(Boolean) as string[];
   if (leadIds.length === 0) {
     return leads;
@@ -92,18 +109,18 @@ export async function attachCrossExecAlerts(leads: Lead[]): Promise<Lead[]> {
     alertsByLeadId.set(event.leadId, alerts);
   }
 
-  return [...leads]
-    .map((lead) => {
-      const alerts = alertsByLeadId.get(lead.id || '') || [];
-      const unreadAlert = alerts.find((event) => !event.isRead);
-      return {
-        ...lead,
-        crossExecAlerts: alerts,
-        hasUnreadCrossExecAlert: !!unreadAlert,
-        crossExecPriorityAt: unreadAlert?.createdAt,
-      };
-    })
-    .sort(compareLeadPriority);
+  const enriched = [...leads].map((lead) => {
+    const alerts = alertsByLeadId.get(lead.id || '') || [];
+    const unreadAlert = alerts.find((event) => !event.isRead);
+    return {
+      ...lead,
+      crossExecAlerts: alerts,
+      hasUnreadCrossExecAlert: !!unreadAlert,
+      crossExecPriorityAt: unreadAlert?.createdAt,
+    };
+  });
+
+  return sortByPriority ? enriched.sort(compareLeadPriority) : enriched;
 }
 
 export async function fetchActiveLeads(userId: string): Promise<Lead[]> {
@@ -112,6 +129,36 @@ export async function fetchActiveLeads(userId: string): Promise<Lead[]> {
 
 export async function fetchDeletedLeads(userId: string): Promise<Lead[]> {
   return attachCrossExecAlerts((await fetchDeletedLeadRows(userId)).map(mapLeadRowToDomain));
+}
+
+export async function fetchLeadPage(userId: string, params: LeadPageQuery): Promise<LeadPageResult> {
+  const safePage = Math.max(1, params.page || 1);
+  const safePageSize = Math.max(1, params.pageSize || 50);
+  const { rows, filteredCount, totalCount } = await fetchLeadPageRows(userId, params);
+  const items = await attachCrossExecAlertsToLeads(rows.map(mapLeadRowToDomain), false);
+
+  return {
+    items,
+    filteredCount,
+    totalCount,
+    page: safePage,
+    pageSize: safePageSize,
+  };
+}
+
+export async function fetchForgottenLeadPage(params: LeadPageQuery): Promise<LeadPageResult> {
+  const safePage = Math.max(1, params.page || 1);
+  const safePageSize = Math.max(1, params.pageSize || 50);
+  const { rows, filteredCount, totalCount } = await fetchForgottenLeadPageRows(params);
+  const items = await attachCrossExecAlertsToLeads(rows.map(mapLeadRowToDomain), false);
+
+  return {
+    items,
+    filteredCount,
+    totalCount,
+    page: safePage,
+    pageSize: safePageSize,
+  };
 }
 
 export async function fetchLeadById(id: string): Promise<Lead | undefined> {
@@ -126,6 +173,24 @@ export async function fetchLeadById(id: string): Promise<Lead | undefined> {
 
 export async function fetchLeadsByList(listaId: number): Promise<Lead[]> {
   return (await fetchLeadRowsByList(listaId)).map(mapLeadRowToDomain);
+}
+
+export interface LeadIdentity {
+  id: string;
+  rut: string;
+  phone: string;
+}
+
+function mapLeadIdentityRow(row: LeadIdentityRow): LeadIdentity {
+  return {
+    id: row.id,
+    rut: row.rut || '',
+    phone: row.phone || '',
+  };
+}
+
+export async function fetchLeadIdentities(userId: string): Promise<LeadIdentity[]> {
+  return (await fetchLeadIdentityRows(userId)).map(mapLeadIdentityRow);
 }
 
 export async function saveLeadForUser(userId: string, lead: Lead): Promise<string> {

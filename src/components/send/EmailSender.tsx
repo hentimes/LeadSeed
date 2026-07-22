@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { Lead, EmailTemplate, EmailTemplateList, LeadList, SendLog } from '../../types';
+import type { Lead, EmailDeliveryChannelOption, EmailTemplate, EmailTemplateList, LeadList, SendLog } from '../../types';
 import { replaceVariables } from '../../utils/waHelper';
 import type { EmailAttachment } from '../../utils/emailSender';
 import { Icon } from '../../utils/icons';
@@ -7,6 +7,9 @@ import EmailEditor from './EmailEditor';
 import EmailScheduler from './EmailScheduler';
 import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../../services/sendService';
+import { getSettings } from '../../db/database';
+import { getMyCalendarConnectionStatus } from '../../services/agendaService';
+import { listEmailChannels } from '../../repositories/emailChannelsRepository';
 
 interface Props {
   leads: Lead[];
@@ -43,6 +46,14 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const [previewLead, setPreviewLead] = useState<Lead | null>(null);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [channelOptions, setChannelOptions] = useState<EmailDeliveryChannelOption[]>([]);
+  const [selectedChannelId, setSelectedChannelId] = useState('');
+  const selectedChannel = useMemo(
+    () => channelOptions.find((option) => option.id === selectedChannelId) || null,
+    [channelOptions, selectedChannelId],
+  );
+
+  const findTemplateById = (value: string) => templates.find((template) => String(template.id ?? '') === value) || null;
 
   const filteredTemplates = catId
     ? templates.filter((t) => (t.templateListIds || []).includes(catId))
@@ -61,6 +72,71 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       setAttachments([]);
     }
   }, [selectedTemplate]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadEmailChannels() {
+      try {
+        const [settings, channels, googleStatus] = await Promise.all([
+          getSettings(),
+          listEmailChannels().catch(() => []),
+          getMyCalendarConnectionStatus().catch(() => null),
+        ]);
+        if (!active) return;
+
+        const activeProvider = settings.emailProvider || 'gmail';
+        const options: EmailDeliveryChannelOption[] = [];
+
+        if (googleStatus?.isConnected && googleStatus.tokenScope?.includes('https://www.googleapis.com/auth/gmail.send')) {
+          options.push({
+            id: 'gmail-oauth',
+            provider: 'gmail',
+            label: 'Gmail',
+            fromName: googleStatus.googleEmail.split('@')[0] || 'Gmail',
+            fromEmail: googleStatus.googleEmail,
+            isConnected: true,
+            isDefault: activeProvider === 'gmail',
+            isActiveProvider: activeProvider === 'gmail',
+          });
+        }
+
+        channels
+          .filter((channel) => channel.isActive)
+          .forEach((channel) => {
+            options.push({
+              id: channel.id,
+              provider: 'resend',
+              label: channel.channelName,
+              fromName: channel.fromName,
+              fromEmail: channel.fromEmail,
+              isConnected: true,
+              isDefault: channel.isDefault,
+              isActiveProvider: activeProvider === 'resend' && channel.isDefault,
+              dailyLimit: channel.dailyLimit,
+            });
+          });
+
+        setChannelOptions(options);
+
+        const preferredOption =
+          options.find((option) => option.isActiveProvider) ||
+          options.find((option) => option.isDefault) ||
+          options[0];
+
+        setSelectedChannelId(preferredOption?.id || '');
+      } catch {
+        if (!active) return;
+        setChannelOptions([]);
+        setSelectedChannelId('');
+      }
+    }
+
+    void loadEmailChannels();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
@@ -132,6 +208,12 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       customBody,
       selectedTemplate.isHtml,
       attachments,
+      selectedChannelId
+        ? {
+            provider: selectedChannel?.provider,
+            channelId: selectedChannel?.provider === 'resend' ? selectedChannelId : undefined,
+          }
+        : undefined,
     );
     setResult(sendResult);
     setSentLog(updatedLog);
@@ -157,8 +239,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             <label className="block text-[11px] text-slate-400 dark:text-slate-500 mb-1">Plantilla</label>
             <select value={selectedTemplate?.id ?? ''} 
               onChange={(e) => {
-                const tpl = templates.find(t => t.id === Number(e.target.value));
-                setSelectedTemplate(tpl || null);
+                setSelectedTemplate(findTemplateById(e.target.value));
               }}
               className="w-full border rounded px-2 py-1.5 text-sm bg-slate-50 dark:bg-slate-900">
               <option value="">Elegir plantilla...</option>
@@ -168,6 +249,23 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             </select>
           </div>
         </div>
+
+        {channelOptions.length > 0 ? (
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="shrink-0">Canal remitente</span>
+            <select
+              value={selectedChannelId}
+              onChange={(e) => setSelectedChannelId(e.target.value)}
+              className="max-w-[280px] rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
+              {channelOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} · {option.fromEmail}{option.isActiveProvider ? ' · Activo' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
       </div>
 
       {/* 2. Edición Dinámica (Al Vuelo) */}

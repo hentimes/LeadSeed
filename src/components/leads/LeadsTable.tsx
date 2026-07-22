@@ -34,6 +34,11 @@ interface Props {
   totalCount: number;
   visibleCount: number;
   selectedCount: number;
+  currentPage: number;
+  pageCount: number;
+  pageSize: number;
+  isLoadingPage?: boolean;
+  onPageChange: (page: number) => void;
   visibleCols: ColumnDef[];
   onColsChange: (cols: ColumnDef[]) => void;
   onReorderCols?: (from: number, to: number) => void;
@@ -59,7 +64,7 @@ function shortName(full: string): string {
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
   onEdit, onView, onDelete, onRestore, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
-  sort, onSort, totalCount, visibleCount, selectedCount, visibleCols, onColsChange,
+  sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
   compactMode, lastClickedIndex, onSetLastClicked,
   onReorderCols,
 }: Props) {
@@ -153,6 +158,11 @@ export default function LeadsTable({
         totalCount={totalCount}
         visibleCount={visibleCount}
         selectedCount={selectedCount}
+        currentPage={currentPage}
+        pageCount={pageCount}
+        pageSize={pageSize}
+        isLoadingPage={isLoadingPage}
+        onPageChange={onPageChange}
         lists={lists}
         filterListId={filterListId}
         onFilterChange={onFilterChange}
@@ -199,7 +209,12 @@ export default function LeadsTable({
             )}
           </thead>
           <tbody ref={tbodyRef}>
-            {leads.length === 0 ? (
+            {isLoadingPage && leads.length === 0 ? (
+              <tr><td colSpan={headerColSpan + 1} className="px-3 py-12 text-center text-slate-400 dark:text-slate-500">
+                <div className="mx-auto mb-3 h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600"></div>
+                <p className="text-sm font-medium">Cargando leads...</p>
+              </td></tr>
+            ) : leads.length === 0 ? (
               <tr><td colSpan={headerColSpan + 1} className="px-3 py-12 text-center text-gray-400">
                 <div className="text-3xl mb-2 opacity-30 flex justify-center">{Icon.Leads()}</div>
                 <p className="text-sm font-medium">No hay leads</p>

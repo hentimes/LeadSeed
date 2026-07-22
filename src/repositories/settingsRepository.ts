@@ -7,8 +7,7 @@ export interface ProfileSettingsRow {
   compact_mode: boolean | null;
   dark_mode: boolean | null;
   visible_cols: AppSettings['visibleCols'] | null;
-  email_provider: 'emailjs' | 'resend' | null;
-  resend_api_key: string | null;
+  email_provider: 'emailjs' | 'resend' | 'gmail' | null;
   resend_from_name: string | null;
   resend_from_email: string | null;
   export_format: 'json' | 'excel' | null;
@@ -19,7 +18,7 @@ export interface ProfileSettingsRow {
 }
 
 const PROFILE_SETTINGS_SELECT =
-  'compact_mode, dark_mode, visible_cols, email_provider, resend_api_key, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period';
+  'compact_mode, dark_mode, visible_cols, email_provider, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period';
 
 export async function fetchAuthenticatedUserId(): Promise<string | undefined> {
   const session = await fetchCurrentSession();

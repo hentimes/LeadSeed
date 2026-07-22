@@ -26,7 +26,24 @@ const TEMPLATE_SELECT =
 export async function fetchTemplateRowsByType(type: TemplateType): Promise<TemplateRow[]> {
   const { data, error } = await supabase.from('templates').select(TEMPLATE_SELECT).eq('type', type).order('name');
   if (error || !data) {
+    if (error) {
+      console.error('fetchTemplateRowsByType failed', error);
+    }
     return [];
+  }
+
+  return data as TemplateRow[];
+}
+
+export async function fetchTemplateRowsByUserId(userId: string): Promise<TemplateRow[]> {
+  const { data, error } = await supabase
+    .from('templates')
+    .select(TEMPLATE_SELECT)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    throw error || new Error('No se pudieron cargar las plantillas del usuario');
   }
 
   return data as TemplateRow[];
@@ -41,6 +58,9 @@ export async function fetchTemplateRowsByList(type: TemplateType, listId: number
     .order('name');
 
   if (error || !data) {
+    if (error) {
+      console.error('fetchTemplateRowsByList failed', error);
+    }
     return [];
   }
 
@@ -71,6 +91,10 @@ export async function deleteTemplateRow(id: string | number): Promise<void> {
 }
 
 export async function fetchLeadAssignmentRows(userId: string): Promise<Array<Pick<Lead, 'id'> & AssignedLeadRow>> {
-  const { data } = await supabase.from('leads').select('id, lista_ids').eq('user_id', userId);
+  const { data, error } = await supabase.from('leads').select('id, lista_ids').eq('user_id', userId);
+  if (error) {
+    console.error('fetchLeadAssignmentRows failed', error);
+    return [];
+  }
   return (data ?? []) as Array<Pick<Lead, 'id'> & AssignedLeadRow>;
 }

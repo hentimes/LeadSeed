@@ -1,23 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSaaS } from '../../hooks/useSaaS';
-import type { Profile, Plan, UserFeatureOverride, Feature } from '../../types';
+import type { Profile, Plan, PlanFeature, UserFeatureOverride, Feature, Lead } from '../../types';
 import { Icon } from '../../utils/icons';
 import { usePresence } from '../../hooks/usePresence';
-import { bulkSetUsersAsHelper, loadUnreadCountsForAdmin, subscribeAdminUsersRealtime } from '../../services/adminService';
+import { bulkSetUsersAsHelper, loadAdminLeadAlerts, loadUnreadCountsForAdmin, markAdminUserBaseSeen, subscribeAdminUsersRealtime } from '../../services/adminService';
+import type { AdminLeadEventRow } from '../../repositories/adminRepository';
 
 import AdminUserLicenses from '../../components/admin/AdminUserLicenses';
 import AdminUserTelemetry from '../../components/admin/AdminUserTelemetry';
 import AdminUserInventory from '../../components/admin/AdminUserInventory';
 import AdminUserBase from '../../components/admin/AdminUserBase';
+import AdminUserAgenda from '../../components/admin/AdminUserAgenda';
 import AdminUserHeatmap from '../../components/admin/AdminUserHeatmap';
 import AdminSupportChat from '../../components/admin/AdminSupportChat';
 import AdminUserHelperStats from '../../components/admin/AdminUserHelperStats';
 import { useAuth } from '../../contexts/AuthContext';
 
-type AdminTab = 'licencias' | 'telemetria' | 'inventario' | 'base' | 'heatmap' | 'soporte' | 'helper';
+type AdminTab = 'licencias' | 'telemetria' | 'inventario' | 'base' | 'agenda' | 'heatmap' | 'soporte' | 'helper';
 
 export default function AdminUsersPage() {
-  const { getProfiles, getPlans, getFeatures, getUserOverrides, assignFeatureToUser, removeFeatureFromUser, updateProfile } = useSaaS();
+  const { getProfiles, getPlans, getFeatures, getPlanFeatures, getUserOverrides, assignFeatureToUser, removeFeatureFromUser, updateProfile } = useSaaS();
   const { onlineUsers } = usePresence();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -25,6 +27,7 @@ export default function AdminUsersPage() {
   
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedPlanFeatures, setSelectedPlanFeatures] = useState<PlanFeature[]>([]);
   const [userOverrides, setUserOverrides] = useState<UserFeatureOverride[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -32,11 +35,29 @@ export default function AdminUsersPage() {
   
   const [activeTab, setActiveTab] = useState<AdminTab>(isAdmin ? 'licencias' : 'soporte');
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [leadAlertCounts, setLeadAlertCounts] = useState<Record<string, number>>({});
+  const [liveObservedLead, setLiveObservedLead] = useState<Lead | null>(null);
+  const [adminBaseRefreshKey, setAdminBaseRefreshKey] = useState(0);
+  const activeTabRef = useRef<AdminTab>(activeTab);
+  const selectedUserIdRef = useRef<string | null>(selectedUser?.id ?? null);
 
   const loadUnreadCounts = async () => {
     if (!session) return;
     setUnreadCounts(await loadUnreadCountsForAdmin(session.user.id));
   };
+
+  const loadLeadAlerts = async () => {
+    if (!isAdmin) return;
+    setLeadAlertCounts(await loadAdminLeadAlerts());
+  };
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    selectedUserIdRef.current = selectedUser?.id ?? null;
+  }, [selectedUser]);
 
   const loadData = async () => {
     setLoading(true);
@@ -48,10 +69,16 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
+    if (!session) {
+      return;
+    }
+
     void loadData();
     void loadUnreadCounts();
+    void loadLeadAlerts();
 
     return subscribeAdminUsersRealtime(
+      session.user.id,
       (payload) => {
         if (payload.eventType === 'INSERT') {
           setProfiles((prev) => [payload.new as Profile, ...prev]);
@@ -61,9 +88,51 @@ export default function AdminUsersPage() {
       },
       () => {
         void loadUnreadCounts();
+      },
+      (payload) => {
+        const leadEvent = payload.new as AdminLeadEventRow;
+        const observedUserId = leadEvent.observed_user_id;
+        const isObservedBaseOpen = activeTabRef.current === 'base' && selectedUserIdRef.current === observedUserId;
+
+        if (!observedUserId) {
+          void loadLeadAlerts();
+          return;
+        }
+
+        setLeadAlertCounts((current) => {
+          if (isObservedBaseOpen) {
+            return { ...current, [observedUserId]: 0 };
+          }
+          return { ...current, [observedUserId]: (current[observedUserId] || 0) + 1 };
+        });
+
+        if (isObservedBaseOpen) {
+          setLiveObservedLead({
+            id: leadEvent.lead_id,
+            name: 'Nuevo lead',
+            phone: '',
+            email: '',
+            company: '',
+            rut: '',
+            status: 'nuevo',
+            score: 0,
+            listaIds: [],
+            notes: '',
+            metadata: {},
+            crossExecAlerts: [],
+            hasUnreadCrossExecAlert: false,
+            createdAt: leadEvent.created_at,
+            updatedAt: leadEvent.created_at,
+          });
+          setAdminBaseRefreshKey((current) => current + 1);
+          void markAdminUserBaseSeen(observedUserId).catch(() => undefined);
+          return;
+        }
+
+        void loadLeadAlerts();
       }
     );
-  }, []);
+  }, [isAdmin, session]);
 
   useEffect(() => {
     if (activeTab === 'soporte' && selectedUser) {
@@ -74,10 +143,40 @@ export default function AdminUsersPage() {
 
   const handleSelectUser = async (user: Profile) => {
     setSelectedUser(user);
-    setActiveTab('licencias'); // Reset tab on user change
-    const overrides = await getUserOverrides(user.id);
+    setActiveTab(isAdmin ? 'base' : 'soporte');
+    const [overrides, planFeatures] = await Promise.all([
+      getUserOverrides(user.id),
+      user.plan_id ? getPlanFeatures(user.plan_id) : Promise.resolve([]),
+    ]);
     setUserOverrides(overrides);
+    setSelectedPlanFeatures(planFeatures);
   };
+
+  useEffect(() => {
+    if (!isAdmin || activeTab !== 'base' || !selectedUser) return;
+    let cancelled = false;
+    const observedUserId = selectedUser.id;
+
+    async function syncSeenState(): Promise<void> {
+      try {
+        await markAdminUserBaseSeen(observedUserId);
+        if (!cancelled) {
+          setLeadAlertCounts((current) => ({ ...current, [observedUserId]: 0 }));
+        }
+      } catch (_error) {
+        // noop: si falla la marca de visto no se bloquea la vista
+      }
+    }
+
+    void syncSeenState();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isAdmin, selectedUser]);
+
+  useEffect(() => {
+    setLiveObservedLead(null);
+  }, [selectedUser?.id, activeTab]);
 
   const handleToggleUserSelection = (e: React.MouseEvent | React.ChangeEvent<HTMLInputElement>, userId: string) => {
     e.stopPropagation();
@@ -118,6 +217,8 @@ export default function AdminUsersPage() {
     await updateProfile(selectedUser.id, { plan_id: planId });
     setProfiles(profiles.map(p => p.id === selectedUser.id ? { ...p, plan_id: planId } : p));
     setSelectedUser({ ...selectedUser, plan_id: planId });
+    const planFeatures = planId ? await getPlanFeatures(planId) : [];
+    setSelectedPlanFeatures(planFeatures);
   };
 
   const handleAssignFeature = async (featureId: string, days?: number) => {
@@ -223,6 +324,11 @@ export default function AdminUsersPage() {
                       <div className="flex flex-col justify-center min-w-0 pr-2">
                         <div className="flex items-center">
                           <p className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">{p.full_name || p.email.split('@')[0]}</p>
+                          {leadAlertCounts[p.id] > 0 && (
+                            <span className="bg-amber-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full shadow-sm ml-1 shrink-0">
+                              {leadAlertCounts[p.id]}
+                            </span>
+                          )}
                           {unreadCounts[p.id] > 0 && (
                             <span className="bg-purple-600 text-white text-[9px] font-bold px-1 py-0.5 rounded-full shadow-sm animate-pulse ml-1 shrink-0">
                               {unreadCounts[p.id]}
@@ -283,7 +389,15 @@ export default function AdminUsersPage() {
                 <button onClick={() => setActiveTab('telemetria')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'telemetria' ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>Actividad</button>
                 <button onClick={() => setActiveTab('heatmap')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'heatmap' ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>Heatmap</button>
                 <button onClick={() => setActiveTab('inventario')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'inventario' ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>Inventario</button>
-                <button onClick={() => setActiveTab('base')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'base' ? 'bg-red-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>Base</button>
+                <button onClick={() => setActiveTab('base')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'base' ? 'bg-red-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>
+                  Base
+                  {(leadAlertCounts[selectedUser.id] || 0) > 0 && activeTab !== 'base' && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                      {leadAlertCounts[selectedUser.id]}
+                    </span>
+                  )}
+                </button>
+                <button onClick={() => setActiveTab('agenda')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'agenda' ? 'bg-red-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>Agenda</button>
               </>
             )}
             <button onClick={() => setActiveTab('soporte')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'soporte' ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>
@@ -303,6 +417,7 @@ export default function AdminUsersPage() {
                 selectedUser={selectedUser} 
                 plans={plans} 
                 features={features} 
+                planFeatures={selectedPlanFeatures}
                 userOverrides={userOverrides} 
                 onUpdatePlan={handleUpdatePlan} 
                 onAssignFeature={handleAssignFeature} 
@@ -312,7 +427,16 @@ export default function AdminUsersPage() {
             {activeTab === 'telemetria' && isAdmin && <AdminUserTelemetry selectedUser={selectedUser} />}
             {activeTab === 'heatmap' && isAdmin && <AdminUserHeatmap selectedUser={selectedUser} />}
             {activeTab === 'inventario' && isAdmin && <AdminUserInventory selectedUser={selectedUser} />}
-            {activeTab === 'base' && isAdmin && <AdminUserBase selectedUser={selectedUser} profiles={profiles} />}
+            {activeTab === 'base' && isAdmin && (
+              <AdminUserBase
+                selectedUser={selectedUser}
+                profiles={profiles}
+                newLeadCount={leadAlertCounts[selectedUser.id] || 0}
+                liveInsertedLead={liveObservedLead}
+                realtimeRefreshKey={adminBaseRefreshKey}
+              />
+            )}
+            {activeTab === 'agenda' && isAdmin && <AdminUserAgenda selectedUser={selectedUser} />}
             {activeTab === 'soporte' && <AdminSupportChat selectedUser={selectedUser} />}
             {activeTab === 'helper' && (selectedUser.is_helper || selectedUser.role === 'admin') && <AdminUserHelperStats selectedUser={selectedUser} />}
           </div>

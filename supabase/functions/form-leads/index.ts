@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4'
+import { resolveUserEmailChannel } from '../_shared/emailChannels.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -21,6 +22,29 @@ type UploadedAttachment = {
   tempPath: string
   contentType: string
   size: number
+}
+
+type NotificationEmailConfig = {
+  apiKey: string
+  fromEmail: string
+  fromName: string
+}
+
+type AppointmentNotificationContext = {
+  appointmentId: string
+  ownerUserId: string
+  appointmentAt: string
+  timezone: string
+  meetLink: string
+  googleSyncStatus: string
+  sourceChannel: string
+  captureRef: string
+  captureCampaign: string
+  leadName: string
+  leadEmail: string
+  leadPhone: string
+  ownerEmail: string
+  ownerName: string
 }
 
 function corsHeaders(origin: string | null) {
@@ -58,6 +82,27 @@ function getSafeExtension(name: string) {
 
 function sanitizeIdentifierSegment(value: string) {
   return String(value || '').replace(/[^0-9kK]/g, '').toUpperCase().trim()
+}
+
+function escapeHtml(value: string) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function formatAppointmentLabel(isoString: string, timezone: string) {
+  try {
+    return new Intl.DateTimeFormat('es-CL', {
+      dateStyle: 'full',
+      timeStyle: 'short',
+      timeZone: timezone || 'America/Santiago',
+    }).format(new Date(isoString))
+  } catch {
+    return isoString
+  }
 }
 
 function buildFinalAttachmentFilename(payload: LeadPayload, originalName: string, leadId: string, createdAt: string) {
@@ -115,6 +160,28 @@ function normalizeSourceChannel(value: string) {
   return ''
 }
 
+function normalizeCaptureRef(value: string) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  return normalized.slice(0, 64)
+}
+
+function resolveCaptureRefFromCandidates(...candidates: string[]) {
+  const normalized = candidates.map((value) => normalizeCaptureRef(value)).filter(Boolean)
+  if (!normalized.length) return ''
+
+  let best = normalized[0]
+  for (const candidate of normalized.slice(1)) {
+    if (candidate.startsWith(best) && candidate.length > best.length) {
+      best = candidate
+      continue
+    }
+    if (!best.startsWith(candidate) && candidate.length > best.length) {
+      best = candidate
+    }
+  }
+  return best
+}
+
 function inferSourceContext(payload: LeadPayload, request: Request) {
   const referer = request.headers.get('referer') || ''
   const origin = request.headers.get('origin') || ''
@@ -128,7 +195,9 @@ function inferSourceContext(payload: LeadPayload, request: Request) {
   }
 
   const explicitChannel = normalizeSourceChannel(firstString(payload, 'source_channel', 'form_channel'))
-  const captureRef = firstString(payload, 'capture_ref', 'ref')
+  const payloadCaptureRef = firstString(payload, 'capture_ref', 'ref')
+  const queryCaptureRef = parsedUrl?.searchParams.get('ref') || ''
+  const captureRef = resolveCaptureRefFromCandidates(payloadCaptureRef, queryCaptureRef)
   const pathFromPayload = firstString(payload, 'source_path', 'page_path', 'pathname')
   const sourcePath = pathFromPayload || parsedUrl?.pathname || ''
   const sourceHostname = firstString(payload, 'source_hostname', 'hostname', 'host') || parsedUrl?.hostname || ''
@@ -140,6 +209,8 @@ function inferSourceContext(payload: LeadPayload, request: Request) {
     'general'
 
   return {
+    capture_ref: captureRef || '',
+    first_touch_ref: resolveCaptureRefFromCandidates(firstString(payload, 'first_touch_ref'), captureRef) || '',
     source_channel: inferredChannel,
     source_form_variant: firstString(payload, 'source_form_variant', 'form_variant') || inferredChannel,
     source_hostname: sourceHostname || (origin ? new URL(origin).hostname : ''),
@@ -174,6 +245,183 @@ function extractAppointmentId(data: unknown) {
   if (!data || typeof data !== 'object') return ''
   const appointmentId = (data as Record<string, unknown>).appointment_id
   return typeof appointmentId === 'string' ? appointmentId.trim() : ''
+}
+
+async function resolveNotificationEmailConfig(userId: string): Promise<NotificationEmailConfig | null> {
+  const channel = await resolveUserEmailChannel(supabase, userId, {
+    requestedProvider: 'resend',
+    allowSystemFallback: true,
+  })
+
+  if (!channel) return null
+  if (channel.provider !== 'resend' || channel.credentials.provider !== 'resend') return null
+
+  return {
+    apiKey: channel.credentials.apiKey,
+    fromEmail: channel.fromEmail,
+    fromName: channel.fromName,
+  }
+}
+
+async function sendResendEmail(
+  config: NotificationEmailConfig,
+  to: string,
+  subject: string,
+  html: string,
+  text: string,
+) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: `${config.fromName} <${config.fromEmail}>`,
+      to: [to],
+      subject,
+      html,
+      text,
+    }),
+  })
+
+  const payload = await response.json().catch(() => ({})) as Record<string, unknown>
+
+  if (!response.ok) {
+    throw new Error(typeof payload.message === 'string' ? payload.message : 'Resend email send failed')
+  }
+}
+
+async function fetchAppointmentNotificationContext(appointmentId: string): Promise<AppointmentNotificationContext | null> {
+  if (!appointmentId) return null
+
+  const { data: appointment, error: appointmentError } = await supabase
+    .from('appointments')
+    .select('id, user_id, lead_id, start_time, timezone, meet_link, google_sync_status, source_channel, capture_ref, metadata')
+    .eq('id', appointmentId)
+    .maybeSingle()
+
+  if (appointmentError) throw appointmentError
+  if (!appointment?.user_id || !appointment?.lead_id) return null
+
+  const [{ data: lead, error: leadError }, { data: ownerProfile, error: ownerError }] = await Promise.all([
+    supabase
+      .from('leads')
+      .select('name, email, phone')
+      .eq('id', appointment.lead_id)
+      .maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', appointment.user_id)
+      .maybeSingle(),
+  ])
+
+  if (leadError) throw leadError
+  if (ownerError) throw ownerError
+
+  const metadata =
+    appointment.metadata && typeof appointment.metadata === 'object' && !Array.isArray(appointment.metadata)
+      ? appointment.metadata as Record<string, unknown>
+      : {}
+
+  return {
+    appointmentId: String(appointment.id || ''),
+    ownerUserId: String(appointment.user_id || ''),
+    appointmentAt: String(appointment.start_time || ''),
+    timezone: String(appointment.timezone || 'America/Santiago'),
+    meetLink: String(appointment.meet_link || ''),
+    googleSyncStatus: String(appointment.google_sync_status || ''),
+    sourceChannel: String(appointment.source_channel || ''),
+    captureRef: String(appointment.capture_ref || ''),
+    captureCampaign: String(metadata.capture_campaign || ''),
+    leadName: String(lead?.name || '').trim(),
+    leadEmail: String(lead?.email || '').trim(),
+    leadPhone: String(lead?.phone || '').trim(),
+    ownerEmail: String(ownerProfile?.email || '').trim(),
+    ownerName: String(ownerProfile?.full_name || ownerProfile?.email || '').trim(),
+  }
+}
+
+async function sendAppointmentNotifications(appointmentId: string) {
+  const context = await fetchAppointmentNotificationContext(appointmentId)
+  if (!context) {
+    return { status: 'skipped', reason: 'missing_appointment_context' }
+  }
+
+  const config = await resolveNotificationEmailConfig(context.ownerUserId)
+  if (!config) {
+    return { status: 'skipped', reason: 'missing_resend_configuration' }
+  }
+
+  const whenLabel = formatAppointmentLabel(context.appointmentAt, context.timezone)
+  const meetLine = context.meetLink
+    ? `Enlace Meet: ${context.meetLink}`
+    : context.googleSyncStatus === 'synced'
+      ? 'La cita quedo registrada en Google Calendar.'
+      : 'La cita quedo registrada y el enlace Meet sera confirmado por el equipo.'
+
+  const clientResults: string[] = []
+
+  if (context.leadEmail) {
+    const clientSubject = `Confirmacion de cita PlanesPro - ${whenLabel}`
+    const clientHtml = `
+      <div style="font-family:Arial,sans-serif;color:#0f172a;line-height:1.6">
+        <h2 style="margin:0 0 12px">Tu cita fue agendada</h2>
+        <p>Hola ${escapeHtml(context.leadName || 'cliente')},</p>
+        <p>Tu solicitud en PlanesPro quedo registrada para <strong>${escapeHtml(whenLabel)}</strong>.</p>
+        <p>Asesor asignado: <strong>${escapeHtml(context.ownerName || 'PlanesPro')}</strong>.</p>
+        <p>${escapeHtml(meetLine)}</p>
+        <p>Si necesitas reagendar, responde este correo.</p>
+      </div>
+    `
+    const clientText = [
+      'Tu cita fue agendada.',
+      `Fecha: ${whenLabel}`,
+      `Asesor: ${context.ownerName || 'PlanesPro'}`,
+      meetLine,
+      'Si necesitas reagendar, responde este correo.',
+    ].join('\n')
+
+    await sendResendEmail(config, context.leadEmail, clientSubject, clientHtml, clientText)
+    clientResults.push('client_sent')
+  }
+
+  if (context.ownerEmail) {
+    const ownerSubject = `Nueva cita agendada - ${context.leadName || 'Lead'}`
+    const ownerHtml = `
+      <div style="font-family:Arial,sans-serif;color:#0f172a;line-height:1.6">
+        <h2 style="margin:0 0 12px">Nueva cita agendada</h2>
+        <p>Lead: <strong>${escapeHtml(context.leadName || 'Sin nombre')}</strong></p>
+        <p>Fecha: <strong>${escapeHtml(whenLabel)}</strong></p>
+        <p>Canal: <strong>${escapeHtml(context.sourceChannel || 'general')}</strong></p>
+        <p>Telefono: ${escapeHtml(context.leadPhone || '-')}</p>
+        <p>Email: ${escapeHtml(context.leadEmail || '-')}</p>
+        <p>Capture ref: ${escapeHtml(context.captureRef || '-')}</p>
+        <p>Campana: ${escapeHtml(context.captureCampaign || '-')}</p>
+        <p>${escapeHtml(meetLine)}</p>
+      </div>
+    `
+    const ownerText = [
+      'Nueva cita agendada.',
+      `Lead: ${context.leadName || 'Sin nombre'}`,
+      `Fecha: ${whenLabel}`,
+      `Canal: ${context.sourceChannel || 'general'}`,
+      `Telefono: ${context.leadPhone || '-'}`,
+      `Email: ${context.leadEmail || '-'}`,
+      `Capture ref: ${context.captureRef || '-'}`,
+      `Campana: ${context.captureCampaign || '-'}`,
+      meetLine,
+    ].join('\n')
+
+    await sendResendEmail(config, context.ownerEmail, ownerSubject, ownerHtml, ownerText)
+    clientResults.push('owner_sent')
+  }
+
+  return {
+    status: clientResults.length ? 'sent' : 'skipped',
+    deliveries: clientResults,
+  }
 }
 
 async function createGoogleCalendarEventForAppointment(appointmentId: string) {
@@ -307,6 +555,10 @@ Deno.serve(async (request) => {
     const googleCalendarResult = await createGoogleCalendarEventForAppointment(appointmentId)
     if (data && typeof data === 'object' && appointmentId) {
       ;(data as Record<string, unknown>).google_calendar = googleCalendarResult
+      ;(data as Record<string, unknown>).appointment_notifications = await sendAppointmentNotifications(appointmentId).catch((notificationError) => ({
+        status: 'error',
+        error: notificationError instanceof Error ? notificationError.message : 'notification_failed',
+      }))
     }
 
     return new Response(JSON.stringify(data), {

@@ -13,7 +13,11 @@ import {
   syncMyGoogleCalendarAttendees,
   unsubscribeFromMyAgendaChanges,
 } from '../services/agendaService';
-import { getAppointmentSuccessMessage, getGoogleSyncPendingSummary } from '../utils/appointmentStatusCopy';
+import {
+  getAppointmentSuccessMessage,
+  getGoogleSyncBadgeLabel,
+  getGoogleSyncPendingSummary,
+} from '../utils/appointmentStatusCopy';
 import { Icon } from '../utils/icons';
 
 interface AgendaPageProps {
@@ -276,7 +280,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
     try {
       const result = await rescheduleMyAppointment(appointment.id, startsAt);
       await loadAgenda(true);
-      setMessage(getAppointmentSuccessMessage('reschedule', result.googleSyncStatus === 'error'));
+      setMessage(getAppointmentSuccessMessage('reschedule', result.googleSyncStatus));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo reprogramar la cita');
       await loadAgenda(true);
@@ -294,7 +298,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
     try {
       const result = await cancelMyAppointment(appointment.id, 'Cancelada desde MENSAJES');
       await loadAgenda(true);
-      setMessage(getAppointmentSuccessMessage('cancel', result.googleSyncStatus === 'error'));
+      setMessage(getAppointmentSuccessMessage('cancel', result.googleSyncStatus));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cancelar la cita');
       await loadAgenda(true);
@@ -402,6 +406,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
             const participantsOpen = expandedParticipants[appointment.id] === true;
             const historyOpen = expandedHistory[appointment.id] === true;
             const isFocusedAppointment = focusedAppointmentId === appointment.id;
+            const googleSyncBadgeLabel = getGoogleSyncBadgeLabel(appointment);
             const googlePendingSummary = getGoogleSyncPendingSummary(appointment);
 
             return (
@@ -429,19 +434,19 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                 </div>
                 <p className="text-[11px] text-slate-400">{formatDateTime(appointment.startsAt)} - {appointment.sourceChannel}</p>
 
-                {(notice || appointment.meetLink || appointment.googleSyncStatus === 'error') && (
+                {(notice || appointment.meetLink || googleSyncBadgeLabel) && (
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     {notice && (
                       <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
                         {notice}
                       </span>
                     )}
-                    {appointment.googleSyncStatus === 'error' && (
+                    {googleSyncBadgeLabel && (
                       <span
                         className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded"
                         title={appointment.googleSyncError || googlePendingSummary}
                       >
-                        Google pendiente
+                        {googleSyncBadgeLabel}
                       </span>
                     )}
                     {appointment.meetLink && (
@@ -521,7 +526,10 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                               className="inline-flex items-center gap-1 text-[10px] border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300"
                               title={participant.googleSyncError || participant.invitationStatus}
                             >
-                              {participant.name || participant.email}
+                              <span>{participant.name || participant.email}</span>
+                              <span className="text-[9px] uppercase tracking-wide text-slate-400">
+                                {participant.invitationStatus}
+                              </span>
                               <button
                                 type="button"
                                 onClick={() => void handleDeleteParticipant(appointment.id, participant.id)}

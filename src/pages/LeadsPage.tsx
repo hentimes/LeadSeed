@@ -8,21 +8,16 @@ import LeadForm from '../components/leads/LeadForm';
 import LeadDetail from '../components/leads/LeadDetail';
 import ImportModal from '../components/leads/ImportModal';
 import BulkActionBar from '../components/leads/BulkActionBar';
-import { useSort } from '../hooks/useSort';
 import type { ColumnDef } from '../components/ColumnSelector';
 import type { ParsedRow } from '../utils/importParser';
 import { exportToJSON, exportToExcel } from '../utils/exportData';
 import { getSettings } from '../db/database';
 import { Icon } from '../utils/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchSentLeadIdsSetForUser } from '../services/historyService';
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
+import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 
 const ACTIVE_APPOINTMENT_STATUSES = new Set(['pendiente', 'agendada', 'confirmada', 'tentativa']);
-
-function extractRut(lead: Lead): string {
-  return lead.rut || '';
-}
 
 function getLeadAppointmentMetadata(lead: Lead): { appointmentId: string; appointmentStatus: string } {
   const metadata = (lead.metadata || {}) as Record<string, unknown>;
@@ -39,13 +34,19 @@ interface LeadsPageProps {
 }
 
 export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNavigate }: LeadsPageProps) {
-  const { getAll, getDeleted, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey } = useLeads();
+  const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey } = useLeads();
   const { getAll: getLists } = useLists();
   const { hasFeature, user } = useAuth();
+  const pageSize = 50;
 
   const [filterMode, setFilterMode] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [lists, setLists] = useState<LeadList[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingPage, setIsLoadingPage] = useState(true);
+  const [leadIdentities, setLeadIdentities] = useState<Array<{ id: string; rut: string; phone: string }>>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [editing, setEditing] = useState<Lead | null>(null);
@@ -56,8 +57,9 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   const [newLeadToast, setNewLeadToast] = useState<{ id: string; name: string } | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
+  const [sort, setSort] = useState<{ field: LeadSortField; dir: 'asc' | 'desc' }>({ field: 'createdAt', dir: 'desc' });
 
-  const { filtered, filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters(leads);
+  const { filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters();
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -79,19 +81,19 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
 
   const existingRuts = useMemo(() => {
     const ruts = new Set<string>();
-    for (const lead of leads) {
+    for (const lead of leadIdentities) {
       if (lead.rut) ruts.add(lead.rut);
     }
     return ruts;
-  }, [leads]);
+  }, [leadIdentities]);
 
   const existingPhones = useMemo(() => {
     const phones = new Set<string>();
-    for (const lead of leads) {
+    for (const lead of leadIdentities) {
       if (lead.phone) phones.add(lead.phone.replace(/[^+\d]/g, ''));
     }
     return phones;
-  }, [leads]);
+  }, [leadIdentities]);
 
   const resolveActiveAppointmentId = useCallback(async (lead: Lead): Promise<string> => {
     const { appointmentId, appointmentStatus } = getLeadAppointmentMetadata(lead);
@@ -129,16 +131,54 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
     }
   }, []);
 
-  const loadLeads = async () => {
-    let data = showTrash ? await getDeleted() : await getAll();
+  const loadLeadIdentities = useCallback(async () => {
+    if (!user || showTrash || (!showForm && !showImport)) {
+      setLeadIdentities([]);
+      return;
+    }
+    setLeadIdentities(await getIdentities());
+  }, [getIdentities, showForm, showImport, showTrash, user]);
 
-    if (!showTrash && filterMode === 'olvidados' && user?.id) {
-      const logLeadIds = await fetchSentLeadIdsSetForUser(user.id);
-      data = data.filter((lead) => {
-        const daysSince = Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 3600 * 24));
-        if (daysSince <= 7) return false;
-        return !lead.id || !logLeadIds.has(lead.id);
-      });
+  const loadLeads = useCallback(async () => {
+    const pageQuery: LeadPageQuery = {
+      page: currentPage,
+      pageSize,
+      search,
+      listId: filterListId,
+      status: filterStatus,
+      dateFilter: filterDate,
+      sortField: sort.field,
+      sortDirection: sort.dir,
+      deleted: showTrash,
+    };
+
+    let data: Lead[] = [];
+    let nextFilteredCount = 0;
+    let nextTotalCount = 0;
+
+    setIsLoadingPage(true);
+
+    if (showTrash) {
+      const pageData = await getPage(pageQuery);
+      data = pageData.items;
+      nextFilteredCount = pageData.filteredCount;
+      nextTotalCount = pageData.totalCount;
+    } else if (filterMode === 'olvidados' && user?.id) {
+      const pageData = await getForgottenPage(pageQuery);
+      data = pageData.items;
+      nextFilteredCount = pageData.filteredCount;
+      nextTotalCount = pageData.totalCount;
+    } else {
+      const pageData = await getPage(pageQuery);
+      data = pageData.items;
+      nextFilteredCount = pageData.filteredCount;
+      nextTotalCount = pageData.totalCount;
+    }
+
+    if (currentPage > 1 && data.length === 0 && nextFilteredCount > 0) {
+      setCurrentPage((prev) => Math.max(1, prev - 1));
+      setIsLoadingPage(false);
+      return;
     }
 
     const leadHashMatch = window.location.hash.match(/[?&]lead=([^&]+)/);
@@ -148,9 +188,17 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
       if (leadFromHash) {
         setViewing(leadFromHash);
         window.location.hash = '#leads';
+      } else {
+        const fetchedLead = await getById(leadIdFromHash);
+        if (fetchedLead) {
+          setViewing(fetchedLead);
+          window.location.hash = '#leads';
+        }
       }
     }
 
+    setFilteredCount(nextFilteredCount);
+    setTotalCount(nextTotalCount);
     setLeads((prev) => {
       if (!showTrash && prev.length > 0) {
         const previousIds = new Set(prev.map((lead) => lead.id));
@@ -167,22 +215,48 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
 
       return data;
     });
-  };
+    setIsLoadingPage(false);
+  }, [
+    currentPage,
+    filterDate,
+    filterListId,
+    filterMode,
+    filterStatus,
+    getAll,
+    getById,
+    getForgottenPage,
+    getPage,
+    search,
+    showTrash,
+    sort.dir,
+    sort.field,
+    user?.id,
+  ]);
 
-  const loadLists = async () => {
+  const loadLists = useCallback(async () => {
     setLists(await getLists());
-  };
+  }, [getLists]);
 
   useEffect(() => {
     void loadLeads();
     void loadLists();
-  }, [refreshKey, showTrash, filterMode, user?.id]);
+  }, [loadLeads, loadLists, refreshKey]);
 
-  const { sort, toggle: onSort, sorted } = useSort(filtered, {
-    createdAt: (lead) => lead.crossExecPriorityAt || lead.createdAt,
-    name: (lead) => lead.name.toLowerCase(),
-    rut: extractRut,
-  });
+  useEffect(() => {
+    void loadLeadIdentities();
+  }, [loadLeadIdentities]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedIds(new Set());
+  }, [filterDate, filterListId, filterMode, filterStatus, search, showTrash, sort.field, sort.dir]);
+
+  const onSort = useCallback((field: LeadSortField) => {
+    setSort((prev) => ({
+      field,
+      dir: prev.field === field && prev.dir === 'desc' ? 'asc' : 'desc',
+    }));
+  }, []);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -195,15 +269,15 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
 
   const selectAll = useCallback(() => {
     setSelectedIds((prev) => {
-      if (prev.size === sorted.length) return new Set();
-      return new Set(sorted.map((lead) => lead.id!));
+      if (prev.size === leads.length) return new Set();
+      return new Set(leads.map((lead) => lead.id!));
     });
-  }, [sorted]);
+  }, [leads]);
 
   const rangeSelect = useCallback((from: number, to: number, select: boolean) => {
     const start = Math.min(from, to);
     const end = Math.max(from, to);
-    const idsInRange = sorted.slice(start, end + 1).map((lead) => lead.id!);
+    const idsInRange = leads.slice(start, end + 1).map((lead) => lead.id!);
     setSelectedIds((prev) => {
       const next = new Set(prev);
       for (const id of idsInRange) {
@@ -212,7 +286,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
       }
       return next;
     });
-  }, [sorted]);
+  }, [leads]);
 
   const handleSave = async (lead: Lead) => {
     const dupRut = lead.rut && existingRuts.has(lead.rut);
@@ -335,14 +409,12 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
     setSelectedIds(new Set());
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     let data: Lead[];
     if (selectedIds.size > 0) {
       data = leads.filter((lead) => selectedIds.has(lead.id!));
-    } else if (filterListId !== null || filterStatus !== null || filterDate || search.trim()) {
-      data = sorted;
     } else {
-      data = leads;
+      data = showTrash ? await getDeleted() : await getAll();
     }
 
     if (exportFormat === 'excel') exportToExcel(data);
@@ -350,7 +422,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   };
 
   const handleImport = async (rows: ParsedRow[]) => {
-    if (!hasFeature('pro:unlimited_leads') && leads.length + rows.length > 100) {
+    if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
       alert('Has superado el limite de 100 prospectos del plan Free. Actualiza tu plan para poder importar mas leads.');
       return;
     }
@@ -360,7 +432,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   };
 
   const handleNewLeadClick = () => {
-    if (!hasFeature('pro:unlimited_leads') && leads.length >= 100) {
+    if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
       alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
       return;
     }
@@ -406,7 +478,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
         showTrash={showTrash}
         exportFormat={exportFormat}
         lists={lists}
-        onExport={handleExport}
+        onExport={() => { void handleExport(); }}
         onRestore={handleBulkRestore}
         onDelete={handleBulkDelete}
         onStatusChange={handleBulkStatusChange}
@@ -416,7 +488,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
 
       <LeadsTable
         filterMode={filterMode}
-        leads={sorted}
+        leads={leads}
         lists={lists}
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}
@@ -437,9 +509,14 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
         onSearchChange={setSearch}
         sort={sort}
         onSort={onSort}
-        totalCount={leads.length}
-        visibleCount={sorted.length}
+        totalCount={totalCount}
+        visibleCount={filteredCount}
         selectedCount={selectedIds.size}
+        currentPage={currentPage}
+        pageCount={Math.max(1, Math.ceil(filteredCount / pageSize))}
+        pageSize={pageSize}
+        isLoadingPage={isLoadingPage}
+        onPageChange={(page) => setCurrentPage(Math.max(1, page))}
         visibleCols={visibleCols}
         onColsChange={onColsChange || (() => {})}
         onReorderCols={(from, to) => {

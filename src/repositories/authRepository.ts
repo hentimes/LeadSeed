@@ -1,12 +1,22 @@
 import { type Session, type Subscription } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
-export async function startGoogleOAuthFlow(redirectTo: string, skipBrowserRedirect: boolean): Promise<string | null> {
+const DEFAULT_GOOGLE_SCOPES = 'https://www.googleapis.com/auth/calendar';
+
+export interface GoogleOAuthFlowOptions {
+  scopes?: string;
+}
+
+export async function startGoogleOAuthFlow(
+  redirectTo: string,
+  skipBrowserRedirect: boolean,
+  options: GoogleOAuthFlowOptions = {}
+): Promise<string | null> {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo,
-      scopes: 'https://www.googleapis.com/auth/calendar',
+      scopes: options.scopes?.trim() || DEFAULT_GOOGLE_SCOPES,
       skipBrowserRedirect,
       queryParams: {
         access_type: 'offline',

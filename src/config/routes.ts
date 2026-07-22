@@ -12,12 +12,12 @@ export interface RouteDef {
 }
 
 export const primaryRoutes: RouteDef[] = [
-  { page: 'dashboard', label: 'Dashboard', icon: Icon.Dashboard, requiredFeature: 'dashboard' },
+  { page: 'dashboard', label: 'Dashboard', icon: Icon.Dashboard, requiredFeature: 'module:dashboard' },
   { page: 'leads', label: 'Leads', icon: Icon.Leads, shortcut: '1' },
   { page: 'agenda', label: 'Agenda', icon: Icon.History },
-  { page: 'pipeline', label: 'Pipeline', icon: Icon.Pipeline, requiredFeature: 'pipeline' },
+  { page: 'pipeline', label: 'Pipeline', icon: Icon.Pipeline, requiredFeature: 'module:pipeline' },
   { page: 'send', label: 'Enviar', icon: Icon.Send, shortcut: '2', requiredFeature: 'module:send' },
-  { page: 'tasks', label: 'Tareas', icon: Icon.Tasks, shortcut: '3', badge: true, requiredFeature: 'tasks' },
+  { page: 'tasks', label: 'Tareas', icon: Icon.Tasks, shortcut: '3', badge: true, requiredFeature: 'module:tasks' },
 ];
 
 export const secondaryRoutes: RouteDef[] = [

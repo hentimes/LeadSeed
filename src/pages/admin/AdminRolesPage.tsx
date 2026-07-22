@@ -28,6 +28,7 @@ export default function AdminRolesPage() {
 
   const handleSelectPlan = async (plan: Plan) => {
     setSelectedPlan(plan);
+    setPlanFeatures([]);
     const pf = await getPlanFeatures(plan.id);
     setPlanFeatures(pf);
   };
@@ -49,10 +50,10 @@ export default function AdminRolesPage() {
     
     if (isAssigned) {
       await removeFeatureFromPlan(selectedPlan.id, featureId);
-      setPlanFeatures(planFeatures.filter(pf => pf.feature_id !== featureId));
+      setPlanFeatures((current) => current.filter((pf) => pf.feature_id !== featureId));
     } else {
       await assignFeatureToPlan(selectedPlan.id, featureId);
-      setPlanFeatures([...planFeatures, { plan_id: selectedPlan.id, feature_id: featureId }]);
+      setPlanFeatures((current) => [...current, { plan_id: selectedPlan.id, feature_id: featureId }]);
     }
   };
 

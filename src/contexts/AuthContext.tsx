@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types';
 import { getCurrentSession, logoutCurrentUser, mapSessionToUser, onAuthSessionChange, persistGoogleCalendarConnectionFromSession } from '../services/authService';
 import { loadActiveFeatures, loadUserProfile } from '../services/profileService';
+import { supabase } from '../lib/supabaseClient';
 
 interface AuthContextType {
   session: Session | null;
@@ -36,62 +37,131 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeFeatures, setActiveFeatures] = useState<string[]>([]);
+  const requestVersionRef = useRef(0);
+  const sessionRef = useRef<Session | null>(null);
 
-  const loadFeatures = async () => {
-    setActiveFeatures(await loadActiveFeatures());
+  const loadFeatures = async (requestVersion: number) => {
+    const nextFeatures = await loadActiveFeatures();
+    if (requestVersionRef.current !== requestVersion) return;
+    setActiveFeatures(nextFeatures);
   };
 
   const refreshProfile = async (targetUserId = user?.id) => {
     if (!targetUserId) return;
     const nextProfile = await loadUserProfile(targetUserId);
-    if (nextProfile) {
-      setProfile(nextProfile);
+    if (requestVersionRef.current === 0) return;
+    setProfile(nextProfile);
+    if (targetUserId === user?.id) {
+      await loadFeatures(requestVersionRef.current);
     }
   };
 
   useEffect(() => {
-    getCurrentSession().then((nextSession) => {
-      console.log('AuthContext - getSession:', nextSession);
+    let cancelled = false;
+
+    const syncSession = (nextSession: Session | null) => {
+      if (cancelled) return;
+      const nextUser = mapSessionToUser(nextSession);
+      const requestVersion = requestVersionRef.current + 1;
+      requestVersionRef.current = requestVersion;
+
       setSession(nextSession);
-      setUser(mapSessionToUser(nextSession));
-      if (nextSession) {
+      sessionRef.current = nextSession;
+      setUser(nextUser);
+      setLoading(false);
+
+      if (nextSession && nextUser) {
         void persistGoogleCalendarConnectionFromSession(nextSession).catch((error) => {
           console.warn('No se pudo guardar la conexion Google Calendar:', error);
         });
-        void loadFeatures();
+        void loadFeatures(requestVersion).catch(() => {
+          if (requestVersionRef.current !== requestVersion) return;
+          setActiveFeatures([]);
+        });
+        void loadUserProfile(nextUser.id)
+          .then((nextProfile) => {
+            if (requestVersionRef.current !== requestVersion) return;
+            setProfile(nextProfile);
+          })
+          .catch(() => {
+            if (requestVersionRef.current !== requestVersion) return;
+            setProfile(null);
+          });
       } else {
         setActiveFeatures([]);
         setProfile(null);
-        setLoading(false);
       }
-    });
+    };
+
+    getCurrentSession()
+      .then(syncSession)
+      .catch(() => {
+        if (cancelled) return;
+        requestVersionRef.current += 1;
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setActiveFeatures([]);
+        setLoading(false);
+      });
 
     const subscription = onAuthSessionChange((event, nextSession) => {
-      console.log('AuthContext - onAuthStateChange event:', event, 'session:', nextSession);
-      setSession(nextSession);
-      setUser(mapSessionToUser(nextSession));
-      if (nextSession) {
-        void persistGoogleCalendarConnectionFromSession(nextSession).catch((error) => {
-          console.warn('No se pudo guardar la conexion Google Calendar:', error);
-        });
-        void loadFeatures();
-      } else {
-        setActiveFeatures([]);
-        setProfile(null);
-        setLoading(false);
-      }
+      if (event === 'INITIAL_SESSION' && sessionRef.current === nextSession) return;
+      syncSession(nextSession);
     });
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
-    if (user) {
-      refreshProfile(user.id).finally(() => setLoading(false));
-    }
-  }, [user]);
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`auth_entitlements_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+        (payload) => {
+          const nextProfile = payload.new as Profile;
+          setProfile((currentProfile) => (currentProfile ? { ...currentProfile, ...nextProfile } : nextProfile));
+          void loadFeatures(requestVersionRef.current).catch(() => undefined);
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_feature_overrides', filter: `user_id=eq.${user.id}` },
+        () => {
+          void loadFeatures(requestVersionRef.current).catch(() => undefined);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !profile?.plan_id) return;
+
+    const channel = supabase
+      .channel(`auth_plan_features_${user.id}_${profile.plan_id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'plan_features', filter: `plan_id=eq.${profile.plan_id}` },
+        () => {
+          void loadFeatures(requestVersionRef.current).catch(() => undefined);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [profile?.plan_id, user?.id]);
 
   const signOut = async () => {
     setActiveFeatures([]);

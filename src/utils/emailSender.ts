@@ -1,6 +1,7 @@
 import emailjs from '@emailjs/browser';
 import { getSettings } from '../db/database';
-import type { Lead } from '../types';
+import { supabase } from '../lib/supabaseClient';
+import type { EmailProvider, Lead } from '../types';
 import { replaceVariables } from './waHelper';
 
 export interface EmailAttachment {
@@ -8,82 +9,77 @@ export interface EmailAttachment {
   content: string;
 }
 
-async function sendEmail(
-  lead: Lead,
-  asunto: string,
-  contenido: string,
-  isHtml: boolean,
-  attachments: EmailAttachment[] = []
-): Promise<{ success: boolean; error?: string }> {
-  const settings = await getSettings();
-  const provider = settings.emailProvider || 'emailjs';
+type DeliveryPayload = {
+  to: string;
+  leadId?: string;
+  leadName?: string;
+  subject: string;
+  html?: string;
+  text?: string;
+  attachments?: EmailAttachment[];
+};
 
-  const subject = replaceVariables(asunto, lead);
-  // Limpiar backticks de markdown (```) que los usuarios a menudo copian por error desde IAs y que rompen el CSS en Gmail
-  let body = replaceVariables(contenido, lead);
-  body = body.replace(/```[a-z]*\n/gi, '').replace(/```/g, '');
+type ChannelSelection = {
+  provider?: EmailProvider;
+  channelId?: string;
+};
 
-  if (provider === 'resend') {
-    if (!settings.resendApiKey) {
-      return { success: false, error: 'Configura la API Key de Resend en Ajustes' };
-    }
+function stripMarkdownFences(value: string) {
+  return value.replace(/```[a-z]*\n/gi, '').replace(/```/g, '');
+}
 
-    try {
-      // Nota: Para producción en Resend necesitas un dominio verificado (ej: hola@tudominio.com).
-      // Por defecto Resend usa onboarding@resend.dev para pruebas (solo puedes enviarte a ti mismo).
-      const fromName = settings.resendFromName || 'Acme';
-      const fromEmail = settings.resendFromEmail || 'onboarding@resend.dev';
+function buildTextFallback(body: string) {
+  return body
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/\n\s*\n/g, '\n\n')
+    .trim();
+}
 
-      const payload: any = {
-        from: `${fromName} <${fromEmail}>`,
-        to: [lead.email],
-        subject: subject,
-      };
+async function sendBackendBatch(
+  deliveries: DeliveryPayload[],
+  channelSelection?: ChannelSelection,
+  fallbackProvider?: EmailProvider,
+) {
+  const { data, error } = await supabase.functions.invoke('send-email', {
+    body: {
+      deliveries,
+      requestedProvider: channelSelection?.provider || fallbackProvider,
+      requestedChannelId: channelSelection?.channelId,
+    },
+  });
 
-      if (attachments && attachments.length > 0) {
-        payload.attachments = attachments;
-      }
-
-      if (isHtml) {
-        const hasTags = /<[a-z][\s\S]*>/i.test(body);
-        const formattedHtml = hasTags ? body : body.replace(/\n/g, '<br/>');
-        
-        // Fallback de texto puro: remover bloques <style> y <script> enteros, luego tags, y limpiar espacios
-        const textFallback = body
-          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-          .replace(/<br\s*\/?>/gi, '\n')
-          .replace(/<[^>]*>?/gm, '')
-          .replace(/\n\s*\n/g, '\n\n')
-          .trim();
-        
-        payload.html = formattedHtml;
-        payload.text = textFallback;
-      } else {
-        payload.text = body;
-      }
-
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${settings.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        return { success: false, error: errorData.message || 'Error al enviar por Resend' };
-      }
-      return { success: true };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error desconocido en Resend';
-      return { success: false, error: msg };
-    }
+  if (error) {
+    return {
+      ok: false,
+      errors: [error.message || 'No se pudo invocar send-email'],
+      deliveries: [] as Array<{ to: string; ok: boolean; error?: string }>,
+    };
   }
 
-  // --- Fallback a EmailJS (Original) ---
+  return {
+    ok: Boolean(data?.ok),
+    errors: Array.isArray(data?.errors) ? data.errors.map(String) : [],
+    deliveries: Array.isArray(data?.deliveries)
+      ? data.deliveries.map((entry: Record<string, unknown>) => ({
+          to: String(entry.to || ''),
+          ok: Boolean(entry.ok),
+          error: typeof entry.error === 'string' ? entry.error : undefined,
+        }))
+      : [],
+  };
+}
+
+async function sendEmailJsEmail(
+  lead: Lead,
+  subject: string,
+  body: string,
+  isHtml: boolean,
+): Promise<{ success: boolean; error?: string }> {
+  const settings = await getSettings();
+
   if (!settings.emailJSUserId || !settings.emailJSServiceId || !settings.emailJSTemplateId) {
     return { success: false, error: 'Configura EmailJS en Ajustes primero' };
   }
@@ -104,9 +100,11 @@ async function sendEmail(
 
     await emailjs.send(settings.emailJSServiceId, settings.emailJSTemplateId, templateParams);
     return { success: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Error desconocido en EmailJS';
-    return { success: false, error: msg };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido en EmailJS',
+    };
   }
 }
 
@@ -115,19 +113,84 @@ export async function sendEmailToLeads(
   asunto: string,
   contenido: string,
   isHtml: boolean,
-  attachments: EmailAttachment[] = []
+  attachments: EmailAttachment[] = [],
+  channelSelection?: ChannelSelection
 ): Promise<{ total: number; sent: number; errors: string[] }> {
-  let sent = 0;
+  const settings = await getSettings();
+  const provider = settings.emailProvider || 'resend';
   const errors: string[] = [];
 
-  for (const lead of leads) {
-    const result = await sendEmail(lead, asunto, contenido, isHtml, attachments);
-    if (result.success) {
-      sent++;
-    } else {
-      errors.push(`${lead.name}: ${result.error}`);
+  const preparedLeads = leads
+    .filter((lead) => String(lead.email || '').trim())
+    .map((lead) => {
+      const subject = replaceVariables(asunto, lead);
+      const rawBody = stripMarkdownFences(replaceVariables(contenido, lead));
+      const hasTags = /<[a-z][\s\S]*>/i.test(rawBody);
+      const htmlBody = isHtml ? (hasTags ? rawBody : rawBody.replace(/\n/g, '<br/>')) : undefined;
+      const textBody = isHtml ? buildTextFallback(rawBody) : rawBody;
+      return {
+        lead,
+        delivery: {
+          to: lead.email,
+          leadId: lead.id,
+          leadName: lead.name,
+          subject,
+          html: htmlBody,
+          text: textBody,
+          attachments,
+        } satisfies DeliveryPayload,
+      };
+    });
+
+  if (provider === 'resend' || provider === 'gmail' || channelSelection?.provider === 'resend' || channelSelection?.provider === 'gmail') {
+    const result = await sendBackendBatch(preparedLeads.map((entry) => entry.delivery), channelSelection, provider);
+    const failedByRecipient = new Map<string, string>();
+    let successfulDeliveries = 0;
+
+    for (const delivery of result.deliveries) {
+      if (delivery.ok) {
+        successfulDeliveries += 1;
+      } else {
+        failedByRecipient.set(delivery.to, delivery.error || 'Error al enviar por Resend');
+      }
     }
+
+    for (const entry of preparedLeads) {
+      const failure = failedByRecipient.get(entry.delivery.to);
+      if (failure) {
+        errors.push(`${entry.lead.name}: ${failure}`);
+      }
+    }
+
+    for (const upstreamError of result.errors) {
+      if (!errors.includes(upstreamError)) {
+        errors.push(upstreamError);
+      }
+    }
+
+    return {
+      total: preparedLeads.length,
+      sent: successfulDeliveries,
+      errors,
+    };
   }
 
-  return { total: leads.length, sent, errors };
+  let sent = 0;
+  for (const entry of preparedLeads) {
+    const response = await sendEmailJsEmail(
+      entry.lead,
+      entry.delivery.subject,
+      isHtml ? entry.delivery.html || '' : entry.delivery.text || '',
+      isHtml,
+    );
+
+    if (response.success) {
+      sent += 1;
+      continue;
+    }
+
+    errors.push(`${entry.lead.name}: ${response.error}`);
+  }
+
+  return { total: preparedLeads.length, sent, errors };
 }

@@ -70,9 +70,10 @@ export async function sendImmediateEmail(
   subject: string,
   body: string,
   isHtml: boolean,
-  attachments: EmailAttachment[]
+  attachments: EmailAttachment[],
+  channelSelection?: { provider?: 'gmail' | 'resend' | 'emailjs'; channelId?: string }
 ) {
-  const result = await sendEmailToLeads(recipients, subject, body, isHtml, attachments);
+  const result = await sendEmailToLeads(recipients, subject, body, isHtml, attachments, channelSelection);
   const now = new Date().toISOString();
 
   await insertSendLogs(

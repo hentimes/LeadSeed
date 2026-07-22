@@ -10,10 +10,9 @@ export const db = {} as any; // Mock para evitar que rompan imports perdidos tem
 // Inicializar settings por defecto
 export async function getSettings(): Promise<AppSettings> {
   const defaultSettings: AppSettings = {
-    emailProvider: 'emailjs',
-    resendApiKey: '',
-    resendFromName: 'Acme',
-    resendFromEmail: 'onboarding@resend.dev',
+    emailProvider: 'gmail',
+    resendFromName: '',
+    resendFromEmail: '',
     emailJSUserId: '',
     emailJSServiceId: '',
     emailJSTemplateId: '',
@@ -42,7 +41,6 @@ export async function getSettings(): Promise<AppSettings> {
         darkMode: data.dark_mode ?? defaultSettings.darkMode,
         visibleCols: data.visible_cols ?? defaultSettings.visibleCols,
         emailProvider: data.email_provider ?? defaultSettings.emailProvider,
-        resendApiKey: data.resend_api_key ?? defaultSettings.resendApiKey,
         resendFromName: data.resend_from_name ?? defaultSettings.resendFromName,
         resendFromEmail: data.resend_from_email ?? defaultSettings.resendFromEmail,
         exportFormat: data.export_format ?? defaultSettings.exportFormat,
@@ -68,7 +66,6 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
         dark_mode: settings.darkMode,
         visible_cols: settings.visibleCols,
         email_provider: settings.emailProvider,
-        resend_api_key: settings.resendApiKey,
         resend_from_name: settings.resendFromName,
         resend_from_email: settings.resendFromEmail,
         export_format: settings.exportFormat,

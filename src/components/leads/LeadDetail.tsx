@@ -15,7 +15,11 @@ import type {
 } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../types';
 import { Icon } from '../../utils/icons';
-import { getAppointmentSuccessMessage, getGoogleSyncPendingSummary, isGoogleSyncPending } from '../../utils/appointmentStatusCopy';
+import {
+  getAppointmentSuccessMessage,
+  getGoogleSyncBadgeLabel,
+  getGoogleSyncPendingSummary,
+} from '../../utils/appointmentStatusCopy';
 import { getCurrentAccessToken, getCurrentSession } from '../../services/authService';
 import { createAppointmentFromLead, getDefaultAgendaRange, listMyAppointments } from '../../services/agendaService';
 import {
@@ -75,7 +79,8 @@ const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
   no_asistio: 'No asistio',
 };
 
-const PLANESPRO_FILE_PROXY_URL = 'https://form.planespro.cl/api/private/form-lead-file';
+const PLANESPRO_FILE_PROXY_URL =
+  import.meta.env.VITE_PLANESPRO_FILE_PROXY_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/form-lead-file`;
 const ACTIVE_APPOINTMENT_STATUSES = new Set(['pendiente', 'agendada', 'confirmada', 'tentativa']);
 
 function toReadableValue(value: unknown) {
@@ -206,6 +211,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
   const visibleAppointmentStatus = activeAppointment?.status || localAppointmentStatus || planesproDetails.appointmentStatus;
   const visibleAppointmentAt = activeAppointment?.startsAt || localAppointmentAt || planesproDetails.appointmentAt;
   const visibleMeetLink = activeAppointment?.meetLink;
+  const googleSyncBadgeLabel = getGoogleSyncBadgeLabel(activeAppointment);
   const googlePendingSummary = getGoogleSyncPendingSummary(activeAppointment);
   const canCreateAppointment =
     !!leadId &&
@@ -232,31 +238,46 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
   };
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    void (async () => {
       if (!leadId) return;
       const data = await loadLeadDetailData(leadId);
+      if (cancelled) return;
       setNotes(data.notes);
       setSendLogs(data.sendLogs);
       setWaTemplates(data.waTemplates);
       setEmailTemplates(data.emailTemplates);
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [leadId]);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    void (async () => {
       if (!leadId) return;
       const alerts = await loadLeadCrossExecAlerts(leadId);
+      if (cancelled) return;
       setCrossExecAlerts(alerts);
 
       const unreadIds = alerts.filter((event) => !event.isRead).map((event) => event.id);
       if (unreadIds.length > 0) {
         await markLeadCrossExecAlertsAsRead(unreadIds);
+        if (cancelled) return;
 
         setCrossExecAlerts((prev) =>
           prev.map((event) => unreadIds.includes(event.id) ? { ...event, isRead: true } : event),
         );
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [leadId]);
 
   useEffect(() => {
@@ -270,15 +291,22 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
   }, [planesproMetadata.pdf_path]);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    void (async () => {
       if (!leadId) return;
       const range = getDefaultAgendaRange(90);
       const appointments = await listMyAppointments(range.from, range.to);
+      if (cancelled) return;
       const appointment = appointments.find(
         (item) => item.leadId === leadId && ACTIVE_APPOINTMENT_STATUSES.has(item.status),
       );
       setActiveAppointment(appointment || null);
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [leadId]);
 
   const submitPdfRequest = async (download: boolean) => {
@@ -373,7 +401,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
       setLocalAppointmentStatus(result.appointment.status);
       setActiveAppointment(result.appointment);
       setAppointmentNote('');
-      setAppointmentMessage(getAppointmentSuccessMessage('create', result.googleSyncStatus === 'error'));
+      setAppointmentMessage(getAppointmentSuccessMessage('create', result.googleSyncStatus));
     } catch (err) {
       setAppointmentError(getErrorMessage(err, 'No se pudo crear la cita'));
     } finally {
@@ -537,9 +565,9 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                       <p className="font-semibold text-slate-800">{formatAppointmentDate(visibleAppointmentAt)}</p>
                     </div>
                   )}
-                  {activeAppointment && isGoogleSyncPending(activeAppointment) && (
+                  {activeAppointment && googleSyncBadgeLabel && (
                     <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5">
-                      <span className="text-amber-800">Google pendiente</span>
+                      <span className="text-amber-800">{googleSyncBadgeLabel}</span>
                       <p className="mt-1 text-slate-700">{googlePendingSummary}</p>
                     </div>
                   )}

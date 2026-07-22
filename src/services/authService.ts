@@ -53,8 +53,16 @@ function extractTokensFromCallbackUrl(callbackUrl: string): OAuthCallbackTokens 
   };
 }
 
-export async function beginGoogleLogin(redirectUrl: string, isExtension: boolean): Promise<string | null> {
-  return startGoogleOAuthFlow(redirectUrl, isExtension);
+export interface BeginGoogleLoginOptions {
+  scopes?: string;
+}
+
+export async function beginGoogleLogin(
+  redirectUrl: string,
+  isExtension: boolean,
+  options: BeginGoogleLoginOptions = {}
+): Promise<string | null> {
+  return startGoogleOAuthFlow(redirectUrl, isExtension, options);
 }
 
 export async function completeGoogleExtensionLogin(callbackUrl: string): Promise<void> {

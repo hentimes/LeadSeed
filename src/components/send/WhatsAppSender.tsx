@@ -32,6 +32,8 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  const findTemplateById = (value: string) => templates.find((template) => String(template.id ?? '') === value) || null;
+
   const filteredTemplates = catId
     ? templates.filter((t) => (t.templateListIds || []).includes(catId))
     : templates;
@@ -118,8 +120,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
             <label className="block text-[11px] text-slate-400 dark:text-slate-500 mb-1">Plantilla</label>
             <select value={selectedTemplate?.id ?? ''} 
               onChange={(e) => {
-                const tpl = templates.find(t => t.id === Number(e.target.value));
-                setSelectedTemplate(tpl || null);
+                setSelectedTemplate(findTemplateById(e.target.value));
               }}
               className="w-full border rounded px-2 py-1.5 text-sm bg-slate-50 dark:bg-slate-900">
               <option value="">Elegir plantilla...</option>

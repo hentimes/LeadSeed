@@ -26,7 +26,6 @@ const DEFAULT_COLUMNS: ColumnDef[] = [
 export default function App() {
   const { session, profile, loading: authLoading, hasFeature, isAdmin } = useAuth();
   const [page, setPage] = useState<Page>('leads');
-  const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState('');
   const [compactMode, setCompactMode] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -53,48 +52,53 @@ export default function App() {
       setDarkMode(settings.darkMode);
       document.documentElement.classList.toggle('dark', settings.darkMode);
       setVisibleCols(settings.visibleCols);
-      setDbReady(true);
       setDbError('');
-      await processScheduledEmails();
-      await refreshTaskCount();
-      try {
-        chrome.action.setBadgeText({ text: '' });
-      } catch {
-        // noop
-      }
-      if (session?.user) {
-        await purgeDeletedLeads(session.user.id);
-      }
     } catch (error) {
       console.error('App error', error);
-      setDbReady(false);
       setDbError(error instanceof Error ? error.message : String(error));
     }
-  }, [refreshTaskCount, session?.user]);
+  }, []);
 
   useEffect(() => {
     void initializeShell();
   }, [initializeShell]);
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void initializeShell();
+    if (!session?.user) {
+      setTaskCount(0);
+      return;
+    }
+
+    void refreshTaskCount();
+    void purgeDeletedLeads(session.user.id).catch((error) => {
+      console.warn('No se pudo purgar leads eliminados:', error);
+    });
+    void processScheduledEmails().catch((error) => {
+      console.warn('No se pudieron procesar correos programados:', error);
+    });
+
+    try {
+      chrome.action.setBadgeText({ text: '' });
+    } catch {
+      // noop
+    }
+  }, [refreshTaskCount, session?.user]);
+
+  useEffect(() => {
+    const refreshShellCounters = () => {
+      if (document.visibilityState === 'visible' && session?.user) {
+        void refreshTaskCount();
       }
     };
 
-    const handleFocus = () => {
-      void initializeShell();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', refreshShellCounters);
+    window.addEventListener('focus', refreshShellCounters);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', refreshShellCounters);
+      window.removeEventListener('focus', refreshShellCounters);
     };
-  }, [initializeShell]);
+  }, [refreshTaskCount, session?.user]);
 
   const handleCompactModeChange = (value: boolean) => {
     setCompactMode(value);
@@ -119,7 +123,7 @@ export default function App() {
     return <AppStatusScreen tone="error" title="Error de base de datos" description={dbError} />;
   }
 
-  if (!dbReady || authLoading) {
+  if (authLoading) {
     return <AppStatusScreen title="Inicializando..." />;
   }
 

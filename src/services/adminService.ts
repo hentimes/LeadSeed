@@ -1,10 +1,17 @@
-import type { Profile, Requirement } from '../types';
+import type { AdminObservedLeadAlert, AgendaAppointment, Profile, Requirement } from '../types';
 import type { LeadRow } from '../repositories/leadsRepository';
 import { mapLeadRowToDomain } from './leadsService';
+import { fetchLeadRows } from '../repositories/leadsRepository';
+import { fetchTemplateRowsByUserId } from '../repositories/templatesRepository';
 import {
+  type AdminLeadEventChangesPayload,
+  type AdminLeadAlertRow,
+  type AdminObservedAppointmentRow,
   type AdminTemplateRow,
   type InteractionMessageRow,
   type ProfileChangesPayload,
+  fetchAdminLeadAlertRows,
+  fetchAdminObservedAppointmentRows,
   fetchAdminTelemetryRows,
   fetchAdminUserLeadRows,
   fetchAdminUserRecentLeadRows,
@@ -18,7 +25,9 @@ import {
   fetchProfilesByIds,
   fetchRequirementRows,
   fetchUnreadAdminMessageRows,
+  markAdminObservedUserLeadsSeen,
   removeAdminChannel,
+  subscribeToLeadChanges,
   subscribeToInternalMessageChanges,
   subscribeToProfilesChanges,
   subscribeToRequirementsChanges,
@@ -41,14 +50,18 @@ export async function loadUnreadCountsForAdmin(receiverId: string): Promise<Reco
 }
 
 export function subscribeAdminUsersRealtime(
+  adminUserId: string,
   onProfilesChange: (payload: ProfileChangesPayload) => void,
-  onUnreadChange: () => void
+  onUnreadChange: () => void,
+  onLeadsChange: (payload: AdminLeadEventChangesPayload) => void
 ): () => void {
   const profilesChannel = subscribeToProfilesChanges(onProfilesChange);
   const messagesChannel = subscribeToInternalMessageChanges(onUnreadChange);
+  const leadsChannel = subscribeToLeadChanges(adminUserId, onLeadsChange);
   return () => {
     void removeAdminChannel(profilesChannel);
     void removeAdminChannel(messagesChannel);
+    void removeAdminChannel(leadsChannel);
   };
 }
 
@@ -102,11 +115,24 @@ export async function assignRequirementToHelper(requirementId: string, helperId:
   await updateRequirementRow(requirementId, { helper_id: helperId, status: 'in_progress' });
 }
 
-export async function loadAdminUserBase(userId: string) {
-  const [leadRows, templateRows] = await Promise.all([
-    fetchAdminUserLeadRows(userId),
-    fetchAdminUserTemplateRows(userId),
-  ]);
+export async function loadAdminUserBase(userId: string, currentUserId?: string) {
+  const isSelfObservation = !!currentUserId && currentUserId === userId;
+
+  const leadTask = isSelfObservation ? fetchLeadRows(userId) : fetchAdminUserLeadRows(userId);
+  const templateTask = isSelfObservation ? fetchTemplateRowsByUserId(userId) : fetchAdminUserTemplateRows(userId);
+
+  const [leadResult, templateResult] = await Promise.allSettled([leadTask, templateTask]);
+
+  if (leadResult.status === 'rejected') {
+    throw leadResult.reason instanceof Error ? leadResult.reason : new Error('No se pudo cargar los leads observados');
+  }
+
+  if (templateResult.status === 'rejected') {
+    throw templateResult.reason instanceof Error ? templateResult.reason : new Error('No se pudo cargar las plantillas observadas');
+  }
+
+  const leadRows = leadResult.value as LeadRow[];
+  const templateRows = templateResult.value as AdminTemplateRow[];
 
   return {
     leads: leadRows.map((row: LeadRow) => mapLeadRowToDomain(row)),
@@ -120,6 +146,54 @@ export async function loadAdminUserBase(userId: string) {
       createdAt: row.created_at || new Date(0).toISOString(),
     })),
   };
+}
+
+function mapAdminLeadAlertRow(row: AdminLeadAlertRow): AdminObservedLeadAlert {
+  return {
+    observedUserId: row.observed_user_id,
+    unseenNewLeadsCount: Number(row.unseen_new_leads_count || 0),
+    latestLeadCreatedAt: row.latest_lead_created_at || undefined,
+  };
+}
+
+function mapAdminObservedAppointmentRow(row: AdminObservedAppointmentRow): AgendaAppointment {
+  return {
+    id: row.id,
+    leadId: row.lead_id || undefined,
+    leadName: row.lead_name || 'Lead sin nombre',
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    status: row.status,
+    sourceChannel: row.source_channel || 'general',
+    captureRef: row.capture_ref || undefined,
+    notes: row.notes || '',
+    meetLink: row.meet_link || undefined,
+    googleEventId: row.google_event_id || undefined,
+    googleSyncStatus: row.google_sync_status || undefined,
+    googleSyncError: row.google_sync_error || undefined,
+    googleSyncedAt: row.google_synced_at || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function loadAdminLeadAlerts(): Promise<Record<string, number>> {
+  const rows = await fetchAdminLeadAlertRows();
+  return rows
+    .map(mapAdminLeadAlertRow)
+    .reduce<Record<string, number>>((accumulator, row) => {
+      accumulator[row.observedUserId] = row.unseenNewLeadsCount;
+      return accumulator;
+    }, {});
+}
+
+export async function markAdminUserBaseSeen(userId: string): Promise<void> {
+  await markAdminObservedUserLeadsSeen(userId);
+}
+
+export async function loadAdminUserAgenda(userId: string, from: string, to: string): Promise<AgendaAppointment[]> {
+  const rows = await fetchAdminObservedAppointmentRows(userId, from, to);
+  return rows.map(mapAdminObservedAppointmentRow);
 }
 
 export async function transferAdminUserAssets(targetUserId: string, leadIds: string[], templateIds: string[]): Promise<void> {
