@@ -7,6 +7,7 @@ import { useSort } from '../hooks/useSort';
 import { useAuth } from '../contexts/AuthContext';
 import ListEditor from '../components/lists/ListEditor';
 import ListLeadsTable from '../components/lists/ListLeadsTable';
+import PageHeader from '../components/ui/PageHeader';
 
 export default function ListsPage() {
   const { hasFeature } = useAuth();
@@ -104,11 +105,10 @@ export default function ListsPage() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Listas</h2>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Organiza tus contactos en grupos para campañas masivas.</p>
-        </div>
+      <PageHeader
+        title="Listas"
+        description="Organiza tus contactos en grupos para campañas masivas."
+      >
         <button 
           onClick={() => {
             if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
@@ -122,7 +122,7 @@ export default function ListsPage() {
         >
           {Icon.Plus()} Nueva lista
         </button>
-      </div>
+      </PageHeader>
 
       {creating && (
         <ListEditor 

@@ -8,6 +8,7 @@ import type { SendLog } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
+import PageHeader from '../components/ui/PageHeader';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -146,14 +147,16 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-bold">Mensajes</h2>
+      <PageHeader
+        title="Plantillas"
+        description="Gestiona tus plantillas de mensajes y respuestas rápidas."
+      >
         <div className="flex gap-1">
           <button onClick={() => setTab('whatsapp')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>WhatsApp</button>
           <button onClick={() => setTab('email')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Email</button>
           <button onClick={() => setTab('call')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'call' ? 'bg-amber-500 text-white' : 'bg-gray-200'}`}>Llamadas</button>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-1 mb-2 items-center">

@@ -8,12 +8,14 @@ import LeadForm from '../components/leads/LeadForm';
 import LeadDetail from '../components/leads/LeadDetail';
 import ImportModal from '../components/leads/ImportModal';
 import BulkActionBar from '../components/leads/BulkActionBar';
+import PageHeader from '../components/ui/PageHeader';
 import type { ColumnDef } from '../components/ColumnSelector';
 import type { ParsedRow } from '../utils/importParser';
 import { exportToJSON, exportToExcel } from '../utils/exportData';
 import { getSettings } from '../db/database';
 import { Icon } from '../utils/icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useLayoutContext } from '../contexts/LayoutContext';
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 
@@ -37,6 +39,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey } = useLeads();
   const { getAll: getLists } = useLists();
   const { hasFeature, user } = useAuth();
+  const { setPageTitle } = useLayoutContext();
   const pageSize = 50;
 
   const [filterMode, setFilterMode] = useState<string | null>(null);
@@ -60,6 +63,11 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   const [sort, setSort] = useState<{ field: LeadSortField; dir: 'asc' | 'desc' }>({ field: 'createdAt', dir: 'desc' });
 
   const { filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters();
+
+  useEffect(() => {
+    setPageTitle('Leads');
+    return () => setPageTitle(null);
+  }, [setPageTitle]);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -441,52 +449,50 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-lg font-bold">Leads</h2>
-        <div className="flex gap-2 items-center">
-          <div className="flex gap-2 mb-0 items-center">
-            {filterMode === 'olvidados' && (
-              <span className="bg-red-600 text-white text-xs px-2.5 py-1.5 rounded font-medium flex items-center gap-1.5 shadow-sm">
-                Olvidados
-                <button onClick={() => { setFilterMode(null); window.location.hash = '#leads'; }} className="opacity-80 hover:opacity-100 transition-opacity font-bold ml-1" />
-              </span>
-            )}
-            <button onClick={handleNewLeadClick} className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">
-              + Lead
-            </button>
-          </div>
-          <button
-            onClick={() => { setShowTrash(!showTrash); setSelectedIds(new Set()); }}
-            className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center ${showTrash ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}
-            title={showTrash ? 'Volver a leads' : 'Papelera'}
-          >
-            {showTrash ? 'Salir de papelera' : Icon.Trash()}
-          </button>
-        </div>
-      </div>
-
+    <div className="flex flex-col animate-ios-slide-up pb-4 w-full">
       {showForm && (
-        <div className="mb-6 p-4 border rounded-lg bg-slate-50 dark:bg-slate-900">
+        <div className="mb-4 p-4 border border-[#E6EAF0] rounded-[8px] bg-white shadow-sm">
           <h3 className="text-base font-semibold mb-3">{editing ? 'Editar Lead' : 'Nuevo Lead'}</h3>
           <LeadForm lead={editing} lists={lists} onSave={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
         </div>
       )}
 
-      <BulkActionBar
-        selectedIds={selectedIds}
-        showTrash={showTrash}
-        exportFormat={exportFormat}
-        lists={lists}
-        onExport={() => { void handleExport(); }}
-        onRestore={handleBulkRestore}
-        onDelete={handleBulkDelete}
-        onStatusChange={handleBulkStatusChange}
-        onAddToList={handleAddToList}
-        onClearSelection={() => setSelectedIds(new Set())}
-      />
-
       <LeadsTable
+        bulkActions={
+          <BulkActionBar
+            selectedIds={selectedIds}
+            showTrash={showTrash}
+            exportFormat={exportFormat}
+            lists={lists}
+            onExport={() => { void handleExport(); }}
+            onRestore={handleBulkRestore}
+            onDelete={handleBulkDelete}
+            onStatusChange={handleBulkStatusChange}
+            onAddToList={handleAddToList}
+            onClearSelection={() => setSelectedIds(new Set())}
+          />
+        }
+        leftActions={
+          <div className="flex gap-2 items-center">
+            {filterMode === 'olvidados' && (
+              <span className="bg-red-600 text-white text-[12px] px-2.5 h-[34px] rounded-[6px] font-medium flex items-center gap-1.5 shadow-sm">
+                Olvidados
+                <button onClick={() => { setFilterMode(null); window.location.hash = '#leads'; }} className="opacity-80 hover:opacity-100 transition-opacity font-bold ml-1" />
+              </span>
+            )}
+            <button onClick={handleNewLeadClick} className="bg-[#6C4CF6] text-white px-3 h-[34px] rounded-[6px] text-[13px] font-medium hover:bg-[#5b3ce0] transition-colors flex items-center gap-1.5 shadow-sm shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Nuevo lead
+            </button>
+            <button
+              onClick={() => { setShowTrash(!showTrash); setSelectedIds(new Set()); }}
+              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-white text-[#5B6475] border-[#E6EAF0] hover:bg-gray-50'}`}
+              title={showTrash ? 'Volver a leads' : 'Papelera'}
+            >
+              {showTrash ? 'Salir de papelera' : <div className="w-[14px] h-[14px] flex items-center justify-center scale-90 opacity-80">{Icon.Trash()}</div>}
+            </button>
+          </div>
+        }
         filterMode={filterMode}
         leads={leads}
         lists={lists}

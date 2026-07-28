@@ -9,6 +9,7 @@ import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
 import { createFollowUpTaskForLead } from '../services/tasksService';
+import PageHeader from '../components/ui/PageHeader';
 
 const STATUS_ORDER: LeadStatus[] = ['nuevo', 'contactado', 'interesado', 'convertido', 'descartado'];
 
@@ -194,7 +195,10 @@ export default function PipelinePage() {
 
   return (
     <div className="pb-6">
-      <h2 className="text-lg font-bold mb-3">Pipeline</h2>
+      <PageHeader
+        title="Pipeline"
+        description="Visualiza el flujo de tus contactos y su progreso."
+      />
 
       <div className="flex gap-2 mb-3 w-full">
         <div className="flex-1 relative">

@@ -41,14 +41,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5174,
     strictPort: true,
     cors: {
       origin: /^chrome-extension:\/\/.+$/,
       credentials: true,
     },
     hmr: {
-      port: 5173,
+      port: 5174,
     },
   },
   resolve: {

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LeadSeed",
+  "name": "LeadSeed (UI Test)",
   "version": "1.0.0",
   "description": "Gestiona leads, envía WhatsApp y correos electrónicos",
   "icons": {

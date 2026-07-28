@@ -22,8 +22,13 @@ interface Props {
 
 type Tab = 'display' | 'data' | 'links' | 'agenda' | 'email' | 'goals' | 'support';
 
+import PageHeader from '../components/ui/PageHeader';
+
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
-  const [tab, setTab] = useState<Tab>('display');
+  const [tab, setTab] = useState<Tab>(() => {
+    const hash = window.location.hash.replace('#', '');
+    return (['display', 'data', 'links', 'agenda', 'email', 'goals', 'support'].includes(hash)) ? hash as Tab : 'display';
+  });
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
 
   useEffect(() => {
@@ -32,72 +37,23 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
     });
   }, []);
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['display', 'data', 'links', 'agenda', 'email', 'goals', 'support'].includes(hash)) {
+        setTab(hash as Tab);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-[var(--color-text-strong)]">Ajustes</h2>
-        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Configura la extensión, gestiona tus datos y conecta proveedores.</p>
-      </div>
-
-      {/* Tabs - Header Style */}
-      <div className="flex border-b border-[var(--color-border)] mb-4 px-2 gap-3 overflow-x-auto">
-        <button
-          onClick={() => setTab('display')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'display' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.Palette /> Apariencia
-        </button>
-        <button
-          onClick={() => setTab('data')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'data' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.Database /> Datos
-        </button>
-        <button
-          onClick={() => setTab('email')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'email' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.Email /> Email
-        </button>
-        <button
-          onClick={() => setTab('links')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'links' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.Send /> Links
-        </button>
-        <button
-          onClick={() => setTab('agenda')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'agenda' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.History /> Config agenda
-        </button>
-        <button
-          onClick={() => setTab('goals')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'goals' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.Bullseye /> Metas
-        </button>
-        <button
-          onClick={() => setTab('support')}
-          className={`pb-2.5 px-1 flex items-center gap-2 text-[13px] font-semibold transition-all border-b-2 -mb-[1px] ${
-            tab === 'support' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200'
-          }`}
-        >
-          <Icon.Messages /> Ayuda VIP
-        </button>
-      </div>
+      <PageHeader 
+        title="Ajustes" 
+        description="Personaliza tu experiencia en LeadSeed."
+      />
 
       {/* Content */}
       <div className="transition-all duration-300">

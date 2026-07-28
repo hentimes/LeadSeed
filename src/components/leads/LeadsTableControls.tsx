@@ -3,6 +3,8 @@ import type { LeadStatus, LeadList } from '../../types';
 import { STATUS_LABELS } from '../../types';
 
 interface Props {
+  leftActions?: React.ReactNode;
+  bulkActions?: React.ReactNode;
   search: string;
   onSearchChange: (search: string) => void;
   totalCount: number;
@@ -23,7 +25,7 @@ interface Props {
 }
 
 export default function LeadsTableControls({
-  search, onSearchChange, totalCount, visibleCount, selectedCount,
+  leftActions, bulkActions, search, onSearchChange, totalCount, visibleCount, selectedCount,
   currentPage, pageCount, pageSize, isLoadingPage, onPageChange,
   lists, filterListId, onFilterChange, filterStatus, onFilterStatusChange,
   filterDate, onFilterDateChange
@@ -34,52 +36,36 @@ export default function LeadsTableControls({
 
   return (
     <>
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex-1 max-w-sm">
+      {/* Top Bar: Actions, Search, Filters */}
+      <div className="flex items-center gap-2 mb-3">
+        {leftActions && <div className="shrink-0">{leftActions}</div>}
+        
+        <div className="flex-1 min-w-0 relative">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Buscar nombre, teléfono, email, RUT..." className="w-full border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-900 rounded px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none" />
+            placeholder="Buscar..." 
+            className="w-full pl-8 pr-2 h-[34px] bg-white border border-[#E6EAF0] rounded-[6px] text-[13px] focus:ring-2 focus:ring-[#6C4CF6] focus:border-[#6C4CF6] outline-none transition-all shadow-sm" />
         </div>
         
-        <div className="flex items-center gap-3 shrink-0 ml-2">
-          <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline-block">
-            {visibleCount !== totalCount ? `${visibleCount}/${totalCount} leads` : `${totalCount} leads`}
-            {selectedCount > 0 && <span className="ml-1 text-blue-600 font-medium">{selectedCount} sel.</span>}
-          </span>
-          <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage <= 1 || !!isLoadingPage}
-              className="rounded border border-slate-300 px-2 py-1 disabled:opacity-40"
-            >
-              Anterior
-            </button>
-            <span>
-              Pag. {currentPage}/{pageCount}
-            </span>
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage >= pageCount || !!isLoadingPage}
-              className="rounded border border-slate-300 px-2 py-1 disabled:opacity-40"
-            >
-              Siguiente
-            </button>
-          </div>
+        <div className="shrink-0">
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showFilters || activeFiltersCount > 0 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-slate-300 dark:border-slate-600/50 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'}`}
+            className={`flex items-center gap-1.5 px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors border shadow-sm ${showFilters || activeFiltersCount > 0 ? 'bg-[#F2EEFF] border-[#6C4CF6] text-[#6C4CF6]' : 'bg-white border-[#E6EAF0] text-[#161A24] hover:bg-gray-50'}`}
           >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-            Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            <span className="hidden sm:inline">Filtros</span> {activeFiltersCount > 0 && `(${activeFiltersCount})`}
           </button>
         </div>
       </div>
 
       {showFilters && (
-        <div className="flex gap-2 mb-3 items-center flex-wrap bg-slate-50 dark:bg-slate-900 dark:bg-gray-800/50 border border-slate-200 dark:border-slate-700/50 dark:border-gray-700 rounded p-2 animate-toast-in">
-          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 mr-1">Filtrar por:</span>
+        <div className="flex gap-2 mb-4 items-center flex-wrap bg-white border border-[#E6EAF0] shadow-sm rounded-[8px] p-3 animate-toast-in">
+          <span className="text-[13px] font-semibold text-[#5B6475] mr-1">Filtrar por:</span>
           
           <select value={filterType} onChange={(e) => setFilterType(e.target.value as any)}
-            className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+            className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
             <option value="listas">Listas</option>
             <option value="estados">Estados</option>
             <option value="fechas">Fechas</option>
@@ -87,14 +73,14 @@ export default function LeadsTableControls({
 
           {filterType === 'listas' && (
             <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
-              className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
               <option value="">Todas las listas</option>
               {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           )}
           {filterType === 'estados' && (
             <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
-              className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
               <option value="">Todos los estados</option>
               {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
                 <option key={s} value={s}>{STATUS_LABELS[s]}</option>
@@ -103,7 +89,7 @@ export default function LeadsTableControls({
           )}
           {filterType === 'fechas' && (
             <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
-              className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
               <option value="">Todas las fechas</option>
               <option value="7d">Última semana</option>
               <option value="30d">Último mes</option>
@@ -113,18 +99,22 @@ export default function LeadsTableControls({
 
           {activeFiltersCount > 0 && (
             <button onClick={() => { onFilterChange(null); onFilterStatusChange(null); onFilterDateChange(''); }} 
-                    className="ml-auto w-6 h-6 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors shrink-0"
+                    className="ml-auto w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0"
                     title="Limpiar filtros">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           )}
         </div>
       )}
-      <div className="sm:hidden mb-3 flex items-center justify-between text-xs text-slate-500">
-        <span>
+      
+      {/* Pagination Info and Bulk Actions */}
+      <div className="flex items-center justify-between mb-2 min-h-[28px]">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {bulkActions}
+        </div>
+        <div className="text-[13px] text-[#5B6475] font-medium whitespace-nowrap ml-auto">
           Pag. {currentPage}/{pageCount}
-        </span>
-        <span>{pageSize} por pagina</span>
+        </div>
       </div>
     </>
   );

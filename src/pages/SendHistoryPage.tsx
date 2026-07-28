@@ -10,6 +10,7 @@ import {
 } from '../services/historyService';
 import type { Page } from '../types';
 import { Icon } from '../utils/icons';
+import PageHeader from '../components/ui/PageHeader';
 
 interface Props {
   onNavigate: (page: Page) => void;
@@ -85,7 +86,10 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-3">Historial</h2>
+      <PageHeader
+        title="Historial de Envíos"
+        description="Revisa el registro de mensajes enviados y actividad reciente."
+      />
 
       <div className="flex gap-2 mb-3 items-center flex-wrap">
         <input

@@ -239,11 +239,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
             </button>
           </div>
           
-          <div className="flex justify-between items-center mt-2 px-2">
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--ls-success,#22C55E)]">
-              <span className="w-1.5 h-1.5 bg-[#22C55E] rounded-full"></span>
-              6 en línea
-            </span>
+          <div className="flex justify-end items-center mt-2 px-2">
             <div className="flex gap-3">
               <span className={`text-[10px] font-medium ${inputText.length >= 110 ? 'text-[var(--ls-danger,#EF4444)]' : 'text-[var(--ls-text-muted,#667085)]'}`}>
                 {inputText.length} / 120

@@ -40,7 +40,7 @@ const LeadsTableRow = ({
   onView, onEdit, onDelete, onRestore, getScore, shortName
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
-  const trClass = `border-t border-[var(--color-border)] hover:bg-[var(--color-bg-surface-hover)] transition-colors cursor-pointer ${isSelected ? 'bg-[var(--color-primary-light)]' : 'bg-[var(--color-bg-base)]'}`;
+  const trClass = `border-b border-[#E6EAF0] transition-colors cursor-pointer ${isSelected ? 'bg-[#E0D4FF] hover:bg-[#D6C7FF]' : 'bg-white hover:bg-gray-50'}`;
   
   const checkboxBox = (
     <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-[var(--color-border)] bg-[var(--color-bg-surface)]'}`}>
@@ -77,17 +77,17 @@ const LeadsTableRow = ({
   );
 
   const actions = (
-    <div className="flex gap-0.5">
-      <button onClick={(e) => { e.stopPropagation(); onView(lead); }} title="Ver" className="text-gray-400 hover:text-blue-600 text-xs p-0.5">{Icon.View()}</button>
+    <div className="flex gap-1.5 justify-end items-center pr-1 min-w-[64px]">
+      <button onClick={(e) => { e.stopPropagation(); onView(lead); }} title="Ver" className="text-[#5B6475] hover:text-[#161A24] text-xs p-1">{Icon.View()}</button>
       {isTrash ? (
         <>
-          {onRestore && <button onClick={(e) => { e.stopPropagation(); onRestore(lead.id!); }} title="Restaurar" className="text-gray-400 hover:text-green-600 text-xs p-0.5">{Icon.Restore()}</button>}
-          <button onClick={(e) => { e.stopPropagation(); onDelete(lead.id!); }} title="Eliminar definitivo" className="text-gray-400 hover:text-red-600 text-xs p-0.5">{Icon.Trash()}</button>
+          {onRestore && <button onClick={(e) => { e.stopPropagation(); onRestore(lead.id!); }} title="Restaurar" className="text-[#5B6475] hover:text-green-600 text-xs p-1">{Icon.Restore()}</button>}
+          {isSelected && <button onClick={(e) => { e.stopPropagation(); onDelete(lead.id!); }} title="Eliminar definitivo" className="text-[#5B6475] hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
         </>
       ) : (
         <>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(lead); }} title="Editar" className="text-gray-400 hover:text-blue-600 text-xs p-0.5">{Icon.Edit()}</button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(lead.id!); }} title="Eliminar" className="text-gray-400 hover:text-red-600 text-xs p-0.5">{Icon.Trash()}</button>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(lead); }} title="Editar" className="text-[#5B6475] hover:text-[#161A24] text-xs p-1">{Icon.Edit()}</button>
+          {isSelected && <button onClick={(e) => { e.stopPropagation(); onDelete(lead.id!); }} title="Eliminar" className="text-[#5B6475] hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
         </>
       )}
     </div>
@@ -99,25 +99,25 @@ const LeadsTableRow = ({
         <td className="px-2 py-1.5">{checkboxBox}</td>
         <td className="px-2 py-1.5">
           {renderNameWithBadges(true)}
-          {rutVis && lead.rut && <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">RUT: {lead.rut}</div>}
-          {nameVis && !rutVis && !lead.rut && <div className="text-xs text-gray-400">-</div>}
+          {rutVis && lead.rut && <div className="text-[11px] text-[#5B6475] font-mono mt-0.5">RUT: {lead.rut}</div>}
+          {nameVis && !rutVis && !lead.rut && <div className="text-[11px] text-[#5B6475] mt-0.5">-</div>}
         </td>
-        {companyVis && <td className="px-2 py-1.5 text-xs">{lead.company || '-'}</td>}
+        {companyVis && <td className="px-2 py-1.5 text-[12px]">{lead.company || '-'}</td>}
         <td className="px-2 py-1.5">
-          {phoneVis && <div className="text-xs">{lead.phone ? <a href={`https://wa.me/${lead.phone.replace(/[^+\d]/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title="Abrir WhatsApp">{isSelected ? lead.phone : `...${lead.phone.slice(-4)}`}</a> : '-'}</div>}
-          {emailVis && <div className="text-xs text-blue-600">{lead.email ? <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title={`Enviar email a ${lead.email}`}>{lead.email.length > 13 ? <span title={lead.email}>{lead.email.slice(0, 10)}...</span> : lead.email}</a> : '-'}</div>}
+          {phoneVis && <div className="text-[12px] truncate">{lead.phone ? <a href={`https://wa.me/${lead.phone.replace(/[^+\d]/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[#6C4CF6] hover:text-[#5b3ce0] font-medium" title="Abrir WhatsApp">{isSelected ? lead.phone : `...${lead.phone.slice(-4)}`}</a> : '-'}</div>}
+          {emailVis && <div className="text-[12px] text-[#6C4CF6] truncate mt-0.5">{lead.email ? <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-[#5B6475] hover:text-[#161A24]" title={`Enviar email a ${lead.email}`}>{lead.email}</a> : '-'}</div>}
         </td>
-        {dateVis && <td className="px-2 py-1.5 text-xs text-slate-400 dark:text-slate-500">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</td>}
+        {dateVis && <td className="px-2 py-1.5 text-[12px] text-[#5B6475]">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</td>}
         {listsVis && <td className="px-2 py-1.5">
-          <div className="flex gap-0.5 flex-wrap">
+          <div className="flex gap-1 flex-wrap">
             {lead.listaIds.map((lid) => {
               const list = listsMap.get(lid);
-              return list ? <span key={lid} className="px-1 py-0.5 rounded text-xs text-white" style={{ backgroundColor: list.color }}>{list.name}</span> : null;
+              return list ? <span key={lid} className="px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium" style={{ backgroundColor: `${list.color}15`, color: list.color }}>{list.name}</span> : null;
             })}
           </div></td>}
-        {statusVis && <td className="px-2 py-1.5"><span className="px-1.5 py-0.5 rounded-full text-xs text-white font-medium" style={{ backgroundColor: STATUS_COLORS[lead.status || 'nuevo'] }}>{STATUS_LABELS[lead.status || 'nuevo']}</span></td>}
-        {scoreVis && <td className="px-2 py-1.5 text-xs text-amber-500">{''.repeat(getScore(lead))}{''.repeat(5 - getScore(lead))}</td>}
-        <td className="px-1 py-1.5">{actions}</td>
+        {statusVis && <td className="px-2 py-1.5"><span className="px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium" style={{ backgroundColor: `${STATUS_COLORS[lead.status || 'nuevo']}15`, color: STATUS_COLORS[lead.status || 'nuevo'] }}>{STATUS_LABELS[lead.status || 'nuevo']}</span></td>}
+        {scoreVis && <td className="px-2 py-1.5 text-[12px] text-amber-500">{''.repeat(getScore(lead))}{''.repeat(5 - getScore(lead))}</td>}
+        <td className="px-2 py-1.5 w-[72px] sticky right-0 bg-inherit shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10">{actions}</td>
       </tr>
     );
   }
@@ -140,7 +140,7 @@ const LeadsTableRow = ({
           })}
         </div></td>}
       {statusVis && <td className="px-2 py-1.5"><span className="px-1.5 py-0.5 rounded-full text-xs text-white font-medium" style={{ backgroundColor: STATUS_COLORS[lead.status || 'nuevo'] }}>{STATUS_LABELS[lead.status || 'nuevo']}</span></td>}
-      <td className="px-1 py-1.5">{actions}</td>
+      <td className="px-1 py-1.5 sticky right-0 bg-inherit shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10">{actions}</td>
     </tr>
   );
 };

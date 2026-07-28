@@ -19,6 +19,7 @@ import {
   getGoogleSyncPendingSummary,
 } from '../utils/appointmentStatusCopy';
 import { Icon } from '../utils/icons';
+import PageHeader from '../components/ui/PageHeader';
 
 interface AgendaPageProps {
   onNavigate: (page: Page) => void;
@@ -365,21 +366,18 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in p-3 flex flex-col gap-3">
-      <div className="border-b border-[var(--color-border)] pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Agenda</h2>
-            <p className="text-xs text-slate-400 mt-1">Citas, alertas, Meet, reprogramacion y cancelaciones.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('settings')}
-            className="btn btn-ghost btn-sm"
-          >
-            Configurar
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Agenda"
+        description="Citas, alertas, Meet, reprogramacion y cancelaciones."
+      >
+        <button
+          type="button"
+          onClick={() => onNavigate('settings')}
+          className="btn btn-ghost btn-sm"
+        >
+          Configurar
+        </button>
+      </PageHeader>
 
       {(message || error) && (
         <div className={`text-xs p-2 rounded-[var(--radius-md)] border ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>

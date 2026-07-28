@@ -6,7 +6,9 @@ import {
   faRotateLeft, faChevronDown, faChevronRight, faArrowsUpDown,
   faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
-  faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply
+  faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
+  faCrown, faUser, faBell, faChartLine, faCommentDots, faArrowRight, faFilter,
+  faLightbulb, faLayerGroup, faCalendarDays, faShareNodes
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -21,9 +23,16 @@ export const Icon = {
   Send: () => <I icon={faPaperPlane} className="text-sm" />,
   Tasks: () => <I icon={faClipboardCheck} className="text-sm" />,
   Dashboard: () => <I icon={faChartBar} className="text-sm" />,
+  TrendUp: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+      <polyline points="17 6 23 6 23 12"></polyline>
+    </svg>
+  ),
   Pipeline: () => <I icon={faDiagramProject} className="text-sm" />,
+  Funnel: () => <I icon={faFilter} className="text-sm" />,
   Lists: () => <I icon={faList} className="text-sm" />,
-  Messages: () => <I icon={faMessage} className="text-sm" />,
+  Messages: () => <I icon={faCommentDots} className="text-sm" />,
   History: () => <I icon={faClockRotateLeft} className="text-sm" />,
   Settings: () => <I icon={faGear} className="text-sm" />,
   Admin: () => <I icon={faShieldHalved} className="text-sm" />,
@@ -31,6 +40,8 @@ export const Icon = {
   Users: () => <I icon={faUsers} className="text-sm" />,
   Inbox: () => <I icon={faInbox} className="text-sm" />,
   Bot: () => <I icon={faRobot} className="text-sm" />,
+  User: () => <I icon={faUser} className="text-sm" />,
+  Crown: () => <I icon={faCrown} className="text-sm" />,
 
   // Actions
   View: () => <I icon={faEye} className="text-xs" />,
@@ -47,6 +58,7 @@ export const Icon = {
   Help: () => <I icon={faQuestion} className="text-sm" />,
   Restore: () => <I icon={faRotateLeft} className="text-xs" />,
   ArrowLeft: () => <I icon={faArrowLeft} className="text-xs" />,
+  ArrowRight: () => <I icon={faArrowRight} className="text-sm" />,
   CheckCircle: () => <I icon={faCheckCircle} className="text-xs" />,
   Logout: () => <I icon={faArrowRightFromBracket} className="text-sm" />,
   Email: () => <I icon={faEnvelope} className="text-xs" />,
@@ -59,6 +71,20 @@ export const Icon = {
   Paperclip: () => <I icon={faPaperclip} className="text-xs" />,
   Copy: () => <I icon={faCopy} className="text-xs" />,
   Reply: () => <I icon={faReply} className="text-xs" />,
+  Bell: () => <I icon={faBell} className="text-xs" />,
+  TargetArrow: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <circle cx="12" cy="12" r="6"></circle>
+      <circle cx="12" cy="12" r="2"></circle>
+      <path d="M12 2v4"></path>
+      <path d="M12 18v4"></path>
+      <path d="M4 12H2"></path>
+      <path d="M22 12h-2"></path>
+      <path d="m20.5 3.5-6 6"></path>
+      <path d="M21 7V3h-4"></path>
+    </svg>
+  ),
 
   // UI
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,
@@ -71,4 +97,52 @@ export const Icon = {
   Sun: () => <I icon={faSun} className="text-xs" />,
   ThumbUp: () => <I icon={faThumbsUp} className="text-xs" />,
   ThumbDown: () => <I icon={faThumbsDown} className="text-xs" />,
+  Sparkles: () => <I icon={faLightbulb} className="text-sm" />,
+  Layers: () => <I icon={faLayerGroup} className="text-sm" />,
+  Calendar: () => <I icon={faCalendarDays} className="text-sm" />,
+  Share: () => <I icon={faShareNodes} className="text-sm" />,
+  WhatsAppOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+  ),
+  EmailOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+      <path d="M2 4l10 8 10-8"></path>
+    </svg>
+  ),
+  PhoneOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    </svg>
+  ),
+  CheckOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="4" ry="4"></rect>
+      <path d="M9 12l2 2 4-4"></path>
+    </svg>
+  ),
+  SendOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="22" y1="2" x2="11" y2="13"></line>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    </svg>
+  ),
+  MessagesOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      <path d="M9 10h.01"></path>
+      <path d="M15 10h.01"></path>
+      <path d="M12 10h.01"></path>
+    </svg>
+  ),
+  CalendarOutline: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+  )
 };

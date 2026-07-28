@@ -13,6 +13,7 @@ import {
 } from '../services/tasksService';
 import type { Lead, LeadList, Task, TaskStatus } from '../types';
 import { Icon } from '../utils/icons';
+import PageHeader from '../components/ui/PageHeader';
 
 const STATUS_TABS: { key: TaskStatus | 'todas'; label: string; color: string }[] = [
   { key: 'pendiente', label: 'Pendientes', color: 'text-amber-600' },
@@ -107,28 +108,25 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
 
   return (
     <div className="max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Tareas</h2>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Gestiona tus seguimientos y recordatorios.</p>
-          </div>
-          <div className="flex gap-1.5 self-start mt-1">
-            {stats.overdue.length > 0 && (
-              <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-red-200">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
-            )}
-            {stats.dueToday.length > 0 && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-amber-200">{stats.dueToday.length} hoy</span>
-            )}
-            {stats.dueTomorrow.length > 0 && (
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} manana</span>
-            )}
-          </div>
+      <PageHeader
+        title="Tareas"
+        description="Gestiona tus seguimientos y recordatorios."
+      >
+        <div className="flex gap-1.5 mr-2 self-center">
+          {stats.overdue.length > 0 && (
+            <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-red-200">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
+          )}
+          {stats.dueToday.length > 0 && (
+            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-amber-200">{stats.dueToday.length} hoy</span>
+          )}
+          {stats.dueTomorrow.length > 0 && (
+            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} manana</span>
+          )}
         </div>
         <button onClick={openNew} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
           {Icon.Plus()} Tarea
         </button>
-      </div>
+      </PageHeader>
 
       <div className="flex gap-1 mb-3 border-b">
         {STATUS_TABS.map(({ key, label, color }) => (
