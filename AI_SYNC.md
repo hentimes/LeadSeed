@@ -6165,3 +6165,188 @@ Rediseño completo de la interfaz de la extensión (Dashboard y sección de Lead
 
 **NOTA PARA CODEX:**
 Antigravity ha CONGELADO el bloque de detalle de leads. Antigravity **NO** tocará `cloudflare/ppcrm/static/views/leads/leads.js`, `cloudflare/ppcrm/static/css/leads-panel.css`, ni la lógica de carga/renderizado del formulario PlanesPro. Confirmo que el backend PB/Supabase ya persistió correctamente `metadata.intake_journey.step1` y que el problema actual parece estar en la alineación UI/build de esa sección, no en la persistencia. ¡Codex tiene el control total sobre ese bloque!
+
+### 2026-07-28 CLT - Antigravity
+- Tipo: Redise�o UI / CONTROL
+- Rol: Implementador
+- Estado: completado
+- Objetivo actual:
+  - Aplicar redise�o visual a la vista de detalles del lead (LeadDetail) present�ndolo como un modal flotante centralizado.
+  - Asegurar que los �conos de acciones (ojo y l�piz) en LeadsTableRow siempre queden visibles independientemente del ancho de la extensi�n.
+- Archivos tocados:
+  - src/components/leads/LeadDetail.tsx (estructura reconstruida en forma de modal)
+  - src/components/leads/LeadsTable.tsx (agregados min-w-0 y w-full al contenedor)
+  - src/components/layout/AppLayout.tsx (agregado min-w-0 al tag main flex-1)
+- Qu� ya funciona:
+  - LeadDetail renderiza el nuevo layout y compila en TypeScript correctamente.
+  - El flex overflow de la tabla de leads ha sido corregido, forzando la aparici�n del scrollbar horizontal y permitiendo que la columna sticky derecha funcione adecuadamente para que nunca se pierdan de vista los �conos de acciones.
+- Qu� NO debe tocar otra IA:
+  - No modificar la estructura de LeadDetail.tsx reci�n inyectada, excepto para conectarla a campos adicionales si se requiere.
+  - No desarmar las clases min-w-0 w-full que se han colocado en los Layouts.
+
+### 2026-07-28 CLT - Codex
+- Tipo: Links PB / CONTROL
+- Rol: Implementador
+- Estado: completado
+- Objetivo actual:
+  - Acortar el URL publico mostrado y copiado por la extension para los links de `/pb`.
+- Archivo tocado:
+  - `src/services/captureLinksService.ts`
+- Cambio realizado:
+  - `buildCaptureLinkUrl(refCode)` dejo de construir `https://planespro.cl/pb/?ref=<codigo>` y ahora construye `https://planespro.cl/pb/<codigo>`.
+- Validacion:
+  - Busqueda en `src` confirmo que no quedaban otras referencias activas a `?ref=` dentro del bloque de Links.
+  - El cambio no toca Leads, detalle de lead, ni paginas del formulario principal.
+- Que NO debe tocar otra IA:
+  - No revertir `src/services/captureLinksService.ts` a `?ref=`.
+  - No mezclar este ajuste con el bloque de Leads ni con redisenos del detalle del lead.
+
+### 2026-07-28 CLT - Codex
+- Tipo: Links PB cortos / CONTROL
+- Rol: Implementador
+- Estado: completado
+- Scope reservado:
+  - Ajustes > Links
+  - generacion/copiado de URLs publicas PB
+  - migracion Supabase de capture_links.ref_code
+  - rewrites publicos /pb/<short_code>
+- Archivos tocados:
+  - src/services/captureLinksService.ts
+  - sql/migrations/053_capture_links_short_ref_codes.sql
+  - implementation_plan.md
+  - roadmap.md
+  - AI_SYNC.md
+- Cambios ejecutados:
+  - Supabase ahora genera refs publicos cortos de 6 caracteres para capture_links.
+  - Se aplico backfill remoto: los refs largos pp-<uuid32> activos fueron reemplazados por codigos cortos y el valor anterior quedo en metadata.legacy_ref_code.
+  - La extension ya construye/copia URLs https://planespro.cl/pb/<short_code> en vez de https://planespro.cl/pb/?ref=...
+  - El limite UI de links queda alineado a 6.
+- Validacion ejecutada:
+  - npx supabase db query --linked --file sql\migrations\053_capture_links_short_ref_codes.sql: OK.
+  - Query remoto confirmo refs activos xe8jdu, whwgd4, dvu9dd con longitud 6.
+  - npm run build en LeadSeed_Test: OK.
+  - https://planespro.cl/pb/dvu9dd responde HTTP 200.
+- Fronteras:
+  - No se toco el modulo Leads ni el detalle de lead reservado por Antigravity.
+  - No se restauro backend Cloudflare del formulario; Cloudflare/hosting solo participa como transporte estatico/rewrite mientras siga alojando el sitio.
+
+### 2026-07-28 CLT - Codex
+- Tipo: Fix final links PB cortos / routing publico
+- Rol: Implementador
+- Estado: completado
+- Scope ejecutado:
+  - Ajustes > Links y rutas publicas PB.
+  - No se toco Leads, detalle de lead, ni backend del formulario.
+- Archivos tocados:
+  - C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\_redirects
+  - C:\Users\henti\OneDrive\Documentos\IA\deepseek\PROYECTOS\LeadSeed_Test\src\services\captureLinksService.ts
+- Cambio aplicado:
+  - _redirects dejo /pb/:ref apuntando a /pb/?ref=:ref para evitar que el host normalice /pb/index.html y pierda el codigo corto.
+  - La extension queda compilada para construir https://planespro.cl/pb/<short_code>.
+- Validacion ejecutada:
+  - npx wrangler pages deploy . --project-name planespro --branch master: OK, deploy estatico publicado.
+  - https://planespro.cl/pb/dvu9dd: HTTP 200, titulo Analiza tu plan | PlanesPro, formulario PB detectado.
+  - https://planespro.cl/pb/whwgd4: HTTP 200, titulo Analiza tu plan | PlanesPro, formulario PB detectado.
+  - https://planespro.cl/pb/xe8jdu: HTTP 200, titulo Analiza tu plan | PlanesPro, formulario PB detectado.
+  - npm run build en LeadSeed_Test: OK.
+- Nota de arquitectura:
+  - Esto no devuelve backend a Cloudflare. Solo corrige routing/hosting publico mientras planespro.cl siga sirviendo assets desde Pages.
+  - La fuente de verdad de links y leads sigue siendo Supabase.
+
+### 2026-07-28 17:31 CLT - Codex
+- Tipo: CONTROL / ajuste PB responsive + routing corto definitivo
+- Rol: Implementador
+- Estado: completado, pendiente QA visual del usuario en navegador real
+- Scope ejecutado:
+  - Solo formulario publico PB y routing estatico de links cortos.
+  - No se toco el formulario principal/sidebar de planespro.cl.
+  - No se toco modulo Leads de LeadSeed_Test ni detalle de lead reservado por Antigravity.
+  - No se agrego backend Cloudflare; Supabase sigue siendo la fuente de verdad.
+- Archivos tocados:
+  - C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\pb\index.html
+  - C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\pb\styles.css
+  - C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\_redirects
+- Cambio aplicado:
+  - Se agrego una pasada CSS final para que /pb sea un formulario standalone responsive, no un mockup angosto ni el layout del sidebar.
+  - En desktop queda centrado con ancho controlado y sin marco de telefono.
+  - En movil queda full-width, compacto, con header/footer optimizados y tarjetas menos redondeadas.
+  - Se actualizo el cache-bust de CSS a pb-responsive-20260728.
+  - Correccion importante: /pb/:ref ahora sirve /pb/index.html?ref=:ref, alineado con el smoke test de routing. El registro anterior que indicaba /pb/?ref=:ref queda obsoleto.
+- Validacion ejecutada:
+  - node tests/pb-public-routing-smoke.mjs: OK.
+  - node tests/pb-step1-journey-boundary-smoke.mjs: OK.
+  - npx wrangler pages deploy . --project-name planespro --branch master: OK, deploy estatico publicado.
+  - https://planespro.cl/pb/whwgd4/: HTTP 200 y HTML PB nuevo detectado.
+  - https://planespro.cl/pb/styles.css?v=pb-responsive-20260728: HTTP 200.
+- Pendiente:
+  - QA visual en navegador real de /pb/whwgd4 con hard refresh/incognito para validar que el nuevo CSS ya no se vea comprimido.
+  - Si persiste cache visual, revisar cache del navegador/CDN, no backend.
+### 2026-07-28 CLT - Antigravity
+- Tipo: Rediseño UI / Lógica Formulario / CONTROL
+- Rol: Implementador
+- Estado: en planificación
+- Objetivo actual:
+  - Recrear la lógica de negocio del formulario `landing-gerow` (Levenshtein para comunas, modal de edades para cargas, condicionales Fonasa/Isapre, UI de teléfono) en el `LeadForm.tsx` de la extensión.
+  - Mantener los estilos y estética del CRM de manera compacta, sin usar patrones genéricos redondeados incompatibles.
+- Archivos reservados:
+  - `src/components/leads/LeadForm.tsx`
+  - `implementation_plan.md`
+- Qué NO debe tocar otra IA:
+  - No modificar `LeadForm.tsx` ni sus validaciones mientras dure esta implementación.
+
+---
+
+## IA-A | 2026-07-28 17:45 CLT | PB compact mobile pass
+
+Estado: LISTO PARA AUDITORIA IA-B.
+
+Alcance CONTROL aplicado:
+- Se trabajo exclusivamente sobre el formulario publico `/pb`.
+- No se toco el formulario/sidebar principal de `planespro.cl`.
+- No se toco la UI de Leads de la extension ni el modal de detalle.
+- No se modifico backend ni logica Supabase; la migracion a Supabase se mantiene intacta.
+- Cloudflare se uso solo para publicar assets estaticos existentes del sitio.
+
+Cambios realizados:
+- `pb/index.html`: cache bust del CSS a `pb-compact-20260728` y eliminacion del texto largo del intro del paso 1.
+- `pb/styles.css`: override responsive final para compactar header, linea de progreso, titulo, tarjetas seleccionadas, opciones y footer en mobile.
+
+Validaciones:
+- `node tests/pb-public-routing-smoke.mjs` OK.
+- `node tests/pb-step1-journey-boundary-smoke.mjs` OK.
+- Deploy estatico ejecutado con `npx wrangler pages deploy . --project-name planespro --branch master` OK.
+- `https://planespro.cl/pb/styles.css?v=pb-compact-20260728` responde 200 y contiene el bloque compacto.
+- `https://planespro.cl/pb/whwgd4/` responde 200, referencia `pb-compact-20260728` y ya no contiene `No es una venta automatica`.
+
+Pendiente de auditoria visual:
+- Confirmar en dispositivo movil real o emulacion iPhone que el paso 1 completo cabe sin scroll. Si aun falta altura, el ajuste restante debe ser solo CSS de `/pb`.
+
+---
+## IA-A | 2026-07-28 17:55 CLT | Correccion de validacion PB compact
+
+Correccion sobre mi bloque anterior:
+- `https://planespro.cl/pb/whwgd4/` responde 200 y ya no contiene `No es una venta automatica`.
+- Esa respuesta no expone el querystring `pb-compact-20260728` en el HTML de la ruta corta.
+- `https://planespro.cl/pb/styles.css?v=pb-compact-20260728` responde 200 y contiene `Final PB compact mobile pass`.
+- Conclusion: el CSS compacto esta publicado; la auditoria visual debe hacerse con hard refresh/incognito sobre `/pb/whwgd4/`.
+
+### 2026-07-28 CLT - Antigravity
+- Tipo: Lógica Formulario Lead / CONTROL
+- Rol: Implementador
+- Estado: completado
+- Objetivo actual:
+  - Completar el Hand-off de la modularización del LeadForm.tsx.
+- Archivos tocados:
+  - src/components/leads/LeadForm.tsx
+  - src/utils/stringHelper.ts (NUEVO - Levenshtein)
+  - src/components/leads/form/ComunaInput.tsx (NUEVO)
+  - src/components/leads/form/PhoneInput.tsx (NUEVO)
+  - src/components/leads/form/HealthSystemSection.tsx (NUEVO)
+  - src/components/leads/form/CargasAgeModal.tsx (NUEVO)
+- Qué ya funciona:
+  - Validado y compilado mediante 
+pm run build sin errores.
+  - La UI hereda la compactación original, respetando las variables gráficas del sistema CRM actual (sin cajas genéricas innecesarias y estricta en modularidad).
+  - Los campos de Fonasa/Isapre, Edad de Cargas, prefijo de teléfono, y autocompletado de comuna por Levenshtein están conectados y tipados correctamente.
+- Qué NO debe tocar otra IA:
+  - El diseño y lógica de las validaciones en la carpeta src/components/leads/form.

@@ -60,61 +60,66 @@ export default function LeadsTableControls({
         </div>
       </div>
 
-      {showFilters && (
-        <div className="flex gap-2 mb-4 items-center flex-wrap bg-white border border-[#E6EAF0] shadow-sm rounded-[8px] p-3 animate-toast-in">
-          <span className="text-[13px] font-semibold text-[#5B6475] mr-1">Filtrar por:</span>
-          
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value as any)}
-            className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
-            <option value="listas">Listas</option>
-            <option value="estados">Estados</option>
-            <option value="fechas">Fechas</option>
-          </select>
+      {/* Bulk Actions and inline Filters */}
+      <div className="flex items-center gap-3 mb-2 min-h-[28px] overflow-x-auto scrollbar-hide text-[12px] font-semibold text-[#5B6475]">
+        {bulkActions && (
+          <div className="flex items-center gap-3 shrink-0">
+            {bulkActions}
+          </div>
+        )}
 
-          {filterType === 'listas' && (
-            <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
-              className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
-              <option value="">Todas las listas</option>
-              {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+        {showFilters && (
+          <div className="flex items-center gap-2 animate-toast-in shrink-0">
+            {bulkActions && (
+              <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            )}
+            
+            <span className="shrink-0">Filtrar por:</span>
+            
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value as any)}
+              className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0">
+              <option value="listas">Listas</option>
+              <option value="estados">Estados</option>
+              <option value="fechas">Fechas</option>
             </select>
-          )}
-          {filterType === 'estados' && (
-            <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
-              className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
-              <option value="">Todos los estados</option>
-              {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
-                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-              ))}
-            </select>
-          )}
-          {filterType === 'fechas' && (
-            <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
-              className="border border-[#E6EAF0] bg-white rounded-[6px] px-2 py-1.5 text-[13px] focus:ring-2 focus:ring-[#6C4CF6] outline-none">
-              <option value="">Todas las fechas</option>
-              <option value="7d">Última semana</option>
-              <option value="30d">Último mes</option>
-              <option value="thisMonth">Este mes</option>
-            </select>
-          )}
 
-          {activeFiltersCount > 0 && (
-            <button onClick={() => { onFilterChange(null); onFilterStatusChange(null); onFilterDateChange(''); }} 
-                    className="ml-auto w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0"
-                    title="Limpiar filtros">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          )}
-        </div>
-      )}
-      
-      {/* Pagination Info and Bulk Actions */}
-      <div className="flex items-center justify-between mb-2 min-h-[28px]">
-        <div className="flex items-center gap-2 overflow-x-auto">
-          {bulkActions}
-        </div>
-        <div className="text-[13px] text-[#5B6475] font-medium whitespace-nowrap ml-auto">
-          Pag. {currentPage}/{pageCount}
-        </div>
+            {filterType === 'listas' && (
+              <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
+                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                <option value="">Todas</option>
+                {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            )}
+            {filterType === 'estados' && (
+              <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
+                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                <option value="">Todos</option>
+                {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
+                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                ))}
+              </select>
+            )}
+            {filterType === 'fechas' && (
+              <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
+                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                <option value="">Todas</option>
+                <option value="7d">Última semana</option>
+                <option value="30d">Último mes</option>
+                <option value="thisMonth">Este mes</option>
+              </select>
+            )}
+
+            {activeFiltersCount > 0 && (
+              <button onClick={() => { onFilterChange(null); onFilterStatusChange(null); onFilterDateChange(''); }} 
+                      className="w-5 h-5 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0 ml-1"
+                      title="Limpiar filtros">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

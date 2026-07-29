@@ -87,6 +87,15 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
     void getSettings().then((settings) => setExportFormat(settings.exportFormat));
   }, []);
 
+  useEffect(() => {
+    if (showForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [showForm]);
+
   const existingRuts = useMemo(() => {
     const ruts = new Set<string>();
     for (const lead of leadIdentities) {
@@ -449,11 +458,20 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   };
 
   return (
-    <div className="flex flex-col animate-ios-slide-up pb-4 w-full">
+    <div className="flex flex-col animate-ios-slide-up pb-4 w-full min-w-0">
       {showForm && (
-        <div className="mb-4 p-4 border border-[#E6EAF0] rounded-[8px] bg-white shadow-sm">
-          <h3 className="text-base font-semibold mb-3">{editing ? 'Editar Lead' : 'Nuevo Lead'}</h3>
-          <LeadForm lead={editing} lists={lists} onSave={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-start justify-center pt-8 p-4 overflow-y-auto custom-scrollbar" onClick={() => { setShowForm(false); setEditing(null); }}>
+          <div className="bg-white rounded-[8px] shadow-2xl w-full max-w-[460px] flex flex-col mx-auto animate-scale-in border border-slate-100 mb-8 relative" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 pb-3 border-b border-slate-100 shrink-0">
+              <h2 className="text-[15px] font-bold text-slate-800 leading-tight">{editing ? 'Editar Lead' : 'Nuevo Lead'}</h2>
+              <button onClick={() => { setShowForm(false); setEditing(null); }} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto custom-scrollbar">
+              <LeadForm lead={editing} lists={lists} onSave={handleSave} onCancel={() => { setShowForm(false); setEditing(null); }} />
+            </div>
+          </div>
         </div>
       )}
 

@@ -730,10 +730,10 @@ El flujo externo no es un unico formulario.
 
 - Cada usuario debe tener 1 link por defecto.
 - El maximo de links no es global: depende del perfil o plan del usuario.
-- La capacidad objetivo inicial es hasta 5 links de publicidad por usuario cuando su perfil lo permita.
+- La capacidad objetivo inicial es hasta 6 links de publicidad por usuario cuando su perfil lo permita.
 - Cada link debe guardar al menos:
   - nombre visible
-  - identificador o slug publico
+  - `short_code` publico corto, sin slug descriptivo y sin exponer UUID completo
   - campana
   - estado activo o inactivo
   - owner del link
@@ -1253,7 +1253,7 @@ Estado al 2026-07-18:
   - `update_my_capture_link(...)`
   - `deactivate_my_capture_link(...)`
   - `get_my_capture_link_stats(...)`
-- Se mantiene el limite por `profiles.capture_links_limit`, con rango 1 a 5.
+- Se mantiene el limite por `profiles.capture_links_limit`, con rango operativo 1 a 6.
 - Se creo backfill idempotente: todo perfil sin link recibe `Link principal`.
 - Validacion remota:
   - 7 funciones verificadas en `public`
@@ -1277,9 +1277,14 @@ Estado al 2026-07-18:
   - editar nombre y campana
   - marcar un link como principal
   - desactivar links no principales
-  - copiar la URL publica `https://planespro.cl/pb/?ref=...`
+  - copiar la URL publica corta `https://planespro.cl/pb/<short_code>`
   - ver leads, cierres, tasa de cierre y cortes analiticos basicos
 - No se agregaron mutaciones directas desde UI sobre `capture_links`.
+- Corte 2026-07-28:
+  - `capture_links.ref_code` queda normalizado a codigos cortos de 6 caracteres desde Supabase.
+  - los refs largos anteriores se conservan solo como auditoria en `metadata.legacy_ref_code`.
+  - la extension construye y copia `https://planespro.cl/pb/<short_code>`.
+  - `landing-gerow` mantiene rewrites estaticos para que `/pb/<short_code>` cargue el formulario PB y preserve el codigo como `ref` interno.
 - Validacion ejecutada:
   - `npm run build`: OK
   - busqueda de `any`, mojibake y caracteres no ASCII nuevos en el bloque tocado: sin coincidencias

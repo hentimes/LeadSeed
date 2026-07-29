@@ -158,7 +158,7 @@
 
   /* --- Sistema Base de Tarjetas (Dashboard Cards) --- */
   .card-standard {
-    @apply bg-white border border-[#E6EAF0] rounded-[6px] py-2 px-4;
+    @apply bg-surface border border-slate-200 rounded-card py-2 px-4 shadow-card;
   }
 
   .card-header {
@@ -166,7 +166,33 @@
   }
 
   .card-title {
-    @apply text-[15px] font-medium text-[#161A24];
+    @apply text-[15px] font-medium text-slate-800;
+  }
+
+  /* --- Modales y Paneles Maestros --- */
+  .modal-container {
+    @apply bg-surface rounded-modal shadow-std border border-slate-200;
+  }
+  
+  .panel-container {
+    @apply bg-surface rounded-panel border border-slate-200;
+  }
+
+  /* --- Tipografía Maestra --- */
+  .text-heading-1 {
+    @apply text-xl font-semibold text-slate-800 tracking-tight;
+  }
+  
+  .text-heading-2 {
+    @apply text-lg font-semibold text-slate-800 tracking-tight;
+  }
+  
+  .text-subtitle {
+    @apply text-[15px] font-medium text-slate-700;
+  }
+  
+  .text-body {
+    @apply text-[13px] text-slate-600;
   }
 }
 

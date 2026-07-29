@@ -176,12 +176,12 @@ export default function LeadsTable({
         onFilterDateChange={onFilterDateChange}
       />
 
-      <div className="bg-white border border-[#E6EAF0] rounded-[6px] overflow-x-auto shadow-sm">
+      <div className="bg-white border border-[#E6EAF0] rounded-[6px] overflow-x-auto shadow-sm w-full min-w-0">
         <table className="w-full text-[13px] text-[#161A24]">
           <thead className="border-b border-[#E6EAF0] text-[#5B6475] bg-white">
             {compactMode ? (
               <tr>
-                <th className="w-8 px-4 py-3"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[#E6EAF0] bg-white'}`} onClick={onSelectAll}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 1 : 0}/></svg></div></th>
+                <th className="w-8 px-2 py-3"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[#E6EAF0] bg-white'}`} onClick={onSelectAll}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 1 : 0}/></svg></div></th>
                 <th onClick={() => onSort('name')} className="text-left px-3 py-3 font-medium cursor-pointer select-none hover:bg-gray-50 w-[30%] min-w-[140px]">
                   <div className="flex items-center gap-1 whitespace-nowrap">
                     {nameLabel} <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('name', sort)}</span>
@@ -197,7 +197,9 @@ export default function LeadsTable({
                 {listsVis && <th className="text-left px-3 py-3 font-medium w-[20%] min-w-[100px]">Listas</th>}
                 {statusVis && <th className="text-left px-3 py-3 font-medium w-[15%] min-w-[80px]">Estado</th>}
                 {scoreVis && <th className="text-left px-3 py-3 font-medium w-[10%] min-w-[70px]">Score</th>}
-                <th className="w-[72px] min-w-[72px] px-3 py-3 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10"></th>
+                <th className="w-[100px] min-w-[100px] px-3 py-3 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal">
+                  <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
+                </th>
               </tr>
             ) : (
               <tr>
@@ -219,7 +221,9 @@ export default function LeadsTable({
                 </th>}
                 {listsVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'lists')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'lists')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Listas</th>}
                 {statusVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'status')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'status')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Estado</th>}
-                <th className="w-12 px-2 py-2 sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10"></th>
+                <th className="w-[100px] min-w-[100px] px-2 py-2 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal">
+                  <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
+                </th>
               </tr>
             )}
           </thead>

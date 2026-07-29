@@ -19,6 +19,11 @@ export const STATUS_COLORS: Record<LeadStatus, string> = {
 };
 
 export interface PlanesproLeadRawPayload {
+  paso1_motivo?: string;
+  paso1_necesidad?: string;
+  paso1_objetivo?: string;
+  paso1_grupo?: string;
+  paso1_resumen?: string;
   sistema_actual?: string;
   rango_renta?: string;
   rango_edad?: string;
@@ -33,6 +38,15 @@ export interface PlanesproLeadRawPayload {
   cita_estado?: string;
   cita_fecha_hora?: string;
   [key: string]: unknown;
+}
+
+export interface PlanesproIntakeJourneyStep1 {
+  version?: string;
+  motivo?: string;
+  necesidad?: string;
+  objetivo?: string;
+  grupo?: string;
+  resumen?: string;
 }
 
 export interface PlanesproLeadMetadata {
@@ -54,6 +68,10 @@ export interface PlanesproLeadMetadata {
   appointment_status?: string | null;
   contact_preference?: string | null;
   advisor_id?: string | null;
+  intake_journey?: {
+    step1?: PlanesproIntakeJourneyStep1;
+    [key: string]: unknown;
+  };
   raw_payload?: PlanesproLeadRawPayload;
   [key: string]: unknown;
 }

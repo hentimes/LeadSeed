@@ -61,3 +61,66 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     }
   }
 });
+
+async function abrirWhatsAppWeb(numero: string, mensaje: string) {
+  const telefono = String(numero).replace(/\D/g, "");
+
+  if (!telefono) {
+    throw new Error("El número de teléfono es inválido.");
+  }
+
+  const url = new URL("https://web.whatsapp.com/send");
+  url.searchParams.set("phone", telefono);
+
+  if (mensaje) {
+    url.searchParams.set("text", mensaje);
+  }
+
+  const tabs = await chrome.tabs.query({
+    url: ["https://web.whatsapp.com/*"],
+  });
+
+  if (tabs.length > 0) {
+    const whatsappTab = tabs[0];
+
+    await chrome.tabs.update(whatsappTab.id!, {
+      url: url.toString(),
+      active: true,
+    });
+
+    if (whatsappTab.windowId !== undefined) {
+      await chrome.windows.update(whatsappTab.windowId, {
+        focused: true,
+      });
+    }
+
+    return {
+      action: "reused",
+      tabId: whatsappTab.id,
+    };
+  }
+
+  const newTab = await chrome.tabs.create({
+    url: url.toString(),
+    active: true,
+  });
+
+  return {
+    action: "created",
+    tabId: newTab.id,
+  };
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "OPEN_WHATSAPP_WEB") {
+    abrirWhatsAppWeb(request.payload.phone, request.payload.message)
+      .then((result) => {
+        sendResponse({ success: true, result });
+      })
+      .catch((error) => {
+        console.error("Error al abrir WhatsApp Web:", error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
+  }
+});

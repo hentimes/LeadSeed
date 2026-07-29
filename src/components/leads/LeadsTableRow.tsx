@@ -34,6 +34,27 @@ interface Props {
 }
 
 
+const getPurpleShade = (id: string) => {
+  const shades = [
+    'bg-[#F2EEFF] text-[#6C4CF6]', 
+    'bg-[#E0D4FF] text-[#5b3ce0]',
+    'bg-[#D6C7FF] text-[#4a2bb5]',
+    'bg-[#8b73f8] text-white',
+    'bg-[#6C4CF6] text-white',
+    'bg-[#4a2bb5] text-white'
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return shades[Math.abs(hash) % shades.length];
+};
+
+const AvatarIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+);
+
 const LeadsTableRow = ({
   lead, idx, selectedIds, sendCounts, listsMap, compactMode, filterMode, isTrash,
   nameVis, rutVis, phoneVis, emailVis, companyVis, dateVis, listsVis, statusVis, scoreVis,
@@ -51,8 +72,8 @@ const LeadsTableRow = ({
   );
 
   const renderNameWithBadges = (isCompact: boolean) => (
-    <div className={`font-medium text-xs flex items-center gap-1.5 ${isCompact ? '' : ''}`}>
-      {isCompact ? shortName(lead.name) : lead.name}
+    <div className={`font-medium text-xs flex items-center gap-1.5 min-w-0`}>
+      <span className="truncate">{isCompact ? shortName(lead.name) : lead.name}</span>
       {lead.hasUnreadCrossExecAlert && (
         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 whitespace-nowrap">
           {Icon.Warning()} Cruce
@@ -98,9 +119,16 @@ const LeadsTableRow = ({
       <tr data-row-index={idx} data-lead-id={lead.id!} className={trClass}>
         <td className="px-2 py-1.5">{checkboxBox}</td>
         <td className="px-2 py-1.5">
-          {renderNameWithBadges(true)}
-          {rutVis && lead.rut && <div className="text-[11px] text-[#5B6475] font-mono mt-0.5">RUT: {lead.rut}</div>}
-          {nameVis && !rutVis && !lead.rut && <div className="text-[11px] text-[#5B6475] mt-0.5">-</div>}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={`w-7 h-7 rounded-[4px] shrink-0 flex items-center justify-center shadow-sm ${getPurpleShade(lead.id!)}`}>
+              <AvatarIcon />
+            </div>
+            <div className="flex flex-col min-w-0">
+              {renderNameWithBadges(true)}
+              {rutVis && lead.rut && <div className="text-[11px] text-[#5B6475] font-mono mt-0.5 truncate">RUT: {lead.rut}</div>}
+              {nameVis && !rutVis && !lead.rut && <div className="text-[11px] text-[#5B6475] mt-0.5">-</div>}
+            </div>
+          </div>
         </td>
         {companyVis && <td className="px-2 py-1.5 text-[12px]">{lead.company || '-'}</td>}
         <td className="px-2 py-1.5">

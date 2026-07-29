@@ -8,8 +8,8 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["sidePanel", "storage", "notifications", "alarms", "identity"],
-  "host_permissions": ["https://wa.me/*", "https://api.emailjs.com/*"],
+  "permissions": ["sidePanel", "storage", "notifications", "alarms", "identity", "tabs"],
+  "host_permissions": ["https://wa.me/*", "https://api.emailjs.com/*", "https://web.whatsapp.com/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:;"
   },

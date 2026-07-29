@@ -257,7 +257,9 @@ Regla de avance vigente:
 - [COMPLETADO] Permitir editar nombre, campana y estado.
 - [COMPLETADO] Permitir marcar link principal.
 - [COMPLETADO] Permitir desactivar links no principales.
-- [COMPLETADO] Copiar URL publica `https://planespro.cl/pb/?ref=...`.
+- [COMPLETADO] Copiar URL publica corta `https://planespro.cl/pb/<short_code>`.
+- [COMPLETADO] Migrar `capture_links.ref_code` a codigos cortos de 6 caracteres en Supabase, preservando el ref historico en `metadata.legacy_ref_code`.
+- [COMPLETADO] Publicar rewrite para que `/pb/<short_code>` resuelva al formulario PB sin query string visible.
 - [COMPLETADO] Mostrar leads, cierres, tasa de cierre y cortes analiticos basicos.
 - [COMPLETADO] IA-B aprobo UI compacta el 2026-07-18.
 - [PENDIENTE] Validacion manual en extension con usuario real.

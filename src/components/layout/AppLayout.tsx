@@ -46,7 +46,7 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
         onNavigateSettings={() => onNavigate('settings')}
       />
 
-      <main className="flex-1 overflow-y-auto relative animate-fade-in z-0 px-2 sm:px-4 py-4 w-full">
+      <main className="flex-1 overflow-y-auto relative animate-fade-in z-0 px-2 sm:px-4 py-4 w-full min-w-0">
         {children}
       </main>
 

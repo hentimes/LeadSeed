@@ -9,7 +9,15 @@ import {
 } from '../repositories/captureLinksRepository';
 import type { CaptureLink, CaptureLinkInput, CaptureLinkStats } from '../types';
 
-const PUBLIC_LINK_BASE = 'https://planespro.cl/pb/?ref=';
+const PUBLIC_LINK_BASE = 'https://planespro.cl/pb/';
+const SHORT_REF_ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz';
+
+function generateLocalShortRefCode(length = 6): string {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+
+  return Array.from(bytes, (byte) => SHORT_REF_ALPHABET[byte % SHORT_REF_ALPHABET.length]).join('');
+}
 
 function toNumber(value: number | null | undefined): number {
   return Number(value ?? 0);
@@ -27,7 +35,7 @@ function mapCaptureLinkRow(row: CaptureLinkRow): CaptureLink {
     totalLeads: toNumber(row.total_leads),
     closedLeads: toNumber(row.closed_leads),
     closeRatePct: toNumber(row.close_rate_pct),
-    captureLinksLimit: Math.max(1, Math.min(toNumber(row.capture_links_limit) || 1, 5)),
+    captureLinksLimit: Math.max(1, Math.min(toNumber(row.capture_links_limit) || 1, 6)),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -64,6 +72,7 @@ export async function createMyCaptureLink(input: CaptureLinkInput): Promise<Capt
   const row = await createMyCaptureLinkRow({
     p_label: input.label,
     p_campaign_name: input.campaignName || null,
+    p_ref_code: generateLocalShortRefCode(),
     p_stats_config: input.statsConfig || {},
     p_metadata: {},
     p_is_default: input.isDefault || false,

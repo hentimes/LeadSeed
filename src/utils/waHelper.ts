@@ -18,12 +18,6 @@ export function normalizePhone(phone: string): string {
   return `+569${digits.slice(-8)}`;
 }
 
-function buildWaLink(phone: string, message: string): string {
-  const clean = phone.replace(/[^+\d]/g, '');
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/${clean}?text=${encoded}`;
-}
-
 export function replaceVariables(text: string, lead: Lead): string {
   return text
     .replace(/\{nombre\}/gi, lead.name)
@@ -39,9 +33,17 @@ export function replaceVariables(text: string, lead: Lead): string {
     .replace(/\{notes\}/gi, lead.notes);
 }
 
-function openWhatsApp(phone: string, message: string): void {
-  const link = buildWaLink(phone, message);
-  window.open(link, '_blank');
+export function openWhatsApp(phone: string, message: string = ''): void {
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+    chrome.runtime.sendMessage({
+      type: 'OPEN_WHATSAPP_WEB',
+      payload: { phone, message }
+    }).catch(console.error);
+  } else {
+    const clean = phone.replace(/\D/g, '');
+    const encoded = encodeURIComponent(message);
+    window.open(`https://web.whatsapp.com/send?phone=${clean}&text=${encoded}`, '_blank');
+  }
 }
 
 export function openWhatsAppForLeads(
