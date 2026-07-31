@@ -10,7 +10,6 @@ import LoginPage from './pages/LoginPage';
 import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
 import { loadAppPreferences, syncSettingsToChromeStorage, updateStoredSettings } from './services/appSettings';
 import { loadPendingTaskCount, processScheduledEmails, purgeDeletedLeads } from './services/appMaintenance';
-import { LayoutProvider } from './contexts/LayoutContext';
 
 const DEFAULT_COLUMNS: ColumnDef[] = [
   { key: 'name', label: 'Nombre', visible: true },
@@ -138,25 +137,23 @@ export default function App() {
   }
 
   return (
-    <LayoutProvider>
-      <AppLayout currentPage={page} onNavigate={setPage} taskCount={taskCount} isAdmin={isAdmin}>
-        <AppPageRenderer
-          page={page}
-          compactMode={compactMode}
-          darkMode={darkMode}
-          visibleCols={visibleCols}
-          highlightTemplate={highlightTemplate}
-          isAdmin={isAdmin}
-          hasFeature={hasFeature}
-          onNavigate={setPage}
-          onTasksChanged={refreshTaskCount}
-          onCompactModeChange={handleCompactModeChange}
-          onDarkModeChange={handleDarkModeChange}
-          onColsChange={handleColsChange}
-          onClearHighlightTemplate={() => setHighlightTemplate(null)}
-          onHighlightTemplate={(template) => setHighlightTemplate(template)}
-        />
-      </AppLayout>
-    </LayoutProvider>
+    <AppLayout currentPage={page} onNavigate={setPage} taskCount={taskCount} isAdmin={isAdmin}>
+      <AppPageRenderer
+        page={page}
+        compactMode={compactMode}
+        darkMode={darkMode}
+        visibleCols={visibleCols}
+        highlightTemplate={highlightTemplate}
+        isAdmin={isAdmin}
+        hasFeature={hasFeature}
+        onNavigate={setPage}
+        onTasksChanged={refreshTaskCount}
+        onCompactModeChange={handleCompactModeChange}
+        onDarkModeChange={handleDarkModeChange}
+        onColsChange={handleColsChange}
+        onClearHighlightTemplate={() => setHighlightTemplate(null)}
+        onHighlightTemplate={(template) => setHighlightTemplate(template)}
+      />
+    </AppLayout>
   );
 }

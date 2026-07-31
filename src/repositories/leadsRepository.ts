@@ -166,6 +166,22 @@ export async function fetchLeadRows(userId: string): Promise<LeadRow[]> {
   return (data ?? []) as LeadRow[];
 }
 
+export async function fetchPinnedLeads(userId: string): Promise<LeadRow[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEAD_SELECT)
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .eq('metadata->>isPinned', 'true');
+
+  if (error) {
+    console.error('Error fetching pinned leads:', error);
+    return [];
+  }
+
+  return (data ?? []) as LeadRow[];
+}
+
 export async function fetchLeadPageRows(userId: string, params: LeadPageQuery): Promise<LeadPageRowResult> {
   const safePage = Math.max(1, params.page || 1);
   const safePageSize = Math.max(1, Math.min(200, params.pageSize || 50));

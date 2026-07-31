@@ -29,6 +29,7 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
         isDrawerOpen={isDrawerOpen}
         onToggleDrawer={() => setIsDrawerOpen(prev => !prev)}
         onToggleUserMenu={() => setIsUserMenuOpen(prev => !prev)}
+        currentPage={currentPage}
       />
       
       <NavigationDrawer 

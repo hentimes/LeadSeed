@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { exportBackup, importBackup } from '../../utils/backup';
 import { useDuplicates } from '../../hooks/useDuplicates';
-import { getSettings, saveSettings } from '../../db/database';
+import { getSettings, saveSettings } from '../../services/appSettingsService';
 import type { ExportFormat } from '../../types';
 import { Icon } from '../../utils/icons';
 import ImportModal from '../leads/ImportModal';

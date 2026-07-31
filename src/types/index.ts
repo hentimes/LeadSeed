@@ -89,6 +89,7 @@ export interface Lead {
   status: LeadStatus;
   listaIds: number[];
   score: number;
+  isPinned?: boolean;
 
   // Campos de Negocio y Marketing (Nuevos)
   scheduledAt?: string;
@@ -432,6 +433,11 @@ export interface AppSettings {
   dailyGoalEmail: number;
   dailyGoalCalls: number;
   dashboardComparePeriod: ComparePeriod;
+  whatsappClientPreference: 'web' | 'app';
+  
+  // Agrupación y Smart Lists
+  activeSmartLists?: string[];
+  listGroups?: { id: string; name: string; listIds: (number | string)[] }[];
 }
 
 export type TaskStatus = 'pendiente' | 'completada';

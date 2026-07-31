@@ -3,6 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types';
 import { getCurrentSession, logoutCurrentUser, mapSessionToUser, onAuthSessionChange, persistGoogleCalendarConnectionFromSession } from '../services/authService';
 import { loadActiveFeatures, loadUserProfile } from '../services/profileService';
+import { subscribeToUserUpdates, subscribeToPlanUpdates } from '../services/realtimeService';
 import { supabase } from '../lib/supabaseClient';
 
 interface AuthContextType {
@@ -119,48 +120,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
-      .channel(`auth_entitlements_${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
-        (payload) => {
-          const nextProfile = payload.new as Profile;
-          setProfile((currentProfile) => (currentProfile ? { ...currentProfile, ...nextProfile } : nextProfile));
-          void loadFeatures(requestVersionRef.current).catch(() => undefined);
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_feature_overrides', filter: `user_id=eq.${user.id}` },
-        () => {
-          void loadFeatures(requestVersionRef.current).catch(() => undefined);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return subscribeToUserUpdates(
+      user.id,
+      (nextProfile) => {
+        setProfile((currentProfile) => (currentProfile ? { ...currentProfile, ...nextProfile } : nextProfile));
+        void loadFeatures(requestVersionRef.current).catch(() => undefined);
+      },
+      () => {
+        void loadFeatures(requestVersionRef.current).catch(() => undefined);
+      }
+    );
   }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id || !profile?.plan_id) return;
 
-    const channel = supabase
-      .channel(`auth_plan_features_${user.id}_${profile.plan_id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'plan_features', filter: `plan_id=eq.${profile.plan_id}` },
-        () => {
-          void loadFeatures(requestVersionRef.current).catch(() => undefined);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return subscribeToPlanUpdates(
+      user.id,
+      profile.plan_id,
+      () => {
+        void loadFeatures(requestVersionRef.current).catch(() => undefined);
+      }
+    );
   }, [profile?.plan_id, user?.id]);
 
   const signOut = async () => {

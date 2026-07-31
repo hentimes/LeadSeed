@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSaaS } from '../../hooks/useSaaS';
 import type { Plan, Feature, PlanFeature } from '../../types';
 import { Icon } from '../../utils/icons';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 export default function AdminRolesPage() {
   const { getPlans, getFeatures, getPlanFeatures, createPlan, assignFeatureToPlan, removeFeatureFromPlan } = useSaaS();
@@ -57,7 +58,7 @@ export default function AdminRolesPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando perfiles...</div>;
+  if (loading) return <LoadingOverlay message="Cargando perfiles..." />;
 
   return (
     <div className="flex gap-6 h-full">

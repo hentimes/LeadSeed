@@ -70,7 +70,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[var(--ls-bg,#F8F9FC)] dark:bg-gray-900 border dark:border-gray-800 rounded-lg overflow-hidden">
+    <div className="panel-container flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-[var(--ls-border,#E6E8F0)] dark:border-gray-700 flex justify-between items-center z-10 shadow-sm">
         <div className="flex gap-2">

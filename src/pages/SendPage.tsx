@@ -23,7 +23,6 @@ import WhatsAppSender from '../components/send/WhatsAppSender';
 import EmailSender from '../components/send/EmailSender';
 import CallSender from '../components/send/CallSender';
 import { Icon } from '../utils/icons';
-import PageHeader from '../components/ui/PageHeader';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -62,10 +61,6 @@ export default function SendPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Enviar Mensajes"
-        description="Envía mensajes masivos y personalizados a tus listas de contactos."
-      />
 
       <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
         <button

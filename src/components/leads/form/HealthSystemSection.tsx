@@ -43,20 +43,21 @@ export function HealthSystemSection({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[60px_1fr_1fr] gap-3">
+      <div className="grid grid-cols-[120px_1fr_1fr] gap-3">
         <div>
           <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Edad</label>
-          <input
-            type="number"
-            min="0"
-            max="120"
+          <select
             value={rangoEdad}
-            onChange={(e) => {
-               if (e.target.value.length <= 3) onRangoEdadChange(e.target.value)
-            }}
-            placeholder="30"
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
-          />
+            onChange={(e) => onRangoEdadChange(e.target.value)}
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all cursor-pointer"
+          >
+            <option value="">Exacta o Rango...</option>
+            <option value="Menor a 30">Menor a 30</option>
+            <option value="30-39">30 a 39 años</option>
+            <option value="40-49">40 a 49 años</option>
+            <option value="50-59">50 a 59 años</option>
+            <option value="60+">60 años o más</option>
+          </select>
         </div>
 
         <div>

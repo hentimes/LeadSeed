@@ -1,19 +1,37 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
-import { useLayoutContext } from '../../contexts/LayoutContext';
+import type { Page } from '../../types';
 
 interface Props {
   isDrawerOpen: boolean;
   onToggleDrawer: () => void;
   onToggleUserMenu: () => void;
+  currentPage: Page;
 }
 
-export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu }: Props) {
+const PAGE_TITLES: Record<Page, string> = {
+  dashboard: 'Panel Analítico',
+  leads: 'Gestión de Leads',
+  lists: 'Listas y Cargas',
+  templates: 'Plantillas de Mensaje',
+  send: 'Envío Masivo',
+  history: 'Historial de Envíos',
+  tasks: 'Mis Tareas',
+  pipeline: 'Pipeline Comercial',
+  agenda: 'Agenda y Citas',
+  settings: 'Configuración',
+  community: 'Comunidad LeadSeed',
+  support: 'Soporte Técnico',
+  admin: 'Administración',
+  chat: 'Chats Activos',
+};
+
+export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu, currentPage }: Props) {
   const { user, profile } = useAuth();
-  const { pageTitle } = useLayoutContext();
+  const pageTitle = PAGE_TITLES[currentPage];
 
   return (
-    <header className="h-[64px] shrink-0 bg-white dark:bg-slate-900 border-b border-[var(--ls-border,#E6E8F0)] dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 relative">
+    <header className="h-[64px] shrink-0 bg-surface dark:bg-slate-900 border-b border-[var(--ls-border,#E6E8F0)] dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 relative">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleDrawer}
@@ -36,7 +54,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu 
         </button>
         <div className="flex items-center gap-2">
           {pageTitle ? (
-            <span className="font-medium text-[var(--ls-text,#161A24)] dark:text-white text-[18px] tracking-tight ml-2">
+            <span className="text-heading-2 ml-2">
               {pageTitle}
             </span>
           ) : (

@@ -10,7 +10,6 @@ import {
 } from '../services/historyService';
 import type { Page } from '../types';
 import { Icon } from '../utils/icons';
-import PageHeader from '../components/ui/PageHeader';
 
 interface Props {
   onNavigate: (page: Page) => void;
@@ -86,10 +85,6 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Historial de Envíos"
-        description="Revisa el registro de mensajes enviados y actividad reciente."
-      />
 
       <div className="flex gap-2 mb-3 items-center flex-wrap">
         <input
@@ -123,7 +118,7 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
       </div>
 
       {tab === 'envios' ? (
-        <div className="border rounded-lg overflow-hidden dark:border-gray-700">
+        <div className="card-standard overflow-hidden">
           {filteredLogs.length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-gray-400">No hay envios.</p>
           ) : (
@@ -162,7 +157,7 @@ export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
           )}
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden dark:border-gray-700">
+        <div className="card-standard overflow-hidden">
           {filteredActivity.length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-gray-400">No hay actividad.</p>
           ) : (

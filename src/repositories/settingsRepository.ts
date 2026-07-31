@@ -15,10 +15,13 @@ export interface ProfileSettingsRow {
   daily_goal_email: number | null;
   daily_goal_calls: number | null;
   dashboard_compare_period: 'yesterday' | 'lastWeek' | 'lastMonth' | 'lastYear' | null;
+  whatsapp_client_preference: 'web' | 'app' | null;
+  active_smart_lists: string[] | null;
+  list_groups: { id: string; name: string; listIds: (number | string)[] }[] | null;
 }
 
 const PROFILE_SETTINGS_SELECT =
-  'compact_mode, dark_mode, visible_cols, email_provider, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period';
+  'compact_mode, dark_mode, visible_cols, email_provider, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period, whatsapp_client_preference, active_smart_lists, list_groups';
 
 export async function fetchAuthenticatedUserId(): Promise<string | undefined> {
   const session = await fetchCurrentSession();

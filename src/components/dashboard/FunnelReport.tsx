@@ -44,7 +44,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             Volver al pipeline
           </button>
           <div className="h-4 w-[1px] bg-[#E2E6F0]" />
-          <h1 className="text-[14px] font-medium text-[#111936]">Reporte completo del embudo</h1>
+          <h1 className="text-heading-2">Reporte completo del embudo</h1>
         </div>
         
         <select 
@@ -62,7 +62,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
       {/* 1. KPIs */}
       <div className="grid grid-cols-4 gap-3">
         {/* Tasa de conversión */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 flex flex-col shadow-sm">
+        <div className="card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-[#5B6475]">
             <div className="w-5 h-5 flex items-center justify-center bg-[#F4F1FF] text-[#7B5CFF] rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -77,7 +77,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         </div>
 
         {/* Ciclo de ventas */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 flex flex-col shadow-sm">
+        <div className="card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-[#5B6475]">
             <div className="w-5 h-5 flex items-center justify-center bg-[#F4F1FF] text-[#7B5CFF] rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -92,7 +92,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         </div>
 
         {/* Tasa de pérdida */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 flex flex-col shadow-sm">
+        <div className="card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-[#5B6475]">
             <div className="w-5 h-5 flex items-center justify-center bg-[#F4F1FF] text-[#7B5CFF] rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -107,7 +107,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         </div>
 
         {/* Valor de Oportunidades */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 flex flex-col shadow-sm">
+        <div className="card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-[#5B6475]">
             <div className="w-5 h-5 flex items-center justify-center bg-[#F4F1FF] text-[#7B5CFF] rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -125,9 +125,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
       <div className="grid grid-cols-3 gap-3">
         
         {/* Drop-off Analysis */}
-        <div className="col-span-2 bg-white border border-[#E6EAF0] rounded-[6px] p-3 shadow-sm flex flex-col">
+        <div className="col-span-2 card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
-            <h3 className="text-[12px] font-medium text-[#111936]">Análisis de Fugas (Drop-offs)</h3>
+            <h3 className="text-subtitle">Análisis de Fugas (Drop-offs)</h3>
             <div className="text-[#8C95A6]"><Icon.Help /></div>
           </div>
           <div className="flex-1 flex items-center justify-center min-h-[140px] max-w-[400px] w-full mx-auto">
@@ -136,9 +136,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         </div>
 
         {/* Loss Reasons */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 shadow-sm flex flex-col">
+        <div className="card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-1">
-            <h3 className="text-[12px] font-medium text-[#111936]">Razones de descarte</h3>
+            <h3 className="text-subtitle">Razones de descarte</h3>
             <div className="text-[#8C95A6]"><Icon.Help /></div>
           </div>
           <div className="flex-1 min-h-[140px]">
@@ -151,9 +151,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
       <div className="grid grid-cols-2 gap-3">
         
         {/* Time in Stage */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 shadow-sm flex flex-col">
+        <div className="card-standard p-3 flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
-            <h3 className="text-[12px] font-medium text-[#111936]">Tiempo promedio por etapa</h3>
+            <h3 className="text-subtitle">Tiempo promedio por etapa</h3>
             <div className="text-[#8C95A6]"><Icon.Help /></div>
           </div>
           <div className="flex-1">
@@ -162,9 +162,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         </div>
 
         {/* Quality Matrix */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-3 shadow-sm flex flex-col overflow-hidden">
+        <div className="card-standard p-3 flex flex-col overflow-hidden">
           <div className="flex items-center gap-1.5 mb-1">
-            <h3 className="text-[12px] font-medium text-[#111936]">Calidad de Leads por Fuente</h3>
+            <h3 className="text-subtitle">Calidad de Leads por Fuente</h3>
             <div className="text-[#8C95A6]"><Icon.Help /></div>
           </div>
           <div className="flex-1 overflow-auto custom-scrollbar">

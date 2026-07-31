@@ -8,14 +8,14 @@ import LeadForm from '../components/leads/LeadForm';
 import LeadDetail from '../components/leads/LeadDetail';
 import ImportModal from '../components/leads/ImportModal';
 import BulkActionBar from '../components/leads/BulkActionBar';
-import PageHeader from '../components/ui/PageHeader';
+
 import type { ColumnDef } from '../components/ColumnSelector';
 import type { ParsedRow } from '../utils/importParser';
 import { exportToJSON, exportToExcel } from '../utils/exportData';
-import { getSettings } from '../db/database';
+import { getSettings } from '../services/appSettingsService';
 import { Icon } from '../utils/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { useLayoutContext } from '../contexts/LayoutContext';
+
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 
@@ -36,10 +36,10 @@ interface LeadsPageProps {
 }
 
 export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNavigate }: LeadsPageProps) {
-  const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey } = useLeads();
+  const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey, getPinned } = useLeads();
   const { getAll: getLists } = useLists();
   const { hasFeature, user } = useAuth();
-  const { setPageTitle } = useLayoutContext();
+
   const pageSize = 50;
 
   const [filterMode, setFilterMode] = useState<string | null>(null);
@@ -58,16 +58,13 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   const [viewing, setViewing] = useState<Lead | null>(null);
   const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
   const [newLeadToast, setNewLeadToast] = useState<{ id: string; name: string } | null>(null);
+  const [pinToast, setPinToast] = useState<{ name: string; isPinned: boolean } | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
   const [sort, setSort] = useState<{ field: LeadSortField; dir: 'asc' | 'desc' }>({ field: 'createdAt', dir: 'desc' });
 
   const { filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters();
 
-  useEffect(() => {
-    setPageTitle('Leads');
-    return () => setPageTitle(null);
-  }, [setPageTitle]);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -180,15 +177,20 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
       data = pageData.items;
       nextFilteredCount = pageData.filteredCount;
       nextTotalCount = pageData.totalCount;
-    } else if (filterMode === 'olvidados' && user?.id) {
-      const pageData = await getForgottenPage(pageQuery);
-      data = pageData.items;
-      nextFilteredCount = pageData.filteredCount;
-      nextTotalCount = pageData.totalCount;
     } else {
-      const pageData = await getPage(pageQuery);
-      data = pageData.items;
-      nextFilteredCount = pageData.filteredCount;
+      let pageData;
+      if (filterMode === 'olvidados' && user?.id) {
+        pageData = await getForgottenPage(pageQuery);
+      } else {
+        pageData = await getPage(pageQuery);
+      }
+
+      const allPinned = await getPinned();
+      const pinnedIds = new Set(allPinned.map((p) => p.id));
+      const nonPinnedItems = pageData.items.filter((item) => !pinnedIds.has(item.id));
+      
+      data = [...allPinned, ...nonPinnedItems];
+      nextFilteredCount = pageData.filteredCount; // Omit pinned from count inflation
       nextTotalCount = pageData.totalCount;
     }
 
@@ -321,9 +323,30 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
     }
 
     await save(lead);
-    setEditing(null);
     setShowForm(false);
+    setEditing(null);
+    void loadLeads();
+  };
+
+  const handleTogglePin = async (lead: Lead, isPinned: boolean) => {
+    await save({ ...lead, isPinned });
+    setPinToast({ name: lead.name, isPinned });
+    setTimeout(() => {
+      setPinToast(null);
+    }, 3000);
     await loadLeads();
+  };
+
+  const handleExport = async () => {
+    let data: Lead[];
+    if (selectedIds.size > 0) {
+      data = leads.filter((lead) => selectedIds.has(lead.id!));
+    } else {
+      data = showTrash ? await getDeleted() : await getAll();
+    }
+
+    if (exportFormat === 'excel') exportToExcel(data);
+    else exportToJSON(data);
   };
 
   const handleDelete = async (id: string) => {
@@ -426,17 +449,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
     setSelectedIds(new Set());
   };
 
-  const handleExport = async () => {
-    let data: Lead[];
-    if (selectedIds.size > 0) {
-      data = leads.filter((lead) => selectedIds.has(lead.id!));
-    } else {
-      data = showTrash ? await getDeleted() : await getAll();
-    }
 
-    if (exportFormat === 'excel') exportToExcel(data);
-    else exportToJSON(data);
-  };
 
   const handleImport = async (rows: ParsedRow[]) => {
     if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
@@ -552,6 +565,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
           }
         }}
         compactMode={compactMode}
+        onTogglePin={handleTogglePin}
         lastClickedIndex={lastClickedIndex}
         onSetLastClicked={setLastClickedIndex}
       />
@@ -581,6 +595,14 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
             <span>{toast.name} movido a la papelera</span>
             <button onClick={() => handleUndoDelete(toast.id)} className="text-blue-400 hover:text-blue-300 font-medium underline">Deshacer</button>
             <button onClick={() => setToast(null)} className="text-gray-400 hover:text-gray-300 ml-1">&times;</button>
+          </div>
+        </div>
+      )}
+
+      {pinToast && (
+        <div className="fixed bottom-36 left-4 right-4 z-50 flex justify-center animate-toast-in">
+          <div className="bg-slate-800 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm flex items-center gap-3">
+            <span>{pinToast.isPinned ? `${pinToast.name} ha sido fijado al inicio` : `${pinToast.name} ha sido desfijado`}</span>
           </div>
         </div>
       )}

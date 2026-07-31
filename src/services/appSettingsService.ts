@@ -16,14 +16,22 @@ export async function getSettings(): Promise<AppSettings> {
     emailJSUserId: '',
     emailJSServiceId: '',
     emailJSTemplateId: '',
-    exportFormat: 'json',
-    compactMode: true,
+    exportFormat: 'excel',
+    compactMode: false,
     darkMode: false,
-    visibleCols: [],
-    dailyGoalWhatsApp: 30,
+    visibleCols: [
+      { key: 'name', label: 'Nombre', visible: true },
+      { key: 'phone', label: 'Teléfono', visible: true },
+      { key: 'email', label: 'Correo', visible: true },
+      { key: 'status', label: 'Estado', visible: true },
+    ],
+    dailyGoalWhatsApp: 50,
     dailyGoalEmail: 20,
-    dailyGoalCalls: 5,
-    dashboardComparePeriod: 'yesterday',
+    dailyGoalCalls: 10,
+    dashboardComparePeriod: 'lastWeek',
+    whatsappClientPreference: 'web',
+    activeSmartLists: ['smart_nuevos', 'smart_sin_gestion', 'smart_eliminados'],
+    listGroups: [],
   };
 
   try {
@@ -48,6 +56,9 @@ export async function getSettings(): Promise<AppSettings> {
         dailyGoalEmail: data.daily_goal_email ?? defaultSettings.dailyGoalEmail,
         dailyGoalCalls: data.daily_goal_calls ?? defaultSettings.dailyGoalCalls,
         dashboardComparePeriod: data.dashboard_compare_period ?? defaultSettings.dashboardComparePeriod,
+        whatsappClientPreference: data.whatsapp_client_preference ?? defaultSettings.whatsappClientPreference,
+        activeSmartLists: data.active_smart_lists ?? defaultSettings.activeSmartLists,
+        listGroups: data.list_groups ?? defaultSettings.listGroups,
       };
     }
   } catch (e) {
@@ -73,6 +84,9 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
         daily_goal_email: settings.dailyGoalEmail,
         daily_goal_calls: settings.dailyGoalCalls,
         dashboard_compare_period: settings.dashboardComparePeriod,
+        whatsapp_client_preference: settings.whatsappClientPreference,
+        active_smart_lists: settings.activeSmartLists,
+        list_groups: settings.listGroups,
       });
     }
   } catch (e) {

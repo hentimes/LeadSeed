@@ -29,6 +29,7 @@ import {
   loadLeadDetailData,
   markLeadCrossExecAlertsAsRead,
 } from '../../services/leadDetailService';
+import { updateLead } from '../../repositories/leadsRepository';
 
 interface Props {
   lead: Lead;
@@ -249,12 +250,23 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
       setSendLogs(data.sendLogs);
       setWaTemplates(data.waTemplates);
       setEmailTemplates(data.emailTemplates);
+
+      // Marcar como leido si aun no lo esta
+      if (metadata.is_read !== true) {
+        try {
+          const updatedMetadata = { ...metadata, is_read: true };
+          await updateLead(leadId, { metadata: updatedMetadata });
+          // No necesitamos actualizar el estado local 'lead' ya que cerraremos el modal o no es visible
+        } catch (e) {
+          console.error('Error marcando lead como leido:', e);
+        }
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [leadId]);
+  }, [leadId, metadata]);
 
   useEffect(() => {
     let cancelled = false;
@@ -437,7 +449,17 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
 
   const toJourneyLabel = (val: string, labels: Record<string, string>) => labels[val] || val;
   
-  const journey = (planesproMetadata as any)?.intake_journey?.step1;
+  const journey = (planesproMetadata as any)?.intake_journey?.step1 || (() => {
+    const rp = rawPayload as Record<string, unknown>;
+    const motivo = rp.paso1_motivo as string | undefined;
+    const necesidad = rp.paso1_necesidad as string | undefined;
+    const objetivo = rp.paso1_objetivo as string | undefined;
+    const resumen = rp.paso1_resumen as string | undefined;
+    if (motivo || necesidad || objetivo || resumen) {
+      return { motivo, necesidad, objetivo, resumen };
+    }
+    return undefined;
+  })();
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';

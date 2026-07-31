@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getSettings } from '../db/database';
+import { getSettings } from '../services/appSettingsService';
 import { fetchDashboardSnapshot, type DashboardSnapshot } from '../services/dashboardService';
 import type { AppSettings, Page } from '../types';
-import { useLayoutContext } from '../contexts/LayoutContext';
+
 
 // Tabs modulares
 import OverviewTab from './dashboard/OverviewTab';
@@ -20,13 +20,6 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [reportType, setReportType] = useState<'acquisition' | 'funnel' | null>(null);
   const { user } = useAuth();
-  const { setPageTitle } = useLayoutContext();
-
-  useEffect(() => {
-    setPageTitle(`Panel Analítico`);
-    
-    return () => setPageTitle(null);
-  }, [setPageTitle]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,7 +100,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         
         {/* Date Picker (Mock) */}
         <div className="pb-2">
-          <button className="flex items-center gap-2 px-3 py-1.5 border border-[#E6EAF0] rounded-[8px] bg-white text-[13px] font-medium text-[#161A24] hover:bg-gray-50 transition-colors">
+          <button className="btn btn-secondary btn-sm flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             Hoy, {new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#5B6475] ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>

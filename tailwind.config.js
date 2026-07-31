@@ -17,11 +17,11 @@ export default {
         }
       },
       borderRadius: {
-        'std': 'var(--radius-md, 0.5rem)',
-        'modal': 'var(--ls-radius-lg, 18px)',
-        'card': 'var(--ls-radius-md, 14px)',
-        'panel': 'var(--ls-radius-sm, 10px)',
-        'btn': 'var(--radius-md, 0.5rem)',
+        'std': '6px',
+        'modal': '8px',
+        'card': '6px',
+        'panel': '6px',
+        'btn': '6px',
         'input': '6px',
       },
       boxShadow: {

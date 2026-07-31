@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import type { Lead, LeadList } from '../../types';
 import { STATUS_LABELS, STATUS_COLORS } from '../../types';
 import { Icon } from '../../utils/icons';
@@ -29,6 +29,7 @@ interface Props {
   onEdit: (lead: Lead) => void;
   onDelete: (id: string) => void;
   onRestore?: (id: string) => void;
+  onTogglePin: (lead: Lead, isPinned: boolean) => void;
   getScore: (lead: Lead) => number;
   shortName: (full: string) => string;
 }
@@ -58,9 +59,10 @@ const AvatarIcon = () => (
 const LeadsTableRow = ({
   lead, idx, selectedIds, sendCounts, listsMap, compactMode, filterMode, isTrash,
   nameVis, rutVis, phoneVis, emailVis, companyVis, dateVis, listsVis, statusVis, scoreVis,
-  onView, onEdit, onDelete, onRestore, getScore, shortName
+  onView, onEdit, onDelete, onRestore, onTogglePin, getScore, shortName
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
+  const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
   const trClass = `border-b border-[#E6EAF0] transition-colors cursor-pointer ${isSelected ? 'bg-[#E0D4FF] hover:bg-[#D6C7FF]' : 'bg-white hover:bg-gray-50'}`;
   
   const checkboxBox = (
@@ -120,8 +122,24 @@ const LeadsTableRow = ({
         <td className="px-2 py-1.5">{checkboxBox}</td>
         <td className="px-2 py-1.5">
           <div className="flex items-center gap-2 min-w-0">
-            <div className={`w-7 h-7 rounded-[4px] shrink-0 flex items-center justify-center shadow-sm ${getPurpleShade(lead.id!)}`}>
-              <AvatarIcon />
+            <div 
+              className={`w-7 h-7 rounded-[4px] shrink-0 flex items-center justify-center shadow-sm relative ${getPurpleShade(lead.id!)}`}
+              onMouseEnter={() => setIsHoveringAvatar(true)}
+              onMouseLeave={() => setIsHoveringAvatar(false)}
+            >
+              <div className={`transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-0' : 'opacity-100'}`}>
+                <AvatarIcon />
+              </div>
+              <button 
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onTogglePin(lead, !lead.isPinned); }}
+                className={`absolute inset-0 flex items-center justify-center transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-100' : 'opacity-0'}`}
+                title={lead.isPinned ? "Quitar pin" : "Fijar lead al inicio"}
+              >
+                <div className="w-3.5 h-3.5">
+                {Icon.pin()}
+              </div>
+              </button>
             </div>
             <div className="flex flex-col min-w-0">
               {renderNameWithBadges(true)}
@@ -154,7 +172,32 @@ const LeadsTableRow = ({
   return (
     <tr data-row-index={idx} data-lead-id={lead.id!} className={trClass}>
       <td className="px-2 py-1.5">{checkboxBox}</td>
-      {nameVis && <td className="px-2 py-1.5 font-medium text-xs">{renderNameWithBadges(false)}</td>}
+      {nameVis && <td className="px-2 py-1.5 font-medium text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <div 
+            className={`w-7 h-7 rounded-[4px] shrink-0 flex items-center justify-center shadow-sm relative ${getPurpleShade(lead.id!)}`}
+            onMouseEnter={() => setIsHoveringAvatar(true)}
+            onMouseLeave={() => setIsHoveringAvatar(false)}
+          >
+            <div className={`transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-0' : 'opacity-100'}`}>
+              <AvatarIcon />
+            </div>
+            <button 
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onTogglePin(lead, !lead.isPinned); }}
+              className={`absolute inset-0 flex items-center justify-center transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-100' : 'opacity-0'}`}
+              title={lead.isPinned ? "Quitar pin" : "Fijar lead al inicio"}
+            >
+              <div className="w-3.5 h-3.5">
+                {Icon.pin()}
+              </div>
+            </button>
+          </div>
+          <div className="flex flex-col min-w-0">
+            {renderNameWithBadges(false)}
+          </div>
+        </div>
+      </td>}
       {phoneVis && <td className="px-2 py-1.5 text-xs">{lead.phone ? (isSelected ? lead.phone : `...${lead.phone.slice(-4)}`) : '-'}</td>}
       {emailVis && <td className="px-2 py-1.5 text-xs text-blue-600">{lead.email ? <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2" title={`Enviar email a ${lead.email}`}>{lead.email.length > 13 ? <span title={lead.email}>{lead.email.slice(0, 10)}...</span> : lead.email}</a> : '-'}</td>}
       {companyVis && <td className="px-2 py-1.5 text-xs">{lead.company || '-'}</td>}

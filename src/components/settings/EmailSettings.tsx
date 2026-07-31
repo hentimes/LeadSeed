@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getSettings, saveSettings } from '../../db/database';
+import { getSettings, saveSettings } from '../../services/appSettingsService';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../../services/authService';

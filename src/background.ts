@@ -6,18 +6,29 @@ chrome.sidePanel
 
 async function updateBadge() {
   try {
+    console.log('[Background] Ejecutando updateBadge...');
+    
     const summary = await loadBackgroundTaskAlertSummary();
-    if (!summary) return;
+    
+    // NOTIFICACION DE DIAGNOSTICO EN PANTALLA
+    if (!summary) {
+      console.log('[Background] No hay summary (probablemente sin sesión)');
+      return;
+    }
 
-    if (summary.total > 0) {
-      chrome.action.setBadgeText({ text: String(summary.total) });
-      chrome.action.setBadgeBackgroundColor({
-        color: summary.overdueCount > 0 ? '#EF4444' : summary.todayCount > 0 ? '#F59E0B' : '#3B82F6',
-      });
+    // El badge ahora muestra la cantidad de Nuevos Leads
+    if (summary.newLeadsCount > 0) {
+      console.log(`[Background] Configurando badge: ${summary.newLeadsCount} leads nuevos`);
+      chrome.action.setBadgeText({ text: String(summary.newLeadsCount) });
+      chrome.action.setBadgeBackgroundColor({ color: '#EF4444' }); // Rojo para nuevos leads
     } else {
+      console.log('[Background] Sin leads nuevos, limpiando badge');
       chrome.action.setBadgeText({ text: '' });
     }
 
+    // Persistir datos para la UI y detectar cambios
+    const stored = await chrome.storage.local.get(['taskAlerts', 'lastNewLeadsCount', 'lastOverdueNotify']);
+    
     chrome.storage.local.set({
       taskAlerts: {
         overdue: summary.overdueCount,
@@ -25,12 +36,27 @@ async function updateBadge() {
         upcoming: summary.upcomingCount,
         total: summary.total,
       },
+      lastNewLeadsCount: summary.newLeadsCount
     });
 
+    // Notificación de nuevos leads si el conteo aumentó
+    const prevLeadsCount = stored.lastNewLeadsCount || 0;
+    if (summary.newLeadsCount > prevLeadsCount) {
+      console.log('[Background] Disparando notificacion de nuevos leads');
+      chrome.notifications.create('new-leads', {
+        type: 'basic',
+        iconUrl: 'icons/icon128.png',
+        title: '¡Nuevos Leads Recibidos!',
+        message: `Tienes ${summary.newLeadsCount} lead(s) en estado Nuevo esperando gestión.`,
+        priority: 2,
+      });
+    }
+
+    // Mantener también la notificación de tareas vencidas (una vez al día)
     if (summary.overdueCount > 0) {
       const today = new Date().toISOString().slice(0, 10);
-      const { lastOverdueNotify } = await chrome.storage.local.get('lastOverdueNotify');
-      if (lastOverdueNotify !== today) {
+      if (stored.lastOverdueNotify !== today) {
+        console.log('[Background] Disparando notificacion de tareas vencidas');
         chrome.notifications.create('tasks-overdue', {
           type: 'basic',
           iconUrl: 'icons/icon128.png',
@@ -41,8 +67,15 @@ async function updateBadge() {
         chrome.storage.local.set({ lastOverdueNotify: today });
       }
     }
-  } catch {
-    // DB no disponible aun.
+  } catch (error) {
+    console.error('[Background] Error en updateBadge:', error);
+    chrome.notifications.create('test-error', {
+      type: 'basic',
+      iconUrl: 'icons/icon128.png',
+      title: 'Error de Background',
+      message: `Error al cargar: ${error instanceof Error ? error.message : String(error)}`,
+      priority: 2,
+    });
   }
 }
 

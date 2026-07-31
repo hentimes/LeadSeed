@@ -7,6 +7,7 @@ import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import LeadsTableControls from './LeadsTableControls';
 import LeadsTableRow from './LeadsTableRow';
+import LoadingOverlay from '../LoadingOverlay';
 
 interface Props {
   leads: Lead[];
@@ -19,6 +20,7 @@ interface Props {
   onView: (lead: Lead) => void;
   onDelete: (id: string) => void;
   onRestore?: (id: string) => void;
+  onTogglePin: (lead: Lead, isPinned: boolean) => void;
   isTrash?: boolean;
   filterMode?: string | null;
   filterListId: number | null;
@@ -65,7 +67,7 @@ function shortName(full: string): string {
 
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
-  onEdit, onView, onDelete, onRestore, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
+  onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
   compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
   onReorderCols,
@@ -176,7 +178,7 @@ export default function LeadsTable({
         onFilterDateChange={onFilterDateChange}
       />
 
-      <div className="bg-white border border-[#E6EAF0] rounded-[6px] overflow-x-auto shadow-sm w-full min-w-0">
+      <div className="card-standard overflow-x-auto w-full min-w-0">
         <table className="w-full text-[13px] text-[#161A24]">
           <thead className="border-b border-[#E6EAF0] text-[#5B6475] bg-white">
             {compactMode ? (
@@ -229,12 +231,11 @@ export default function LeadsTable({
           </thead>
           <tbody ref={tbodyRef}>
             {isLoadingPage && leads.length === 0 ? (
-              <tr><td colSpan={headerColSpan + 1} className="px-3 py-12 text-center text-slate-400 dark:text-slate-500">
-                <div className="mx-auto mb-3 h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600"></div>
-                <p className="text-sm font-medium">Cargando leads...</p>
+              <tr><td colSpan={100} className="p-0 text-center text-slate-400">
+                <LoadingOverlay message="Cargando leads..." />
               </td></tr>
             ) : leads.length === 0 ? (
-              <tr><td colSpan={headerColSpan + 1} className="px-3 py-12 text-center text-gray-400">
+              <tr><td colSpan={100} className="px-3 py-12 text-center text-gray-400">
                 <div className="text-3xl mb-2 opacity-30 flex justify-center">{Icon.Leads()}</div>
                 <p className="text-sm font-medium">No hay leads</p>
                 <p className="text-xs mt-1">Creá uno o importá desde un archivo</p>
@@ -264,6 +265,7 @@ export default function LeadsTable({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onRestore={onRestore}
+                  onTogglePin={onTogglePin}
                   getScore={getScore}
                   shortName={shortName}
                 />
@@ -276,7 +278,7 @@ export default function LeadsTable({
       {/* Bottom Pagination */}
       {pageCount > 1 && (
         <div className="flex justify-center items-center mt-6 gap-1">
-          <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1 || !!isLoadingPage} className="w-8 h-8 flex items-center justify-center rounded-[6px] border border-[#E6EAF0] bg-white text-[#5B6475] hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1 || !!isLoadingPage} className="btn btn-secondary w-8 h-8 flex items-center justify-center p-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           
@@ -294,7 +296,7 @@ export default function LeadsTable({
             return null;
           })}
           
-          <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= pageCount || !!isLoadingPage} className="w-8 h-8 flex items-center justify-center rounded-[6px] border border-[#E6EAF0] bg-white text-[#5B6475] hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= pageCount || !!isLoadingPage} className="btn btn-secondary w-8 h-8 flex items-center justify-center p-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
         </div>

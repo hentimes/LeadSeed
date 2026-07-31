@@ -13,6 +13,7 @@ import {
   fetchLeadRowById,
   fetchLeadRows,
   fetchLeadRowsByList,
+  fetchPinnedLeads,
   importLeadRows,
   purgeDeletedLeadRows,
   type LeadIdentityRow,
@@ -70,7 +71,8 @@ export const mapLeadRowToDomain = (row: LeadRow): Lead => ({
   firstContactedAt: row.first_contacted_at || undefined,
   closedAt: row.closed_at || undefined,
   estimatedValue: row.estimated_value || undefined,
-  metadata: row.metadata,
+  metadata: row.metadata || {},
+  isPinned: row.metadata?.isPinned === true,
   crossExecAlerts: [],
   hasUnreadCrossExecAlert: false,
   crossExecPriorityAt: undefined,
@@ -129,6 +131,11 @@ export async function fetchActiveLeads(userId: string): Promise<Lead[]> {
 
 export async function fetchDeletedLeads(userId: string): Promise<Lead[]> {
   return attachCrossExecAlerts((await fetchDeletedLeadRows(userId)).map(mapLeadRowToDomain));
+}
+
+export async function getPinnedLeads(userId: string): Promise<Lead[]> {
+  const rows = await fetchPinnedLeads(userId);
+  return attachCrossExecAlerts(rows.map(mapLeadRowToDomain));
 }
 
 export async function fetchLeadPage(userId: string, params: LeadPageQuery): Promise<LeadPageResult> {
@@ -210,8 +217,13 @@ export async function saveLeadForUser(userId: string, lead: Lead): Promise<strin
       status: patch.status !== undefined ? patch.status : ((existing.status as LeadStatus) || 'nuevo'),
       score: patch.score !== undefined ? patch.score : (existing.score || 0),
       notes: patch.notes !== undefined ? patch.notes : (existing.notes || ''),
+      lista_ids: patch.listaIds !== undefined ? patch.listaIds : (existing.lista_ids || []),
       scheduled_at: patch.scheduledAt !== undefined ? patch.scheduledAt : existing.scheduled_at,
-      metadata: patch.metadata !== undefined ? patch.metadata : (existing.metadata || {}),
+      metadata: {
+        ...(existing.metadata || {}),
+        ...(patch.metadata || {}),
+        isPinned: patch.isPinned !== undefined ? patch.isPinned : existing.metadata?.isPinned
+      },
       user_id: existing.user_id || userId,
       updated_at: new Date().toISOString(),
     };
@@ -229,8 +241,12 @@ export async function saveLeadForUser(userId: string, lead: Lead): Promise<strin
     status: lead.status || 'nuevo',
     score: lead.score || 0,
     notes: lead.notes || '',
+    lista_ids: lead.listaIds || [],
     scheduled_at: lead.scheduledAt,
-    metadata: lead.metadata || {},
+    metadata: {
+      ...(lead.metadata || {}),
+      isPinned: lead.isPinned || false
+    },
     user_id: userId,
     updated_at: new Date().toISOString(),
   };

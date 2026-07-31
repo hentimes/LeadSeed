@@ -27,3 +27,6 @@ if (!rootEl) {
     rootEl.innerHTML = `<div style="padding:20px;color:red;">Error al iniciar: ${e instanceof Error ? e.message : String(e)}</div>`;
   }
 }
+
+
+

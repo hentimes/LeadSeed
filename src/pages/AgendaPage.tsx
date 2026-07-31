@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import LoadingOverlay from '../components/LoadingOverlay';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant, Page } from '../types';
 import {
   addMyAppointmentParticipant,
@@ -19,7 +20,6 @@ import {
   getGoogleSyncPendingSummary,
 } from '../utils/appointmentStatusCopy';
 import { Icon } from '../utils/icons';
-import PageHeader from '../components/ui/PageHeader';
 
 interface AgendaPageProps {
   onNavigate: (page: Page) => void;
@@ -361,15 +361,12 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-400 py-6">Cargando agenda...</p>;
+    return <LoadingOverlay message="Cargando agenda..." />;
   }
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in p-3 flex flex-col gap-3">
-      <PageHeader
-        title="Agenda"
-        description="Citas, alertas, Meet, reprogramacion y cancelaciones."
-      >
+      <div className="flex justify-end mb-4">
         <button
           type="button"
           onClick={() => onNavigate('settings')}
@@ -377,7 +374,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         >
           Configurar
         </button>
-      </PageHeader>
+      </div>
 
       {(message || error) && (
         <div className={`text-xs p-2 rounded-[var(--radius-md)] border ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>

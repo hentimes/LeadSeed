@@ -22,6 +22,13 @@ export function useSort<T>(items: T[], extractors: Record<SortField, (item: T) =
     const extract = extractors[sort.field];
     const dir = sort.dir === 'asc' ? 1 : -1;
     return [...items].sort((a, b) => {
+      // Pinned leads always at the top
+      const isPinnedA = (a as any).isPinned ? 1 : 0;
+      const isPinnedB = (b as any).isPinned ? 1 : 0;
+      if (isPinnedA !== isPinnedB) {
+        return isPinnedB - isPinnedA;
+      }
+
       const va = extract(a);
       const vb = extract(b);
       if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;

@@ -18,6 +18,7 @@ import {
   restoreLead as restoreLeadById,
   saveLeadForUser,
   softDeleteLead,
+  getPinnedLeads,
   type LeadIdentity,
   type LeadPageResult,
 } from '../services/leadsService';
@@ -139,8 +140,14 @@ export function useLeads() {
     }
   }, [triggerRefresh, user]);
 
+  const getPinned = useCallback(async (): Promise<Lead[]> => {
+    if (!user) return [];
+    return getPinnedLeads(user.id);
+  }, [user]);
+
   return {
     getAll,
+    getPinned,
     getDeleted,
     getPage,
     getForgottenPage,

@@ -278,10 +278,10 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
       {error && <div className="p-2.5 bg-red-50 border border-red-100 rounded-[6px]"><p className="text-[11px] font-semibold text-red-600">{error}</p></div>}
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="flex-1 rounded-[6px] bg-slate-100 px-4 py-2 text-[12px] font-bold text-slate-600 hover:bg-slate-200 transition-colors">
+        <button type="button" onClick={onCancel} className="btn btn-secondary flex-1">
           Cancelar
         </button>
-        <button type="submit" className="flex-1 rounded-[6px] bg-[#6C4CF6] px-4 py-2 text-[12px] font-bold text-white hover:bg-[#5b3ce0] transition-colors shadow-sm">
+        <button type="submit" className="btn btn-primary flex-1">
           {lead?.id ? 'Guardar Cambios' : 'Crear Lead'}
         </button>
       </div>
