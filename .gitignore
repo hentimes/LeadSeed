@@ -2,3 +2,11 @@ node_modules/
 dist/
 .DS_Store
 *.log
+
+# secretos y artefactos de build
+.env.local
+.env
+dist.pem
+dist.crx
+*.rar
+extension.zip
