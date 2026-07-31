@@ -1,0 +1,378 @@
+## Handoff Operativo - Siguiente sesion
+
+Fecha de emision: 2026-07-30
+Proyecto: `MENSAJES`
+Workspace: `C:\Users\henti\OneDrive\Documentos\IA\deepseek\PROYECTOS\MENSAJES`
+
+Este documento existe para que la siguiente sesion pueda continuar sin reinterpretar el estado del proyecto ni reabrir decisiones ya cerradas.
+
+## 1. Objetivo actual exacto
+
+El objetivo activo inmediato es:
+
+- implementar el primer corte de `alertas personales de nuevos leads` en la extension
+
+No es una exploracion.
+No es un rediseño conceptual.
+No es comunidad aun.
+
+Específicamente:
+
+- evento canonico en Supabase
+- consumo realtime en extension
+- reconciliacion segura para Chrome MV3
+- settings de usuario para notificacion, sonido y badge
+
+## 2. Que ya quedo decidido
+
+Estas decisiones ya estan cerradas.
+No deben reabrirse salvo evidencia tecnica fuerte.
+
+### 2.1 Fuente de verdad
+
+- `Supabase` es la fuente de verdad para esta funcionalidad
+- la alerta debe nacer desde la persistencia final del lead en Supabase
+
+### 2.2 Cloudflare
+
+- `Cloudflare` queda fuera de la cadena de alertas
+- no se crean Workers nuevos para notificaciones
+- no se usa Cloudflare para badge
+- no se usa Cloudflare para deduplicacion
+- no se usa Cloudflare como feed de eventos
+
+### 2.3 MV3 / polling
+
+- `polling de 3 segundos` en extension cerrada con `chrome.alarms` fue descartado
+- razon: Chrome MV3 no lo garantiza
+- el minimo util para `chrome.alarms` es `30s`
+- por lo tanto:
+  - `Realtime` es el mecanismo primario
+  - `chrome.alarms` a `30s` es solo reconciliacion
+
+### 2.4 Feed de eventos
+
+- no se reutiliza `public.admin_lead_events`
+- razon:
+  - pertenece al dominio admin/supervision
+  - su semantica no corresponde a alertas personales del owner
+- se crea una nueva frontera:
+  - `public.user_lead_alert_events`
+
+### 2.5 Background de extension
+
+- `src/background.ts` no debe seguir creciendo como archivo omnibus
+- debe quedar como orquestador
+- la logica de alertas personales debe vivir en un modulo dedicado
+
+### 2.6 Alcance inmediato
+
+Si en la siguiente sesion aparece la tentacion de abrir:
+
+- comunidad
+- foro
+- chat
+- intercambio de leads
+- reputacion
+- marketplace
+
+Eso no es el alcance actual.
+Es vision futura ya documentada, pero no ejecucion inmediata.
+
+## 3. Documentos canonicos que SI hay que leer al iniciar
+
+Antes de tocar codigo en la siguiente sesion, leer:
+
+1. [roadmap.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/roadmap.md)
+2. [implementation_plan.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/implementation_plan.md)
+3. [HANDOFF_NEXT_SESSION.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/HANDOFF_NEXT_SESSION.md)
+
+## 4. Donde quedo documentado cada cosa
+
+### 4.1 Estado general del proyecto
+
+- `roadmap.md`
+
+### 4.2 Contrato tecnico de alertas
+
+- `implementation_plan.md`
+  - seccion `Actualizacion 2026-07-30 - Control de viabilidad para alertas en extension`
+  - seccion `Actualizacion 2026-07-30 - Contrato implementable canonico para migracion Supabase + CONTROL`
+  - seccion `Checklist ejecutable - Alertas de nuevos leads`
+
+### 4.3 Vision futura del producto
+
+- `implementation_plan.md`
+  - seccion `Actualizacion 2026-07-30 - Vision de producto para comunidad de vendedores`
+
+## 5. Siguiente tarea exacta
+
+La siguiente tarea a ejecutar es:
+
+- `Fase 1 backend` del sistema de alertas personales
+
+Eso significa:
+
+1. crear migracion SQL para `public.user_lead_alert_events`
+2. agregar RLS
+3. agregar trigger `AFTER INSERT ON public.leads`
+4. publicar tabla en `supabase_realtime`
+
+No empezar por UI.
+No empezar por sonidos.
+No empezar por comunidad.
+
+Primero cerrar el contrato backend.
+
+## 6. Secuencia recomendada de trabajo para la proxima sesion
+
+### Paso 1. Releer y verificar contexto
+
+- abrir `roadmap.md`
+- abrir `implementation_plan.md`
+- abrir este handoff
+- confirmar que el objetivo sigue siendo `alertas personales de nuevos leads`
+
+### Paso 2. Auditar archivos reales antes de editar
+
+Revisar:
+
+- `src/background.ts`
+- `src/types/index.ts`
+- `src/services/appSettingsService.ts`
+- `src/repositories/settingsRepository.ts`
+- `src/pages/SettingsPage.tsx`
+- `sql/migrations/`
+
+Objetivo:
+
+- confirmar que la arquitectura local sigue alineada con lo documentado
+
+### Paso 3. Ejecutar Fase 1 backend
+
+Crear migracion nueva para:
+
+- tabla `public.user_lead_alert_events`
+- indices
+- RLS
+- policy de lectura
+- funcion trigger
+- trigger sobre `public.leads`
+- inclusion en `supabase_realtime`
+
+### Paso 4. Validacion backend
+
+Hacer smoke test real:
+
+- insertar lead de prueba
+- verificar evento en `user_lead_alert_events`
+- verificar owner correcto
+- verificar que Realtime emite
+
+### Paso 5. Solo despues avanzar a extension
+
+Cuando backend este cerrado:
+
+- crear `src/services/backgroundLeadAlertsService.ts`
+- refactorizar `src/background.ts`
+- extender settings
+- agregar UI de ajustes
+
+## 7. Archivos que casi seguro habra que tocar
+
+### Backend / SQL
+
+- `sql/migrations/<nueva_migracion>.sql`
+
+### Extension
+
+- `src/background.ts`
+- `src/services/backgroundLeadAlertsService.ts`
+- `src/types/index.ts`
+- `src/services/appSettingsService.ts`
+- `src/repositories/settingsRepository.ts`
+- `src/pages/SettingsPage.tsx`
+
+## 8. Contrato de datos esperado
+
+Tabla propuesta:
+
+- `public.user_lead_alert_events`
+
+Columnas minimas:
+
+- `id uuid primary key default gen_random_uuid()`
+- `target_user_id uuid not null`
+- `lead_id uuid not null`
+- `event_kind text not null check (event_kind in ('lead_created'))`
+- `created_at timestamptz not null default timezone('utc', now())`
+
+Campos opcionales recomendados:
+
+- `lead_name text null`
+- `lead_phone text null`
+- `source_channel text null`
+- `capture_ref text null`
+
+Indices minimos:
+
+- `(target_user_id, created_at desc)`
+- `(lead_id)`
+
+RLS minima:
+
+- `SELECT` solo si `auth.uid() = target_user_id`
+
+## 9. Contrato de extension esperado
+
+Nuevo modulo:
+
+- `src/services/backgroundLeadAlertsService.ts`
+
+API minima recomendada:
+
+- `startLeadAlertsRuntime()`
+- `stopLeadAlertsRuntime()`
+- `handleIncomingLeadAlert(event)`
+- `reconcileLeadAlerts()`
+- `updateLeadAlertBadge()`
+
+Estado local recomendado en `chrome.storage.local`:
+
+- `leadAlerts.lastEventId`
+- `leadAlerts.lastEventCreatedAt`
+- `leadAlerts.seenEventIds`
+- `leadAlerts.desktopEnabled`
+- `leadAlerts.soundEnabled`
+- `leadAlerts.badgeMode`
+
+## 10. Settings que deben existir
+
+Extender `AppSettings` con:
+
+- `leadDesktopAlertsEnabled: boolean`
+- `leadSoundAlertsEnabled: boolean`
+- `extensionBadgeMode: 'tasks' | 'new_leads' | 'appointments' | 'none'`
+
+Defaults recomendados:
+
+- `leadDesktopAlertsEnabled = true`
+- `leadSoundAlertsEnabled = true` o conservador segun plataforma
+- `extensionBadgeMode = 'tasks'` o el valor que se decida explicitamente al implementar
+
+Nota:
+
+- el valor por defecto final debe fijarse en codigo y quedar documentado
+- no dejarlo ambiguo en la sesion siguiente
+
+## 11. Validaciones minimas obligatorias
+
+### Backend
+
+- crear lead
+- verificar insercion en `user_lead_alert_events`
+- verificar payload
+- verificar RLS
+
+### Extension abierta
+
+- toast
+- badge
+- refresh incremental
+- sin duplicados
+
+### Extension cerrada
+
+- notificacion nativa
+- badge
+- sin popup abierto
+
+### Reconciliacion
+
+- simular perdida de evento
+- confirmar recuperacion con `alarm` de `30s`
+- confirmar que no duplica
+
+## 12. Prohibiciones explicitas
+
+No hacer ninguna de estas cosas en la siguiente sesion:
+
+- no usar `admin_lead_events` para este feature
+- no consultar `public.leads` completa cada pocos segundos
+- no reintroducir Cloudflare en la cadena de alertas
+- no vender como resuelto un sonido de background si la plataforma no lo garantiza
+- no meter toda la logica nueva directamente en `src/background.ts`
+- no abrir el alcance a comunidad/chat/marketplace todavia
+
+## 13. Riesgos ya detectados
+
+### Riesgo 1. Confundir realtime admin con realtime personal
+
+Mitigacion:
+
+- mantener tablas y servicios separados
+
+### Riesgo 2. Intentar forzar `3s polling`
+
+Mitigacion:
+
+- respetar contrato MV3 ya documentado
+
+### Riesgo 3. Duplicados entre background y UI abierta
+
+Mitigacion:
+
+- deduplicacion por `event.id`
+- buffer corto de eventos vistos
+
+### Riesgo 4. Drift entre settings UI y storage real
+
+Mitigacion:
+
+- un solo contrato `AppSettings`
+- mapear todo via `settingsRepository` y `appSettingsService`
+
+## 14. Vision futura ya aprobada, pero fuera de alcance inmediato
+
+Ya quedo aprobada como norte, pero no debe ejecutarse ahora:
+
+- priorizacion diaria
+- copiloto comercial
+- comunidad util
+- derivacion e intercambio de leads
+- reputacion
+- biblioteca viva
+
+Regla:
+
+- lo actual debe dejar base para eso
+- pero no debe intentar construirlo todavia
+
+## 15. Criterio de cierre de la proxima sesion
+
+La siguiente sesion no deberia declararse cerrada hasta cumplir al menos uno de estos dos cortes:
+
+### Corte A. Backend cerrado
+
+- migracion creada
+- trigger creado
+- RLS creada
+- realtime publicado
+- smoke test backend hecho
+
+### Corte B. Backend + base de extension
+
+- todo el Corte A
+- servicio `backgroundLeadAlertsService` creado
+- `background.ts` separado por dominios
+- settings extendidos
+
+Si no llega a esos cortes, debe dejar documentado exactamente:
+
+- que archivo quedo a medio hacer
+- que decision quedo abierta
+- que validacion falto correr
+
+## 16. Resumen de una linea para arrancar la siguiente sesion
+
+`Continuar con Fase 1 backend de alertas personales de nuevos leads: crear user_lead_alert_events en Supabase con trigger, RLS y Realtime, sin usar admin_lead_events ni Cloudflare, y solo despues avanzar a background/settings de la extension.`
