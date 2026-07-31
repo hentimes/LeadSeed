@@ -10,3 +10,9 @@ dist.pem
 dist.crx
 *.rar
 extension.zip
+
+# scripts y archivos temporales de trabajo
+temp_*
+tmp-*
+testDb.js
+*.py
