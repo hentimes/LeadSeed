@@ -138,10 +138,10 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <div className="modal-container w-full max-w-5xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Importar Leads</h2>
+            <h2 className="text-heading-2">Importar Leads</h2>
             <button
               onClick={() => setShowColInfo(!showColInfo)}
               className="text-gray-400 hover:text-blue-600 text-lg leading-none"
@@ -348,14 +348,14 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                 </p>
                 <button
                   onClick={handleResetFile}
-                  className="px-4 py-2 rounded text-sm bg-gray-200 hover:bg-gray-300"
+                  className="btn btn-secondary"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleImport}
                   disabled={selectedCount === 0}
-                  className="px-4 py-2 rounded text-sm bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-primary"
                 >
                   Importar {selectedCount} leads
                 </button>

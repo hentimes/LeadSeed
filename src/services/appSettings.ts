@@ -1,4 +1,4 @@
-import { getSettings, saveSettings } from '../db/database';
+import { getSettings, saveSettings } from './appSettingsService';
 import type { ColumnDef } from '../components/ColumnSelector';
 import type { AppSettings } from '../types';
 

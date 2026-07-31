@@ -1,5 +1,5 @@
 import emailjs from '@emailjs/browser';
-import { getSettings } from '../db/database';
+import { getSettings } from '../services/appSettingsService';
 import { supabase } from '../lib/supabaseClient';
 import type { EmailProvider, Lead } from '../types';
 import { replaceVariables } from './waHelper';

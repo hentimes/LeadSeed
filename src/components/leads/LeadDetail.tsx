@@ -13,6 +13,7 @@ import type {
   Page,
   AgendaAppointment,
 } from '../../types';
+import { openWhatsApp } from '../../utils/waHelper';
 import { STATUS_COLORS, STATUS_LABELS } from '../../types';
 import { Icon } from '../../utils/icons';
 import {
@@ -28,6 +29,7 @@ import {
   loadLeadDetailData,
   markLeadCrossExecAlertsAsRead,
 } from '../../services/leadDetailService';
+import { updateLead } from '../../repositories/leadsRepository';
 
 interface Props {
   lead: Lead;
@@ -248,12 +250,23 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
       setSendLogs(data.sendLogs);
       setWaTemplates(data.waTemplates);
       setEmailTemplates(data.emailTemplates);
+
+      // Marcar como leido si aun no lo esta
+      if (metadata.is_read !== true) {
+        try {
+          const updatedMetadata = { ...metadata, is_read: true };
+          await updateLead(leadId, { metadata: updatedMetadata });
+          // No necesitamos actualizar el estado local 'lead' ya que cerraremos el modal o no es visible
+        } catch (e) {
+          console.error('Error marcando lead como leido:', e);
+        }
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [leadId]);
+  }, [leadId, metadata]);
 
   useEffect(() => {
     let cancelled = false;
@@ -416,401 +429,380 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
 
   const leadLists = lists.filter((list) => lead.listaIds?.includes(list.id!));
 
-  return (
-    <div className="fixed inset-0 bg-black/30 z-40 flex items-start justify-center pt-4 overflow-hidden">
-      <div className="bg-[var(--color-bg-base)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-premium w-[92%] max-w-[340px] max-h-[90vh] flex flex-col mx-auto animate-scale-in">
-        <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] shrink-0 bg-[var(--color-bg-surface)] rounded-t-[var(--radius-lg)]">
-          <div>
-            <h2 className="text-lg font-bold">{lead.name}</h2>
-            <span
-              className="px-2 py-0.5 rounded-full text-xs text-white font-medium"
-              style={{ backgroundColor: STATUS_COLORS[lead.status || 'nuevo'] }}
-            >
-              {STATUS_LABELS[lead.status || 'nuevo']}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const text = [
-                  `Nombre: ${lead.name}`,
-                  lead.phone ? `Telefono: ${lead.phone}` : '',
-                  lead.email ? `Email: ${lead.email}` : '',
-                  lead.company ? `Empresa: ${lead.company}` : '',
-                  lead.rut ? `RUT: ${lead.rut}` : '',
-                ].filter(Boolean).join('\n');
+  const STEP1_MOTIVO_LABELS: Record<string, string> = {
+    'invertir': 'Invertir',
+    'vivir': 'Vivir'
+  };
 
-                navigator.clipboard.writeText(text);
-                const button = document.getElementById('copy-btn');
-                if (button) {
-                  const previous = button.innerHTML;
-                  button.innerHTML = 'Copiado';
-                  setTimeout(() => {
-                    button.innerHTML = previous;
-                  }, 2000);
-                }
-              }}
-              id="copy-btn"
-              className="btn btn-ghost btn-sm flex items-center gap-1"
-            >
-              <Icon.Copy /> Copiar
+  const STEP1_NECESIDAD_LABELS: Record<string, string> = {
+    'rentabilidad': 'Rentabilidad',
+    'patrimonio': 'Patrimonio',
+    'seguridad': 'Seguridad',
+    'independencia': 'Independencia'
+  };
+
+  const STEP1_OBJETIVO_LABELS: Record<string, string> = {
+    'corto_plazo': 'Corto plazo',
+    'largo_plazo': 'Largo plazo',
+    'jubilacion': 'Jubilación'
+  };
+
+  const toJourneyLabel = (val: string, labels: Record<string, string>) => labels[val] || val;
+  
+  const journey = (planesproMetadata as any)?.intake_journey?.step1 || (() => {
+    const rp = rawPayload as Record<string, unknown>;
+    const motivo = rp.paso1_motivo as string | undefined;
+    const necesidad = rp.paso1_necesidad as string | undefined;
+    const objetivo = rp.paso1_objetivo as string | undefined;
+    const resumen = rp.paso1_resumen as string | undefined;
+    if (motivo || necesidad || objetivo || resumen) {
+      return { motivo, necesidad, objetivo, resumen };
+    }
+    return undefined;
+  })();
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'auto'; };
+  }, []);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  // Iconos inline
+  const CopyIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+  );
+
+  const WAppIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  );
+
+  return (
+    <div onClick={handleBackdropClick} className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-start justify-center pt-8 p-4 overflow-y-auto custom-scrollbar">
+      <div className="bg-white rounded-[8px] shadow-2xl w-full max-w-[460px] flex flex-col mx-auto animate-scale-in border border-slate-100 mb-8 relative">
+        
+        {/* Header (Sin tag nuevo, rut visible, nombre en una linea) */}
+        <div className="flex items-start justify-between p-4 pb-3 border-b border-slate-100 shrink-0 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+            <div className="w-10 h-10 rounded-[6px] bg-gradient-to-br from-[#F2EEFF] to-[#E0D4FF] text-[#6C4CF6] flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
+              {lead.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[15px] font-bold text-slate-800 leading-tight truncate w-full" title={lead.name}>{lead.name}</h2>
+              {/* Rut si existe */}
+              {!!((lead as any).documentId || rawPayload.rut || rawPayload.document_id) && (
+                <p className="text-[11px] font-medium text-slate-500 mt-0.5 truncate">
+                  RUT: {(lead as any).documentId || rawPayload.rut || rawPayload.document_id}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={() => { onEdit(lead); onClose(); }} className="p-1.5 text-slate-400 hover:text-[#6C4CF6] hover:bg-[#F2EEFF] rounded-[6px] transition-colors" title="Editar">
+              {Icon.Edit()}
             </button>
-            <button onClick={() => { onEdit(lead); onClose(); }} className="btn btn-ghost btn-sm text-blue-500 hover:text-blue-400">
-              {Icon.Edit()} Editar
-            </button>
-            <button onClick={onClose} className="btn btn-ghost btn-sm text-lg leading-none ml-1 px-2">
-              &times;
+            <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-[6px] transition-colors" title="Cerrar">
+              {Icon.Close()}
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          {crossExecAlerts.length > 0 && (
-            <div className="border border-amber-200 bg-amber-50/90 rounded-md p-3">
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-amber-800 mb-2">
-                {Icon.Warning()}
-                Seguimiento comercial
-              </div>
-              <div className="space-y-1.5">
-                {crossExecAlerts.map((event) => (
-                  <div key={event.id} className="text-[11px] text-amber-900 leading-4">
-                    {getCrossExecMessage(event)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {lead.phone && <div><span className="text-slate-400 dark:text-slate-500 text-xs">Telefono</span><p>{lead.phone}</p></div>}
-            {lead.email && <div><span className="text-slate-400 dark:text-slate-500 text-xs">Email</span><p className="text-blue-600">{lead.email}</p></div>}
-            {lead.company && <div><span className="text-slate-400 dark:text-slate-500 text-xs">Empresa</span><p>{lead.company}</p></div>}
-            {lead.rut && <div><span className="text-slate-400 dark:text-slate-500 text-xs">RUT</span><p className="font-mono">{lead.rut}</p></div>}
-            <div><span className="text-slate-400 dark:text-slate-500 text-xs">Ingreso</span><p>{new Date(lead.createdAt).toLocaleDateString('es-CL')}</p></div>
-            {hasMeaningfulUpdate && <div><span className="text-slate-400 dark:text-slate-500 text-xs">Actualizado</span><p>{new Date(lead.updatedAt).toLocaleDateString('es-CL')}</p></div>}
-          </div>
-
-          {isPlanesproLead && (
-            <div className="mt-2">
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Formulario PlanesPro</p>
-              <div className="bg-[var(--color-bg-surface)] rounded-md p-2 space-y-2 border border-[var(--color-border)]">
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                  {planesproDetails.sistema && (
-                    <div>
-                      <span className="text-blue-700/80">Sistema</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.sistema}</p>
-                    </div>
-                  )}
-                  {planesproDetails.isapre && (
-                    <div>
-                      <span className="text-blue-700/80">Isapre</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.isapre}</p>
-                    </div>
-                  )}
-                  {planesproDetails.rangoEdad && (
-                    <div>
-                      <span className="text-blue-700/80">Edad</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.rangoEdad}</p>
-                    </div>
-                  )}
-                  {planesproDetails.rangoRenta && (
-                    <div>
-                      <span className="text-blue-700/80">Renta</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.rangoRenta}</p>
-                    </div>
-                  )}
-                  {planesproDetails.comuna && (
-                    <div>
-                      <span className="text-blue-700/80">Comuna</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.comuna}</p>
-                    </div>
-                  )}
-                  {planesproDetails.region && (
-                    <div>
-                      <span className="text-blue-700/80">Region</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.region}</p>
-                    </div>
-                  )}
-                  {planesproDetails.numeroCargas && (
-                    <div>
-                      <span className="text-blue-700/80">Cargas</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.numeroCargas}</p>
-                    </div>
-                  )}
-                  {planesproDetails.edadesCargas.length > 0 && (
-                    <div>
-                      <span className="text-blue-700/80">Edades cargas</span>
-                      <p className="font-semibold text-slate-800">{planesproDetails.edadesCargas.join(', ')}</p>
-                    </div>
-                  )}
-                  {planesproDetails.contacto && (
-                    <div>
-                      <span className="text-blue-700/80">Contacto</span>
-                      <p className="font-semibold text-slate-800">
-                        {CONTACT_PREFERENCE_LABELS[planesproDetails.contacto] || planesproDetails.contacto}
-                      </p>
-                    </div>
-                  )}
-                  {visibleAppointmentStatus && (
-                    <div>
-                      <span className="text-blue-700/80">Estado cita</span>
-                      <p className="font-semibold text-slate-800">
-                        {APPOINTMENT_STATUS_LABELS[visibleAppointmentStatus.toLowerCase()] || visibleAppointmentStatus}
-                      </p>
-                    </div>
-                  )}
-                  {visibleAppointmentAt && (
-                    <div className="col-span-2">
-                      <span className="text-blue-700/80">Fecha cita</span>
-                      <p className="font-semibold text-slate-800">{formatAppointmentDate(visibleAppointmentAt)}</p>
-                    </div>
-                  )}
-                  {activeAppointment && googleSyncBadgeLabel && (
-                    <div className="col-span-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5">
-                      <span className="text-amber-800">{googleSyncBadgeLabel}</span>
-                      <p className="mt-1 text-slate-700">{googlePendingSummary}</p>
-                    </div>
-                  )}
+        <div className="flex-1 p-4 pt-3 space-y-4">
+          
+          {/* Quick Actions / Contacto (En una sola linea) */}
+          <div className="flex gap-2 w-full">
+            {/* Phone Block */}
+            {lead.phone && (
+              <div className="flex-1 flex gap-1 min-w-0">
+                <div 
+                  className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] cursor-pointer hover:bg-slate-100 transition-colors group min-w-0"
+                  title="Doble clic para copiar"
+                  onDoubleClick={() => copyToClipboard(lead.phone)}
+                >
+                  <span className="text-slate-400 shrink-0">{Icon.Phone()}</span>
+                  <span className="text-[11px] font-semibold text-slate-700 truncate">{lead.phone}</span>
+                  <span className="ml-auto text-slate-300 group-hover:text-slate-500 shrink-0"><CopyIcon /></span>
                 </div>
-                {(planesproMetadata.pdf_path || pdfLoading || pdfError) && (
-                  <div className="rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border)] p-2 text-xs mt-2">
-                    <span className="text-blue-700/80">Adjunto PDF</span>
-                    <div className="mt-1 flex items-center gap-2">
-                      {planesproMetadata.pdf_path ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => { void submitPdfRequest(false); }}
-                            className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-2 py-1 font-semibold text-blue-700 hover:bg-blue-50"
-                          >
-                            {Icon.View()} Ver PDF
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { void submitPdfRequest(true); }}
-                            className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-2 py-1 font-semibold text-blue-700 hover:bg-blue-50"
-                          >
-                            {Icon.Download()} Descargar
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-slate-500">
-                          {pdfLoading ? 'Preparando vista...' : pdfError || 'Sin acceso al PDF'}
-                        </span>
-                      )}
-                    </div>
-                    {planesproMetadata.pdf_filename && (
-                      <p className="mt-2 break-all text-slate-500">{planesproMetadata.pdf_filename}</p>
-                    )}
-                  </div>
-                )}
-                {planesproDetails.comentario && (
-                  <div className="rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border)] p-2 text-xs mt-2">
-                    <span className="text-blue-700/80">Comentario</span>
-                    <p className="mt-1 whitespace-pre-wrap text-slate-700">
-                      {planesproDetails.comentario}
-                    </p>
-                  </div>
-                )}
+                <button onClick={() => openWhatsApp(lead.phone, '')} className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] hover:border-[#E0D4FF] transition-colors border border-slate-200" title="WhatsApp">
+                  <WAppIcon />
+                </button>
+                <a href={`tel:${lead.phone.replace(/[^+\d]/g, '')}`} className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] hover:border-[#E0D4FF] transition-colors border border-slate-200" title="Llamar">
+                  {Icon.Phone()}
+                </a>
               </div>
-            </div>
-          )}
-
-          <div className="mt-2">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Agenda</p>
-            <div className="border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-2 rounded-md text-xs space-y-2">
-              {!canCreateAppointment && (
-                <div className="space-y-2">
-                  <p className="text-slate-600">
-                    Este lead ya tiene una cita activa.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {visibleMeetLink && (
-                      <button
-                        type="button"
-                        onClick={() => openMeetLink(visibleMeetLink)}
-                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-2 py-1 font-semibold text-blue-700 hover:bg-blue-50"
-                      >
-                        Abrir Meet
-                      </button>
-                    )}
-                    {onNavigate && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openAgendaAppointment(activeAppointment?.id);
-                          onClose();
-                          onNavigate('agenda');
-                        }}
-                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-2 py-1 font-semibold text-blue-700 hover:bg-blue-50"
-                      >
-                        Gestionar cita
-                      </button>
-                    )}
-                  </div>
+            )}
+            {/* Email Block */}
+            {lead.email && (
+              <div className="flex-1 flex gap-1 min-w-0">
+                <div 
+                  className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] cursor-pointer hover:bg-slate-100 transition-colors group min-w-0"
+                  title="Doble clic para copiar"
+                  onDoubleClick={() => copyToClipboard(lead.email)}
+                >
+                  <span className="text-slate-400 shrink-0">{Icon.Email()}</span>
+                  <span className="text-[11px] font-semibold text-slate-700 truncate">{lead.email}</span>
+                  <span className="ml-auto text-slate-300 group-hover:text-slate-500 shrink-0"><CopyIcon /></span>
                 </div>
-              )}
-              {canCreateAppointment && (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="date"
-                      value={appointmentDate}
-                      onChange={(event) => setAppointmentDate(event.target.value)}
-                      className="border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5"
-                    />
-                    <input
-                      type="time"
-                      value={appointmentTime}
-                      onChange={(event) => setAppointmentTime(event.target.value)}
-                      className="border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5"
-                    />
-                  </div>
-                  <textarea
-                    value={appointmentNote}
-                    onChange={(event) => setAppointmentNote(event.target.value)}
-                    placeholder="Nota de la cita..."
-                    className="w-full border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5 min-h-[54px] resize-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { void handleCreateAppointment(); }}
-                    disabled={appointmentLoading}
-                    className="w-full bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-blue-700 disabled:opacity-60"
-                  >
-                    {appointmentLoading ? 'Agendando...' : 'Agendar cita'}
-                  </button>
-                </>
-              )}
-              {appointmentMessage && <p className="text-[11px] text-emerald-700">{appointmentMessage}</p>}
-              {appointmentError && <p className="text-[11px] text-red-600">{appointmentError}</p>}
-            </div>
-          </div>
-
-          {genericMetadataEntries.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Informacion adicional</p>
-              <div className="bg-[var(--color-bg-surface)] rounded-md p-2 space-y-1.5 border border-[var(--color-border)]">
-                {genericMetadataEntries.map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center border-b border-blue-100/50 last:border-0 pb-1 last:pb-0 gap-2">
-                    <span className="text-xs font-medium text-blue-800 capitalize">{key.replace(/_/g, ' ')}</span>
-                    <span className="text-xs text-blue-900 font-semibold text-right break-all">{String(value)}</span>
-                  </div>
-                ))}
+                <a href={`mailto:${lead.email}`} className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] hover:border-[#E0D4FF] transition-colors border border-slate-200" title="Enviar correo">
+                  {Icon.Email()}
+                </a>
               </div>
-            </div>
-          )}
-
-          {lead.notes && !isPlanesproLead && (
-            <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Notas actuales</p>
-              <p className="text-sm bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded p-2 whitespace-pre-wrap">{lead.notes}</p>
-            </div>
-          )}
-
-          {leadLists.length > 0 && (
-            <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Listas</p>
-              <div className="flex flex-wrap gap-1">
-                {leadLists.map((list) => (
-                  <span key={list.id} className="px-2 py-0.5 rounded-full text-xs text-white" style={{ backgroundColor: list.color }}>
-                    {list.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-3 flex gap-2">
-            <input
-              type="text"
-              value={newNote}
-              onChange={(event) => setNewNote(event.target.value)}
-              placeholder="Agregar nota..."
-              className="flex-1 border border-[var(--color-border)] bg-[var(--color-bg-base)] rounded px-2 py-1.5 text-xs"
-              onKeyDown={(event) => event.key === 'Enter' && addNote()}
-            />
-            <button onClick={addNote} className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700">
-              Guardar
-            </button>
-          </div>
-
-          <div>
-            <button onClick={() => setShowNotes(!showNotes)} className="w-full flex justify-between items-center text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 border-b pb-1 hover:text-blue-600">
-              <span>Historial de notas ({notes.length + (lead.notes ? 1 : 0)})</span>
-              <span>{showNotes ? Icon.ChevronDown() : Icon.ChevronRight()}</span>
-            </button>
-            {showNotes && (
-              <>
-                {notes.length === 0 && !lead.notes && (
-                  <p className="text-xs text-gray-400">Sin notas todavia.</p>
-                )}
-                <div className="space-y-2">
-                  {notes.map((note) => (
-                    <div key={note.id} className="border-l-2 border-blue-300 pl-3">
-                      <p className="text-xs whitespace-pre-wrap">{note.content}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{new Date(note.createdAt).toLocaleString('es-CL')}</p>
-                    </div>
-                  ))}
-                </div>
-              </>
             )}
           </div>
 
-          {sendLogs.length > 0 && (
+          {/* Journey Section (Resumen siempre visible) */}
+          {!!(isPlanesproLead || journey) && (
             <div>
-              <button onClick={() => setShowLogs(!showLogs)} className="w-full flex justify-between items-center text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 border-b pb-1 hover:text-blue-600">
-                <span>Historial de envios ({sendLogs.length})</span>
-                <span>{showLogs ? Icon.ChevronDown() : Icon.ChevronRight()}</span>
-              </button>
-              {showLogs && (
-                <div className="space-y-1">
-                  {sendLogs.map((log) => {
-                    const templateName = getTemplateName(log.templateId as any, log.templateType);
-                    const hasContent = templateName !== '?';
-                    const isExpanded = expandedLogId === log.id;
-
-                    let templateContent = '';
-                    if (log.templateType === 'whatsapp') {
-                      templateContent = waTemplates.find((template) => template.id === log.templateId)?.contenido || '';
-                    } else {
-                      const emailTemplate = emailTemplates.find((template) => template.id === log.templateId);
-                      templateContent = emailTemplate?.contenido || '';
-                    }
-
-                    return (
-                      <div key={log.id}>
-                        <div className="text-xs flex items-center gap-2">
-                          <span className={log.templateType === 'whatsapp' ? 'text-green-600' : 'text-blue-600'}>
-                            {log.templateType === 'whatsapp'
-                              ? <span className="text-green-500">{Icon.Send()}</span>
-                              : <span className="text-blue-500">{Icon.Email()}</span>}
-                          </span>
-                          <button
-                            onClick={() => setExpandedLogId(isExpanded ? null : log.id!)}
-                            className={`text-left ${hasContent ? 'text-blue-600 hover:text-blue-800 underline decoration-dotted underline-offset-2' : 'text-slate-500 dark:text-slate-400 cursor-default'}`}
-                            disabled={!hasContent}
-                          >
-                            {templateName}
-                          </button>
-                          <span className="text-gray-400 ml-auto">{new Date(log.sentAt).toLocaleString('es-CL')}</span>
-                        </div>
-                        {isExpanded && templateContent && (
-                          <div className="mt-1 mb-2 p-2 bg-slate-50 dark:bg-slate-900 border rounded text-xs max-h-32 overflow-y-auto">
-                            {log.templateType === 'email' && emailTemplates.find((template) => template.id === log.templateId)?.isHtml ? (
-                              <div dangerouslySetInnerHTML={{ __html: templateContent }} />
-                            ) : (
-                              <div className="whitespace-pre-wrap">{templateContent}</div>
-                            )}
-                          </div>
-                        )}
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Revisión PlanesPro</h3>
+              
+              {!!journey && (
+                <div className="bg-slate-50 rounded-[8px] p-3 border border-slate-200 mb-3">
+                  
+                  {!!journey.resumen && (
+                    <div className="bg-[#F2EEFF] rounded-[6px] p-3 border border-[#E0D4FF] mb-2">
+                      <div className="flex items-center gap-1.5 mb-1 text-[#6C4CF6]">
+                        {Icon.CheckCircle()}
+                        <span className="font-bold text-[11px] uppercase tracking-wide">Resumen</span>
                       </div>
-                    );
-                  })}
+                      <p className="text-[12px] text-[#5b3ce0] font-medium leading-relaxed">
+                        {`${journey.resumen || ''}`}
+                      </p>
+                    </div>
+                  )}
+
+                  <details className="group">
+                    <summary className="text-[11px] font-bold text-[#6C4CF6] cursor-pointer hover:underline list-none flex items-center gap-1">
+                      <span className="group-open:rotate-90 transition-transform">{Icon.ChevronRight()}</span> Ver respuestas originales
+                    </summary>
+                    <div className="mt-3 flex gap-2 w-full">
+                      {!!journey.motivo && (
+                        <div className="flex-1 bg-white p-1.5 rounded-[6px] border border-slate-200 shadow-sm min-w-0">
+                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">Motivo</p>
+                          <p className="text-[10px] font-semibold text-slate-700 leading-tight mt-0.5 line-clamp-2" title={toJourneyLabel(`${journey.motivo || ''}`, STEP1_MOTIVO_LABELS)}>{toJourneyLabel(`${journey.motivo || ''}`, STEP1_MOTIVO_LABELS)}</p>
+                        </div>
+                      )}
+                      
+                      {!!journey.necesidad && (
+                        <div className="flex-1 bg-white p-1.5 rounded-[6px] border border-slate-200 shadow-sm min-w-0">
+                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">Necesidad</p>
+                          <p className="text-[10px] font-semibold text-slate-700 leading-tight mt-0.5 line-clamp-2" title={toJourneyLabel(`${journey.necesidad || ''}`, STEP1_NECESIDAD_LABELS)}>{toJourneyLabel(`${journey.necesidad || ''}`, STEP1_NECESIDAD_LABELS)}</p>
+                        </div>
+                      )}
+
+                      {!!journey.objetivo && (
+                        <div className="flex-1 bg-white p-1.5 rounded-[6px] border border-slate-200 shadow-sm min-w-0">
+                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">Objetivo</p>
+                          <p className="text-[10px] font-semibold text-slate-700 leading-tight mt-0.5 line-clamp-2" title={toJourneyLabel(`${journey.objetivo || ''}`, STEP1_OBJETIVO_LABELS)}>{toJourneyLabel(`${journey.objetivo || ''}`, STEP1_OBJETIVO_LABELS)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </details>
                 </div>
               )}
             </div>
           )}
+
+          {/* Datos del Lead (Desplegable con Grid Completo) */}
+          <details className="group bg-slate-50 border border-slate-200 rounded-[8px] overflow-hidden" open>
+            <summary className="text-[11px] font-bold text-slate-600 uppercase tracking-widest cursor-pointer hover:bg-slate-100 p-3 list-none flex items-center justify-between select-none transition-colors">
+              <div className="flex items-center gap-2">
+                <span className="group-open:rotate-90 transition-transform text-[#6C4CF6]">{Icon.ChevronRight()}</span> 
+                Detalles y Perfil
+              </div>
+              <span className="text-[11px] font-semibold text-slate-400 tracking-normal normal-case">{new Date(lead.createdAt).toLocaleDateString('es-CL')}</span>
+            </summary>
+            
+            <div className="p-3 pt-0 border-t border-slate-100 mt-1">
+              <div className="grid grid-cols-2 gap-2 mt-2">
+
+                {/* Origen */}
+                {!!((lead as any).source || rawPayload.origen || rawPayload.source) && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Origen</p>
+                    <p className="text-[12px] font-semibold text-slate-700 truncate">{`${(lead as any).source || rawPayload.origen || rawPayload.source || ''}`}</p>
+                  </div>
+                )}
+
+                {!!planesproDetails.rangoEdad && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Edad</p>
+                    <p className="text-[12px] font-semibold text-slate-700">{planesproDetails.rangoEdad}</p>
+                  </div>
+                )}
+                
+                {!!(planesproDetails.rangoRenta || rawPayload.renta || rawPayload.renta_liquida) && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Renta</p>
+                    <p className="text-[12px] font-semibold text-slate-700">{`${planesproDetails.rangoRenta || toReadableValue(rawPayload.renta) || toReadableValue(rawPayload.renta_liquida) || ''}`}</p>
+                  </div>
+                )}
+                
+                {/* Lógica Fonasa/Isapre */}
+                {!!(planesproDetails.sistema && String(planesproDetails.sistema).toLowerCase() === 'fonasa') && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Sistema</p>
+                    <p className="text-[12px] font-semibold text-slate-700">{planesproDetails.sistema}</p>
+                  </div>
+                )}
+                {!!planesproDetails.isapre && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Isapre</p>
+                    <p className="text-[12px] font-semibold text-slate-700">{planesproDetails.isapre}</p>
+                  </div>
+                )}
+
+                {!!planesproDetails.comuna && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Comuna</p>
+                    <p className="text-[12px] font-semibold text-slate-700">{planesproDetails.comuna}</p>
+                  </div>
+                )}
+                {!!planesproDetails.region && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Región</p>
+                    <p className="text-[12px] font-semibold text-slate-700">{planesproDetails.region}</p>
+                  </div>
+                )}
+
+                {/* Cargas (en el grid si aplica) */}
+                {!!(planesproDetails.numeroCargas && planesproDetails.numeroCargas !== '0') && (
+                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm col-span-2 flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] text-[#6C4CF6] font-bold uppercase tracking-wide">Cargas Familiares</p>
+                      <p className="text-[12px] font-semibold text-slate-700">{planesproDetails.numeroCargas} carga(s)</p>
+                    </div>
+                    {!!(planesproDetails.edadesCargas && planesproDetails.edadesCargas.length > 0) && (
+                      <div className="text-right">
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Edades</p>
+                        <p className="text-[11px] font-semibold text-slate-600">{planesproDetails.edadesCargas.join(', ')}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </details>
+
+          {/* Mensaje / Comentario del cliente */}
+          {!!planesproDetails.comentario && (
+            <div className="mt-2 bg-[#F2EEFF] p-3 rounded-[6px] border border-[#E0D4FF]">
+              <p className="text-[10px] text-[#6C4CF6] font-bold uppercase tracking-wide mb-1 flex items-center gap-1">
+                {Icon.Messages()} Comentario del cliente
+              </p>
+              <p className="text-[12px] text-slate-800 font-medium whitespace-pre-wrap">{planesproDetails.comentario}</p>
+            </div>
+          )}
+          
+          {/* PDF Adjunto si existe */}
+          {!!(planesproMetadata.pdf_path || pdfLoading || pdfError) && (
+            <div className="mt-2 bg-slate-50 p-3 rounded-[6px] border border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-700">
+                <span className="text-[#6C4CF6]">{Icon.Layers()}</span>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide">Documento PDF</p>
+                  <p className="text-[10px] text-slate-500">{pdfFileName}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {planesproMetadata.pdf_path ? (
+                  <>
+                    <button onClick={() => { void submitPdfRequest(false); }} className="px-2.5 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-600 hover:bg-slate-100 bg-white shadow-sm transition-colors">
+                      Ver
+                    </button>
+                    <button onClick={() => { void submitPdfRequest(true); }} className="px-2.5 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-600 hover:bg-slate-100 bg-white shadow-sm transition-colors">
+                      Descargar
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-slate-500">{pdfLoading ? 'Cargando...' : pdfError || 'Sin acceso'}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Agenda Compacta */}
+          <div>
+            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cita / Agenda</h3>
+            {!canCreateAppointment ? (
+              <div className="bg-slate-50 border border-slate-200 rounded-[6px] p-2.5 flex justify-between items-center">
+                <div>
+                  <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">{`${visibleAppointmentStatus || ''}`}</p>
+                  <p className="text-[12px] font-semibold text-slate-800">{formatAppointmentDate(`${visibleAppointmentAt || ''}`)}</p>
+                </div>
+                {onNavigate && (
+                  <button onClick={() => { openAgendaAppointment(activeAppointment?.id); onClose(); onNavigate('agenda'); }} className="px-3 py-1.5 bg-white border border-slate-200 rounded-[4px] text-[11px] font-bold text-slate-700 shadow-sm hover:bg-slate-100 transition-colors">
+                    Ver cita
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-[6px] p-2.5 shadow-sm space-y-2">
+                <div className="flex gap-2">
+                  <input type="date" value={appointmentDate} onChange={(e) => setAppointmentDate(e.target.value)} className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-[#6C4CF6]" />
+                  <input type="time" value={appointmentTime} onChange={(e) => setAppointmentTime(e.target.value)} className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-[#6C4CF6]" />
+                </div>
+                <div className="flex gap-2">
+                  <input type="text" value={appointmentNote} onChange={(e) => setAppointmentNote(e.target.value)} placeholder="Nota (opcional)" className="flex-1 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] text-slate-700 focus:outline-none focus:border-[#6C4CF6]" />
+                  <button onClick={() => { void handleCreateAppointment(); }} disabled={appointmentLoading} className="px-3 py-1.5 bg-[#161A24] hover:bg-black text-white text-[11px] font-bold rounded-[4px] transition-colors disabled:opacity-60">
+                    {appointmentLoading ? '...' : 'Agendar'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Historial de Contacto y Notas */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Historial de Interacciones</h3>
+              <button onClick={() => setShowNotes(!showNotes)} className="text-[10px] font-bold text-[#6C4CF6] hover:underline bg-[#F2EEFF] px-2 py-0.5 rounded-[4px]">
+                {showNotes ? 'Ocultar' : `Ver historial (${notes.length})`}
+              </button>
+            </div>
+            
+            <div className="flex gap-2 mb-2">
+              <input 
+                type="text" 
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addNote()}
+                placeholder="Registrar interacción (ej. Se llamó y no contestó)..." 
+                className="flex-1 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] text-[11px] text-slate-700 focus:outline-none focus:border-[#6C4CF6] focus:bg-white transition-colors" 
+              />
+              <button onClick={addNote} className="px-3 py-1.5 bg-[#F2EEFF] text-[#6C4CF6] text-[12px] font-bold rounded-[6px] hover:bg-[#E0D4FF] transition-colors" title="Guardar">
+                {Icon.Send()}
+              </button>
+            </div>
+
+            {showNotes && (
+              <div className="space-y-2 mt-2">
+                {notes.map((note) => (
+                  <div key={note.id} className="bg-slate-50 rounded-[6px] p-2.5 border border-slate-200 flex flex-col">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase">Nota interna</span>
+                      <span className="text-[9px] text-slate-400 font-medium">{new Date(note.createdAt).toLocaleString('es-CL')}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-700 whitespace-pre-wrap leading-relaxed">{note.content}</p>
+                  </div>
+                ))}
+                {notes.length === 0 && (
+                  <div className="text-center py-2 text-[11px] text-slate-400 italic">No hay interacciones registradas.</div>
+                )}
+              </div>
+            )}
+          </div>
+          
         </div>
       </div>
     </div>

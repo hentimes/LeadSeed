@@ -222,13 +222,13 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
 
   return (
     <div className="w-full h-[600px]">
-      <div className="w-full h-full flex flex-col bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm overflow-hidden">
-        <div className="bg-indigo-600 p-4 text-white flex items-center justify-between">
+      <div className="w-full h-full flex flex-col card-standard overflow-hidden">
+        <div className="bg-[var(--color-surface)] border-b border-[var(--color-border)] p-4 flex items-center justify-between">
           <div>
-            <h2 className="font-bold text-lg">Chat Maestro</h2>
-            <p className="text-xs text-indigo-200">En vivo con {selectedUser.full_name || selectedUser.email}</p>
+            <h2 className="font-bold text-lg text-slate-800 dark:text-slate-200">Chat Maestro</h2>
+            <p className="text-xs text-slate-500">En vivo con {selectedUser.full_name || selectedUser.email}</p>
           </div>
-          <button onClick={closeUserChat} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+          <button onClick={closeUserChat} className="btn bg-red-50 text-red-600 hover:bg-red-100 border-red-200">
             Cerrar Chat al Usuario
           </button>
         </div>
@@ -281,15 +281,15 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} className="p-4 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-t border-slate-200 dark:border-slate-700/50 flex gap-2">
+        <form onSubmit={handleSend} className="p-4 bg-[var(--color-surface)] border-t border-[var(--color-border)] flex gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={handleTyping}
             placeholder="Enviar un mensaje directo..."
-            className="flex-1 border border-slate-300 dark:border-slate-600/50 rounded-full px-5 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+            className="flex-1 input-standard rounded-full"
           />
-          <button type="submit" disabled={!newMessage.trim()} className="bg-indigo-600 text-white w-10 h-10 rounded-full flex justify-center items-center disabled:opacity-50 hover:bg-indigo-700 transition-colors">
+          <button type="submit" disabled={!newMessage.trim()} className="btn btn-primary rounded-full w-10 h-10 p-0 flex justify-center items-center">
             <Icon.Send />
           </button>
         </form>

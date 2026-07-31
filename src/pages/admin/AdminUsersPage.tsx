@@ -14,6 +14,7 @@ import AdminUserAgenda from '../../components/admin/AdminUserAgenda';
 import AdminUserHeatmap from '../../components/admin/AdminUserHeatmap';
 import AdminSupportChat from '../../components/admin/AdminSupportChat';
 import AdminUserHelperStats from '../../components/admin/AdminUserHelperStats';
+import LoadingOverlay from '../../components/LoadingOverlay';
 import { useAuth } from '../../contexts/AuthContext';
 
 type AdminTab = 'licencias' | 'telemetria' | 'inventario' | 'base' | 'agenda' | 'heatmap' | 'soporte' | 'helper';
@@ -240,7 +241,7 @@ export default function AdminUsersPage() {
     setUserOverrides(userOverrides.filter(o => o.feature_id !== featureId));
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando usuarios...</div>;
+  if (loading) return <LoadingOverlay message="Cargando usuarios..." />;
 
   return (
     <div className="flex gap-6 h-full">

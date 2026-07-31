@@ -22,15 +22,15 @@ export default function VariableDropdown({ onSelect, direction = 'down' }: Props
   const variables = ['nombre', 'telefono', 'email', 'empresa', 'notas', 'rut'];
 
   const dropdownClass = direction === 'up' 
-    ? "absolute right-0 bottom-full mb-1 w-32 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-lg shadow-xl z-50 py-1 text-xs"
-    : "absolute right-0 top-full mt-1 w-32 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-lg shadow-xl z-50 py-1 text-xs";
+    ? "absolute right-0 bottom-full mb-1 w-32 card-standard z-50 py-1 text-xs"
+    : "absolute right-0 top-full mt-1 w-32 card-standard z-50 py-1 text-xs";
 
   return (
     <div className="relative inline-block" ref={containerRef}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-xs hover:bg-blue-100 flex items-center font-mono font-bold text-blue-700 transition-colors shadow-sm"
+        className="btn btn-sm font-mono flex items-center text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200"
         title="Insertar variable"
       >
         {'{ }'}

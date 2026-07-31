@@ -7,7 +7,7 @@ import EmailEditor from './EmailEditor';
 import EmailScheduler from './EmailScheduler';
 import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../../services/sendService';
-import { getSettings } from '../../db/database';
+import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { listEmailChannels } from '../../repositories/emailChannelsRepository';
 
@@ -102,8 +102,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
         }
 
         channels
-          .filter((channel) => channel.isActive)
-          .forEach((channel) => {
+          .filter((channel: any) => channel.isActive)
+          .forEach((channel: any) => {
             options.push({
               id: channel.id,
               provider: 'resend',

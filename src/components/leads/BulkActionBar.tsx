@@ -29,28 +29,28 @@ export default function BulkActionBar({
   if (selectedIds.size === 0) return null;
 
   return (
-    <div className="mb-3 p-2 bg-blue-50/50 border border-blue-100 rounded flex items-center gap-2 flex-wrap shadow-sm">
-      <span className="text-xs font-medium text-blue-800 bg-blue-100 px-2 py-1 rounded">
+    <div className="flex items-center gap-2">
+      <span className="text-[12px] font-semibold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-[6px]">
         {selectedIds.size} sel.
       </span>
       <button
         onClick={onExport}
         title={`Exportar seleccionados como ${exportFormat.toUpperCase()}`}
-        className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 px-1.5 py-1 rounded text-xs font-medium hover:bg-slate-50 dark:bg-slate-900 transition-colors"
+        className="text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-[12px] font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
       >
         Exportar
       </button>
       {showTrash ? (
         <>
-          <button onClick={onRestore} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-green-200 text-green-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-green-50 transition-colors">
+          <button onClick={onRestore} className="text-green-700 px-2 py-1 rounded text-[12px] font-medium hover:bg-green-50 transition-colors">
             Restaurar
           </button>
-          <button onClick={onDelete} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-red-200 text-red-700 px-1.5 py-1 rounded text-xs font-medium hover:bg-red-50 transition-colors">
+          <button onClick={onDelete} className="text-red-700 px-2 py-1 rounded text-[12px] font-medium hover:bg-red-50 transition-colors">
             Eliminar def.
           </button>
         </>
       ) : (
-        <button onClick={onDelete} className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-red-200 text-red-600 px-1.5 py-1 rounded text-xs font-medium hover:bg-red-50 transition-colors flex items-center gap-1">
+        <button onClick={onDelete} className="text-red-600 px-2 py-1 rounded text-[12px] font-medium hover:bg-red-50 transition-colors">
           Eliminar
         </button>
       )}
@@ -58,7 +58,7 @@ export default function BulkActionBar({
         <>
           <select
             onChange={(e) => { if (e.target.value) onStatusChange(e.target.value as LeadStatus); e.target.value = ''; }}
-            className="border border-slate-200 dark:border-slate-700/50 rounded px-1.5 py-1 text-xs bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-600 dark:text-slate-300 outline-none focus:border-blue-300"
+            className="rounded px-1.5 py-1 text-[12px] text-slate-600 hover:bg-slate-100 outline-none cursor-pointer border-none bg-transparent font-medium"
             defaultValue=""
           >
             <option value="" disabled>Estado...</option>
@@ -68,7 +68,7 @@ export default function BulkActionBar({
           </select>
           <select
             onChange={(e) => { if (e.target.value) onAddToList(Number(e.target.value)); e.target.value = ''; }}
-            className="border border-slate-200 dark:border-slate-700/50 rounded px-1.5 py-1 text-xs bg-white dark:bg-slate-800/80 dark:backdrop-blur-md text-slate-600 dark:text-slate-300 outline-none focus:border-blue-300"
+            className="rounded px-1.5 py-1 text-[12px] text-slate-600 hover:bg-slate-100 outline-none cursor-pointer border-none bg-transparent font-medium"
             defaultValue=""
           >
             <option value="" disabled>Lista...</option>
@@ -78,12 +78,6 @@ export default function BulkActionBar({
           </select>
         </>
       )}
-      <button
-        onClick={onClearSelection}
-        className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 ml-auto underline decoration-dotted"
-      >
-        Deseleccionar
-      </button>
     </div>
   );
 }

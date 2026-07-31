@@ -7,6 +7,7 @@ import {
   subscribeToCommunityMessages,
   type CommunityMessage,
 } from '../services/communityService';
+import LoadingOverlay from '../components/LoadingOverlay';
 import { Icon } from '../utils/icons';
 
 export default function CommunityPage() {
@@ -43,7 +44,7 @@ export default function CommunityPage() {
     await sendCommunityMessage(user.id, text);
   };
 
-  if (loading) return <div className="p-8 flex justify-center text-slate-400 dark:text-slate-500"><Icon.Settings /> Cargando sala...</div>;
+  if (loading) return <LoadingOverlay message="Cargando sala..." />;
 
   return (
     <div className="flex h-full gap-4 max-w-6xl mx-auto p-4">

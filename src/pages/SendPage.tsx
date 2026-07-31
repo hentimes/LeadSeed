@@ -61,7 +61,6 @@ export default function SendPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-3">Enviar Mensajes</h2>
 
       <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
         <button

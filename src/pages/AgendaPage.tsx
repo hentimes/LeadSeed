@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import LoadingOverlay from '../components/LoadingOverlay';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant, Page } from '../types';
 import {
   addMyAppointmentParticipant,
@@ -360,25 +361,19 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-400 py-6">Cargando agenda...</p>;
+    return <LoadingOverlay message="Cargando agenda..." />;
   }
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in p-3 flex flex-col gap-3">
-      <div className="border-b border-[var(--color-border)] pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Agenda</h2>
-            <p className="text-xs text-slate-400 mt-1">Citas, alertas, Meet, reprogramacion y cancelaciones.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('settings')}
-            className="btn btn-ghost btn-sm"
-          >
-            Configurar
-          </button>
-        </div>
+      <div className="flex justify-end mb-4">
+        <button
+          type="button"
+          onClick={() => onNavigate('settings')}
+          className="btn btn-ghost btn-sm"
+        >
+          Configurar
+        </button>
       </div>
 
       {(message || error) && (

@@ -1,5 +1,6 @@
 import { getCurrentSession } from './authService';
 import { fetchDueScheduledEmailLogs, fetchPendingTaskAlertRows } from '../repositories/appMaintenanceRepository';
+import { supabase } from '../lib/supabaseClient';
 
 export interface BackgroundTaskAlertSummary {
   overdueCount: number;
@@ -7,10 +8,21 @@ export interface BackgroundTaskAlertSummary {
   upcomingCount: number;
   total: number;
   overdueTitles: string[];
+  newLeadsCount: number;
 }
 
 function toIsoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+export async function fetchNewLeadsCount(userId: string): Promise<number> {
+  const { count } = await supabase
+    .from('leads')
+    .select('id, metadata', { count: 'exact', head: true })
+    .eq('status', 'nuevo')
+    .eq('user_id', userId)
+    .not('metadata', 'cs', '{"is_read":true}');
+  return count || 0;
 }
 
 export async function loadBackgroundTaskAlertSummary(): Promise<BackgroundTaskAlertSummary | null> {
@@ -20,6 +32,7 @@ export async function loadBackgroundTaskAlertSummary(): Promise<BackgroundTaskAl
   }
 
   const tasks = await fetchPendingTaskAlertRows(session.user.id);
+  const newLeadsCount = await fetchNewLeadsCount(session.user.id);
   const now = new Date();
   const today = toIsoDay(now);
   const tomorrow = toIsoDay(new Date(now.getTime() + 86400000));
@@ -34,6 +47,7 @@ export async function loadBackgroundTaskAlertSummary(): Promise<BackgroundTaskAl
     upcomingCount: upcoming.length,
     total: overdue.length + todayTasks.length + upcoming.length,
     overdueTitles: overdue.map((task) => task.title),
+    newLeadsCount,
   };
 }
 

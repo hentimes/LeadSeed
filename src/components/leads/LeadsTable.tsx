@@ -7,6 +7,7 @@ import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import LeadsTableControls from './LeadsTableControls';
 import LeadsTableRow from './LeadsTableRow';
+import LoadingOverlay from '../LoadingOverlay';
 
 interface Props {
   leads: Lead[];
@@ -19,6 +20,7 @@ interface Props {
   onView: (lead: Lead) => void;
   onDelete: (id: string) => void;
   onRestore?: (id: string) => void;
+  onTogglePin: (lead: Lead, isPinned: boolean) => void;
   isTrash?: boolean;
   filterMode?: string | null;
   filterListId: number | null;
@@ -45,6 +47,8 @@ interface Props {
   compactMode: boolean;
   lastClickedIndex: number | null;
   onSetLastClicked: (index: number) => void;
+  leftActions?: React.ReactNode;
+  bulkActions?: React.ReactNode;
 }
 
 const sortIcon = (f: SortField, s: SortConfig) => {
@@ -63,9 +67,9 @@ function shortName(full: string): string {
 
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
-  onEdit, onView, onDelete, onRestore, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
+  onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
-  compactMode, lastClickedIndex, onSetLastClicked,
+  compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
   onReorderCols,
 }: Props) {
   const sendCounts = useSendCounts();
@@ -153,6 +157,8 @@ export default function LeadsTable({
   return (
     <div>
       <LeadsTableControls
+        leftActions={leftActions}
+        bulkActions={bulkActions}
         search={search}
         onSearchChange={onSearchChange}
         totalCount={totalCount}
@@ -172,23 +178,30 @@ export default function LeadsTable({
         onFilterDateChange={onFilterDateChange}
       />
 
-      <div className="border border-[var(--color-border)] rounded-[var(--radius-md)] overflow-x-auto shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-[var(--color-bg-surface)] text-left">
+      <div className="card-standard overflow-x-auto w-full min-w-0">
+        <table className="w-full text-[13px] text-[#161A24]">
+          <thead className="border-b border-[#E6EAF0] text-[#5B6475] bg-white">
             {compactMode ? (
               <tr>
-                <th className="w-8 px-2 py-2"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 'bg-blue-600 border-blue-600' : 'border-[var(--color-border)] bg-[var(--color-bg-surface)]'}`} onClick={onSelectAll}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 1 : 0}/></svg></div></th>
-                <th onClick={() => onSort('name')} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-[var(--color-bg-surface-hover)]">
-                  {nameLabel} <span className="text-gray-400 text-xs">{sortIcon('name', sort)}</span>
+                <th className="w-8 px-2 py-3"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[#E6EAF0] bg-white'}`} onClick={onSelectAll}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 1 : 0}/></svg></div></th>
+                <th onClick={() => onSort('name')} className="text-left px-3 py-3 font-medium cursor-pointer select-none hover:bg-gray-50 w-[30%] min-w-[140px]">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    {nameLabel} <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('name', sort)}</span>
+                  </div>
                 </th>
-                {companyVis && <th className="text-left px-2 py-2 font-medium">Empresa</th>}
-                {contactLabel && <th className="text-left px-2 py-2 font-medium">{contactLabel}</th>}
-                {dateVis && <th onClick={() => onSort('createdAt')} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-gray-200">
-                  Ingreso <span className="text-gray-400 text-xs">{sortIcon('createdAt', sort)}</span></th>}
-                {listsVis && <th className="text-left px-2 py-2 font-medium">Listas</th>}
-                {statusVis && <th className="text-left px-2 py-2 font-medium">Estado</th>}
-                {scoreVis && <th className="text-left px-2 py-2 font-medium">Score</th>}
-                <th className="w-12 px-2 py-2"></th>
+                {companyVis && <th className="text-left px-3 py-3 font-medium w-[15%] min-w-[100px]">Empresa</th>}
+                {contactLabel && <th className="text-left px-3 py-3 font-medium w-[25%] min-w-[130px]">{contactLabel}</th>}
+                {dateVis && <th onClick={() => onSort('createdAt')} className="text-left px-3 py-3 font-medium cursor-pointer select-none hover:bg-gray-50 w-[15%] min-w-[80px]">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    Ingreso <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('createdAt', sort)}</span>
+                  </div>
+                </th>}
+                {listsVis && <th className="text-left px-3 py-3 font-medium w-[20%] min-w-[100px]">Listas</th>}
+                {statusVis && <th className="text-left px-3 py-3 font-medium w-[15%] min-w-[80px]">Estado</th>}
+                {scoreVis && <th className="text-left px-3 py-3 font-medium w-[10%] min-w-[70px]">Score</th>}
+                <th className="w-[100px] min-w-[100px] px-3 py-3 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal">
+                  <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
+                </th>
               </tr>
             ) : (
               <tr>
@@ -199,23 +212,30 @@ export default function LeadsTable({
                 {emailVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'email')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'email')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Email</th>}
                 {companyVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'company')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'company')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Empresa</th>}
                 {rutVis && <th onClick={() => onSort('rut')} draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'rut')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'rut')); }} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-gray-200">
-                  RUT <span className="text-gray-400 text-xs">{sortIcon('rut', sort)}</span></th>}
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    RUT <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('rut', sort)}</span>
+                  </div>
+                </th>}
                 {dateVis && <th onClick={() => onSort('createdAt')} draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'createdAt')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'createdAt')); }} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-gray-200">
-                  Ingreso <span className="text-gray-400 text-xs">{sortIcon('createdAt', sort)}</span></th>}
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    Ingreso <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('createdAt', sort)}</span>
+                  </div>
+                </th>}
                 {listsVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'lists')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'lists')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Listas</th>}
                 {statusVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'status')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'status')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Estado</th>}
-                <th className="w-12 px-2 py-2"></th>
+                <th className="w-[100px] min-w-[100px] px-2 py-2 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal">
+                  <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
+                </th>
               </tr>
             )}
           </thead>
           <tbody ref={tbodyRef}>
             {isLoadingPage && leads.length === 0 ? (
-              <tr><td colSpan={headerColSpan + 1} className="px-3 py-12 text-center text-slate-400 dark:text-slate-500">
-                <div className="mx-auto mb-3 h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600"></div>
-                <p className="text-sm font-medium">Cargando leads...</p>
+              <tr><td colSpan={100} className="p-0 text-center text-slate-400">
+                <LoadingOverlay message="Cargando leads..." />
               </td></tr>
             ) : leads.length === 0 ? (
-              <tr><td colSpan={headerColSpan + 1} className="px-3 py-12 text-center text-gray-400">
+              <tr><td colSpan={100} className="px-3 py-12 text-center text-gray-400">
                 <div className="text-3xl mb-2 opacity-30 flex justify-center">{Icon.Leads()}</div>
                 <p className="text-sm font-medium">No hay leads</p>
                 <p className="text-xs mt-1">Creá uno o importá desde un archivo</p>
@@ -245,6 +265,7 @@ export default function LeadsTable({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onRestore={onRestore}
+                  onTogglePin={onTogglePin}
                   getScore={getScore}
                   shortName={shortName}
                 />
@@ -253,6 +274,33 @@ export default function LeadsTable({
           </tbody>
         </table>
       </div>
+      
+      {/* Bottom Pagination */}
+      {pageCount > 1 && (
+        <div className="flex justify-center items-center mt-6 gap-1">
+          <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1 || !!isLoadingPage} className="btn btn-secondary w-8 h-8 flex items-center justify-center p-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          
+          {Array.from({ length: pageCount }, (_, i) => i + 1).map(p => {
+            if (p === 1 || p === pageCount || (p >= currentPage - 1 && p <= currentPage + 1)) {
+              return (
+                <button key={p} onClick={() => onPageChange(p)} disabled={!!isLoadingPage} className={`w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors ${p === currentPage ? 'bg-[#F2EEFF] text-[#6C4CF6]' : 'text-[#5B6475] hover:bg-gray-50'}`}>
+                  {p}
+                </button>
+              );
+            }
+            if (p === currentPage - 2 || p === currentPage + 2) {
+              return <span key={p} className="w-8 h-8 flex items-center justify-center text-[#5B6475]">...</span>;
+            }
+            return null;
+          })}
+          
+          <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= pageCount || !!isLoadingPage} className="btn btn-secondary w-8 h-8 flex items-center justify-center p-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

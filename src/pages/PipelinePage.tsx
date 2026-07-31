@@ -151,7 +151,7 @@ export default function PipelinePage() {
         onDragOver={(e) => { e.preventDefault(); setDragOver(s); }}
         onDragLeave={() => setDragOver(null)}
         onDrop={(e) => { e.preventDefault(); handleDrop(s); }}
-        className={`flex flex-col rounded-xl border-2 transition-all cursor-pointer overflow-hidden h-[160px] sm:h-[180px] bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 ${
+        className={`card-standard flex flex-col border-2 transition-all cursor-pointer overflow-hidden h-[160px] sm:h-[180px] ${
           isDragOver ? 'scale-105 shadow-xl z-10' : 
           isActive ? 'shadow-md ring-2 ring-offset-2 dark:ring-offset-gray-900' : 'opacity-90 hover:opacity-100 hover:shadow-md'
         }`}
@@ -194,7 +194,7 @@ export default function PipelinePage() {
 
   return (
     <div className="pb-6">
-      <h2 className="text-lg font-bold mb-3">Pipeline</h2>
+
 
       <div className="flex gap-2 mb-3 w-full">
         <div className="flex-1 relative">
@@ -214,7 +214,7 @@ export default function PipelinePage() {
         </div>
       </div>
 
-      <div className="flex flex-col max-h-[250px] min-h-[150px] border border-slate-200 dark:border-slate-700/50 dark:border-gray-700 rounded-lg overflow-hidden mb-5 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 shadow-sm">
+      <div className="card-standard flex flex-col max-h-[250px] min-h-[150px] overflow-hidden mb-5">
         <div className="bg-slate-50 dark:bg-slate-900 dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700/50 dark:border-gray-700 px-3 py-2 flex justify-between items-center shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 dark:text-gray-300 flex items-center gap-2">
             Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span>
@@ -290,7 +290,7 @@ export default function PipelinePage() {
               </select>
               {selectedTemplate && taskPrompt?.lead && (
                 <button onClick={() => { openWhatsAppForLeads([taskPrompt.lead!], waTemplates.find((t: WhatsAppTemplate) => t.id === selectedTemplate)?.contenido || ''); }}
-                  className="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-700 shrink-0">
+                  className="btn btn-primary shrink-0">
                   Enviar
                 </button>
               )}
@@ -300,7 +300,7 @@ export default function PipelinePage() {
             <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 px-2 py-1.5">
               Omitir
             </button>
-            <button onClick={createTask} className="bg-amber-600 text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-amber-700 shadow-sm">
+            <button onClick={createTask} className="btn btn-primary shadow-sm">
               Crear tarea
             </button>
           </div>

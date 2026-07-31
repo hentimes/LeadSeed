@@ -137,25 +137,23 @@ export default function App() {
   }
 
   return (
-    <>
-      <AppLayout currentPage={page} onNavigate={setPage} taskCount={taskCount} isAdmin={isAdmin}>
-        <AppPageRenderer
-          page={page}
-          compactMode={compactMode}
-          darkMode={darkMode}
-          visibleCols={visibleCols}
-          highlightTemplate={highlightTemplate}
-          isAdmin={isAdmin}
-          hasFeature={hasFeature}
-          onNavigate={setPage}
-          onTasksChanged={refreshTaskCount}
-          onCompactModeChange={handleCompactModeChange}
-          onDarkModeChange={handleDarkModeChange}
-          onColsChange={handleColsChange}
-          onClearHighlightTemplate={() => setHighlightTemplate(null)}
-          onHighlightTemplate={(template) => setHighlightTemplate(template)}
-        />
-      </AppLayout>
-    </>
+    <AppLayout currentPage={page} onNavigate={setPage} taskCount={taskCount} isAdmin={isAdmin}>
+      <AppPageRenderer
+        page={page}
+        compactMode={compactMode}
+        darkMode={darkMode}
+        visibleCols={visibleCols}
+        highlightTemplate={highlightTemplate}
+        isAdmin={isAdmin}
+        hasFeature={hasFeature}
+        onNavigate={setPage}
+        onTasksChanged={refreshTaskCount}
+        onCompactModeChange={handleCompactModeChange}
+        onDarkModeChange={handleDarkModeChange}
+        onColsChange={handleColsChange}
+        onClearHighlightTemplate={() => setHighlightTemplate(null)}
+        onHighlightTemplate={(template) => setHighlightTemplate(template)}
+      />
+    </AppLayout>
   );
 }

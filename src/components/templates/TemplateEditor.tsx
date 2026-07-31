@@ -178,7 +178,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
           </label>
           <div className="flex gap-1">
             <VariableDropdown onSelect={(val: string) => insertTextAtCursor(contenidoRef, contenido, val, setContenido)} />
-            {type === 'email' && isHtml && (
+            {(type === 'whatsapp' || (type === 'email' && isHtml)) && (
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
@@ -186,13 +186,13 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                   showPreview ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
-                 Preview
+                 Vista Previa
               </button>
             )}
           </div>
         </div>
 
-        <div className={showPreview ? 'grid grid-cols-2 gap-2' : ''}>
+        <div className={(showPreview && type === 'email' && isHtml) ? 'grid grid-cols-2 gap-2' : ''}>
           {type === 'email' && isHtml ? (
             <textarea
               ref={contenidoRef}
@@ -236,14 +236,23 @@ export default function TemplateEditor({ template, type, categories = [], onSave
             </div>
           )}
 
-          {/* WhatsApp preview */}
-          {type === 'whatsapp' && contenido && (
-            <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-lg overflow-hidden flex flex-col h-full shadow-sm sticky top-4">
-              <div className="bg-gray-100 px-4 py-2 border-b flex items-center gap-2">
-                <span className="text-green-600"><Icon.Messages /></span> <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Vista previa WhatsApp</span>
-              </div>
-              <div className="p-4 bg-[#efeae2] flex-1 overflow-y-auto" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.9 }}>
-                  {replaceVars(contenido)}
+          {/* WhatsApp preview Modal */}
+          {showPreview && type === 'whatsapp' && contenido && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+              <div className="bg-white rounded-xl overflow-hidden flex flex-col w-full max-w-[320px] shadow-2xl max-h-[85vh] animate-scale-in">
+                <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#25D366]"><Icon.Messages /></span> 
+                    <span className="text-sm font-semibold text-slate-700">Vista previa</span>
+                  </div>
+                  <button type="button" onClick={() => setShowPreview(false)} className="text-slate-400 hover:text-slate-600 transition-colors p-1"><Icon.Close /></button>
+                </div>
+                <div className="p-4 flex-1 overflow-y-auto relative min-h-[300px]" style={{ backgroundColor: '#E5DDD5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }}>
+                  <div className="bg-white text-[#111B21] text-[12.5px] leading-relaxed p-2 px-3 rounded-lg rounded-tr-none shadow-sm max-w-[90%] float-right relative whitespace-pre-wrap">
+                    {replaceVars(contenido)}
+                  </div>
+                  <div className="clear-both"></div>
+                </div>
               </div>
             </div>
           )}
@@ -278,14 +287,14 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       <div className="flex gap-2 pt-2">
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
+          className="btn btn-primary"
         >
           {template?.id ? 'Actualizar' : 'Crear Plantilla'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-200 text-slate-600 dark:text-slate-300 px-4 py-2 rounded text-sm font-medium hover:bg-gray-300"
+          className="btn btn-secondary"
         >
           Cancelar
         </button>

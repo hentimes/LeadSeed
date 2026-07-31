@@ -1,5 +1,7 @@
 import { ReactNode, useState } from 'react';
-import SidebarNav from '../SidebarNav';
+import Header from './Header';
+import NavigationDrawer from './NavigationDrawer';
+import UserMenu from './UserMenu';
 import ProfileModal from '../profile/ProfileModal';
 import type { Page } from '../../types';
 import { usePresence } from '../../hooks/usePresence';
@@ -18,17 +20,38 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
   // Inicializar rastreo de telemetría y presencia global en la app
   useTelemetry(currentPage);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-primary)' }}>
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
-        <div className="flex-1 overflow-y-auto p-4 animate-fade-in">
-          {children}
-        </div>
+    <div className="flex flex-col h-screen overflow-hidden font-sans bg-[var(--ls-bg,#F8F9FC)] dark:bg-slate-900 text-[var(--ls-text,#111827)] dark:text-slate-100">
+      <Header 
+        isDrawerOpen={isDrawerOpen}
+        onToggleDrawer={() => setIsDrawerOpen(prev => !prev)}
+        onToggleUserMenu={() => setIsUserMenuOpen(prev => !prev)}
+        currentPage={currentPage}
+      />
+      
+      <NavigationDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+        currentPage={currentPage}
+        onNavigate={onNavigate}
+        taskCount={taskCount}
+      />
+      
+      <UserMenu 
+        isOpen={isUserMenuOpen} 
+        onClose={() => setIsUserMenuOpen(false)} 
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onNavigateSettings={() => onNavigate('settings')}
+      />
+
+      <main className="flex-1 overflow-y-auto relative animate-fade-in z-0 px-2 sm:px-4 py-4 w-full min-w-0">
+        {children}
       </main>
-      <SidebarNav currentPage={currentPage} onNavigate={onNavigate} taskCount={taskCount} isAdmin={isAdmin} onOpenProfile={() => setIsProfileModalOpen(true)} />
+
       <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
-      {/* Ventana de soporte asíncrona/flotante */}
       <SupportFloatingChat />
     </div>
   );

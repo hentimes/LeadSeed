@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSettings, saveSettings } from '../../db/database';
+import { getSettings, saveSettings } from '../../services/appSettingsService';
 import type { ComparePeriod } from '../../types';
 
 export default function GoalsSettings() {

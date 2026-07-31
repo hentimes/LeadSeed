@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Lead, LeadList, LeadStatus } from '../../types';
-import { STATUS_LABELS } from '../../types';
 import { formatRutDisplay, isValidRut, normalizeRut } from '../../utils/rutNormalizer';
 import { normalizePhone } from '../../utils/waHelper';
+import { PhoneInput } from './form/PhoneInput';
+import { ComunaInput } from './form/ComunaInput';
+import { HealthSystemSection } from './form/HealthSystemSection';
 
 interface Props {
   lead?: Lead | null;
@@ -21,6 +23,17 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
   const [status, setStatus] = useState<LeadStatus>('nuevo');
   const [listaIds, setListaIds] = useState<number[]>([]);
   const [error, setError] = useState('');
+  
+  const [rangoEdad, setRangoEdad] = useState('');
+  const [region, setRegion] = useState('');
+  const [comuna, setComuna] = useState('');
+  
+  // Health System State
+  const [sistema, setSistema] = useState('Fonasa');
+  const [rangoRenta, setRangoRenta] = useState('');
+  const [isapre, setIsapre] = useState('');
+  const [numeroCargas, setNumeroCargas] = useState('');
+  const [edadCargas, setEdadCargas] = useState('');
 
   useEffect(() => {
     if (lead) {
@@ -32,6 +45,16 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
       setNotes(lead.notes);
       setStatus(lead.status || 'nuevo');
       setListaIds(lead.listaIds || []);
+      
+      const rp = lead.metadata?.raw_payload || {};
+      setRangoEdad(rp.rango_edad || '');
+      setRegion(rp.region || '');
+      setComuna(rp.comuna || '');
+      setSistema(rp.sistema_actual || '');
+      setRangoRenta(rp.rango_renta || '');
+      setIsapre(rp.isapre_especifica || '');
+      setNumeroCargas(rp.numero_cargas || '');
+      setEdadCargas(rp.edad_cargas ? (Array.isArray(rp.edad_cargas) ? JSON.stringify(rp.edad_cargas) : String(rp.edad_cargas)) : '');
       return;
     }
 
@@ -43,6 +66,14 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
     setNotes('');
     setStatus('nuevo');
     setListaIds([]);
+    setRangoEdad('');
+    setRegion('');
+    setComuna('');
+    setSistema('Fonasa');
+    setRangoRenta('');
+    setIsapre('');
+    setNumeroCargas('');
+    setEdadCargas('');
   }, [lead]);
 
   const toggleList = (id: number) => {
@@ -50,7 +81,28 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
   };
 
   const handleRutChange = (value: string) => {
-    setRut(value.replace(/[^0-9kK.\-]/g, '').toUpperCase());
+    let clean = value.replace(/[^0-9kK]/g, '').toUpperCase();
+    if (clean.length > 9) {
+      clean = clean.slice(0, 9);
+    }
+    
+    if (clean.length <= 1) {
+      setRut(clean);
+      return;
+    }
+    
+    const body = clean.slice(0, -1);
+    const dv = clean.slice(-1);
+    
+    const reversed = body.split('').reverse();
+    const withDots: string[] = [];
+    for (let i = 0; i < reversed.length; i++) {
+      if (i > 0 && i % 3 === 0) withDots.push('.');
+      withDots.push(reversed[i]);
+    }
+    const formattedBody = withDots.reverse().join('');
+    
+    setRut(`${formattedBody}-${dv}`);
   };
 
   const handleRutBlur = () => {
@@ -80,119 +132,139 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
       return;
     }
 
+    // Parse edadCargas if possible
+    let parsedEdadCargas: string | string[] = edadCargas;
+    try {
+      if (edadCargas.trim().startsWith('[')) {
+        parsedEdadCargas = JSON.parse(edadCargas);
+      }
+    } catch {
+      // ignore
+    }
+
+    const newMetadata = {
+      ...(lead?.metadata || {}),
+      raw_payload: {
+        ...(lead?.metadata?.raw_payload || {}),
+        rango_edad: rangoEdad.trim(),
+        region: region.trim(),
+        comuna: comuna.trim(),
+        sistema_actual: sistema.trim(),
+        rango_renta: rangoRenta.trim(),
+        isapre_especifica: isapre.trim(),
+        numero_cargas: numeroCargas.trim(),
+        edad_cargas: parsedEdadCargas,
+      }
+    };
+
     onSave({
       ...(lead || {}),
       id: lead?.id || undefined,
       name: name.trim(),
-      phone: normalizePhone(phone),
+      phone: normalizePhone(phone) || phone,
       email: email.trim(),
       company: company.trim(),
       rut: normalizedRut || '',
       notes: notes.trim(),
-      status,
+      status, // Will preserve existing or default to 'nuevo'
       score: lead?.score || 0,
       listaIds,
+      metadata: newMetadata,
       createdAt: lead?.createdAt || '',
       updatedAt: new Date().toISOString(),
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Nombre *</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
-          required
-          autoFocus
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid grid-cols-[2fr_1fr] gap-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Telefono (+569XXXXXXXX)</label>
+          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nombre *</label>
           <input
             type="text"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="12345678 o +56912345678"
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
+            placeholder="Ej. Juan Pérez"
+            required
+            autoFocus
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Empresa</label>
-          <input
-            type="text"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">RUT</label>
+          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">RUT</label>
           <input
             type="text"
             value={rut}
             onChange={(e) => handleRutChange(e.target.value)}
             onBlur={handleRutBlur}
             placeholder="12.345.678-9"
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Estado</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as LeadStatus)}
-            className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
-          >
-            {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((item) => (
-              <option key={item} value={item}>
-                {STATUS_LABELS[item]}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <PhoneInput value={phone} onChange={setPhone} />
+        <div>
+          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="correo@ejemplo.com"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
+          />
+        </div>
+      </div>
+
+      <HealthSystemSection 
+        rangoEdad={rangoEdad}
+        onRangoEdadChange={setRangoEdad}
+        sistema={sistema}
+        onSistemaChange={setSistema}
+        rangoRenta={rangoRenta}
+        onRangoRentaChange={setRangoRenta}
+        isapre={isapre}
+        onIsapreChange={setIsapre}
+        numeroCargas={numeroCargas}
+        onNumeroCargasChange={setNumeroCargas}
+        edadCargas={edadCargas}
+        onEdadCargasChange={setEdadCargas}
+      />
+
+      <ComunaInput 
+        comuna={comuna} 
+        region={region} 
+        onComunaChange={setComuna} 
+        onRegionChange={setRegion} 
+      />
+
+
+
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Notas</label>
+        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Notas</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-600/50 dark:border-gray-600"
+          rows={2}
+          placeholder="Escribe algún comentario o nota importante..."
+          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400 resize-none"
         />
       </div>
 
       {lists.length > 0 && (
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Listas</label>
+          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Listas</label>
           <div className="flex flex-wrap gap-2">
             {lists.map((list) => (
               <button
                 key={list.id!}
                 type="button"
                 onClick={() => toggleList(list.id!!)}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                className={`rounded-[6px] border px-2 py-1 text-[11px] font-semibold transition-all ${
                   listaIds.includes(list.id!!)
-                    ? 'border-transparent text-white'
-                    : 'border-slate-300 text-slate-500 hover:border-gray-400 dark:border-slate-600/50 dark:border-gray-600 dark:text-slate-400'
+                    ? 'border-transparent text-white shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                 }`}
                 style={listaIds.includes(list.id!!) ? { backgroundColor: list.color } : {}}
               >
@@ -203,18 +275,14 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
         </div>
       )}
 
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <div className="p-2.5 bg-red-50 border border-red-100 rounded-[6px]"><p className="text-[11px] font-semibold text-red-600">{error}</p></div>}
 
-      <div className="flex gap-2 pt-2">
-        <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-          {lead?.id ? 'Actualizar' : 'Crear Lead'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded bg-gray-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-gray-300 dark:text-slate-300"
-        >
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="btn btn-secondary flex-1">
           Cancelar
+        </button>
+        <button type="submit" className="btn btn-primary flex-1">
+          {lead?.id ? 'Guardar Cambios' : 'Crear Lead'}
         </button>
       </div>
     </form>

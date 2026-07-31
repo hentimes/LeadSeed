@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '../../hooks/useChat';
+import { useAuth } from '../../contexts/AuthContext';
 import type { ChatMessage } from '../../types';
 import { Icon } from '../../utils/icons';
 
@@ -8,6 +9,7 @@ interface ChatRoomProps {
 }
 
 export default function ChatRoom({ roomId }: ChatRoomProps) {
+  const { user } = useAuth();
   const { room, messages, loading, sendMessage } = useChat(roomId);
   const [inputText, setInputText] = useState('');
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
@@ -68,17 +70,25 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f9fa] dark:bg-gray-900 border dark:border-gray-800 rounded-lg overflow-hidden">
+    <div className="panel-container flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center shadow-sm z-10">
-        <div>
-          <h2 className="font-semibold text-slate-800 dark:text-gray-100 flex items-center gap-2">
-            <span className="text-emerald-500">•</span> {room.name}
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-gray-400">Modo Volátil - Sólo ves mensajes mientras estás aquí</p>
+      <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-[var(--ls-border,#E6E8F0)] dark:border-gray-700 flex justify-between items-center z-10 shadow-sm">
+        <div className="flex gap-2">
+          <button className="px-3 py-1.5 rounded-full bg-[var(--ls-soft-purple,#F2EEFF)] dark:bg-[#6C4CF6]/20 text-[var(--ls-primary,#6C4CF6)] text-xs font-semibold flex items-center gap-1 transition-colors">
+            <span className="text-[#6C4CF6] opacity-70">#</span> General
+            <span className="w-1.5 h-1.5 bg-[var(--ls-primary,#6C4CF6)] rounded-full ml-1"></span>
+          </button>
+          <button className="px-3 py-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-700 text-xs font-medium flex items-center gap-1 transition-colors">
+            <span className="text-slate-400">#</span> Ventas
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full ml-1 opacity-80"></span>
+          </button>
+          <button className="px-3 py-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-700 text-xs font-medium flex items-center gap-1 transition-colors">
+            <span className="text-slate-400">#</span> Soporte
+            <span className="w-1.5 h-1.5 bg-orange-500 rounded-full ml-1 opacity-80"></span>
+          </button>
         </div>
-        <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-          <Icon.More />
+        <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-full transition-colors flex items-center justify-center">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </button>
       </div>
 
@@ -94,50 +104,77 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
           </div>
         )}
         
-        {messages.map((msg) => (
-          <div key={msg.id} className="flex gap-3 group">
-            <img 
-              src={msg.user_profile?.avatar_url || `https://ui-avatars.com/api/?name=${msg.user_profile?.full_name || 'U'}&background=3b82f6&color=fff`} 
-              alt="Avatar" 
-              className="w-8 h-8 rounded-full flex-shrink-0 cursor-pointer object-cover border dark:border-gray-700"
-              title="Ver perfil"
-            />
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-baseline gap-2">
-                <span className="font-semibold text-sm text-slate-800 dark:text-gray-200 cursor-pointer hover:underline">
-                  {msg.user_profile?.full_name || 'Usuario'}
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-              
-              {/* Reply Quote */}
-              {msg.reply_to_message && (
-                <div className="mt-1 pl-2 border-l-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-xs text-slate-600 dark:text-gray-400 py-1 pr-2 rounded-r flex flex-col">
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    {msg.reply_to_message.user_profile?.full_name || 'Usuario'}
-                  </span>
-                  <span className="truncate">{msg.reply_to_message.content}</span>
-                </div>
+        {messages.map((msg) => {
+          const isOwn = user && msg.user_id === user.id;
+
+          return (
+            <div key={msg.id} className={`flex gap-3 group ${isOwn ? 'flex-row-reverse' : ''}`}>
+              {!isOwn && (
+                <img 
+                  src={msg.user_profile?.avatar_url || `https://ui-avatars.com/api/?name=${msg.user_profile?.full_name || 'U'}&background=3b82f6&color=fff`} 
+                  alt="Avatar" 
+                  className="w-8 h-8 rounded-full flex-shrink-0 cursor-pointer object-cover border border-white dark:border-gray-700 shadow-sm"
+                  title="Ver perfil"
+                />
               )}
               
-              <div className="text-sm text-slate-700 dark:text-gray-300 break-words mt-1">
-                {msg.content}
+              <div className={`flex flex-col min-w-0 max-w-[85%] ${isOwn ? 'items-end' : 'items-start'}`}>
+                {!isOwn && (
+                  <div className="flex items-baseline gap-2 mb-1 ml-1">
+                    <span className="font-medium text-sm text-[var(--ls-text,#111827)] dark:text-gray-200">
+                      {msg.user_profile?.full_name || 'Usuario'}
+                    </span>
+                    <span className="text-[10px] text-[var(--ls-text-muted,#667085)] font-medium">
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                )}
+                
+                <div className={`relative px-4 py-2.5 text-[13px] sm:text-sm break-words shadow-sm
+                  ${isOwn 
+                    ? 'bg-[var(--ls-soft-purple,#F2EEFF)] text-slate-800 dark:bg-gray-800 dark:text-gray-100 rounded-2xl rounded-tr-sm' 
+                    : 'bg-white dark:bg-gray-800 text-[var(--ls-text,#111827)] dark:text-gray-100 rounded-2xl rounded-tl-sm border border-[var(--ls-border,#E6E8F0)] dark:border-gray-700'
+                  }`}
+                >
+                  {/* Reply Quote */}
+                  {msg.reply_to_message && (
+                    <div className={`mb-2 pl-2 border-l-2 text-xs py-1 pr-2 rounded-r flex flex-col
+                      ${isOwn 
+                        ? 'border-[#6C4CF6] bg-white/50 text-slate-600' 
+                        : 'border-blue-400 bg-slate-50 dark:bg-gray-700 text-[var(--ls-text-muted,#667085)]'
+                      }`}
+                    >
+                      <span className="font-semibold text-[10px]">
+                        {msg.reply_to_message.user_profile?.full_name || 'Usuario'}
+                      </span>
+                      <span className="truncate opacity-80">{msg.reply_to_message.content}</span>
+                    </div>
+                  )}
+                  
+                  {msg.content}
+
+                  {isOwn && (
+                    <span className="absolute -bottom-5 right-1 text-[10px] text-[var(--ls-text-muted,#667085)] font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Acciones del mensaje (Responder) */}
+              <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center ${isOwn ? 'mr-auto' : 'ml-auto'}`}>
+                <button 
+                  onClick={() => setReplyTo(msg)}
+                  className="p-1.5 text-slate-400 hover:text-[var(--ls-primary,#6C4CF6)] hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  title="Responder"
+                >
+                  <Icon.Reply />
+                </button>
               </div>
             </div>
-            {/* Acciones del mensaje (Responder) */}
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex items-start">
-              <button 
-                onClick={() => setReplyTo(msg)}
-                className="text-xs text-slate-400 hover:text-blue-500 flex items-center gap-1"
-                title="Responder"
-              >
-                <Icon.Reply />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -154,25 +191,31 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
       )}
 
       {/* Composer */}
-      <div className="p-3 bg-white dark:bg-gray-800 border-t dark:border-gray-700 z-10">
+      <div className="p-4 bg-white dark:bg-gray-900 border-t border-[var(--ls-border,#E6E8F0)] dark:border-gray-800 z-10 flex flex-col">
         {replyTo && (
-          <div className="mb-2 pl-2 border-l-2 border-blue-400 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 py-1 pr-2 rounded-r">
-            <div className="flex flex-col text-xs overflow-hidden">
-              <span className="font-semibold text-blue-600 dark:text-blue-400">Repondiendo a {replyTo.user_profile?.full_name}</span>
-              <span className="text-slate-600 dark:text-gray-400 truncate">{replyTo.content}</span>
+          <div className="mb-3 pl-3 border-l-2 border-[var(--ls-primary,#6C4CF6)] flex justify-between items-center bg-[var(--ls-bg,#F8F9FC)] dark:bg-gray-800 py-1.5 pr-2 rounded-r-md text-sm shadow-sm transition-all">
+            <div className="flex flex-col overflow-hidden">
+              <span className="font-semibold text-[var(--ls-primary,#6C4CF6)] text-[10px] uppercase tracking-wider">Respondiendo a {replyTo.user_profile?.full_name}</span>
+              <span className="text-[var(--ls-text,#111827)] dark:text-gray-300 truncate text-xs mt-0.5">{replyTo.content}</span>
             </div>
-            <button onClick={() => setReplyTo(null)} className="text-slate-400 hover:text-slate-600 ml-2">
+            <button onClick={() => setReplyTo(null)} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
               <Icon.Close />
             </button>
           </div>
         )}
-        <form onSubmit={handleSend} className="flex flex-col gap-2">
-          <div className="flex relative items-end gap-2">
+        
+        <form onSubmit={handleSend} className="relative">
+          <div className="flex items-end gap-1 border border-[var(--ls-border,#E6E8F0)] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-[20px] px-2 py-1.5 focus-within:ring-2 focus-within:ring-[var(--ls-soft-purple,#F2EEFF)] transition-all shadow-sm">
+            
+            <button type="button" className="p-2 mb-0.5 text-[var(--ls-text-muted,#667085)] hover:bg-slate-50 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0" title="Adjuntar archivo">
+              <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+            </button>
+
             <textarea 
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Escribe un mensaje..."
-              className="flex-1 resize-none bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-gray-100"
+              placeholder="Escribe tu mensaje..."
+              className="flex-1 resize-none bg-transparent border-none p-2 text-[14px] text-[var(--ls-text,#111827)] dark:text-gray-100 focus:ring-0 focus:outline-none max-h-32 min-h-[40px] leading-relaxed placeholder:text-slate-400"
               rows={1}
               maxLength={120}
               onKeyDown={(e) => {
@@ -182,19 +225,26 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
                 }
               }}
             />
+            
+            <button type="button" className="p-2 mb-0.5 text-[var(--ls-text-muted,#667085)] hover:bg-slate-50 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0 hidden sm:block" title="Emojis">
+              <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </button>
+
             <button 
               type="submit"
               disabled={!inputText.trim() || inputText.length > 120}
-              className="bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white p-2 rounded-lg flex-shrink-0 transition-colors"
+              className="w-10 h-10 mb-0.5 ml-1 bg-[var(--ls-primary,#6C4CF6)] hover:bg-[#5b3dc4] disabled:bg-[var(--ls-border,#E6E8F0)] disabled:text-slate-400 text-white rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all transform active:scale-95"
             >
-              <Icon.Send />
+              <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
           </div>
-          <div className="flex justify-between items-center px-1">
-            <span className={`text-[10px] ${inputText.length >= 110 ? 'text-orange-500' : 'text-slate-400'}`}>
-              {inputText.length} / 120
-            </span>
-            <span className="text-[10px] text-slate-400">Enter para enviar</span>
+          
+          <div className="flex justify-end items-center mt-2 px-2">
+            <div className="flex gap-3">
+              <span className={`text-[10px] font-medium ${inputText.length >= 110 ? 'text-[var(--ls-danger,#EF4444)]' : 'text-[var(--ls-text-muted,#667085)]'}`}>
+                {inputText.length} / 120
+              </span>
+            </div>
           </div>
         </form>
       </div>

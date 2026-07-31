@@ -8,6 +8,9 @@ import type { SendLog } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
+import PageHeader from '../components/ui/PageHeader';
+import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
+import { Icon } from '../utils/icons';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -146,8 +149,13 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-bold">Mensajes</h2>
+      <PageHeader
+        title="Plantillas"
+        description="Gestiona tus plantillas de mensajes y respuestas rápidas."
+      >
+      </PageHeader>
+
+      <div className="flex justify-end mb-4">
         <div className="flex gap-1">
           <button onClick={() => setTab('whatsapp')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>WhatsApp</button>
           <button onClick={() => setTab('email')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Email</button>
@@ -155,8 +163,14 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
         </div>
       </div>
 
+      {tab === 'whatsapp' && (
+        <div className="mb-6">
+          <WhatsAppClientToggle />
+        </div>
+      )}
+
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-1 mb-2 items-center">
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
         <button 
           onClick={() => {
             if (templates.length >= 3 && !hasFeature('pro:unlimited_templates')) {
@@ -165,25 +179,25 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
             }
             setEditing({ nombre: '', contenido: '', asunto: '', isHtml: false });
           }}
-          className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+          className="btn btn-primary"
         >
           + Nueva plantilla
         </button>
 
         {/* Category filter */}
         <select value={filterCatId ?? ''} onChange={(e) => setFilterCatId(e.target.value ? Number(e.target.value) : null)}
-          className="border rounded px-2 py-1 text-xs">
+          className="border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none bg-white">
           <option value="">Todas las categorías</option>
           {tplLists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
 
         <button onClick={() => setShowCatManager(!showCatManager)}
-          className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${showCatManager ? 'bg-gray-200 text-slate-600 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-gray-200'}`}>
+          className={`btn ${showCatManager ? 'bg-slate-200 text-slate-700' : 'btn-secondary'}`}>
           Gestionar categorías
         </button>
 
         {selectedIds.size > 0 && (
-          <button onClick={handleBulkDelete} className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-2.5 py-1.5 rounded text-xs font-medium transition-colors">
+          <button onClick={handleBulkDelete} className="btn bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
             Eliminar ({selectedIds.size})
           </button>
         )}
@@ -193,22 +207,22 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
       {/* Category manager */}
       {showCatManager && (
-        <div className="border rounded p-2 mb-2 bg-slate-50 dark:bg-slate-900">
-          <h3 className="text-xs font-medium mb-1">Categorías</h3>
-          <form onSubmit={handleCreateCategory} className="flex gap-1 mb-2">
+        <div className="card-standard p-4 mb-4 bg-slate-50">
+          <h3 className="text-[14px] font-semibold text-slate-800 mb-3">Categorías</h3>
+          <form onSubmit={handleCreateCategory} className="flex gap-2 mb-4">
             <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)}
-              placeholder="Nueva categoría" className="flex-1 border rounded px-2 py-1.5 text-xs outline-none focus:border-blue-300" required />
-            <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border rounded px-1 py-1.5 text-xs outline-none focus:border-blue-300">
+              placeholder="Nueva categoría" className="flex-1 border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6]" required />
+            <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none">
               {COLORS.map((c) => <option key={c.value} value={c.value}>{c.name}</option>)}
             </select>
-            <button type="submit" className="bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">Crear</button>
+            <button type="submit" className="btn btn-primary">Crear</button>
           </form>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {tplLists.map((l) => (
-              <span key={l.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border group" style={{ borderColor: l.color }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: l.color }} />
+              <span key={l.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[13px] border bg-white" style={{ borderColor: l.color }}>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
                 {l.name}
-                <button onClick={() => handleDeleteCategory(l.id!)} className="text-red-400 hover:text-red-600 ml-0.5">x</button>
+                <button onClick={() => handleDeleteCategory(l.id!)} className="text-slate-400 hover:text-red-500 ml-1 transition-colors"><Icon.Trash /></button>
               </span>
             ))}
           </div>
@@ -217,10 +231,10 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
 
       {/* Template editor */}
       {editing && (
-        <div className="border rounded-lg p-3 mb-3 bg-slate-50 dark:bg-slate-900">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-medium">{editing.id ? 'Editar' : 'Nueva'} Plantilla</h3>
-            <button onClick={() => setEditing(null)} className="text-gray-400 text-sm">x</button>
+        <div className="card-standard p-5 mb-4">
+          <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+            <h3 className="text-[16px] font-semibold text-slate-800">{editing.id ? 'Editar' : 'Nueva'} Plantilla</h3>
+            <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 transition-colors"><Icon.Close /></button>
           </div>
 
           <TemplateEditor template={editing} type={tab} categories={tplLists} onSave={handleSave} onCancel={() => setEditing(null)} />
@@ -228,18 +242,18 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
       )}
 
       {/* Templates list */}
-      <div className="space-y-1">
+      <div className="grid gap-3">
         {filtered.map((t) => (
           <div key={t.id}>
-            <div className={`border rounded p-2 hover:bg-slate-50 dark:bg-slate-900 flex items-start gap-2 ${selectedIds.has(t.id!) ? 'bg-blue-50' : ''}`}>
-              <input type="checkbox" checked={selectedIds.has(t.id!)} onChange={() => toggleSel(t.id!)} className="rounded mt-0.5" />
+            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${selectedIds.has(t.id!) ? 'border-[#6C4CF6] bg-[#F2EEFF]/30' : 'hover:border-slate-300'}`}>
+              <input type="checkbox" checked={selectedIds.has(t.id!)} onChange={() => toggleSel(t.id!)} className="rounded mt-1 border-slate-300 text-[#6C4CF6] focus:ring-[#6C4CF6]" />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <button onClick={() => { setEditing(t); }} className="text-left flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">{t.nombre || '(sin nombre)'}</div>
-                    <div className="text-xs text-gray-400 truncate">{t.contenido?.substring(0, 60) || '...'}</div>
+                    <div className="text-[15px] font-semibold text-slate-800 truncate mb-1">{t.nombre || '(sin nombre)'}</div>
+                    <div className="text-[13px] text-slate-500 truncate">{t.contenido?.substring(0, 80) || '...'}</div>
                   </button>
-                  <button onClick={() => handleDelete(t.id!)} className="text-red-400 hover:text-red-600 text-xs ml-1 shrink-0">x</button>
+                  <button onClick={() => handleDelete(t.id!)} className="text-slate-400 hover:text-red-500 transition-colors ml-2 shrink-0 p-1"><Icon.Trash /></button>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {(t.templateListIds || []).map((lid: number) => {

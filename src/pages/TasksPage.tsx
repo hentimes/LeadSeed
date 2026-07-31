@@ -107,44 +107,38 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
 
   return (
     <div className="max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">Tareas</h2>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Gestiona tus seguimientos y recordatorios.</p>
-          </div>
-          <div className="flex gap-1.5 self-start mt-1">
-            {stats.overdue.length > 0 && (
-              <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-red-200">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
-            )}
-            {stats.dueToday.length > 0 && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-amber-200">{stats.dueToday.length} hoy</span>
-            )}
-            {stats.dueTomorrow.length > 0 && (
-              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} manana</span>
-            )}
-          </div>
+      <div className="flex justify-end items-center mb-4">
+        <div className="flex gap-1.5 mr-2 self-center">
+          {stats.overdue.length > 0 && (
+            <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-red-200">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
+          )}
+          {stats.dueToday.length > 0 && (
+            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-amber-200">{stats.dueToday.length} hoy</span>
+          )}
+          {stats.dueTomorrow.length > 0 && (
+            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} manana</span>
+          )}
         </div>
-        <button onClick={openNew} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
+        <button onClick={openNew} className="btn btn-primary flex items-center gap-2">
           {Icon.Plus()} Tarea
         </button>
       </div>
 
-      <div className="flex gap-1 mb-3 border-b">
-        {STATUS_TABS.map(({ key, label, color }) => (
+      <div className="flex gap-1 mb-3 border-b border-[#E6EAF0]">
+        {STATUS_TABS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`px-3 py-1.5 text-xs font-medium border-b-2 transition-colors ${
-              filter === key ? `border-current ${color}` : 'border-transparent text-gray-400 hover:text-slate-500 dark:text-slate-400'
+            className={`px-3 py-1.5 text-xs font-medium border-b-[2px] transition-all -mb-[1px] ${
+              filter === key ? `border-[#635BFF] text-[#161A24]` : 'border-transparent text-[#5B6475] hover:text-[#161A24]'
             }`}
           >
             {label}
             {key === 'pendiente' && stats.pending.length > 0 && (
-              <span className="ml-1 text-[10px] text-gray-400">({stats.pending.length})</span>
+              <span className="ml-1 text-[10px] text-[#5B6475]">({stats.pending.length})</span>
             )}
             {key === 'completada' && stats.completed.length > 0 && (
-              <span className="ml-1 text-[10px] text-gray-400">({stats.completed.length})</span>
+              <span className="ml-1 text-[10px] text-[#5B6475]">({stats.completed.length})</span>
             )}
           </button>
         ))}
@@ -179,13 +173,13 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
               <TaskSection title="Pendientes" color="gray" tasks={stats.later} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={handleToggleComplete} onEdit={openEdit} onDelete={handleDelete} />
             )}
             {stats.pending.length === 0 && (
-              <p className="text-center text-gray-400 py-8">No hay tareas pendientes.</p>
+              <p className="text-center text-[#5B6475] py-8">No hay tareas pendientes.</p>
             )}
           </>
         )}
         {filter === 'completada' && (
           stats.completed.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">No hay tareas completadas.</p>
+            <p className="text-center text-[#5B6475] py-8">No hay tareas completadas.</p>
           ) : (
             stats.completed.map((task) => (
               <TaskCard key={task.id} task={task} isOverdue={false} isToday={false} tomorrow={tomorrow} leads={leads} lists={lists} onToggleComplete={handleToggleComplete} onEdit={openEdit} onDelete={handleDelete} />
@@ -194,7 +188,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         )}
         {filter === 'todas' && (
           filtered.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">No hay tareas.</p>
+            <p className="text-center text-[#5B6475] py-8">No hay tareas.</p>
           ) : (
             filtered.map((task) => {
               const isOverdue = !!(task.status === 'pendiente' && task.fechaVencimiento && task.fechaVencimiento.slice(0, 10) < today);

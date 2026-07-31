@@ -1,8 +1,7 @@
 import type { Lead } from '../types';
+import { getSettings } from '../services/appSettingsService';
 
 /**
- * Normaliza un número de teléfono chileno a formato +569XXXXXXXX.
- * Reglas:
  *   - < 9 dígitos → rechazar
  *   - 9 dígitos → debe empezar con 9 → +569 + últimos 8
  *   - 10 dígitos → rechazar (no es formato chileno válido)
@@ -16,12 +15,6 @@ export function normalizePhone(phone: string): string {
   if (digits.length === 9 && digits[0] !== '9') return '';
   if (digits.length === 11 && !digits.startsWith('569')) return '';
   return `+569${digits.slice(-8)}`;
-}
-
-function buildWaLink(phone: string, message: string): string {
-  const clean = phone.replace(/[^+\d]/g, '');
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/${clean}?text=${encoded}`;
 }
 
 export function replaceVariables(text: string, lead: Lead): string {
@@ -39,9 +32,27 @@ export function replaceVariables(text: string, lead: Lead): string {
     .replace(/\{notes\}/gi, lead.notes);
 }
 
-function openWhatsApp(phone: string, message: string): void {
-  const link = buildWaLink(phone, message);
-  window.open(link, '_blank');
+export async function openWhatsApp(phone: string, message: string = ''): Promise<void> {
+  const settings = await getSettings();
+  const pref = settings.whatsappClientPreference || 'web';
+
+  if (pref === 'web' && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+    chrome.runtime.sendMessage({
+      type: 'OPEN_WHATSAPP_WEB',
+      payload: { phone, message }
+    }).catch(console.error);
+  } else {
+    const clean = phone.replace(/\D/g, '');
+    const encoded = encodeURIComponent(message);
+    
+    if (pref === 'app') {
+      // Abre usando el protocolo universal de WhatsApp (Lanza la app si está instalada)
+      window.open(`https://api.whatsapp.com/send?phone=${clean}&text=${encoded}`, '_blank');
+    } else {
+      // Fallback a web.whatsapp.com en una nueva pestaña
+      window.open(`https://web.whatsapp.com/send?phone=${clean}&text=${encoded}`, '_blank');
+    }
+  }
 }
 
 export function openWhatsAppForLeads(

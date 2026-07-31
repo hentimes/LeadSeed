@@ -1,0 +1,251 @@
+import React, { useState } from 'react';
+import type { Page } from '../../types';
+import type { DashboardSnapshot } from '../../services/dashboardService';
+import FunnelRow from '../../components/dashboard/FunnelRow';
+import MonthlyChart from '../../components/dashboard/MonthlyChart';
+import SectionHeader from '../../components/dashboard/SectionHeader';
+import { Icon } from '../../utils/icons';
+
+interface PipelineTabProps {
+  snapshot: DashboardSnapshot;
+  onNavigate?: (page: Page) => void;
+  onViewReport: (type: 'acquisition' | 'funnel') => void;
+}
+
+export default function PipelineTab({ snapshot, onNavigate, onViewReport }: PipelineTabProps) {
+  const { leadSummary } = snapshot;
+  
+  // Extraemos cuentas ignorando case para evitar NaN
+  const getCount = (key: string) => {
+    const foundKey = Object.keys(leadSummary.statusCounts || {}).find(k => k.toLowerCase() === key.toLowerCase());
+    return foundKey ? (leadSummary.statusCounts[foundKey] || 0) : 0;
+  };
+  
+  const counts = {
+    nuevo: getCount('nuevo'),
+    contactado: getCount('contactado'),
+    interesado: getCount('interesado'),
+    convertido: getCount('convertido'),
+    descartado: getCount('descartado'),
+  };
+  const total = leadSummary.total || 1;
+  
+  const funnelData = [
+    { 
+      id: 'nuevo', 
+      label: 'Nuevo', 
+      count: counts.nuevo, 
+      color: '#5B42F3', 
+      iconBg: 'bg-[#F2EFFF]',
+      iconColor: 'text-[#5B42F3]',
+      percentTotal: Math.round((counts.nuevo / total) * 100),
+      prevConv: null
+    },
+    { 
+      id: 'contactado', 
+      label: 'Contactado', 
+      count: counts.contactado, 
+      color: '#2F73F4',
+      iconBg: 'bg-[#EAF1FE]',
+      iconColor: 'text-[#2F73F4]',
+      percentTotal: Math.round((counts.contactado / total) * 100),
+      prevConv: counts.nuevo > 0 ? Math.round((counts.contactado / counts.nuevo) * 100) : 0,
+      prevLabel: 'Nuevo'
+    },
+    { 
+      id: 'interesado', 
+      label: 'Interesado', 
+      count: counts.interesado, 
+      color: '#F6A400',
+      iconBg: 'bg-[#FFF9F0]',
+      iconColor: 'text-[#F6A400]',
+      percentTotal: Math.round((counts.interesado / total) * 100),
+      prevConv: counts.contactado > 0 ? Math.round((counts.interesado / counts.contactado) * 100) : 0,
+      prevLabel: 'Contactado'
+    },
+    { 
+      id: 'convertido', 
+      label: 'Convertido', 
+      count: counts.convertido, 
+      color: '#16C26E',
+      iconBg: 'bg-[#E6F9F0]',
+      iconColor: 'text-[#16C26E]',
+      percentTotal: Math.round((counts.convertido / total) * 100),
+      prevConv: counts.interesado > 0 ? Math.round((counts.convertido / counts.interesado) * 100) : 0,
+      prevLabel: 'Interesado'
+    },
+    { 
+      id: 'descartado', 
+      label: 'Descartado', 
+      count: counts.descartado, 
+      color: '#EF3340',
+      iconBg: 'bg-[#FFEDED]',
+      iconColor: 'text-[#EF3340]',
+      percentTotal: Math.round((counts.descartado / total) * 100),
+      prevConv: counts.interesado > 0 ? Math.round((counts.descartado / counts.interesado) * 100) : 0,
+      prevLabel: 'Interesado'
+    }
+  ];
+
+  const chartData = leadSummary.monthlyCounts.map((m: any) => ({
+    name: m.name.substring(0, 3).toUpperCase(),
+    value: m.count
+  }));
+
+  const calculateMonthlyGrowth = () => {
+    if (chartData.length < 2) return 0;
+    const current = chartData[chartData.length - 1].value;
+    const previous = chartData[chartData.length - 2].value;
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
+  const monthlyGrowth = calculateMonthlyGrowth();
+  const isGrowthPositive = monthlyGrowth >= 0;
+
+  const renderTrend = (value: number, type: string, periodLabel: string = 'ayer') => {
+    let color = 'text-[#8F9BB3]';
+    let icon = '';
+    if (value > 0) {
+      color = 'text-[#16C26E]';
+      icon = '↑ ';
+    } else if (value < 0) {
+      color = 'text-[#EF3340]';
+      icon = '↓ ';
+    } else {
+      icon = '- ';
+    }
+
+    return (
+      <div className="mt-1">
+        <span className={`text-[10px] font-bold ${color}`}>
+          {icon}{Math.abs(value)}{type} <span className="font-medium text-[#66718F]">vs {periodLabel}</span>
+        </span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-4 animate-ios-slide-up pb-2">
+      {/* Embudo de ventas */}
+      <div className="card-standard">
+        <div className="card-header">
+          <h2 className="card-title">Embudo de ventas</h2>
+          
+          <select className="text-[12px] border border-[#E6EAF0] rounded-[6px] px-3 py-1 text-[#161A24] bg-white cursor-pointer hover:border-[#635BFF] transition-colors outline-none">
+            <option>Hoy</option>
+            <option>Últimos 7 días</option>
+            <option>Últimos 30 días</option>
+          </select>
+        </div>
+
+        <div className="flex">
+          {/* Total Leads Column */}
+          <div className="w-[140px] shrink-0 border-r border-[#E6EAF0] pr-4 flex flex-col">
+            <div className="flex-1 flex flex-col justify-center">
+              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Total leads</span>
+              <span className="text-[32px] font-bold text-[#161A24] leading-none mb-1.5">{total}</span>
+              <span className="text-[10px] text-[#5B6475]">- 0% vs ayer</span>
+            </div>
+
+            <div className="w-full h-[1px] bg-[#E6EAF0]" />
+
+            <div className="flex-1 flex flex-col justify-center">
+              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Tasa de conversión</span>
+              <span className="text-[32px] font-bold text-[#635BFF] leading-none mb-1.5">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
+              <span className="text-[10px] text-[#5B6475]">- 0 pp vs ayer</span>
+            </div>
+          </div>
+
+          {/* Funnel Rows */}
+          <div className="flex-1 pl-4 flex flex-col">
+            {funnelData.map((step, idx) => (
+              <FunnelRow key={step.id} {...step} isLast={idx === funnelData.length - 1} onClick={() => onNavigate?.('leads')} />
+            ))}
+          </div>
+        </div>
+        
+        {/* Footer actions */}
+        <div className="mt-3 border-t border-[#E6EAF0] flex justify-between items-center pt-3">
+          <div className="flex items-center gap-2 text-[12px] font-medium text-[#5B6475]">
+            <div className="flex items-center justify-center text-[#8C95A6] w-4 h-4"><Icon.Lists /></div>
+            {counts.nuevo} leads → {counts.convertido} clientes
+          </div>
+          <button 
+            onClick={() => onViewReport('funnel')}
+            className="text-[12px] font-semibold text-[#635BFF] flex items-center gap-1.5 hover:text-[#5B42F3] transition-colors group"
+          >
+            Ver detalle del embudo
+            <Icon.ArrowRight />
+          </button>
+        </div>
+      </div>
+
+      {/* Adquisición mensual */}
+      <div className="card-standard">
+        <div className="card-header">
+          <h2 className="card-title">Adquisición mensual</h2>
+          
+          <select className="text-[12px] border border-[#E6EAF0] rounded-[6px] px-3 py-1 text-[#161A24] bg-white cursor-pointer hover:border-[#635BFF] transition-colors outline-none">
+            <option>Últimos 6 meses</option>
+            <option>Este año</option>
+          </select>
+        </div>
+
+        <div className="flex gap-4 mt-4">
+          <div className="w-[140px] shrink-0 border-r border-[#E6EAF0] pr-4 flex flex-col gap-3 pt-2">
+            <div className="flex flex-col">
+              <span className="text-[24px] font-bold text-[#635BFF] leading-none mb-1">{chartData.reduce((a: any, b: any) => a + b.value, 0)}</span>
+              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Leads adquiridos</span>
+              <span className={`text-[10px] font-bold ${isGrowthPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
+                {isGrowthPositive ? '↑' : '↓'} {Math.abs(monthlyGrowth)}% <span className="font-normal text-[#8C95A6]">vs periodo anterior</span>
+              </span>
+            </div>
+            
+            <div className="w-full h-[1px] bg-[#E6EAF0]" />
+            
+            <div className="flex flex-col">
+              <span className="text-[24px] font-bold text-[#16B364] leading-none mb-1">{counts.convertido}</span>
+              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Leads convertidos</span>
+              <span className="text-[10px] text-[#5B6475]">
+                - 0% vs periodo anterior
+              </span>
+            </div>
+            
+            <div className="w-full h-[1px] bg-[#E6EAF0]" />
+            
+            <div className="flex flex-col">
+              <span className="text-[24px] font-bold text-[#635BFF] leading-none mb-1">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
+              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Tasa de conversión</span>
+              <span className="text-[10px] text-[#5B6475]">
+                - 0 pp vs periodo anterior
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="mt-0">
+              <MonthlyChart data={chartData} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 border-t border-[#E6EAF0] flex justify-between items-center pt-3">
+          <div className="flex items-center gap-2 text-[12px] font-medium text-[#5B6475]">
+            <div className="flex items-center justify-center text-[#635BFF]"><Icon.Crown /></div>
+            {isGrowthPositive 
+              ? `Crecimiento: +${monthlyGrowth}% vs mes anterior`
+              : `Disminución: ${monthlyGrowth}% vs mes anterior`
+            }
+          </div>
+          <button 
+            onClick={() => onViewReport('acquisition')}
+            className="text-[12px] font-semibold text-[#635BFF] flex items-center gap-1.5 hover:text-[#5B42F3] transition-colors group"
+          >
+            Ver reporte completo
+            <Icon.ArrowRight />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
