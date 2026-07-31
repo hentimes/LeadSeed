@@ -1,17 +1,11 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd());
-  const appLabel = env.VITE_APP_LABEL || '';
-  const extensionName = appLabel ? `LeadSeed (${appLabel})` : 'LeadSeed';
-  const manifestWithLabel = { ...manifest, name: extensionName };
-
-  return {
-    plugins: [react(), crx({ manifest: manifestWithLabel })],
-    base: './',
+export default defineConfig({
+  plugins: [react(), crx({ manifest })],
+  base: './',
   build: {
     modulePreload: false,
     target: 'esnext',
@@ -47,20 +41,19 @@ export default defineConfig(({ mode }) => {
     },
   },
   server: {
-    port: 5173,
+    port: 5174,
     strictPort: true,
     cors: {
       origin: /^chrome-extension:\/\/.+$/,
       credentials: true,
     },
     hmr: {
-      port: 5173,
+      port: 5174,
     },
   },
-    resolve: {
-      alias: {
-        '@': '/src',
-      },
+  resolve: {
+    alias: {
+      '@': '/src',
     },
-  };
+  },
 });
