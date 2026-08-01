@@ -59,13 +59,32 @@ function notifyDesktop(event: LeadAlertEvent): void {
 }
 
 /**
+ * Cola de serializacion.
+ *
+ * Realtime y la reconciliacion pueden entregar el mismo evento casi a la
+ * vez. Sin esto, ambas leerian el estado antes de que la otra escriba,
+ * verian el evento como no visto y notificarian dos veces, ademas de
+ * pisarse el contador. La dedup por id no alcanza: depende de un
+ * seenEventIds que las dos leyeron desactualizado.
+ */
+let processingQueue: Promise<void> = Promise.resolve();
+
+function enqueue(task: () => Promise<void>): Promise<void> {
+  processingQueue = processingQueue.then(task, task);
+  return processingQueue;
+}
+
+/**
  * Procesa eventos nuevos y dispara las senales. Es el unico punto que
  * escribe el badge de leads, y deduplica por id para que Realtime y la
  * reconciliacion no avisen dos veces del mismo lead.
  */
-async function processIncomingEvents(events: LeadAlertEvent[]): Promise<void> {
-  if (events.length === 0) return;
+function processIncomingEvents(events: LeadAlertEvent[]): Promise<void> {
+  if (events.length === 0) return Promise.resolve();
+  return enqueue(() => processIncomingEventsUnsafe(events));
+}
 
+async function processIncomingEventsUnsafe(events: LeadAlertEvent[]): Promise<void> {
   const state = await getLeadAlertsState();
   const seen = new Set(state.seenEventIds);
   const fresh = events.filter((event) => !seen.has(event.id));
@@ -112,7 +131,16 @@ export async function markLeadAlertsAsSeen(): Promise<void> {
  * Recupera eventos que Realtime no entrego mientras el worker dormia.
  * Es red de seguridad, no el mecanismo primario.
  */
+let lastReconcileAt = 0;
+const RECONCILE_DEBOUNCE_MS = 5000;
+
 export async function reconcileLeadAlerts(): Promise<void> {
+  // En un despertar en frio, el arranque del runtime y el listener de
+  // alarma piden reconciliar casi a la vez; una sola consulta alcanza.
+  const now = Date.now();
+  if (now - lastReconcileAt < RECONCILE_DEBOUNCE_MS) return;
+  lastReconcileAt = now;
+
   const session = await getCurrentSession();
   if (!session?.user?.id) return;
 
@@ -134,11 +162,16 @@ export async function reconcileLeadAlerts(): Promise<void> {
 }
 
 let unsubscribeRealtime: (() => void) | null = null;
+let startPromise: Promise<void> | null = null;
 
-export async function startLeadAlertsRuntime(): Promise<void> {
+async function startRuntimeOnce(): Promise<void> {
   const session = await getCurrentSession();
   const userId = session?.user?.id;
-  if (!userId) return;
+  if (!userId) {
+    // Sin sesion no hay a que suscribirse; se permite reintentar mas tarde.
+    startPromise = null;
+    return;
+  }
 
   stopLeadAlertsRuntime();
 
@@ -148,7 +181,30 @@ export async function startLeadAlertsRuntime(): Promise<void> {
 
   await chrome.alarms.clear(RECONCILE_ALARM);
   await chrome.alarms.create(RECONCILE_ALARM, { periodInMinutes: RECONCILE_MINUTES });
+}
 
+/**
+ * Punto de entrada unico del runtime.
+ *
+ * Al despertar en frio, MV3 re-evalua el script Y dispara el listener de
+ * alarma. Sin este guard, ambos caminos suscribirian su propio canal
+ * Realtime y quedaria uno colgado.
+ */
+export function startLeadAlertsRuntime(): Promise<void> {
+  if (!startPromise) {
+    startPromise = startRuntimeOnce().catch((error) => {
+      console.warn('[LeadAlerts] No se pudo iniciar el runtime:', error);
+      startPromise = null;
+    });
+  }
+  return startPromise;
+}
+
+/** Fuerza un re-arranque; se usa cuando cambia la sesion. */
+export async function restartLeadAlertsRuntime(): Promise<void> {
+  startPromise = null;
+  stopLeadAlertsRuntime();
+  await startLeadAlertsRuntime();
   await reconcileLeadAlerts();
 }
 

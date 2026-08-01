@@ -3,6 +3,7 @@ import {
   isReconcileAlarm,
   markLeadAlertsAsSeen,
   reconcileLeadAlerts,
+  restartLeadAlertsRuntime,
   restoreLeadAlertBadge,
   startLeadAlertsRuntime,
 } from './services/backgroundLeadAlertsService';
@@ -55,17 +56,24 @@ chrome.alarms.clear('check-tasks', () => {
   chrome.alarms.create('check-tasks', { periodInMinutes: 5 });
 });
 
+async function bootLeadAlerts() {
+  await restoreLeadAlertBadge();
+  await startLeadAlertsRuntime();
+  await reconcileLeadAlerts();
+}
+
 void updateTaskAlerts();
-void restoreLeadAlertBadge();
-void startLeadAlertsRuntime();
+void bootLeadAlerts();
 
 chrome.runtime.onStartup.addListener(() => {
-  void restoreLeadAlertBadge();
-  void startLeadAlertsRuntime();
+  void bootLeadAlerts();
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (isReconcileAlarm(alarm.name)) {
+    // Si el service worker fue terminado, la conexion Realtime murio con
+    // el. Re-asegurarla aca es lo que evita degradar a sondeo de 30s.
+    await startLeadAlertsRuntime();
     await reconcileLeadAlerts();
     return;
   }
@@ -143,7 +151,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === "LEAD_ALERTS_RESTART") {
-    void startLeadAlertsRuntime();
+    void restartLeadAlertsRuntime();
     return false;
   }
 
