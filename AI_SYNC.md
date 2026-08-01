@@ -6548,3 +6548,91 @@ registro deberia haberse hecho bloque por bloque, no en un lote retroactivo.
 
 Sin cambios: no hay IA-B activa. Los bloques de seguridad (055) y los
 cambios de codigo de este bloque siguen sin auditoria cruzada bajo 14.4.
+
+---
+
+## Claude | 2026-07-31 CLT | Sistema de alertas de leads nuevos en la extension
+
+Rol: Implementadora (sin IA-B disponible para revision cruzada).
+
+### Auditoria previa: por que no funcionaba
+
+Contrario a lo asumido, el backend NO estaba pendiente. Verificado contra
+produccion antes de escribir codigo:
+
+- tabla `user_lead_alert_events` existe, con la estructura exacta del
+  contrato del handoff
+- trigger sobre `public.leads` activo
+- RLS activa con politica `auth.uid() = target_user_id`
+- publicada en `supabase_realtime`
+- 11 eventos reales ya registrados, correctamente atribuidos por owner
+  (7 hentimes, 3 planespro, canal `pb`)
+
+La falla estaba unicamente del lado de la extension: el consumidor nunca
+existio. Los archivos que iban a serlo se perdieron en la reorganizacion
+de esta misma jornada. Habia 11 eventos esperando en una tabla que nadie
+leia. El badge que si funcionaba venia de otro mecanismo: un sondeo cada
+5 minutos en `background.ts` que contaba leads en estado 'nuevo' y
+pintaba rojo, no morado. Eso explica la demora percibida.
+
+### Implementado
+
+Backend: sin cambios, ya estaba correcto.
+
+Extension:
+- `repositories/leadAlertsRepository.ts`: acceso a datos y suscripcion
+  Realtime filtrada por target_user_id
+- `services/backgroundLeadAlertsService.ts`: nucleo. Realtime primario,
+  `chrome.alarms` a 30s solo como reconciliacion, deduplicacion por
+  event.id, estado en chrome.storage.local
+- `services/extensionBadgeTheme.ts`: badge con los colores definidos por
+  el usuario (morado leads, rojo critico, azul mensajes)
+- `services/offscreenAudio.ts` + `offscreen.html` + `src/offscreen.ts`:
+  audio con la extension cerrada. Tono sintetizado con WebAudio
+- `hooks/useLeadAlerts.ts` + `components/leads/LeadAlertToast.tsx`: toast
+  in-app, montado en AppLayout para verse en cualquier pagina
+- `components/settings/LeadAlertsSettings.tsx`: toggles de escritorio y
+  sonido, en la pestana Apariencia
+- `background.ts`: se saca el conteo de leads del ciclo de tareas (ahora
+  event-driven). Tareas queda intacto. Se elimina ademas una notificacion
+  de error generica que exponia mensajes tecnicos al usuario ante
+  cualquier fallo de red.
+- `manifest.json`: permiso `offscreen`
+- `vite.config.ts`: input explicito de offscreen.html (crxjs no lo
+  detecta porque se crea en runtime, no se declara en el manifest)
+
+Decisiones tomadas con el usuario: el badge cuenta alertas sin ver (no
+leads en estado nuevo), y el sonido se intenta tambien con la extension
+cerrada via offscreen.
+
+### Validacion ejecutada
+
+- `tsc --noEmit` y `vite build` limpios; offscreen.html y su bundle se
+  generan en dist/
+- verificado que el cliente Supabase usa chromeStorageAdapter, precondicion
+  para que el service worker tenga sesion en MV3
+- prueba end-to-end contra la base real: insercion de un lead en la cuenta
+  del usuario genera exactamente 1 evento con lead_name y atribucion
+  correctos. Ejecutado dentro de transaccion revertida; se confirmo
+  despues que la base quedo sin residuos (0 leads de prueba, 8 eventos,
+  el mismo conteo previo)
+
+### Estado
+
+`pendiente de validacion real`: falta que el usuario recargue la extension
+y confirme las tres senales con un lead entrante real. Lo validado hasta
+aca es backend, tipos, build y disparo del trigger; no el comportamiento
+observable en Chrome.
+
+### Riesgos y limitaciones declaradas
+
+- El documento offscreen puede ser descartado por Chrome bajo presion de
+  memoria. El fallo esta contenido: badge y notificacion nativa siguen
+  operando, solo se pierde el sonido.
+- `chrome.alarms` no baja de 30s en MV3. Si Realtime se cae, ese es el
+  peor caso de latencia. No es evitable sin salir del contrato de la
+  plataforma.
+- La primera ejecucion fija la marca de tiempo sin notificar eventos
+  historicos: los 11 ya existentes no van a disparar alertas retroactivas.
+  Es deliberado.
+- Sin auditoria cruzada bajo 14.4: no hay IA-B activa.
