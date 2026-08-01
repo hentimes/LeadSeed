@@ -7,6 +7,12 @@ import {
   restoreLeadAlertBadge,
   startLeadAlertsRuntime,
 } from './services/backgroundLeadAlertsService';
+import {
+  restartMessageAlertsRuntime,
+  startMessageAlertsRuntime,
+} from './services/backgroundMessageAlertsService';
+import { checkUpcomingAppointments } from './services/backgroundAgendaAlertsService';
+import { dispatchAlert } from './services/alertNotifier';
 
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
@@ -32,19 +38,20 @@ async function updateTaskAlerts() {
       },
     });
 
-    // Notificación de tareas vencidas (una vez al día)
+    // Tareas vencidas: una vez al dia, respetando las preferencias.
     if (summary.overdueCount > 0) {
       const today = new Date().toISOString().slice(0, 10);
       if (stored.lastOverdueNotify !== today) {
-        console.log('[Background] Disparando notificacion de tareas vencidas');
-        chrome.notifications.create('tasks-overdue', {
-          type: 'basic',
-          iconUrl: 'icons/icon128.png',
-          title: 'LeadSeed - Tareas vencidas',
+        const result = await dispatchAlert('overdue_task', {
+          id: 'tasks-overdue',
+          title: 'Tareas vencidas',
           message: `${summary.overdueCount} tarea(s) vencida(s): ${summary.overdueTitles.join(', ').slice(0, 100)}`,
-          priority: 2,
         });
-        chrome.storage.local.set({ lastOverdueNotify: today });
+        // Solo marcar el dia si de verdad se aviso; si estaba desactivada
+        // o suprimida por 'solo con extension cerrada', se reintenta luego.
+        if (result.delivered) {
+          chrome.storage.local.set({ lastOverdueNotify: today });
+        }
       }
     }
   } catch (error) {
@@ -56,25 +63,29 @@ chrome.alarms.clear('check-tasks', () => {
   chrome.alarms.create('check-tasks', { periodInMinutes: 5 });
 });
 
-async function bootLeadAlerts() {
+async function bootAlerts() {
   await restoreLeadAlertBadge();
   await startLeadAlertsRuntime();
+  await startMessageAlertsRuntime();
   await reconcileLeadAlerts();
+  await checkUpcomingAppointments();
 }
 
 void updateTaskAlerts();
-void bootLeadAlerts();
+void bootAlerts();
 
 chrome.runtime.onStartup.addListener(() => {
-  void bootLeadAlerts();
+  void bootAlerts();
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (isReconcileAlarm(alarm.name)) {
-    // Si el service worker fue terminado, la conexion Realtime murio con
-    // el. Re-asegurarla aca es lo que evita degradar a sondeo de 30s.
+    // Si el service worker fue terminado, las conexiones Realtime murieron
+    // con el. Re-asegurarlas aca evita degradar a sondeo de 30s.
     await startLeadAlertsRuntime();
+    await startMessageAlertsRuntime();
     await reconcileLeadAlerts();
+    await checkUpcomingAppointments();
     return;
   }
 
@@ -152,6 +163,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === "LEAD_ALERTS_RESTART") {
     void restartLeadAlertsRuntime();
+    void restartMessageAlertsRuntime();
     return false;
   }
 

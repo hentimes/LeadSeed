@@ -9,7 +9,7 @@ import GoalsSettings from '../components/settings/GoalsSettings';
 import SupportTicketsSettings from '../components/settings/SupportTicketsSettings';
 import CaptureLinksSettings from '../components/settings/CaptureLinksSettings';
 import AgendaSettings from '../components/settings/AgendaSettings';
-import LeadAlertsSettings from '../components/settings/LeadAlertsSettings';
+import AlertsManager from '../components/settings/AlertsManager';
 import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
 import { Icon } from '../utils/icons';
 
@@ -65,7 +65,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
               onColsChange={onColsChange}
             />
             <WhatsAppClientToggle />
-            <LeadAlertsSettings />
+            <AlertsManager />
           </div>
         )}
         

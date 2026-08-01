@@ -5,7 +5,7 @@ import {
 } from '../repositories/leadAlertsRepository';
 import { getCurrentSession } from './authService';
 import { setBadge } from './extensionBadgeTheme';
-import { playAlertSound } from './offscreenAudio';
+import { dispatchAlert } from './alertNotifier';
 import type { LeadAlertEvent } from '../types';
 
 const STORAGE_KEY = 'leadAlerts';
@@ -17,16 +17,12 @@ export interface LeadAlertsState {
   lastEventCreatedAt: string;
   seenEventIds: string[];
   unseenCount: number;
-  desktopEnabled: boolean;
-  soundEnabled: boolean;
 }
 
 const DEFAULT_STATE: LeadAlertsState = {
   lastEventCreatedAt: '',
   seenEventIds: [],
   unseenCount: 0,
-  desktopEnabled: true,
-  soundEnabled: true,
 };
 
 export async function getLeadAlertsState(): Promise<LeadAlertsState> {
@@ -39,23 +35,6 @@ async function saveLeadAlertsState(patch: Partial<LeadAlertsState>): Promise<Lea
   const next = { ...current, ...patch };
   await chrome.storage.local.set({ [STORAGE_KEY]: next });
   return next;
-}
-
-export async function setLeadAlertPreferences(prefs: {
-  desktopEnabled?: boolean;
-  soundEnabled?: boolean;
-}): Promise<void> {
-  await saveLeadAlertsState(prefs);
-}
-
-function notifyDesktop(event: LeadAlertEvent): void {
-  chrome.notifications.create(`lead-alert-${event.id}`, {
-    type: 'basic',
-    iconUrl: 'icons/icon128.png',
-    title: 'Nuevo lead',
-    message: event.leadPhone ? `${event.leadName} - ${event.leadPhone}` : event.leadName,
-    priority: 2,
-  });
 }
 
 /**
@@ -93,12 +72,11 @@ async function processIncomingEventsUnsafe(events: LeadAlertEvent[]): Promise<vo
 
   for (const event of fresh) {
     seen.add(event.id);
-    if (state.desktopEnabled) notifyDesktop(event);
-  }
-
-  if (state.soundEnabled) {
-    // Un solo sonido aunque lleguen varios juntos.
-    void playAlertSound();
+    await dispatchAlert('new_lead', {
+      id: `lead-alert-${event.id}`,
+      title: 'Nuevo lead',
+      message: event.leadPhone ? `${event.leadName} - ${event.leadPhone}` : event.leadName,
+    });
   }
 
   const latestCreatedAt = fresh

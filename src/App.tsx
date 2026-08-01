@@ -87,11 +87,9 @@ export default function App() {
       console.warn('No se pudieron procesar correos programados:', error);
     });
 
-    try {
-      chrome.action.setBadgeText({ text: '' });
-    } catch {
-      // noop
-    }
+    // El badge lo limpia useLeadAlerts via LEAD_ALERTS_MARK_SEEN, que
+    // ademas pone en cero el contador guardado. Borrarlo aca dejaba el
+    // estado desincronizado y el badge reaparecia al despertar el worker.
   }, [refreshTaskCount, session?.user]);
 
   useEffect(() => {
