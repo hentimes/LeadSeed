@@ -6876,3 +6876,98 @@ cerrada y color/limpieza del badge.
   trafico y una consulta por respuesta. Aceptable hoy (4 mensajes en la
   tabla); revisar si el chat crece.
 - Sin auditoria cruzada bajo 14.4.
+
+---
+
+## Claude | 2026-08-01 CLT | Tabla de leads dirigida por datos
+
+Rol: Implementadora (sin IA-B disponible para revision cruzada).
+
+### Bug de raiz encontrado
+
+El usuario reporto que "faltan filtros" en Configuracion (solo veia 3
+columnas). No era funcionalidad ausente sino un defecto:
+
+- existian DOS listas de columnas: App.tsx con 9 y appSettingsService
+  con 4, desincronizadas entre si
+- `mergeVisibleColumns` iteraba sobre las columnas GUARDADAS, no sobre
+  las disponibles. Toda columna nueva quedaba invisible para siempre en
+  cuentas existentes.
+
+Corregido: catalogo unico en `src/config/leadColumns.ts` y merge por
+union que respeta orden y visibilidad del usuario y agrega al final las
+columnas que todavia no conocia.
+
+### Hardcodeo eliminado
+
+A pedido explicito del usuario. Cada columna estaba escrita a mano en
+cuatro lugares (thead compacto, thead normal, fila compacta, fila
+normal) y la logica de arrastre estaba duplicada nueve veces en el
+thead. Agregar una columna implicaba copiar ese bloque en cada sitio.
+
+Ahora agregar una columna es: una entrada en LEAD_COLUMN_CATALOG, su
+valor en getLeadColumnValue y, solo si necesita formato especial, un
+case en LeadCell.
+
+### Decision estructural: unificacion de los dos modos
+
+Compacto y normal usaban listas de columnas DISTINTAS: en compacto no
+existia columna RUT (iba como sublinea bajo el nombre) y telefono+email
+se fusionaban en una sola celda. Ese apano existia por falta de ancho,
+que es exactamente lo que resuelve el ocultamiento progresivo nuevo.
+
+Se unifican en una sola lista; compacto pasa a diferenciarse solo por
+densidad. Es un cambio de comportamiento visual, declarado como tal. El
+RUT bajo el nombre se conserva pero solo cuando su columna no esta a la
+vista, para no duplicar el dato.
+
+### Implementado
+
+- `useResponsiveColumns`: ResizeObserver sobre el contenedor (no
+  window.resize: el side panel cambia de ancho sin que la ventana lo
+  haga). Descarta columnas de derecha a izquierda segun el presupuesto
+  de ancho; nunca deja una cortada. La prioridad ES el orden del
+  usuario, lo que le da proposito real al reordenamiento.
+- reordenar columnas: se elimina el guard `from >= 2 && to >= 2` que
+  impedia mover nada a las dos primeras posiciones. Solo Nombre queda
+  fijo por ser la identidad de la fila. Se agrega feedback visual.
+- reordenar leads fijados por arrastre: el orden se persiste en
+  `metadata.pinnedOrder`, mezclando el metadata existente para no perder
+  isPinned ni los datos del formulario. Con padding de ceros porque el
+  orden en SQL es sobre texto. SIN MIGRACION.
+- columnas nuevas: Sistema de salud, Isapre, Renta y Comuna, derivadas
+  del raw_payload del formulario publico.
+
+### Decisiones del usuario
+
+- prioridad de ocultamiento = orden de las columnas (no lista aparte)
+- columnas nuevas: sistema, isapre, renta y comuna. Se descarto el
+  resumen de las 3 preguntas de fase 1.
+
+### Validacion ejecutada
+
+- tsc --noEmit y vite build limpios en cada paso
+- checkpoint intermedio commiteado antes del refactor grande, para tener
+  punto de retorno
+- imports muertos (STATUS_LABELS/STATUS_COLORS) eliminados de LeadsTable
+  al migrar su uso a LeadCell
+
+### Estado
+
+`pendiente de validacion real`.
+
+Certificado: tipos y build. NO certificado: comportamiento observable.
+Este bloque toca la pantalla principal del producto y cambia como se ve
+el modo compacto, asi que la validacion del usuario es imprescindible
+antes de declararlo hecho (seccion 5.5).
+
+### Riesgos declarados
+
+- El ancho de cada columna en el catalogo es una estimacion en px. Si
+  queda corto para contenidos largos, puede aparecer scroll horizontal
+  en vez de ocultarse una columna. Ajustable por columna.
+- `updatePinnedOrder` hace read-modify-write del metadata desde el
+  cliente: si el mismo lead se modificara concurrentemente desde otra
+  sesion, se podria pisar. Aceptable para una accion inmediata del
+  propio usuario sobre sus leads.
+- Sin auditoria cruzada bajo 14.4.
