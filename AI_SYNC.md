@@ -6445,3 +6445,106 @@ de la rama design. La migracion nueva de esta sesion tomo el numero 055.
 Los bloques 5 y 6 tocan seguridad y produccion. Bajo 14.4 requieren auditoria de otra
 IA y no pueden considerarse cerrados sin ella. No hay IA-B activa. El usuario debe
 decidir si ese requisito se suspende formalmente o si los bloques quedan abiertos.
+
+---
+
+## Claude | 2026-07-31 CLT | Modularizacion de codigo, restauracion de UI perdida y correccion de nombre viejo
+
+Rol: Implementadora y auditora (sin IA-B disponible para revision cruzada).
+
+### Incumplimiento declarado
+
+Los 6 commits de este bloque (fa44654..90f891c) se ejecutaron sin actualizar
+`AI_SYNC.md` en su momento. Se registran ahora, a posteriori, a pedido del
+usuario al auditar el estado general del proyecto. Incumple 6.3 y 19: el
+registro deberia haberse hecho bloque por bloque, no en un lote retroactivo.
+
+### Bloques ejecutados
+
+1. Modularizacion de 4 componentes sobredimensionados (identificados en
+   auditoria de arquitectura previa), todos con el patron: extraer estado/
+   efectos/handlers a un hook en src/hooks/, dejar el componente como
+   orquestador de presentacion:
+   - LeadDetail.tsx: 810 -> 391 lineas (hook useLeadDetail.ts, subcomponentes
+     en components/leads/detail/)
+   - EmailSettings.tsx: 842 -> 289 lineas (hook useEmailChannels.ts,
+     primitivos en components/settings/email/)
+   - AgendaPage.tsx: 652 -> 123 lineas (hook useAgenda.ts, subcomponentes
+     en components/agenda/)
+   - LeadsPage.tsx: 630 -> 208 lineas (hook useLeadsPageController.ts,
+     LeadsPageToasts.tsx)
+   Validacion: tsc --noEmit y vite build limpios despues de cada bloque.
+   Estado: hecho.
+
+2. types/index.ts (570 lineas) dividido en 11 archivos por dominio
+   (core, leads, captureLinks, agenda, lists, templates, settings, tasks,
+   saas, support, chat). index.ts queda como barrel de re-exportacion:
+   ningun import existente en el codebase cambio. Validado con tsc
+   --noEmit sobre los 176 archivos del proyecto sin errores. Estado: hecho.
+
+3. Codigo muerto eliminado: IconActionButton.tsx (cero consumidores),
+   googleActionLabel en EmailSettings (declarado, nunca renderizado).
+   Estado: hecho.
+
+4. Regresiones funcionales encontradas y restauradas durante la
+   modularizacion de LeadDetail. El rediseno de UI habia quitado el render
+   de varias piezas dejando la logica y los efectos corriendo por debajo
+   sin interfaz. Confirmado contra el historial de git (commit 09fe40e,
+   pre-rediseno) antes de restaurar cada una:
+   - alertas cross-exec: el efecto seguia consultando Supabase y marcando
+     alertas como leidas sin que el usuario las viera nunca
+   - historial de envios con nombre de plantilla y contenido expandible
+   - feedback de exito/error al agendar una cita
+   - boton "Abrir Meet" cuando el lead tiene cita activa con link de Meet
+   - badge "Google pendiente" cuando la sincronizacion con Google Calendar
+     no confirmo el evento
+   Los primeros 3 se restauraron con aprobacion explicita del usuario via
+   pregunta directa. Los ultimos 2 (Meet + badge sync) se encontraron y
+   restauraron a partir de una pregunta directa del usuario sobre el boton
+   Meet, y se aplico el mismo criterio de verificacion contra el historico.
+   Estado: hecho.
+
+5. Bug de navegacion: NavigationDrawer.tsx categoriza las rutas del menu
+   con 4 listas de nombres hardcodeadas; 'agenda' no estaba en ninguna,
+   por lo que la pagina existia y el routing funcionaba (AppPageRenderer.tsx
+   intacto) pero no habia boton en el menu para llegar a ella. Unico acceso
+   posible era via URL directa (ej. "Ver cita" desde un lead). Se agrego
+   'agenda' a la categoria "Analitica". Estado: hecho.
+
+6. Correccion de nombre de proyecto obsoleto ('MENSAJES') encontrado
+   en codigo y textos visibles, no solo documentacion:
+   - src/utils/appointmentStatusCopy.ts y src/pages/AgendaPage.tsx: texto
+     visible al usuario en la extension (mensajes de agenda)
+   - supabase/functions/google-calendar-create-event/index.ts: texto que
+     aparece en la descripcion del evento de Google Calendar que VE EL
+     LEAD/CLIENTE al recibir la invitacion. Corregido en el codigo fuente;
+     PENDIENTE DE REDEPLOY de la edge function, el fix no toma efecto
+     hasta que se redespliegue a Supabase.
+   - sql/README.md: 4 referencias actualizadas por consistencia documental.
+   Sin resolver, requiere decision editorial del usuario (no es un bug de
+   codigo sino colision semantica): `rediseño leadseed/PLAN_MAESTRO_*.md` y
+   `ROADMAP_TASKLIST_*.md` usan "leadseed" para referirse a un prototipo de
+   diseno distinto de "MENSAJES" (el producto). Ahora que el producto
+   tambien se llama LeadSeed, los titulos quedan ambiguos.
+
+### Riesgos abiertos (sin cambios desde el bloque anterior, mas uno nuevo)
+
+- Rotar service_role, password de DB y evaluar anon key (expuestas en
+  conversacion).
+- planespro/MENSAJES sigue publico con .env.local en su historial.
+- Hallazgo RLS 2 (profiles legible por todo autenticado) y RLS 3 (avatares
+  sobrescribibles): pendiente estructural, requiere decision de producto.
+- AdminUsersPage.tsx (455 lineas) y EmailSender.tsx (500 lineas) siguen
+  saltando la capa de servicios (repositories/ directo desde UI). Mismo
+  sintoma que los 4 archivos modularizados en este bloque, pero no
+  formaban parte del hallazgo original; senalados al usuario, no tocados.
+- NUEVO: edge function google-calendar-create-event pendiente de redeploy
+  para que el fix del nombre en la descripcion del evento tome efecto.
+- NUEVO: design y master quedaron en 853aa3d; develop avanzo 8 commits
+  desde ese punto (seguridad + refactors + fixes). Requiere decidir cuando
+  re-sincronizar.
+
+### Solicitud de revision cruzada
+
+Sin cambios: no hay IA-B activa. Los bloques de seguridad (055) y los
+cambios de codigo de este bloque siguen sin auditoria cruzada bajo 14.4.

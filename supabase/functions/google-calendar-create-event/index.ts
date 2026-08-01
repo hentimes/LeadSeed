@@ -153,7 +153,7 @@ async function getAccessToken(connection: CalendarConnectionRow) {
 
 function buildDescription(lead: LeadRow | null, appointment: AppointmentRow) {
   const lines = [
-    'Cita generada desde PlanesPro/MENSAJES.',
+    'Cita generada desde PlanesPro/LeadSeed.',
     lead?.name ? `Lead: ${lead.name}` : '',
     lead?.phone ? `Telefono: ${lead.phone}` : '',
     lead?.email ? `Email: ${lead.email}` : '',

@@ -57,14 +57,14 @@ Si existe divergencia entre un snippet del panel y un archivo de este directorio
 
 ## Migracion activa reciente
 
-- `024_capture_links_management_rpcs.sql`: frontera oficial para que MENSAJES gestione links de publicacion mediante RPCs autenticadas.
+- `024_capture_links_management_rpcs.sql`: frontera oficial para que LeadSeed gestione links de publicacion mediante RPCs autenticadas.
 - `025_planespro_agenda_supabase_foundation.sql`: primer corte de agenda Supabase; agrega settings, conexiones calendario, bloqueos, disponibilidad publica por `ref` y creacion de appointments desde el submit publico.
 - `026_planespro_agenda_public_rpc_volatility_fix.sql`: corrige volatilidad de RPCs publicas de agenda para que PostgREST permita inicializar defaults al consultar disponibilidad.
-- `027_planespro_agenda_management_rpcs.sql`: frontera oficial para que MENSAJES gestione ajustes de agenda, horario semanal, bloqueos y citas mediante RPCs autenticadas.
-- `028_google_calendar_connection_foundation.sql`: estado no sensible de conexion Google Calendar y metadata de sincronizacion para MENSAJES.
+- `027_planespro_agenda_management_rpcs.sql`: frontera oficial para que LeadSeed gestione ajustes de agenda, horario semanal, bloqueos y citas mediante RPCs autenticadas.
+- `028_google_calendar_connection_foundation.sql`: estado no sensible de conexion Google Calendar y metadata de sincronizacion para LeadSeed.
 - `029_google_calendar_busy_sync.sql`: columnas e indices para convertir FreeBusy de Google en bloqueos `google` dentro de Supabase.
 - `030_google_calendar_event_status.sql`: estado de replica externa de citas Supabase hacia Google Calendar, incluyendo Meet cuando Google lo entregue.
-- `031_appointment_visibility_meet_alerts.sql`: amplia el listado interno de citas para mostrar link Meet y estado Google no sensible en MENSAJES.
+- `031_appointment_visibility_meet_alerts.sql`: amplia el listado interno de citas para mostrar link Meet y estado Google no sensible en LeadSeed.
 - `032_appointment_participants.sql`: modelo y RPCs autenticadas para participantes de citas.
 - `033_appointment_reschedule_cancel.sql`: RPCs autenticadas para reprogramar/cancelar citas propias y auditoria basica de eventos.
 - `034_create_appointment_from_lead.sql`: RPC autenticada para crear una cita desde el detalle de un lead propio, validando conflictos y conservando Supabase como fuente de verdad.
