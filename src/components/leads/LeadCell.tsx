@@ -1,6 +1,7 @@
 import type { Lead, LeadList } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../types';
-import { getLeadColumnValue } from '../../config/leadColumns';
+import { getLeadColumnValue, LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
+import CopyableValue from './CopyableValue';
 
 interface CellContext {
   lead: Lead;
@@ -18,6 +19,16 @@ interface CellContext {
  * aca. Antes habia que duplicar markup en cuatro lugares distintos.
  */
 export default function LeadCell({ columnKey, ctx }: { columnKey: string; ctx: CellContext }) {
+  const definition = LEAD_COLUMN_BY_KEY.get(columnKey);
+  const content = renderContent(columnKey, ctx);
+
+  if (!definition?.copyable) return content;
+
+  const rawValue = getLeadColumnValue(ctx.lead, columnKey, Array.from(ctx.listsMap.values()));
+  return <CopyableValue value={rawValue}>{content}</CopyableValue>;
+}
+
+function renderContent(columnKey: string, ctx: CellContext) {
   const { lead, listsMap, compactMode, isSelected, getScore } = ctx;
 
   switch (columnKey) {

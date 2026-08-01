@@ -12,6 +12,8 @@ export interface LeadColumnDef {
   sortField?: LeadSortField;
   /** No se puede ocultar ni mover: es la identidad de la fila. */
   fixed?: boolean;
+  /** Muestra el boton de copiar al pasar el mouse. */
+  copyable?: boolean;
 }
 
 function raw(lead: Lead): PlanesproLeadRawPayload {
@@ -37,13 +39,13 @@ function text(value: unknown): string {
  */
 export const LEAD_COLUMN_CATALOG: LeadColumnDef[] = [
   { key: 'name', label: 'Nombre', defaultVisible: true, width: 150, sortField: 'name', fixed: true },
-  { key: 'phone', label: 'Teléfono', defaultVisible: true, width: 120 },
+  { key: 'phone', label: 'Teléfono', defaultVisible: true, width: 120, copyable: true },
   { key: 'status', label: 'Estado', defaultVisible: true, width: 100 },
-  { key: 'email', label: 'Email', defaultVisible: true, width: 160 },
-  { key: 'rut', label: 'RUT', defaultVisible: true, width: 110, sortField: 'rut' },
+  { key: 'email', label: 'Email', defaultVisible: true, width: 180, copyable: true },
+  { key: 'rut', label: 'RUT', defaultVisible: true, width: 115, sortField: 'rut', copyable: true },
   { key: 'createdAt', label: 'Ingreso', defaultVisible: true, width: 95, sortField: 'createdAt' },
   { key: 'lists', label: 'Listas', defaultVisible: true, width: 120 },
-  { key: 'company', label: 'Empresa', defaultVisible: false, width: 130 },
+  { key: 'company', label: 'Empresa', defaultVisible: false, width: 130, copyable: true },
   { key: 'healthSystem', label: 'Sistema', defaultVisible: false, width: 90 },
   { key: 'isapre', label: 'Isapre', defaultVisible: false, width: 110 },
   { key: 'income', label: 'Renta', defaultVisible: false, width: 110 },

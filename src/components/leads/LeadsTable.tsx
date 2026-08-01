@@ -59,13 +59,22 @@ const sortIcon = (f: SortField, s: SortConfig) => {
   return s.dir === 'asc' ? Icon.SortUp() : Icon.SortDown();
 };
 
-// Extract first name and first last name
+/**
+ * Nombre corto: primer nombre + primer apellido.
+ *
+ * El caso de 3 partes es ambiguo ("Juan Carlos Perez" vs "Juan Perez
+ * Soto"). Se resuelve por convencion chilena, donde lo habitual es
+ * nombre + dos apellidos, asi que la segunda parte se toma como apellido.
+ *
+ *   2 partes  Ana Soto              -> Ana Soto
+ *   3 partes  Juan Perez Soto       -> Juan Perez
+ *   4+ partes Juan Carlos Perez Soto-> Juan Perez
+ */
 function shortName(full: string): string {
-  const parts = full.trim().split(/\s+/);
-  if (parts.length <= 2) return full;
-  // Assume: first name + middle name(s) + last name(s)
-  // Return first + last
-  return `${parts[0]} ${parts[parts.length - 1]}`;
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return parts.join(' ');
+  if (parts.length === 3) return `${parts[0]} ${parts[1]}`;
+  return `${parts[0]} ${parts[2]}`;
 }
 
 export default function LeadsTable({
@@ -86,9 +95,10 @@ export default function LeadsTable({
   const [pinOverId, setPinOverId] = useState<string | null>(null);
 
   /** Reordena los leads fijados; el resto de la lista no se toca. */
-  const handlePinDrop = () => {
-    const sourceId = pinDragId;
-    const targetId = pinOverId;
+  const handlePinDrop = (droppedId?: string, overId?: string) => {
+    // El dataTransfer es la fuente confiable; el estado es solo respaldo.
+    const sourceId = droppedId || pinDragId;
+    const targetId = overId || pinOverId;
     setPinDragId(null);
     setPinOverId(null);
     if (!sourceId || !targetId || sourceId === targetId) return;
@@ -105,7 +115,7 @@ export default function LeadsTable({
     onReorderPinned?.(reordered);
   };
 
-  const headPad = compactMode ? 'px-2 py-2.5' : 'px-2 py-2';
+  const headPad = compactMode ? 'px-2.5 py-2.5' : 'px-2.5 py-2.5';
   const allSelected = selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0;
 
   /**
@@ -261,7 +271,7 @@ export default function LeadsTable({
                     }}
                     onClick={sortField ? () => onSort(sortField) : undefined}
                     style={{ width: definition?.width, maxWidth: definition?.width }}
-                    className={`text-left ${headPad} font-medium select-none whitespace-nowrap ${
+                    className={`text-left align-middle ${headPad} font-medium select-none whitespace-nowrap ${
                       sortField ? 'cursor-pointer hover:bg-gray-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-50'
                     } ${isDragTarget ? 'bg-[#F2EEFF] border-l-2 border-l-[#6C4CF6]' : ''} ${dragColKey === column.key ? 'opacity-40' : ''}`}
                     title={definition?.fixed ? undefined : 'Arrastra para reordenar'}

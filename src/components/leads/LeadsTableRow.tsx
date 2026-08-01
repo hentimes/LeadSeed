@@ -29,7 +29,7 @@ interface Props {
   isPinDragging?: boolean;
   onPinDragStart?: (leadId: string) => void;
   onPinDragOver?: (leadId: string) => void;
-  onPinDrop?: () => void;
+  onPinDrop?: (sourceId: string, targetId: string) => void;
 }
 
 const getPurpleShade = (id: string) => {
@@ -61,7 +61,7 @@ const LeadsTableRow = ({
   const isSelected = selectedIds.has(lead.id!);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
 
-  const cellPad = compactMode ? 'px-2 py-1.5' : 'px-2 py-2';
+  const cellPad = compactMode ? 'px-2.5 py-1.5' : 'px-2.5 py-2';
   const trClass = `border-b border-[#E6EAF0] transition-colors cursor-pointer ${
     isSelected ? 'bg-[#E0D4FF] hover:bg-[#D6C7FF]' : 'bg-white hover:bg-gray-50'
   } ${isPinDragging ? 'opacity-40' : ''}`;
@@ -169,6 +169,8 @@ const LeadsTableRow = ({
     ? {
         draggable: true,
         onDragStart: (event: React.DragEvent) => {
+          // setData es obligatorio: sin el, Chrome no completa el drop.
+          event.dataTransfer.setData('text/plain', lead.id!);
           event.dataTransfer.effectAllowed = 'move';
           onPinDragStart(lead.id!);
         },
@@ -178,7 +180,7 @@ const LeadsTableRow = ({
         },
         onDrop: (event: React.DragEvent) => {
           event.preventDefault();
-          onPinDrop?.();
+          onPinDrop?.(event.dataTransfer.getData('text/plain'), lead.id!);
         },
       }
     : {};
@@ -188,14 +190,14 @@ const LeadsTableRow = ({
       <td className={cellPad}>{checkboxBox}</td>
 
       {columns.map((column) => (
-        <td key={column.key} className={`${cellPad} text-[12px] overflow-hidden`}>
+        <td key={column.key} className={`${cellPad} align-middle text-[12px] overflow-hidden`}>
           {column.key === 'name' ? nameCell : (
             <LeadCell columnKey={column.key} ctx={{ lead, listsMap, compactMode, isSelected, getScore }} />
           )}
         </td>
       ))}
 
-      <td className={`${cellPad} w-[72px] sticky right-0 bg-inherit shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10`}>
+      <td className={`${cellPad} w-[92px] sticky right-0 bg-inherit shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10`}>
         {actions}
       </td>
     </tr>
