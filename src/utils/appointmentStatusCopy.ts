@@ -30,8 +30,8 @@ export function getAppointmentSuccessMessage(
 ): string {
   const baseMessageByAction: Record<AppointmentAction, string> = {
     create: 'Cita creada y hora bloqueada.',
-    reschedule: 'Cita reprogramada en MENSAJES.',
-    cancel: 'Cita cancelada en MENSAJES.',
+    reschedule: 'Cita reprogramada en LeadSeed.',
+    cancel: 'Cita cancelada en LeadSeed.',
   };
 
   const normalizedStatus = googleStatus === 'already_synced' ? 'synced' : normalizeGoogleSyncStatus(googleStatus);
@@ -66,12 +66,12 @@ export function getGoogleSyncPendingSummary(appointment?: Partial<AppointmentSyn
   }
 
   if (status === 'skipped') {
-    return 'Esta cita existe en MENSAJES, pero Google Calendar no tenia un evento previo que sincronizar en esta accion.';
+    return 'Esta cita existe en LeadSeed, pero Google Calendar no tenia un evento previo que sincronizar en esta accion.';
   }
 
   if (appointment?.meetLink) {
-    return 'La cita ya existe en MENSAJES. Google Calendar sigue pendiente de confirmar la sincronizacion.';
+    return 'La cita ya existe en LeadSeed. Google Calendar sigue pendiente de confirmar la sincronizacion.';
   }
 
-  return 'La hora ya quedo reservada en MENSAJES, pero Google Calendar todavia no confirma el evento ni el link Meet.';
+  return 'La hora ya quedo reservada en LeadSeed, pero Google Calendar todavia no confirma el evento ni el link Meet.';
 }
