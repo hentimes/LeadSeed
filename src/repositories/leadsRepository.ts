@@ -172,7 +172,12 @@ export async function fetchPinnedLeads(userId: string): Promise<LeadRow[]> {
     .select(LEAD_SELECT)
     .eq('user_id', userId)
     .is('deleted_at', null)
-    .eq('metadata->>isPinned', 'true');
+    .eq('metadata->>isPinned', 'true')
+    // El orden manual vive en metadata.pinnedOrder; no hizo falta migrar.
+    // Es texto en JSON, asi que Postgres ordena lexicograficamente: por eso
+    // se guarda con padding de ceros al escribirlo.
+    .order('metadata->>pinnedOrder', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching pinned leads:', error);
@@ -180,6 +185,29 @@ export async function fetchPinnedLeads(userId: string): Promise<LeadRow[]> {
   }
 
   return (data ?? []) as LeadRow[];
+}
+
+/**
+ * Persiste el orden manual de los leads fijados dentro de metadata.
+ *
+ * Se mezcla el metadata existente en vez de reemplazarlo, para no perder
+ * isPinned ni los datos del formulario. El indice se guarda con padding
+ * porque el orden en SQL es sobre texto.
+ */
+export async function updatePinnedOrder(
+  orderedLeads: Array<{ id: string; metadata?: Record<string, unknown> | null }>,
+): Promise<void> {
+  await Promise.all(
+    orderedLeads.map((lead, index) =>
+      supabase
+        .from('leads')
+        .update({
+          metadata: { ...(lead.metadata || {}), pinnedOrder: String(index).padStart(4, '0') },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', lead.id),
+    ),
+  );
 }
 
 export async function fetchLeadPageRows(userId: string, params: LeadPageQuery): Promise<LeadPageRowResult> {

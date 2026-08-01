@@ -19,6 +19,7 @@ import {
   saveLeadForUser,
   softDeleteLead,
   getPinnedLeads,
+  reorderPinnedLeads,
   type LeadIdentity,
   type LeadPageResult,
 } from '../services/leadsService';
@@ -140,6 +141,10 @@ export function useLeads() {
     }
   }, [triggerRefresh, user]);
 
+  const reorderPinned = useCallback(async (orderedIds: string[], allLeads: Lead[]): Promise<void> => {
+    await reorderPinnedLeads(orderedIds, allLeads);
+  }, []);
+
   const getPinned = useCallback(async (): Promise<Lead[]> => {
     if (!user) return [];
     return getPinnedLeads(user.id);
@@ -148,6 +153,7 @@ export function useLeads() {
   return {
     getAll,
     getPinned,
+    reorderPinned,
     getDeleted,
     getPage,
     getForgottenPage,

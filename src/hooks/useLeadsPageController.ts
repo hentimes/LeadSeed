@@ -21,7 +21,7 @@ function getLeadAppointmentMetadata(lead: Lead): { appointmentId: string; appoin
 }
 
 export function useLeadsPageController() {
-  const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey, getPinned } = useLeads();
+  const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey, getPinned, reorderPinned } = useLeads();
   const { getAll: getLists } = useLists();
   const { hasFeature, user } = useAuth();
 
@@ -450,6 +450,11 @@ export function useLeadsPageController() {
     await loadLeads();
   };
 
+  const handleReorderPinned = async (orderedIds: string[]) => {
+    await reorderPinned(orderedIds, leads);
+    await loadLeads();
+  };
+
   const handleNewLeadClick = () => {
     if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
       alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
@@ -521,6 +526,7 @@ export function useLeadsPageController() {
     handleAddToList,
     handleImport,
     handleNewLeadClick,
+    handleReorderPinned,
   };
 }
 

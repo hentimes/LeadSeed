@@ -1,6 +1,5 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import type { Lead, LeadList, LeadStatus } from '../../types';
-import { STATUS_LABELS, STATUS_COLORS } from '../../types';
 import type { SortConfig, SortField } from '../../hooks/useSort';
 import type { ColumnDef } from '../ColumnSelector';
 import { Icon } from '../../utils/icons';
@@ -8,6 +7,8 @@ import { useSendCounts } from '../../hooks/useSendCounts';
 import LeadsTableControls from './LeadsTableControls';
 import LeadsTableRow from './LeadsTableRow';
 import LoadingOverlay from '../LoadingOverlay';
+import { useResponsiveColumns } from '../../hooks/useResponsiveColumns';
+import { LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
 
 interface Props {
   leads: Lead[];
@@ -44,6 +45,8 @@ interface Props {
   visibleCols: ColumnDef[];
   onColsChange: (cols: ColumnDef[]) => void;
   onReorderCols?: (from: number, to: number) => void;
+  /** Nuevo orden de los ids de leads fijados. */
+  onReorderPinned?: (orderedIds: string[]) => void;
   compactMode: boolean;
   lastClickedIndex: number | null;
   onSetLastClicked: (index: number) => void;
@@ -70,19 +73,56 @@ export default function LeadsTable({
   onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
   compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
-  onReorderCols,
+  onReorderCols, onReorderPinned,
 }: Props) {
   const sendCounts = useSendCounts();
   
-  const nameVis = visibleCols.find((c) => c.key === 'name')?.visible ?? true;
-  const rutVis = visibleCols.find((c) => c.key === 'rut')?.visible ?? true;
-  const phoneVis = visibleCols.find((c) => c.key === 'phone')?.visible ?? true;
-  const emailVis = visibleCols.find((c) => c.key === 'email')?.visible ?? true;
-  const companyVis = visibleCols.find((c) => c.key === 'company')?.visible ?? true;
-  const dateVis = visibleCols.find((c) => c.key === 'createdAt')?.visible ?? true;
-  const listsVis = visibleCols.find((c) => c.key === 'lists')?.visible ?? true;
-  const statusVis = visibleCols.find((c) => c.key === 'status')?.visible ?? true;
-  const scoreVis = visibleCols.find((c) => c.key === 'score')?.visible ?? false;
+  const { containerRef, renderedColumns, hiddenByWidth } = useResponsiveColumns(visibleCols);
+
+  const [dragColKey, setDragColKey] = useState<string | null>(null);
+  const [dragOverColKey, setDragOverColKey] = useState<string | null>(null);
+  const [pinDragId, setPinDragId] = useState<string | null>(null);
+  const [pinOverId, setPinOverId] = useState<string | null>(null);
+
+  /** Reordena los leads fijados; el resto de la lista no se toca. */
+  const handlePinDrop = () => {
+    const sourceId = pinDragId;
+    const targetId = pinOverId;
+    setPinDragId(null);
+    setPinOverId(null);
+    if (!sourceId || !targetId || sourceId === targetId) return;
+
+    const pinnedIds = leads.filter((lead) => lead.isPinned).map((lead) => lead.id!);
+    const from = pinnedIds.indexOf(sourceId);
+    const to = pinnedIds.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+
+    const reordered = [...pinnedIds];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+
+    onReorderPinned?.(reordered);
+  };
+
+  const headPad = compactMode ? 'px-2 py-2.5' : 'px-2 py-2';
+  const allSelected = selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0;
+
+  /**
+   * Mueve la columna arrastrada a la posicion de la soltada, operando sobre
+   * la lista completa y no sobre la visible: el indice tiene que ser el real.
+   */
+  const handleColumnDrop = (targetKey: string) => {
+    const sourceKey = dragColKey;
+    setDragColKey(null);
+    setDragOverColKey(null);
+    if (!sourceKey || sourceKey === targetKey) return;
+
+    const from = visibleCols.findIndex((column) => column.key === sourceKey);
+    const to = visibleCols.findIndex((column) => column.key === targetKey);
+    if (from < 0 || to < 0) return;
+
+    onReorderCols?.(from, to);
+  };
 
   const listsMap = useMemo(() => {
     const map = new Map<number, LeadList>();
@@ -99,11 +139,6 @@ export default function LeadsTable({
     if (lead.notes) s++;
     return s;
   };
-
-  const headerColSpan = compactMode ? 3 : 2 + visibleCols.filter((c) => c.visible).length;
-
-  const nameLabel = nameVis && rutVis ? 'Nombre y RUT' : nameVis ? 'Nombre' : rutVis ? 'RUT' : 'Contacto';
-  const contactLabel = phoneVis && emailVis ? 'Teléfono y Correo' : phoneVis ? 'Teléfono' : emailVis ? 'Correo' : '';
 
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
 
@@ -178,56 +213,65 @@ export default function LeadsTable({
         onFilterDateChange={onFilterDateChange}
       />
 
-      <div className="card-standard overflow-x-auto w-full min-w-0">
+      <div ref={containerRef} className="card-standard overflow-x-auto w-full min-w-0">
         <table className="w-full text-[13px] text-[#161A24]">
           <thead className="border-b border-[#E6EAF0] text-[#5B6475] bg-white">
-            {compactMode ? (
-              <tr>
-                <th className="w-8 px-2 py-3"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[#E6EAF0] bg-white'}`} onClick={onSelectAll}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 1 : 0}/></svg></div></th>
-                <th onClick={() => onSort('name')} className="text-left px-3 py-3 font-medium cursor-pointer select-none hover:bg-gray-50 w-[30%] min-w-[140px]">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    {nameLabel} <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('name', sort)}</span>
-                  </div>
-                </th>
-                {companyVis && <th className="text-left px-3 py-3 font-medium w-[15%] min-w-[100px]">Empresa</th>}
-                {contactLabel && <th className="text-left px-3 py-3 font-medium w-[25%] min-w-[130px]">{contactLabel}</th>}
-                {dateVis && <th onClick={() => onSort('createdAt')} className="text-left px-3 py-3 font-medium cursor-pointer select-none hover:bg-gray-50 w-[15%] min-w-[80px]">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    Ingreso <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('createdAt', sort)}</span>
-                  </div>
-                </th>}
-                {listsVis && <th className="text-left px-3 py-3 font-medium w-[20%] min-w-[100px]">Listas</th>}
-                {statusVis && <th className="text-left px-3 py-3 font-medium w-[15%] min-w-[80px]">Estado</th>}
-                {scoreVis && <th className="text-left px-3 py-3 font-medium w-[10%] min-w-[70px]">Score</th>}
-                <th className="w-[100px] min-w-[100px] px-3 py-3 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal">
-                  <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
-                </th>
-              </tr>
-            ) : (
-              <tr>
-                <th className="w-8 px-2 py-2"><div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 'bg-blue-600 border-blue-600' : 'border-gray-400 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md'}`} onClick={onSelectAll}><svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0 ? 1 : 0}/></svg></div></th>
-                {nameVis && <th onClick={() => onSort('name')} draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'name')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'name')); }} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-gray-200">
-                  Nombre <span className="text-gray-400 text-xs">{sortIcon('name', sort)}</span></th>}
-                {phoneVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'phone')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'phone')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Teléfono</th>}
-                {emailVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'email')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'email')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Email</th>}
-                {companyVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'company')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'company')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Empresa</th>}
-                {rutVis && <th onClick={() => onSort('rut')} draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'rut')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'rut')); }} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-gray-200">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    RUT <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('rut', sort)}</span>
-                  </div>
-                </th>}
-                {dateVis && <th onClick={() => onSort('createdAt')} draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'createdAt')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'createdAt')); }} className="text-left px-2 py-2 font-medium cursor-pointer select-none hover:bg-gray-200">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    Ingreso <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon('createdAt', sort)}</span>
-                  </div>
-                </th>}
-                {listsVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'lists')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'lists')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Listas</th>}
-                {statusVis && <th draggable onDragStart={(e) => e.dataTransfer.setData('col-key', 'status')} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onReorderCols?.(visibleCols.findIndex(c => c.key === e.dataTransfer.getData('col-key')), visibleCols.findIndex(c => c.key === 'status')); }} className="text-left px-2 py-2 font-medium cursor-grab active:cursor-grabbing hover:bg-gray-100">Estado</th>}
-                <th className="w-[100px] min-w-[100px] px-2 py-2 text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal">
-                  <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
-                </th>
-              </tr>
-            )}
+            <tr>
+              <th className={`w-8 ${headPad}`}>
+                <div
+                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${allSelected ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[#E6EAF0] bg-white'}`}
+                  onClick={onSelectAll}
+                >
+                  <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={allSelected ? 1 : 0} />
+                  </svg>
+                </div>
+              </th>
+
+              {renderedColumns.map((column) => {
+                const definition = LEAD_COLUMN_BY_KEY.get(column.key);
+                const sortField = definition?.sortField;
+                const isDragTarget = dragOverColKey === column.key && dragColKey !== column.key;
+
+                return (
+                  <th
+                    key={column.key}
+                    draggable={!definition?.fixed}
+                    onDragStart={() => setDragColKey(column.key)}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setDragOverColKey(column.key);
+                    }}
+                    onDragLeave={() => setDragOverColKey((current) => (current === column.key ? null : current))}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      handleColumnDrop(column.key);
+                    }}
+                    onDragEnd={() => {
+                      setDragColKey(null);
+                      setDragOverColKey(null);
+                    }}
+                    onClick={sortField ? () => onSort(sortField) : undefined}
+                    style={{ minWidth: definition?.width }}
+                    className={`text-left ${headPad} font-medium select-none whitespace-nowrap ${
+                      sortField ? 'cursor-pointer hover:bg-gray-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-50'
+                    } ${isDragTarget ? 'bg-[#F2EEFF] border-l-2 border-l-[#6C4CF6]' : ''} ${dragColKey === column.key ? 'opacity-40' : ''}`}
+                    title={definition?.fixed ? undefined : 'Arrastra para reordenar'}
+                  >
+                    <div className="flex items-center gap-1">
+                      {column.label}
+                      {sortField && <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon(sortField, sort)}</span>}
+                    </div>
+                  </th>
+                );
+              })}
+
+              <th className={`w-[100px] min-w-[100px] ${headPad} text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal`}>
+                <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">
+                  {hiddenByWidth > 0 ? `+${hiddenByWidth} col.` : `Pag. ${currentPage}/${pageCount}`}
+                </span>
+              </th>
+            </tr>
           </thead>
           <tbody ref={tbodyRef}>
             {isLoadingPage && leads.length === 0 ? (
@@ -252,15 +296,7 @@ export default function LeadsTable({
                   compactMode={compactMode}
                   filterMode={filterMode}
                   isTrash={isTrash}
-                  nameVis={nameVis}
-                  rutVis={rutVis}
-                  phoneVis={phoneVis}
-                  emailVis={emailVis}
-                  companyVis={companyVis}
-                  dateVis={dateVis}
-                  listsVis={listsVis}
-                  statusVis={statusVis}
-                  scoreVis={scoreVis}
+                  columns={renderedColumns}
                   onView={onView}
                   onEdit={onEdit}
                   onDelete={onDelete}
@@ -268,6 +304,10 @@ export default function LeadsTable({
                   onTogglePin={onTogglePin}
                   getScore={getScore}
                   shortName={shortName}
+                  isPinDragging={pinDragId === lead.id}
+                  onPinDragStart={onReorderPinned ? setPinDragId : undefined}
+                  onPinDragOver={setPinOverId}
+                  onPinDrop={handlePinDrop}
                 />
               ))
             )}

@@ -16,6 +16,7 @@ import {
   fetchPinnedLeads,
   importLeadRows,
   purgeDeletedLeadRows,
+  updatePinnedOrder,
   type LeadIdentityRow,
   type LeadPageQuery,
   type LeadCrossExecEventRow,
@@ -131,6 +132,16 @@ export async function fetchActiveLeads(userId: string): Promise<Lead[]> {
 
 export async function fetchDeletedLeads(userId: string): Promise<Lead[]> {
   return attachCrossExecAlerts((await fetchDeletedLeadRows(userId)).map(mapLeadRowToDomain));
+}
+
+export async function reorderPinnedLeads(orderedIds: string[], allLeads: Lead[]): Promise<void> {
+  const byId = new Map(allLeads.map((lead) => [lead.id!, lead]));
+  const ordered = orderedIds
+    .map((id) => byId.get(id))
+    .filter(Boolean)
+    .map((lead) => ({ id: lead!.id!, metadata: lead!.metadata as Record<string, unknown> | null }));
+
+  await updatePinnedOrder(ordered);
 }
 
 export async function getPinnedLeads(userId: string): Promise<Lead[]> {

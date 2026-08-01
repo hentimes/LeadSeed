@@ -152,7 +152,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
         visibleCols={visibleCols}
         onColsChange={onColsChange || (() => {})}
         onReorderCols={(from, to) => {
-          if (onColsChange && from >= 2 && to >= 2) {
+          if (onColsChange && from >= 0 && to >= 0) {
             const newCols = [...visibleCols];
             const [moved] = newCols.splice(from, 1);
             newCols.splice(to, 0, moved);
@@ -161,6 +161,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
         }}
         compactMode={compactMode}
         onTogglePin={p.handleTogglePin}
+        onReorderPinned={(orderedIds) => void p.handleReorderPinned(orderedIds)}
         lastClickedIndex={p.lastClickedIndex}
         onSetLastClicked={p.setLastClickedIndex}
       />
