@@ -6636,3 +6636,104 @@ observable en Chrome.
   historicos: los 11 ya existentes no van a disparar alertas retroactivas.
   Es deliberado.
 - Sin auditoria cruzada bajo 14.4: no hay IA-B activa.
+
+---
+
+## Claude | 2026-07-31 CLT | Certificacion del sistema de alertas + auditoria CONTROL del propio codigo
+
+Rol: Auditora del bloque anterior (auto-auditoria; no sustituye 14.4).
+
+### Defectos encontrados en el codigo propio y corregidos
+
+Auditando la implementacion previa aparecieron tres defectos reales, todos
+en el runtime de alertas. Corregidos en el commit 29f85d7:
+
+1. RACE CONDITION. `processIncomingEvents` hacia lectura-modificacion-
+   escritura sobre chrome.storage.local sin serializar. Realtime y la
+   reconciliacion pueden entregar el mismo evento casi a la vez: ambas
+   leian el estado antes de que la otra escribiera, notificaban dos veces
+   y se pisaban el contador. La dedup por id NO protegia, porque dependia
+   de un seenEventIds ya desactualizado. Corregido con cola de
+   serializacion (promesa encadenada).
+
+2. DOBLE SUSCRIPCION REALTIME. Al despertar en frio, MV3 re-evalua el
+   script completo Y dispara el listener de alarma. Ambos llamaban a
+   startLeadAlertsRuntime en paralelo, dejando un canal Realtime colgado.
+   Corregido con guard de arranque idempotente via promesa compartida.
+
+3. DEGRADACION SILENCIOSA A SONDEO. Si el service worker era terminado,
+   la conexion Realtime moria con el, y la alarma solo reconciliaba sin
+   re-suscribir. El sistema quedaba permanentemente en 30s, perdiendo
+   justamente la inmediatez que era el requisito. Corregido: la alarma
+   ahora re-asegura el runtime.
+
+Se agrego ademas debounce de 5s a la reconciliacion para eliminar la
+consulta duplicada del arranque en frio.
+
+### Pruebas ejecutadas contra produccion
+
+Todas con limpieza verificada; la base quedo sin residuos en cada una.
+
+1. ENTREGA REALTIME: suscripcion con el mismo filtro que usa la extension,
+   insercion de un lead real, medicion de latencia.
+   RESULTADO: evento entregado en 410 ms, payload completo y correcto
+   (lead_name, target_user_id, event_kind, source_channel).
+
+2. AISLAMIENTO ENTRE USUARIOS: canal abierto para la cuenta B mientras se
+   inserta un lead en la cuenta A.
+   RESULTADO: A genero exactamente 1 evento; B no recibio nada.
+
+3. TRIGGER: insercion de lead dentro de transaccion revertida.
+   RESULTADO: 1 evento con atribucion correcta; base sin residuos.
+
+4. RLS EN LA RUTA DE RECONCILIACION: impersonando al usuario con rol
+   `authenticated` (las pruebas 1-3 usaban service_role, que ignora RLS,
+   lo que era un hueco de la validacion anterior).
+   RESULTADO: de 11 eventos en tabla, el usuario ve solo sus 8; 0 eventos
+   ajenos visibles.
+
+5. ARTEFACTOS DE BUILD: manifest con permiso offscreen y key fija;
+   offscreen.html y su bundle generados; el service worker importa
+   correctamente el chunk de alertas y contiene los 6 tokens criticos.
+
+### Cumplimiento CONTROL del codigo nuevo
+
+- Tamano de archivos: max 225 lineas (norma: 800). Cumple.
+- Longitud de funciones: max 40 lineas en codigo propio (norma: 50).
+  Cumple. (`abrirWhatsAppWeb`, 48 lineas y anidamiento 5, es preexistente.)
+- Anidamiento: max 3-4 en codigo propio. Cumple.
+- Emojis en codigo (10.1): ninguno. Cumple.
+- SQL (seccion 15): no se agrego SQL en este bloque. N/A.
+- Alcance acotado (seccion 12): se respeto; ver hallazgo no corregido.
+
+### Hallazgo NO corregido, por disciplina de alcance
+
+El service worker carga ~140 KB de react-vendor que nunca ejecuta. Se
+verifico con un tracer de grafo de importacion que NINGUNA cadena desde
+background.ts alcanza React o FontAwesome: es un artefacto de la config
+`manualChunks` de vite.config.ts, preexistente y ajeno a esta
+funcionalidad. Importa porque el SW despierta cada 30s y ese peso encarece
+cada arranque en frio. Corregirlo implica tocar el chunking de toda la
+app, lo que excede este bloque (seccion 12). Queda como deuda declarada.
+
+### Estado
+
+`pendiente de validacion real` (sin cambios de clasificacion).
+
+Lo certificado es: backend, trigger, entrega Realtime, aislamiento entre
+usuarios, RLS, tipos, build y artefactos. Lo NO certificado es el
+comportamiento observable en Chrome: badge morado, toast, sonido y
+notificacion nativa. Eso requiere cargar la extension, y no puede
+verificarse desde aca. No debe declararse `hecho` hasta que el usuario
+lo confirme (seccion 5.5).
+
+### Riesgos declarados
+
+- El documento offscreen puede ser descartado por Chrome bajo presion de
+  memoria: se pierde el sonido, no el badge ni la notificacion.
+- `chrome.alarms` con periodInMinutes 0.5 requiere Chrome 120+; en
+  versiones anteriores Chrome lo eleva a 1 minuto. Degrada, no rompe.
+- `chrome.runtime.getContexts` requiere Chrome 116+. El codigo ya degrada
+  con gracia si no existe.
+- Sin auditoria cruzada bajo 14.4: sigue sin haber IA-B activa. Esta
+  entrada es auto-auditoria y no la reemplaza.
