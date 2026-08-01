@@ -1,8 +1,43 @@
 import { supabase } from '../lib/supabaseClient';
 import type { Lead, LeadCrossExecEvent } from '../types';
 
-export type LeadSortField = 'createdAt' | 'name' | 'rut';
+export type LeadSortField =
+  | 'createdAt'
+  | 'name'
+  | 'rut'
+  | 'company'
+  | 'score'
+  | 'lists'
+  | 'healthSystem'
+  | 'isapre'
+  | 'income'
+  | 'comuna';
+
+/**
+ * Columna real por la que ordena cada campo.
+ *
+ * Los cuatro ultimos viven dentro del JSON del formulario publico, asi que
+ * se ordenan por su ruta. Ojo: al ser texto, 'income' ordena
+ * alfabeticamente y no por monto.
+ */
+const LEAD_SORT_COLUMNS: Record<LeadSortField, string> = {
+  createdAt: 'created_at',
+  name: 'name',
+  rut: 'rut',
+  company: 'company',
+  score: 'score',
+  lists: 'lista_ids',
+  healthSystem: 'metadata->raw_payload->>sistema_actual',
+  isapre: 'metadata->raw_payload->>isapre_especifica',
+  income: 'metadata->raw_payload->>rango_renta',
+  comuna: 'metadata->raw_payload->>comuna',
+};
 export type LeadSortDirection = 'asc' | 'desc';
+
+export interface LeadSortConfig {
+  field: LeadSortField;
+  dir: LeadSortDirection;
+}
 
 export interface LeadPageQuery {
   page: number;
@@ -128,17 +163,10 @@ function applyLeadPageFilters(
 
 function resolveLeadSort(params: LeadPageQuery): { column: string; ascending: boolean } {
   const sortField = params.sortField || 'createdAt';
-  const sortDirection = params.sortDirection || 'desc';
-
-  if (sortField === 'name') {
-    return { column: 'name', ascending: sortDirection === 'asc' };
-  }
-
-  if (sortField === 'rut') {
-    return { column: 'rut', ascending: sortDirection === 'asc' };
-  }
-
-  return { column: 'created_at', ascending: sortDirection === 'asc' };
+  return {
+    column: LEAD_SORT_COLUMNS[sortField] || 'created_at',
+    ascending: (params.sortDirection || 'desc') === 'asc',
+  };
 }
 
 function hasActiveLeadFilters(params: LeadPageQuery): boolean {

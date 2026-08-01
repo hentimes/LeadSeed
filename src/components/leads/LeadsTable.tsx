@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import type { Lead, LeadList, LeadStatus } from '../../types';
-import type { SortConfig, SortField } from '../../hooks/useSort';
+import type { LeadSortConfig, LeadSortField } from '../../repositories/leadsRepository';
 import type { ColumnDef } from '../ColumnSelector';
 import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
@@ -32,8 +32,8 @@ interface Props {
   onFilterDateChange: (v: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
-  sort: SortConfig;
-  onSort: (field: SortField) => void;
+  sort: LeadSortConfig;
+  onSort: (field: LeadSortField) => void;
   totalCount: number;
   visibleCount: number;
   selectedCount: number;
@@ -54,7 +54,7 @@ interface Props {
   bulkActions?: React.ReactNode;
 }
 
-const sortIcon = (f: SortField, s: SortConfig) => {
+const sortIcon = (f: LeadSortField, s: LeadSortConfig) => {
   if (s.field !== f) return Icon.Sort();
   return s.dir === 'asc' ? Icon.SortUp() : Icon.SortDown();
 };
@@ -91,16 +91,8 @@ export default function LeadsTable({
 
   const [dragColKey, setDragColKey] = useState<string | null>(null);
   const [dragOverColKey, setDragOverColKey] = useState<string | null>(null);
-  const [pinDragId, setPinDragId] = useState<string | null>(null);
-  const [pinOverId, setPinOverId] = useState<string | null>(null);
-
   /** Reordena los leads fijados; el resto de la lista no se toca. */
-  const handlePinDrop = (droppedId?: string, overId?: string) => {
-    // El dataTransfer es la fuente confiable; el estado es solo respaldo.
-    const sourceId = droppedId || pinDragId;
-    const targetId = overId || pinOverId;
-    setPinDragId(null);
-    setPinOverId(null);
+  const handlePinDrop = (sourceId: string, targetId: string) => {
     if (!sourceId || !targetId || sourceId === targetId) return;
 
     const pinnedIds = leads.filter((lead) => lead.isPinned).map((lead) => lead.id!);
@@ -348,10 +340,7 @@ export default function LeadsTable({
                   onTogglePin={onTogglePin}
                   getScore={getScore}
                   shortName={shortName}
-                  isPinDragging={pinDragId === lead.id}
-                  onPinDragStart={onReorderPinned ? setPinDragId : undefined}
-                  onPinDragOver={setPinOverId}
-                  onPinDrop={handlePinDrop}
+                  onPinDrop={onReorderPinned ? handlePinDrop : undefined}
                 />
               ))
             )}

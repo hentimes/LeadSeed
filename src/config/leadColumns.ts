@@ -44,14 +44,13 @@ export const LEAD_COLUMN_CATALOG: LeadColumnDef[] = [
   { key: 'email', label: 'Email', defaultVisible: true, width: 180, copyable: true },
   { key: 'rut', label: 'RUT', defaultVisible: true, width: 115, sortField: 'rut', copyable: true },
   { key: 'createdAt', label: 'Ingreso', defaultVisible: true, width: 95, sortField: 'createdAt' },
-  { key: 'lists', label: 'Listas', defaultVisible: true, width: 120 },
-  { key: 'company', label: 'Empresa', defaultVisible: false, width: 130, copyable: true },
-  { key: 'healthSystem', label: 'Sistema', defaultVisible: false, width: 90 },
-  { key: 'isapre', label: 'Isapre', defaultVisible: false, width: 110 },
-  { key: 'income', label: 'Renta', defaultVisible: false, width: 110 },
-  { key: 'comuna', label: 'Comuna', defaultVisible: false, width: 110 },
-  // Sin sortField: el backend solo ordena por createdAt, name y rut.
-  { key: 'score', label: 'Score', defaultVisible: false, width: 70 },
+  { key: 'lists', label: 'Listas', defaultVisible: true, width: 120, sortField: 'lists' },
+  { key: 'company', label: 'Empresa', defaultVisible: false, width: 130, sortField: 'company', copyable: true },
+  { key: 'healthSystem', label: 'Sistema', defaultVisible: false, width: 90, sortField: 'healthSystem' },
+  { key: 'isapre', label: 'Isapre', defaultVisible: false, width: 110, sortField: 'isapre' },
+  { key: 'income', label: 'Renta', defaultVisible: false, width: 110, sortField: 'income' },
+  { key: 'comuna', label: 'Comuna', defaultVisible: false, width: 110, sortField: 'comuna' },
+  { key: 'score', label: 'Score', defaultVisible: false, width: 70, sortField: 'score' },
 ];
 
 export const LEAD_COLUMN_BY_KEY = new Map(LEAD_COLUMN_CATALOG.map((column) => [column.key, column]));

@@ -26,9 +26,6 @@ interface Props {
   shortName: (full: string) => string;
 
   /** Reordenamiento de leads fijados por arrastre. */
-  isPinDragging?: boolean;
-  onPinDragStart?: (leadId: string) => void;
-  onPinDragOver?: (leadId: string) => void;
   onPinDrop?: (sourceId: string, targetId: string) => void;
 }
 
@@ -56,7 +53,7 @@ const AvatarIcon = () => (
 const LeadsTableRow = ({
   lead, idx, selectedIds, sendCounts, listsMap, compactMode, filterMode, isTrash, columns,
   onView, onEdit, onDelete, onRestore, onTogglePin, getScore, shortName,
-  isPinDragging, onPinDragStart, onPinDragOver, onPinDrop,
+  onPinDrop,
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
@@ -64,7 +61,7 @@ const LeadsTableRow = ({
   const cellPad = compactMode ? 'px-2.5 py-1.5' : 'px-2.5 py-2';
   const trClass = `border-b border-[#E6EAF0] transition-colors cursor-pointer ${
     isSelected ? 'bg-[#E0D4FF] hover:bg-[#D6C7FF]' : 'bg-white hover:bg-gray-50'
-  } ${isPinDragging ? 'opacity-40' : ''}`;
+  } ${lead.isPinned ? 'cursor-grab active:cursor-grabbing active:opacity-50' : ''}`;
 
   // El RUT se muestra bajo el nombre solo si su columna no esta a la vista,
   // asi no se pierde el dato al angostar el panel ni se duplica al abrirlo.
@@ -165,18 +162,20 @@ const LeadsTableRow = ({
   );
 
   // Solo los leads fijados se pueden reordenar entre si.
-  const pinDragProps = lead.isPinned && onPinDragStart
+  const pinDragProps = lead.isPinned && onPinDrop
     ? {
         draggable: true,
         onDragStart: (event: React.DragEvent) => {
           // setData es obligatorio: sin el, Chrome no completa el drop.
+          // No se toca estado: mutar el elemento arrastrado aborta el drag.
           event.dataTransfer.setData('text/plain', lead.id!);
           event.dataTransfer.effectAllowed = 'move';
-          onPinDragStart(lead.id!);
         },
         onDragOver: (event: React.DragEvent) => {
+          // Solo preventDefault: cualquier setState aca dispara un re-render
+          // por cada evento de dragover y Chrome cancela el arrastre.
           event.preventDefault();
-          onPinDragOver?.(lead.id!);
+          event.dataTransfer.dropEffect = 'move';
         },
         onDrop: (event: React.DragEvent) => {
           event.preventDefault();
@@ -213,7 +212,6 @@ export default memo(LeadsTableRow, (prev, next) => {
   if (prev.compactMode !== next.compactMode) return false;
   if (prev.filterMode !== next.filterMode) return false;
   if (prev.isTrash !== next.isTrash) return false;
-  if (prev.isPinDragging !== next.isPinDragging) return false;
 
   // Basta comparar la identidad del arreglo: LeadsTable lo memoiza.
   if (prev.columns !== next.columns) return false;

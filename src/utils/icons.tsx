@@ -89,9 +89,27 @@ export const Icon = {
   // UI
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,
   ChevronRight: () => <I icon={faChevronRight} className="text-xs" />,
-  Sort: () => <I icon={faArrowsUpDown} className="text-[10px] text-gray-400" />,
-  SortUp: () => <I icon={faCaretUp} className="text-[10px] text-gray-400" />,
-  SortDown: () => <I icon={faCaretDown} className="text-[10px] text-gray-400" />,
+  // Misma familia de glifos en los tres estados: antes el inactivo usaba
+  // faArrowsUpDown y los activos faCaret*, y se veian como iconos distintos.
+  // El activo se distingue por color, no por forma.
+  Sort: () => (
+    <span className="inline-flex flex-col leading-none text-gray-300">
+      <I icon={faCaretUp} className="text-[9px] -mb-[3px]" />
+      <I icon={faCaretDown} className="text-[9px]" />
+    </span>
+  ),
+  SortUp: () => (
+    <span className="inline-flex flex-col leading-none">
+      <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-[#6C4CF6]" />
+      <I icon={faCaretDown} className="text-[9px] text-gray-300" />
+    </span>
+  ),
+  SortDown: () => (
+    <span className="inline-flex flex-col leading-none">
+      <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-gray-300" />
+      <I icon={faCaretDown} className="text-[9px] text-[#6C4CF6]" />
+    </span>
+  ),
   Grip: () => <I icon={faGripVertical} className="text-[10px] text-gray-400" />,
   Moon: () => <I icon={faMoon} className="text-xs" />,
   Sun: () => <I icon={faSun} className="text-xs" />,
