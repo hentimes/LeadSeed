@@ -10,6 +10,11 @@ export default defineConfig({
     modulePreload: false,
     target: 'esnext',
     rollupOptions: {
+      // offscreen.html se crea en runtime via chrome.offscreen, no se
+      // declara en el manifest, asi que crxjs no lo detecta solo.
+      input: {
+        offscreen: 'offscreen.html',
+      },
       output: {
         manualChunks(id) {
           if (id.includes('@supabase')) return 'supabase';

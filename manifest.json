@@ -15,7 +15,8 @@
     "notifications",
     "alarms",
     "identity",
-    "tabs"
+    "tabs",
+    "offscreen"
   ],
   "host_permissions": [
     "https://wa.me/*",

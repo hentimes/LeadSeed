@@ -1,4 +1,5 @@
 export * from './core';
+export * from './alerts';
 export * from './leads';
 export * from './captureLinks';
 export * from './agenda';

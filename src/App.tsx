@@ -6,6 +6,8 @@ import type { Page } from './types';
 import AppLayout from './components/layout/AppLayout';
 import AppStatusScreen from './components/app/AppStatusScreen';
 import AppPageRenderer from './components/app/AppPageRenderer';
+import LeadAlertToast from './components/leads/LeadAlertToast';
+import { useLeadAlerts } from './hooks/useLeadAlerts';
 import LoginPage from './pages/LoginPage';
 import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
 import { loadAppPreferences, syncSettingsToChromeStorage, updateStoredSettings } from './services/appSettings';
@@ -32,6 +34,14 @@ export default function App() {
   const [taskCount, setTaskCount] = useState(0);
   const [visibleCols, setVisibleCols] = useState<ColumnDef[]>(DEFAULT_COLUMNS);
   const [highlightTemplate, setHighlightTemplate] = useState<{ type: 'whatsapp' | 'email' | 'call'; id: number } | null>(null);
+  const { alerts: leadAlerts, dismissAlert: dismissLeadAlert } = useLeadAlerts();
+
+  // El service worker arranca las alertas al instalarse/iniciar Chrome, pero
+  // si el usuario recien inicio sesion todavia no hay suscripcion Realtime.
+  useEffect(() => {
+    if (!session?.user?.id || !chrome?.runtime?.id) return;
+    chrome.runtime.sendMessage({ type: 'LEAD_ALERTS_RESTART' }).catch(() => {});
+  }, [session?.user?.id]);
 
   useAppKeyboardShortcuts({ onNavigate: setPage });
 
@@ -153,6 +163,15 @@ export default function App() {
         onColsChange={handleColsChange}
         onClearHighlightTemplate={() => setHighlightTemplate(null)}
         onHighlightTemplate={(template) => setHighlightTemplate(template)}
+      />
+
+      <LeadAlertToast
+        alerts={leadAlerts}
+        onDismiss={dismissLeadAlert}
+        onOpenLead={(leadId) => {
+          window.location.hash = `#leads?lead=${leadId}`;
+          setPage('leads');
+        }}
       />
     </AppLayout>
   );

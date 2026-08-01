@@ -1,34 +1,27 @@
 import { hasPendingScheduledEmails, loadBackgroundTaskAlertSummary } from './services/backgroundService';
+import {
+  isReconcileAlarm,
+  markLeadAlertsAsSeen,
+  reconcileLeadAlerts,
+  restoreLeadAlertBadge,
+  startLeadAlertsRuntime,
+} from './services/backgroundLeadAlertsService';
 
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error(error));
 
-async function updateBadge() {
+/**
+ * Ciclo de tareas. El badge de leads NO se toca aca: lo maneja
+ * backgroundLeadAlertsService por eventos, no por sondeo.
+ */
+async function updateTaskAlerts() {
   try {
-    console.log('[Background] Ejecutando updateBadge...');
-    
     const summary = await loadBackgroundTaskAlertSummary();
-    
-    // NOTIFICACION DE DIAGNOSTICO EN PANTALLA
-    if (!summary) {
-      console.log('[Background] No hay summary (probablemente sin sesión)');
-      return;
-    }
+    if (!summary) return;
 
-    // El badge ahora muestra la cantidad de Nuevos Leads
-    if (summary.newLeadsCount > 0) {
-      console.log(`[Background] Configurando badge: ${summary.newLeadsCount} leads nuevos`);
-      chrome.action.setBadgeText({ text: String(summary.newLeadsCount) });
-      chrome.action.setBadgeBackgroundColor({ color: '#EF4444' }); // Rojo para nuevos leads
-    } else {
-      console.log('[Background] Sin leads nuevos, limpiando badge');
-      chrome.action.setBadgeText({ text: '' });
-    }
+    const stored = await chrome.storage.local.get(['lastOverdueNotify']);
 
-    // Persistir datos para la UI y detectar cambios
-    const stored = await chrome.storage.local.get(['taskAlerts', 'lastNewLeadsCount', 'lastOverdueNotify']);
-    
     chrome.storage.local.set({
       taskAlerts: {
         overdue: summary.overdueCount,
@@ -36,23 +29,9 @@ async function updateBadge() {
         upcoming: summary.upcomingCount,
         total: summary.total,
       },
-      lastNewLeadsCount: summary.newLeadsCount
     });
 
-    // Notificación de nuevos leads si el conteo aumentó
-    const prevLeadsCount = stored.lastNewLeadsCount || 0;
-    if (summary.newLeadsCount > prevLeadsCount) {
-      console.log('[Background] Disparando notificacion de nuevos leads');
-      chrome.notifications.create('new-leads', {
-        type: 'basic',
-        iconUrl: 'icons/icon128.png',
-        title: '¡Nuevos Leads Recibidos!',
-        message: `Tienes ${summary.newLeadsCount} lead(s) en estado Nuevo esperando gestión.`,
-        priority: 2,
-      });
-    }
-
-    // Mantener también la notificación de tareas vencidas (una vez al día)
+    // Notificación de tareas vencidas (una vez al día)
     if (summary.overdueCount > 0) {
       const today = new Date().toISOString().slice(0, 10);
       if (stored.lastOverdueNotify !== today) {
@@ -68,31 +47,44 @@ async function updateBadge() {
       }
     }
   } catch (error) {
-    console.error('[Background] Error en updateBadge:', error);
-    chrome.notifications.create('test-error', {
-      type: 'basic',
-      iconUrl: 'icons/icon128.png',
-      title: 'Error de Background',
-      message: `Error al cargar: ${error instanceof Error ? error.message : String(error)}`,
-      priority: 2,
-    });
+    console.error('[Background] Error en updateTaskAlerts:', error);
   }
 }
 
 chrome.alarms.clear('check-tasks', () => {
   chrome.alarms.create('check-tasks', { periodInMinutes: 5 });
 });
-void updateBadge();
+
+void updateTaskAlerts();
+void restoreLeadAlertBadge();
+void startLeadAlertsRuntime();
+
+chrome.runtime.onStartup.addListener(() => {
+  void restoreLeadAlertBadge();
+  void startLeadAlertsRuntime();
+});
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (isReconcileAlarm(alarm.name)) {
+    await reconcileLeadAlerts();
+    return;
+  }
+
   if (alarm.name === 'check-tasks') {
-    await updateBadge();
+    await updateTaskAlerts();
     try {
       chrome.storage.local.set({ hasScheduledEmails: await hasPendingScheduledEmails() });
     } catch {
       // noop
     }
   }
+});
+
+// Abrir la extension desde la notificacion nativa.
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (!notificationId.startsWith('lead-alert-')) return;
+  void markLeadAlertsAsSeen();
+  chrome.notifications.clear(notificationId);
 });
 
 async function abrirWhatsAppWeb(numero: string, mensaje: string) {
@@ -145,6 +137,16 @@ async function abrirWhatsAppWeb(numero: string, mensaje: string) {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "LEAD_ALERTS_MARK_SEEN") {
+    void markLeadAlertsAsSeen();
+    return false;
+  }
+
+  if (request.type === "LEAD_ALERTS_RESTART") {
+    void startLeadAlertsRuntime();
+    return false;
+  }
+
   if (request.type === "OPEN_WHATSAPP_WEB") {
     abrirWhatsAppWeb(request.payload.phone, request.payload.message)
       .then((result) => {
