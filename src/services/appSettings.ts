@@ -8,15 +8,33 @@ export interface AppPreferences {
   visibleCols: ColumnDef[];
 }
 
+/**
+ * Fusiona las columnas guardadas con el catalogo actual.
+ *
+ * Antes esto iteraba solo sobre las guardadas, asi que toda columna nueva
+ * que se agregara al catalogo quedaba invisible para siempre en cuentas
+ * existentes. Ahora se respeta el orden y la visibilidad elegidos por el
+ * usuario, y se agregan al final las columnas que todavia no conocia.
+ */
 function mergeVisibleColumns(defaultColumns: ColumnDef[], storedColumns: AppSettings['visibleCols']): ColumnDef[] {
   if (!storedColumns?.length) {
     return defaultColumns;
   }
 
-  return storedColumns.map((column) => {
-    const defaultColumn = defaultColumns.find((candidate) => candidate.key === column.key);
-    return defaultColumn ? { ...defaultColumn, visible: column.visible } : column;
-  });
+  const knownKeys = new Set(defaultColumns.map((column) => column.key));
+  const storedKeys = new Set(storedColumns.map((column) => column.key));
+
+  const preserved = storedColumns
+    // Descarta columnas que ya no existen en el catalogo.
+    .filter((column) => knownKeys.has(column.key))
+    .map((column) => {
+      const defaultColumn = defaultColumns.find((candidate) => candidate.key === column.key)!;
+      return { ...defaultColumn, visible: column.visible };
+    });
+
+  const added = defaultColumns.filter((column) => !storedKeys.has(column.key));
+
+  return [...preserved, ...added];
 }
 
 export async function loadAppPreferences(defaultColumns: ColumnDef[]): Promise<AppPreferences> {

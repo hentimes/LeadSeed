@@ -11,19 +11,9 @@ import { useLeadAlerts } from './hooks/useLeadAlerts';
 import LoginPage from './pages/LoginPage';
 import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
 import { loadAppPreferences, syncSettingsToChromeStorage, updateStoredSettings } from './services/appSettings';
+import { DEFAULT_LEAD_COLUMNS } from './config/leadColumns';
 import { loadPendingTaskCount, processScheduledEmails, purgeDeletedLeads } from './services/appMaintenance';
 
-const DEFAULT_COLUMNS: ColumnDef[] = [
-  { key: 'name', label: 'Nombre', visible: true },
-  { key: 'phone', label: 'Teléfono', visible: true },
-  { key: 'email', label: 'Email', visible: true },
-  { key: 'company', label: 'Empresa', visible: true },
-  { key: 'rut', label: 'RUT', visible: true },
-  { key: 'createdAt', label: 'Ingreso', visible: true },
-  { key: 'lists', label: 'Listas', visible: true },
-  { key: 'status', label: 'Estado', visible: true },
-  { key: 'score', label: 'Score', visible: false },
-];
 
 export default function App() {
   const { session, profile, loading: authLoading, hasFeature, isAdmin } = useAuth();
@@ -32,7 +22,7 @@ export default function App() {
   const [compactMode, setCompactMode] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [taskCount, setTaskCount] = useState(0);
-  const [visibleCols, setVisibleCols] = useState<ColumnDef[]>(DEFAULT_COLUMNS);
+  const [visibleCols, setVisibleCols] = useState<ColumnDef[]>(DEFAULT_LEAD_COLUMNS);
   const [highlightTemplate, setHighlightTemplate] = useState<{ type: 'whatsapp' | 'email' | 'call'; id: number } | null>(null);
   const { alerts: leadAlerts, dismissAlert: dismissLeadAlert } = useLeadAlerts();
 
@@ -57,7 +47,7 @@ export default function App() {
 
   const initializeShell = useCallback(async () => {
     try {
-      const settings = await loadAppPreferences(DEFAULT_COLUMNS);
+      const settings = await loadAppPreferences(DEFAULT_LEAD_COLUMNS);
       setCompactMode(settings.compactMode);
       setDarkMode(settings.darkMode);
       document.documentElement.classList.toggle('dark', settings.darkMode);

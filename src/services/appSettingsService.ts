@@ -4,6 +4,7 @@ import {
   updateProfileSettingsRow,
 } from '../repositories/settingsRepository';
 import type { AppSettings } from '../types';
+import { DEFAULT_LEAD_COLUMNS } from '../config/leadColumns';
 
 // Inicializar settings por defecto
 export async function getSettings(): Promise<AppSettings> {
@@ -17,12 +18,7 @@ export async function getSettings(): Promise<AppSettings> {
     exportFormat: 'excel',
     compactMode: false,
     darkMode: false,
-    visibleCols: [
-      { key: 'name', label: 'Nombre', visible: true },
-      { key: 'phone', label: 'Teléfono', visible: true },
-      { key: 'email', label: 'Correo', visible: true },
-      { key: 'status', label: 'Estado', visible: true },
-    ],
+    visibleCols: DEFAULT_LEAD_COLUMNS,
     dailyGoalWhatsApp: 50,
     dailyGoalEmail: 20,
     dailyGoalCalls: 10,
