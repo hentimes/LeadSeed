@@ -5,8 +5,6 @@ import {
 } from '../repositories/settingsRepository';
 import type { AppSettings } from '../types';
 
-export const db = {} as any; // Mock para evitar que rompan imports perdidos temporalmente
-
 // Inicializar settings por defecto
 export async function getSettings(): Promise<AppSettings> {
   const defaultSettings: AppSettings = {
