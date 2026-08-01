@@ -40,7 +40,7 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
       categorizedRoutes['Principal'].push(route);
     } else if (['chat', 'community'].includes(route.page)) {
       categorizedRoutes['Colaboración'].push(route);
-    } else if (['pipeline', 'history', 'tasks'].includes(route.page)) {
+    } else if (['pipeline', 'history', 'tasks', 'agenda'].includes(route.page)) {
       categorizedRoutes['Analítica'].push(route);
     } else if (['admin'].includes(route.page)) {
       categorizedRoutes['Sistema'].push(route);

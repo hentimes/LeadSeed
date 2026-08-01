@@ -26,6 +26,10 @@ function openAgendaAppointment(appointmentId?: string): void {
   window.location.hash = `#agenda?appointment=${appointmentId}`;
 }
 
+function openMeetLink(meetLink: string): void {
+  window.open(meetLink, '_blank', 'noopener,noreferrer');
+}
+
 export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }: Props) {
   const detail = useLeadDetail(lead);
 
@@ -274,26 +278,48 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
           <div>
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cita / Agenda</h3>
             {!detail.canCreateAppointment ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-[6px] p-2.5 flex justify-between items-center">
-                <div>
-                  <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">
-                    {`${detail.visibleAppointmentStatus || ''}`}
-                  </p>
-                  <p className="text-[12px] font-semibold text-slate-800">
-                    {formatAppointmentDate(`${detail.visibleAppointmentAt || ''}`)}
-                  </p>
+              <div className="bg-slate-50 border border-slate-200 rounded-[6px] p-2.5 space-y-2">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">
+                      {`${detail.visibleAppointmentStatus || ''}`}
+                    </p>
+                    <p className="text-[12px] font-semibold text-slate-800">
+                      {formatAppointmentDate(`${detail.visibleAppointmentAt || ''}`)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {detail.visibleMeetLink && (
+                      <button
+                        onClick={() => openMeetLink(detail.visibleMeetLink as string)}
+                        className="px-3 py-1.5 bg-[#F2EEFF] border border-[#E0D4FF] rounded-[4px] text-[11px] font-bold text-[#6C4CF6] shadow-sm hover:bg-[#E0D4FF] transition-colors"
+                      >
+                        Abrir Meet
+                      </button>
+                    )}
+                    {onNavigate && (
+                      <button
+                        onClick={() => {
+                          openAgendaAppointment(detail.activeAppointment?.id);
+                          onClose();
+                          onNavigate('agenda');
+                        }}
+                        className="px-3 py-1.5 bg-white border border-slate-200 rounded-[4px] text-[11px] font-bold text-slate-700 shadow-sm hover:bg-slate-100 transition-colors"
+                      >
+                        Ver cita
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {onNavigate && (
-                  <button
-                    onClick={() => {
-                      openAgendaAppointment(detail.activeAppointment?.id);
-                      onClose();
-                      onNavigate('agenda');
-                    }}
-                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-[4px] text-[11px] font-bold text-slate-700 shadow-sm hover:bg-slate-100 transition-colors"
-                  >
-                    Ver cita
-                  </button>
+                {detail.googleSyncBadgeLabel && (
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded shrink-0">
+                      {detail.googleSyncBadgeLabel}
+                    </span>
+                    {detail.googlePendingSummary && (
+                      <p className="text-[10px] leading-4 text-amber-800">{detail.googlePendingSummary}</p>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
