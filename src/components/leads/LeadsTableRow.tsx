@@ -188,7 +188,7 @@ const LeadsTableRow = ({
       <td className={cellPad}>{checkboxBox}</td>
 
       {columns.map((column) => (
-        <td key={column.key} className={`${cellPad} text-[12px] min-w-0`}>
+        <td key={column.key} className={`${cellPad} text-[12px] overflow-hidden`}>
           {column.key === 'name' ? nameCell : (
             <LeadCell columnKey={column.key} ctx={{ lead, listsMap, compactMode, isSelected, getScore }} />
           )}

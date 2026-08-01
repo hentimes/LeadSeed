@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ColumnDef } from '../components/ColumnSelector';
 import { LEAD_COLUMN_BY_KEY } from '../config/leadColumns';
 
-/** Ancho que ocupan checkbox de seleccion y acciones de la fila. */
-const CHROME_WIDTH = 96;
+/** Ancho real del cromo de la tabla: checkbox (32) + acciones (92). */
+const CHROME_WIDTH = 124;
 
 /**
  * Oculta columnas de forma progresiva segun el ancho disponible.
@@ -17,6 +17,8 @@ const CHROME_WIDTH = 96;
 export function useResponsiveColumns(columns: ColumnDef[]) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [availableWidth, setAvailableWidth] = useState(0);
+  /** Desplazamiento del "ventaneo" de columnas al usar las flechas. */
+  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
     const node = containerRef.current;
@@ -37,33 +39,53 @@ export function useResponsiveColumns(columns: ColumnDef[]) {
 
   const selectedColumns = useMemo(() => columns.filter((column) => column.visible), [columns]);
 
+  const fixedColumns = useMemo(
+    () => selectedColumns.filter((column) => LEAD_COLUMN_BY_KEY.get(column.key)?.fixed),
+    [selectedColumns],
+  );
+
+  /** Columnas que rotan con las flechas; las fijas quedan siempre ancladas. */
+  const scrollableColumns = useMemo(
+    () => selectedColumns.filter((column) => !LEAD_COLUMN_BY_KEY.get(column.key)?.fixed),
+    [selectedColumns],
+  );
+
   const renderedColumns = useMemo(() => {
     if (availableWidth <= 0) return selectedColumns;
 
+    const widthOf = (column: ColumnDef) => LEAD_COLUMN_BY_KEY.get(column.key)?.width ?? 110;
+
     let budget = availableWidth - CHROME_WIDTH;
-    const fitting: ColumnDef[] = [];
+    for (const column of fixedColumns) budget -= widthOf(column);
 
-    for (const column of selectedColumns) {
-      const definition = LEAD_COLUMN_BY_KEY.get(column.key);
-      const width = definition?.width ?? 110;
-
-      // La columna identidad siempre se muestra, aunque no quede espacio.
-      if (definition?.fixed) {
-        fitting.push(column);
-        budget -= width;
-        continue;
-      }
-
-      if (budget >= width) {
-        fitting.push(column);
-        budget -= width;
-      }
+    const windowed: ColumnDef[] = [];
+    for (const column of scrollableColumns.slice(offset)) {
+      const width = widthOf(column);
+      if (budget < width) break;
+      windowed.push(column);
+      budget -= width;
     }
 
-    return fitting;
-  }, [availableWidth, selectedColumns]);
+    return [...fixedColumns, ...windowed];
+  }, [availableWidth, fixedColumns, offset, scrollableColumns, selectedColumns]);
 
-  const hiddenByWidth = selectedColumns.length - renderedColumns.length;
+  const shownScrollable = renderedColumns.length - fixedColumns.length;
+  const hiddenCount = scrollableColumns.length - shownScrollable;
 
-  return { containerRef, renderedColumns, hiddenByWidth };
+  // Si se agranda el panel o se ocultan columnas, el offset puede quedar
+  // apuntando mas alla del final; se corrige para no dejar la tabla vacia.
+  const maxOffset = Math.max(0, scrollableColumns.length - shownScrollable);
+  useEffect(() => {
+    setOffset((current) => Math.min(current, maxOffset));
+  }, [maxOffset]);
+
+  return {
+    containerRef,
+    renderedColumns,
+    hiddenCount,
+    canScrollBack: offset > 0,
+    canScrollForward: offset < maxOffset,
+    scrollBack: () => setOffset((current) => Math.max(0, current - 1)),
+    scrollForward: () => setOffset((current) => Math.min(maxOffset, current + 1)),
+  };
 }

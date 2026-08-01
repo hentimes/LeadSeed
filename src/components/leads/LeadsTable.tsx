@@ -77,7 +77,8 @@ export default function LeadsTable({
 }: Props) {
   const sendCounts = useSendCounts();
   
-  const { containerRef, renderedColumns, hiddenByWidth } = useResponsiveColumns(visibleCols);
+  const { containerRef, renderedColumns, hiddenCount, canScrollBack, canScrollForward, scrollBack, scrollForward } =
+    useResponsiveColumns(visibleCols);
 
   const [dragColKey, setDragColKey] = useState<string | null>(null);
   const [dragOverColKey, setDragOverColKey] = useState<string | null>(null);
@@ -215,7 +216,7 @@ export default function LeadsTable({
       />
 
       <div ref={containerRef} className="card-standard overflow-x-auto w-full min-w-0">
-        <table className="w-full text-[13px] text-[#161A24]">
+        <table className="w-full table-fixed text-[13px] text-[#161A24]">
           <thead className="border-b border-[#E6EAF0] text-[#5B6475] bg-white">
             <tr>
               <th className={`w-8 ${headPad}`}>
@@ -259,7 +260,7 @@ export default function LeadsTable({
                       setDragOverColKey(null);
                     }}
                     onClick={sortField ? () => onSort(sortField) : undefined}
-                    style={{ minWidth: definition?.width }}
+                    style={{ width: definition?.width, maxWidth: definition?.width }}
                     className={`text-left ${headPad} font-medium select-none whitespace-nowrap ${
                       sortField ? 'cursor-pointer hover:bg-gray-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-50'
                     } ${isDragTarget ? 'bg-[#F2EEFF] border-l-2 border-l-[#6C4CF6]' : ''} ${dragColKey === column.key ? 'opacity-40' : ''}`}
@@ -273,10 +274,36 @@ export default function LeadsTable({
                 );
               })}
 
-              <th className={`w-[100px] min-w-[100px] ${headPad} text-right sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal`}>
-                <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">
-                  {hiddenByWidth > 0 ? `+${hiddenByWidth} col.` : `Pag. ${currentPage}/${pageCount}`}
-                </span>
+              <th className={`w-[92px] ${headPad} sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal`}>
+                <div className="flex items-center justify-end gap-0.5">
+                  {(canScrollBack || canScrollForward) ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={scrollBack}
+                        disabled={!canScrollBack}
+                        title="Ver columnas anteriores"
+                        className="w-5 h-5 flex items-center justify-center rounded-[4px] text-[#5B6475] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                      </button>
+                      {hiddenCount > 0 && (
+                        <span className="text-[10px] text-[#5B6475] font-medium tabular-nums">{hiddenCount}</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={scrollForward}
+                        disabled={!canScrollForward}
+                        title="Ver mas columnas"
+                        className="w-5 h-5 flex items-center justify-center rounded-[4px] text-[#5B6475] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
+                  )}
+                </div>
               </th>
             </tr>
           </thead>
