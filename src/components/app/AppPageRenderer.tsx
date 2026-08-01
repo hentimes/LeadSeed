@@ -103,7 +103,14 @@ export default function AppPageRenderer({
 
   switch (page) {
     case 'leads':
-      pageContent = <LeadsPage compactMode={compactMode} visibleCols={visibleCols} onNavigate={onNavigate} />;
+      pageContent = (
+        <LeadsPage
+          compactMode={compactMode}
+          visibleCols={visibleCols}
+          onColsChange={onColsChange}
+          onNavigate={onNavigate}
+        />
+      );
       break;
     case 'lists':
       pageContent = <ListsPage />;

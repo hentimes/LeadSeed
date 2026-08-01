@@ -111,8 +111,9 @@ export default function LeadsTable({
    * Mueve la columna arrastrada a la posicion de la soltada, operando sobre
    * la lista completa y no sobre la visible: el indice tiene que ser el real.
    */
-  const handleColumnDrop = (targetKey: string) => {
-    const sourceKey = dragColKey;
+  const handleColumnDrop = (targetKey: string, droppedKey?: string) => {
+    // El dataTransfer es la fuente confiable; el estado es solo respaldo.
+    const sourceKey = droppedKey || dragColKey;
     setDragColKey(null);
     setDragOverColKey(null);
     if (!sourceKey || sourceKey === targetKey) return;
@@ -237,7 +238,13 @@ export default function LeadsTable({
                   <th
                     key={column.key}
                     draggable={!definition?.fixed}
-                    onDragStart={() => setDragColKey(column.key)}
+                    onDragStart={(event) => {
+                      // setData es obligatorio: sin el, Chrome puede no
+                      // llegar a disparar el drop.
+                      event.dataTransfer.setData('text/plain', column.key);
+                      event.dataTransfer.effectAllowed = 'move';
+                      setDragColKey(column.key);
+                    }}
                     onDragOver={(event) => {
                       event.preventDefault();
                       setDragOverColKey(column.key);
@@ -245,7 +252,7 @@ export default function LeadsTable({
                     onDragLeave={() => setDragOverColKey((current) => (current === column.key ? null : current))}
                     onDrop={(event) => {
                       event.preventDefault();
-                      handleColumnDrop(column.key);
+                      handleColumnDrop(column.key, event.dataTransfer.getData('text/plain'));
                     }}
                     onDragEnd={() => {
                       setDragColKey(null);

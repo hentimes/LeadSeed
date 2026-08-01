@@ -222,7 +222,11 @@ export async function fetchLeadPageRows(userId: string, params: LeadPageQuery): 
     supabase.from('leads').select(LEAD_SELECT),
     userId,
     params,
-  ).order(column, { ascending }).range(from, to);
+    )
+    // nullsFirst false siempre: en DESC Postgres pone los NULL primero, lo
+    // que hacia flotar arriba los leads sin RUT o sin nombre.
+    .order(column, { ascending, nullsFirst: false })
+    .range(from, to);
 
   const filteredCountQuery = applyLeadPageFilters(
     supabase.from('leads').select('id', { count: 'exact', head: true }),
