@@ -1,11 +1,11 @@
-# Contrato de Integracion: planespro.cl -> MENSAJES
+# Contrato de Integracion: planespro.cl -> LeadSeed
 
 Fecha de actualizacion: 2026-07-17
 Estado: vigente
 
 ## 1. Objetivo
 
-Este documento fija el contrato minimo para que los formularios publicos de `planespro.cl` dejen de depender de Cloudflare `ppforms` para captura de leads y comiencen a escribir directamente en Supabase/MENSAJES.
+Este documento fija el contrato minimo para que los formularios publicos de `planespro.cl` dejen de depender de Cloudflare `ppforms` para captura de leads y comiencen a escribir directamente en Supabase/LeadSeed.
 
 No cubre aun agenda completa ni abandono de lead.
 
@@ -208,7 +208,7 @@ En formulario general, `capture_link_id` puede venir `null`.
 - manual/importado no entra a campaña por defecto
 - alertas de cruce entre ejecutivos si aplican a cualquier lead por coincidencia
 
-## 10. Gestion de links en MENSAJES
+## 10. Gestion de links en LeadSeed
 
 La gestion de links no debe hacerse con mutaciones directas desde UI sobre `capture_links`.
 
@@ -231,7 +231,7 @@ Reglas:
 
 ## 11. Siguiente paso operativo
 
-Para cerrar el ciclo visual dentro de MENSAJES falta:
+Para cerrar el ciclo visual dentro de LeadSeed falta:
 
 1. crear panel compacto de links de publicacion
 2. conectar el panel a las RPCs

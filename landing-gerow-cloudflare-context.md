@@ -2,16 +2,16 @@
 
 Fecha de auditoria: 2026-07-16
 Metodo: Protocolo CONTROL
-Estado: documento operativo para preparar la migracion progresiva a Supabase/MENSAJES
+Estado: documento operativo para preparar la migracion progresiva a Supabase/LeadSeed
 
 ## 1. Objetivo de este documento
 
-Este archivo deja trazabilidad clara de como funciona hoy el dominio de captura de leads de `planespro.cl`, tanto en frontend como en backend Cloudflare, para integrarlo despues con `MENSAJES` y con la futura app movil.
+Este archivo deja trazabilidad clara de como funciona hoy el dominio de captura de leads de `planespro.cl`, tanto en frontend como en backend Cloudflare, para integrarlo despues con `LeadSeed` y con la futura app movil.
 
 La meta arquitectonica confirmada es:
 
 - `planespro.cl` sigue siendo el origen del trafico y del formulario publico.
-- `MENSAJES` sera el CRM/app destino para operar esos leads.
+- `LeadSeed` sera el CRM/app destino para operar esos leads.
 - La migracion del backend sera progresiva desde Cloudflare a Supabase.
 - El primer corte correcto es el dominio `formulario + disponibilidad + agenda + archivos + calendar`, no todo el backend de una sola vez.
 
@@ -34,7 +34,7 @@ La frontera publica real hoy es:
 - `POST /api/form/leads`
 - `POST /api/form/leads/abandoned`
 
-La integracion futura con `MENSAJES` debe respetar ese contrato primero, y luego reemplazar internamente su implementacion en Supabase.
+La integracion futura con `LeadSeed` debe respetar ese contrato primero, y luego reemplazar internamente su implementacion en Supabase.
 
 ## 3. Estado Cloudflare validado
 
@@ -241,7 +241,7 @@ Ejemplos de eventos:
 - sync con calendar
 - borrado
 
-Este historial es importante para `MENSAJES`, porque el CRM futuro no deberia perder trazabilidad operacional al migrar.
+Este historial es importante para `LeadSeed`, porque el CRM futuro no deberia perder trazabilidad operacional al migrar.
 
 ### 8.3 `advisor_calendar_connections`
 
@@ -429,19 +429,19 @@ Aunque por detras ya apunte a Supabase Edge Functions o a un puente transitorio.
 
 Ese contrato estable es la clave para migrar sin romper `planespro.cl`.
 
-## 13. Relacion con `MENSAJES`
+## 13. Relacion con `LeadSeed`
 
 Flujo objetivo confirmado:
 
 1. el usuario entra a `planespro.cl`
 2. completa el formulario
 3. el backend en Supabase crea el lead y, si aplica, la cita y el archivo
-4. `MENSAJES` consume ese lead como sistema operativo de trabajo
+4. `LeadSeed` consume ese lead como sistema operativo de trabajo
 5. luego la misma base alimenta extension y app movil
 
 Eso implica que Supabase debe transformarse en la source of truth del dominio `lead capture + agenda`.
 
-`MENSAJES` no deberia seguir dependiendo de Cloudflare para leer leads nuevos una vez hecho el corte.
+`LeadSeed` no deberia seguir dependiendo de Cloudflare para leer leads nuevos una vez hecho el corte.
 
 ## 14. Riesgos y observaciones bajo CONTROL
 
@@ -479,7 +479,7 @@ El siguiente paso correcto es:
 1. modelar en Supabase el dominio equivalente a `ppforms`
 2. definir funciones/Edge Functions compatibles con las rutas actuales
 3. mover primero disponibilidad, submit, archivos y appointments
-4. conectar `MENSAJES` a ese nuevo dominio como consumidor nativo
+4. conectar `LeadSeed` a ese nuevo dominio como consumidor nativo
 5. solo despues cambiar el `workerUrl` del frontend publico
 
 ## 16. Estado CONTROL
@@ -489,7 +489,7 @@ El siguiente paso correcto es:
 - `hecho`: identificacion del contrato publico actual del formulario
 - `hecho`: identificacion del modelo de datos funcional de `ppforms`
 - `pendiente estructural`: definir el esquema equivalente en Supabase
-- `pendiente estructural`: definir el contrato exacto de integracion con `MENSAJES`
+- `pendiente estructural`: definir el contrato exacto de integracion con `LeadSeed`
 - `pendiente de deploy`: reemplazo progresivo de rutas Cloudflare por Supabase
 - `pendiente de validacion real`: smoke test del flujo publico una vez se haga el primer corte
 
@@ -499,7 +499,7 @@ Decision recomendada:
 
 - mantener `planespro.cl` como frontend origen
 - usar Supabase como nuevo backend source of truth del dominio formulario/agenda
-- usar `MENSAJES` como CRM/app para operar ese dominio
+- usar `LeadSeed` como CRM/app para operar ese dominio
 - retirar `ppforms` por etapas, no por parche
 
 Esta es la frontera mas limpia y coherente con el plan actual.

@@ -1,4 +1,4 @@
-# Roadmap Operativo: PlanesPro CRM / MENSAJES
+# Roadmap Operativo: PlanesPro CRM / LeadSeed
 
 Fecha de control: 2026-07-22
 Estado ejecutivo: base CRM, captura publica, links `pb`, agenda base, ownership por owner, realtime admin y backend del formulario ya quedaron migrados a Supabase en corte tecnico. La escalabilidad de la bandeja ya fue endurecida con indices, paginacion server-side y RPC de olvidados. El dashboard ya fue migrado a snapshot agregado server-side. Aplicando CONTROL, Cloudflare ya no ejecuta backend del formulario y queda reducido a hosting estatico y superficies editoriales de blog/noticias. El arranque del sidebar ya fue re-endurecido para quitar el splash bloqueante y el falso vacio inicial. El frente nuevo mas sensible es correo multi-canal: la arquitectura `gmail + resend` ya existe, pero Gmail como canal de envio efectivo aun sigue en validacion funcional final.
@@ -7,7 +7,7 @@ Este roadmap esta dividido en secciones, capitulos y tareas para que cualquier I
 
 Regla de avance vigente:
 
-- no se abre como foco principal `tareas`, `plantillas`, `grupos`, `blog/noticias` ni nuevos modulos de producto hasta cerrar la validacion end-to-end real de Google Calendar / Google Meet sobre `planespro.cl`, `/pb` y MENSAJES
+- no se abre como foco principal `tareas`, `plantillas`, `grupos`, `blog/noticias` ni nuevos modulos de producto hasta cerrar la validacion end-to-end real de Google Calendar / Google Meet sobre `planespro.cl`, `/pb` y LeadSeed
 - esa validacion es la puerta de salida formal del bloque actual de formulario + agenda + ownership
 - en la pasada de CONTROL del lunes 20 de julio de 2026, 20:20 CLT, ya quedo evidencia real de `appointment_participants` con `invitation_status = synced` y `google_synced_at`; la fase sigue `parcial` hasta completar el checklist completo
 
@@ -48,7 +48,7 @@ Regla de avance vigente:
 - [COMPLETADO] Registrar en CONTROL que toda UI debe ser compacta, sidebar-first y mobile-first.
 - [COMPLETADO] Registrar prohibicion de usar emoticones o emojis.
 - [COMPLETADO] Registrar prohibicion de crecer con cajas blancas genericas de bordes redondeados como patron por defecto.
-- [COMPLETADO] Registrar criterio visual: seguir el lenguaje compacto de MENSAJES.
+- [COMPLETADO] Registrar criterio visual: seguir el lenguaje compacto de LeadSeed.
 - [PENDIENTE] Auditar todas las pantallas existentes contra estas reglas, no solo componentes nuevos.
 
 ---
@@ -225,11 +225,11 @@ Regla de avance vigente:
 ### Capitulo 4.4 - Edicion de lead capturado
 
 - [COMPLETADO] Evitar perdida de metadata del formulario al editar campos como empleador o RUT.
-- [COMPLETADO] Formatear y validar RUT desde el sidebar de MENSAJES.
+- [COMPLETADO] Formatear y validar RUT desde el sidebar de LeadSeed.
 - [COMPLETADO] Separar visualmente adjunto PDF y comentario en la ficha del lead.
 - [COMPLETADO] Mostrar fecha de ingreso.
 - [COMPLETADO] Evitar mostrar fecha de actualizacion como dato redundante si no hubo actualizacion real.
-- [PARCIAL] El `2026-07-19` el usuario valido con prueba real que la captura general de `planespro.cl` vuelve a entrar en MENSAJES; siguen pendientes validaciones reales equivalentes para `pb`, carga manual e importacion.
+- [PARCIAL] El `2026-07-19` el usuario valido con prueba real que la captura general de `planespro.cl` vuelve a entrar en LeadSeed; siguen pendientes validaciones reales equivalentes para `pb`, carga manual e importacion.
 
 ---
 
@@ -305,11 +305,11 @@ Regla de avance vigente:
 
 - [COMPLETADO] `landing-gerow` ya tiene logica de disponibilidad publica en Cloudflare auditada como referencia legacy.
 - [COMPLETADO] La disponibilidad actual considera reglas base, bloqueos manuales, citas CRM y Google Calendar desde Supabase.
-- [COMPLETADO] Auditar codigo actual de Cloudflare y MENSAJES antes de crear nuevas tablas.
+- [COMPLETADO] Auditar codigo actual de Cloudflare y LeadSeed antes de crear nuevas tablas.
 - [COMPLETADO] Confirmar que Supabase remoto ya tenia `appointments`, `user_availability` y `user_availability_overrides`.
 - [COMPLETADO] Confirmar que la agenda remota previa solo tenia `get_available_slots(p_user_id, p_start_date, p_days)`, sin resolucion por `ref`.
 - [COMPLETADO] Confirmar que `submit_planespro_public_lead` guardaba `scheduled_at` y metadata, pero no creaba fila en `appointments`.
-- [COMPLETADO] MENSAJES ya tiene fundacion Supabase de agenda, frontend publico conectado y UI interna compacta.
+- [COMPLETADO] LeadSeed ya tiene fundacion Supabase de agenda, frontend publico conectado y UI interna compacta.
 
 ### Capitulo 7.2 - Modelo Supabase de agenda
 
@@ -326,14 +326,14 @@ Regla de avance vigente:
 - [COMPLETADO] Actualizar `submit_planespro_public_lead(...)` para crear appointment cuando el formulario trae cita.
 - [COMPLETADO] Crear migracion `026_planespro_agenda_public_rpc_volatility_fix.sql` para que PostgREST ejecute availability sin transaccion read-only.
 - [COMPLETADO] Definir RLS base para settings, blocks y conexiones antes de exponer UI interna.
-- [COMPLETADO] Crear RPC autenticada de gestion de disponibilidad y bloqueos del usuario para MENSAJES.
+- [COMPLETADO] Crear RPC autenticada de gestion de disponibilidad y bloqueos del usuario para LeadSeed.
 - [COMPLETADO] Crear DTOs frontend para el contrato interno de agenda.
 
 ### Capitulo 7.3 - Disponibilidad publica
 
 - [COMPLETADO] Resolver contexto de booking por `capture_ref` cuando existe link `pb`.
 - [COMPLETADO] Resolver disponibilidad general contra cuenta central `planespro.cl@gmail.com` o fallback admin.
-- [COMPLETADO] Combinar disponibilidad base, bloqueos manuales y citas MENSAJES.
+- [COMPLETADO] Combinar disponibilidad base, bloqueos manuales y citas LeadSeed.
 - [COMPLETADO] Evitar doble reserva del mismo inicio activo mediante indice unico.
 - [COMPLETADO] Devolver slots con contrato compatible para `planespro.cl`: `slots` y `slot_grid`.
 - [COMPLETADO] Mantener dominio visible branded mediante `https://form.planespro.cl/api/public/availability`.
@@ -346,24 +346,24 @@ Regla de avance vigente:
 - [COMPLETADO] Insertar cita al enviar formulario con fecha/hora desde `submit_planespro_public_lead`.
 - [COMPLETADO] Asociar cita con lead, owner, capture link y source channel.
 - [COMPLETADO] Bloquear hora inmediatamente despues de crear cita mediante fila en `appointments` e indice activo.
-- [COMPLETADO] Permitir reprogramar cita desde MENSAJES actualizando Supabase primero.
+- [COMPLETADO] Permitir reprogramar cita desde LeadSeed actualizando Supabase primero.
 - [COMPLETADO] Replicar reprogramacion hacia Google Calendar cuando exista `google_event_id`.
-- [COMPLETADO] Permitir cancelar cita desde MENSAJES actualizando Supabase primero.
+- [COMPLETADO] Permitir cancelar cita desde LeadSeed actualizando Supabase primero.
 - [COMPLETADO] Replicar cancelacion hacia Google Calendar cuando exista `google_event_id`.
-- [COMPLETADO] Permitir crear una cita desde el detalle del cliente en MENSAJES.
+- [COMPLETADO] Permitir crear una cita desde el detalle del cliente en LeadSeed.
 - [COMPLETADO] Replicar la cita creada desde detalle hacia Google Calendar/Meet cuando exista conexion Google.
 - [COMPLETADO] Liberar slot en disponibilidad publica al pasar cita a `cancelada` o `rechazada`.
 - [COMPLETADO] Ampliar estados: pendiente, agendada, confirmada, tentativa, cancelada, rechazada, completada, no_asistio.
 - [COMPLETADO] Crear historial/auditoria visible de cambios de cita.
 - [COMPLETADO] Definir reglas de invitacion al lead: el cliente con email valido queda como participante automatico de la cita.
-- [COMPLETADO] Permitir agregar participantes a una cita desde MENSAJES.
-- [COMPLETADO] Permitir quitar participantes de una cita desde MENSAJES.
+- [COMPLETADO] Permitir agregar participantes a una cita desde LeadSeed.
+- [COMPLETADO] Permitir quitar participantes de una cita desde LeadSeed.
 - [COMPLETADO] Replicar participantes hacia Google Calendar como invitados del evento cuando exista `google_event_id`.
 - [COMPLETADO] Agregar automaticamente el lead capturado como participante `lead` para que reciba invitacion y recordatorios de Google Calendar.
-- [COMPLETADO] Mantener accion explicita solo para participantes terceros agregados por el asesor desde MENSAJES.
+- [COMPLETADO] Mantener accion explicita solo para participantes terceros agregados por el asesor desde LeadSeed.
 - [COMPLETADO] Definir copy operativo cuando Google falla pero Supabase ya bloqueo la cita.
 
-### Capitulo 7.5 - UI de agenda en MENSAJES
+### Capitulo 7.5 - UI de agenda en LeadSeed
 
 - [COMPLETADO] Crear vista compacta inicial de agenda para sidebar dentro de Ajustes.
 - [COMPLETADO] Separar Agenda operativa como seccion propia fuera de Ajustes.
@@ -431,8 +431,8 @@ Regla de avance vigente:
 - [COMPLETADO] Sincronizar ocupacion real desde Google Calendar usando FreeBusy sin leer detalles privados de eventos.
 - [COMPLETADO] Crear evento Google Calendar desde cita Supabase como replica externa no bloqueante.
 - [COMPLETADO] Guardar link Meet cuando Google lo entregue en la respuesta de `Events Insert`.
-- [COMPLETADO] Actualizar evento Google al reprogramar desde MENSAJES.
-- [COMPLETADO] Cancelar/eliminar evento Google al cancelar desde MENSAJES.
+- [COMPLETADO] Actualizar evento Google al reprogramar desde LeadSeed.
+- [COMPLETADO] Cancelar/eliminar evento Google al cancelar desde LeadSeed.
 - [COMPLETADO] Exponer en UI compacta estados Google mas fieles al backend:
   - `LeadDetail` y `AgendaPage` ya distinguen `pending`, `error`, `skipped` y `synced`
   - la agenda ya muestra `invitationStatus` de participantes
@@ -445,9 +445,9 @@ Regla de avance vigente:
 - [PENDIENTE] Validar end-to-end real como puerta de salida de fase:
   - `planespro.cl` crea lead + cita + evento Google/Meet del owner `general`
   - `/pb` crea lead + cita + evento Google/Meet del owner del `capture_ref`
-  - reprogramar desde MENSAJES actualiza Google Calendar
-  - cancelar desde MENSAJES libera slot y cancela/elimina evento Google
-  - participantes agregados o removidos desde MENSAJES se replican en Google Calendar
+  - reprogramar desde LeadSeed actualiza Google Calendar
+  - cancelar desde LeadSeed libera slot y cancela/elimina evento Google
+  - participantes agregados o removidos desde LeadSeed se replican en Google Calendar
 
 ---
 
@@ -504,14 +504,14 @@ Regla de avance vigente:
 - [COMPLETADO] Identificar Blog actual: Worker `ppblog`, D1 `ppblog_db`, R2 `ppblog-uploads`, rutas publicas `blog.planespro.cl` y frontend `/blog/` + `/blog/:slug/`.
 - [COMPLETADO] Identificar Noticias actual: Worker `ppnews`, D1 `ppnews_db`, R2 `ppnews-thumbnails`, cron de recoleccion, rutas publicas `news.planespro.cl` y frontend de home/noticias.
 - [COMPLETADO] Identificar dependencia admin historica: ambos Workers validan admin via `ppusers` / `admin.planespro.cl`.
-- [PENDIENTE] Decidir si dashboard editorial queda federado temporalmente o migra completo a MENSAJES.
+- [PENDIENTE] Decidir si dashboard editorial queda federado temporalmente o migra completo a LeadSeed.
 
 ### Capitulo 9.2 - Migracion futura
 
 - [PENDIENTE] Definir tablas Supabase para posts, categorias, tags, autores, media, estados, SEO y publicaciones.
 - [PENDIENTE] Definir tablas Supabase para noticias, fuentes, ejecuciones de recoleccion, estados editoriales, thumbnails y snapshots/cache publico.
 - [PENDIENTE] Crear Edge Functions Supabase o RPCs para API publica de blog/noticias manteniendo contratos compatibles con `js/blog.js` y `js/index-news-blog.js`.
-- [PENDIENTE] Crear admin editorial compacto si se integra en MENSAJES, con permisos superadmin/editor/helper.
+- [PENDIENTE] Crear admin editorial compacto si se integra en LeadSeed, con permisos superadmin/editor/helper.
 - [PENDIENTE] Mantener SEO y URLs existentes de `planespro.cl`.
 - [PENDIENTE] Migrar media desde R2 a Supabase Storage o definir una etapa puente si se mantiene R2 temporalmente.
 - [PENDIENTE] Migrar datos desde D1 (`posts`, `categories`, `tags`, `post_tags`, `news_items`, `news_sources`, `news_runs`, `cache_snapshots`) hacia Supabase.
@@ -581,23 +581,23 @@ Regla de avance vigente:
 
 Estamos dentro de Fase 6, en el cierre del ciclo completo de citas. Lo completado permite que:
 
-- el formulario general de `planespro.cl` cree leads en MENSAJES para la cuenta central
+- el formulario general de `planespro.cl` cree leads en LeadSeed para la cuenta central
 - los links `pb` existan como canal separado por asesor y como formulario independiente para ejecutivos externos
 - cada usuario gestione links de publicacion en primer corte
 - los PDFs se suban, se vean y se descarguen con nombres trazables en leads nuevos
-- la arquitectura de MENSAJES ya no siga creciendo desde UI acoplada a Supabase
+- la arquitectura de LeadSeed ya no siga creciendo desde UI acoplada a Supabase
 - la disponibilidad publica consulte Supabase detras de `form.planespro.cl`
 - una cita tomada desde formulario bloquee el slot de inmediato en Supabase
 - Google Calendar aporte bloqueos externos por FreeBusy solo cuando el usuario sincroniza
 - una cita creada en Supabase intente replicarse a Google Calendar y Meet sin bloquear la captura
-- MENSAJES muestre Meet y avisos proximos cuando esos datos existen
+- LeadSeed muestre Meet y avisos proximos cuando esos datos existen
 - un asesor cree una cita nueva desde el detalle del cliente, bloqueando el horario en Supabase e intentando crear evento Google/Meet
-- el `2026-07-19` quedo validado con prueba real de usuario que la captura general desde `planespro.cl` vuelve a entrar en MENSAJES
+- el `2026-07-19` quedo validado con prueba real de usuario que la captura general desde `planespro.cl` vuelve a entrar en LeadSeed
 - el `2026-07-19` quedo validado tecnicamente que la disponibilidad branded responde desde Supabase tanto para canal `general` como para canal `pb`
 - el `2026-07-19` quedo corregido un bug de frontend `pb` que truncaba `ref_code` largos y provocaba fallback silencioso a la agenda general
 - el `2026-07-19` quedo validado con comparacion directa que `general` y `pb` ya exponen bloqueos distintos por owner
 - el `2026-07-19` quedo validado con submit productivo real que un lead `pb` nuevo y su cita ya se asignan al owner del link, con `capture_link_id` correcto y Google Calendar sincronizado
-- el `2026-07-19` quedo corregido en MENSAJES que la bandeja principal lea solo leads propios y no todos los leads visibles por policy admin
+- el `2026-07-19` quedo corregido en LeadSeed que la bandeja principal lea solo leads propios y no todos los leads visibles por policy admin
 - el `2026-07-19` quedo cerrado el incidente de clientes `pb` cacheados:
   - `ppforms` recupera el `ref` completo desde `referer` para disponibilidad publica
   - Supabase recupera el `ref` completo desde `source_url` para ownership de lead y cita aunque el body venga truncado
@@ -627,11 +627,11 @@ La siguiente fase concreta es:
    - si no esta abierta, solo debe subir el badge del usuario observado
 3. Validar manualmente desde navegador normal que el formulario principal de `planespro.cl` no hereda ownership PB ni muestra bloqueos de otro owner.
 4. Validar manualmente desde `/pb` que un lead nuevo y su cita siguen cayendo en la bandeja y agenda del owner del link.
-5. Validar manualmente con usuario real conectado que una cita publica crea evento Google y Meet visible en MENSAJES.
+5. Validar manualmente con usuario real conectado que una cita publica crea evento Google y Meet visible en LeadSeed.
 6. Validar manualmente que una cita creada desde detalle crea evento Google/Meet o deja Google pendiente sin perder la cita Supabase.
-7. Validar manualmente que reprogramar cita desde MENSAJES actualiza Google Calendar.
-8. Validar manualmente que cancelar cita desde MENSAJES elimina o cancela el evento Google y libera el slot publico.
-9. Validar manualmente que agregar y quitar participantes desde MENSAJES actualiza invitados en Google Calendar.
+7. Validar manualmente que reprogramar cita desde LeadSeed actualiza Google Calendar.
+8. Validar manualmente que cancelar cita desde LeadSeed elimina o cancela el evento Google y libera el slot publico.
+9. Validar manualmente que agregar y quitar participantes desde LeadSeed actualiza invitados en Google Calendar.
 10. Validar manualmente el historial visible de citas en sidebar real de extension.
 11. Auditar una anomalia de datos historicos: existen citas `general` antiguas con `capture_ref` poblado y debe confirmarse si son residuo de pruebas previas o un arrastre de contexto no deseado.
 12. Auditar exportacion/importacion/duplicados y analytics por link para decidir el siguiente corte de performance despues del dashboard.
@@ -686,7 +686,7 @@ La siguiente fase concreta es:
 ### Punto exacto tras este corte
 
 - el problema ya no esta en Cloudflare ni en Supabase como plataforma
-- el problema raiz estaba en la capa SaaS local de MENSAJES:
+- el problema raiz estaba en la capa SaaS local de LeadSeed:
   - RPC inconsistente
   - gating inconsistente
   - sesion sin refresco de entitlements

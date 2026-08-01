@@ -140,7 +140,7 @@ Se detectaron estos problemas concretos:
 - paso 2 y 3 no seguian el mismo criterio visual del paso 1
 - la linea del progreso no cruzaba el centro de los puntos
 
-## 5. Integracion con MENSAJES / extension
+## 5. Integracion con LeadSeed / extension
 
 La extension debe poder mostrar las nuevas respuestas de exploracion de paso 1 en el modal de detalle del lead.
 
@@ -203,7 +203,7 @@ Orden recomendado de trabajo:
 2. Terminar el layout responsive del formulario de 3 pasos.
 3. Hacer prueba end-to-end enviando un lead desde `/pb`.
 4. Verificar en Supabase la metadata `intake_journey.step1`.
-5. Reflejar esas respuestas en el modal de detalle del lead en MENSAJES.
+5. Reflejar esas respuestas en el modal de detalle del lead en LeadSeed.
 
 ## 9. Resumen corto para pegar en una nueva conversacion
 
@@ -215,6 +215,6 @@ El backend en Supabase ya persiste `metadata.intake_journey.step1` con respuesta
 - el paso 1 debe contraer respuestas y caber en pantalla movil
 - el stepper debe alinearse correctamente
 - el footer de acciones debe quedar consistente
-- la extension MENSAJES debe mostrar esas nuevas respuestas en el detalle del lead
+- la extension LeadSeed debe mostrar esas nuevas respuestas en el detalle del lead
 
 No mezclar esto con el formulario principal de `planespro.cl` y no reintroducir logica nueva en Cloudflare.

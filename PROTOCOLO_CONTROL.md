@@ -1,9 +1,17 @@
 # Protocolo CONTROL
 
-Version: 1.0  
-Proyecto: `MENSAJES`  
+Version: 1.1  
+Proyecto: `LeadSeed`  
 Fecha base: 2026-07-16  
+Ultima revision: 2026-07-31  
 Estado: vigente  
+
+> Cambio 1.1 (2026-07-31): el proyecto paso a llamarse `LeadSeed`. Se actualizaron
+> nombre y rutas de este documento y del resto de la documentacion normativa.
+> Ruta de trabajo actual: `C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed`.
+> Repositorio actual: `github.com/hentimes/LeadSeed` (privado).
+> `AI_SYNC.md` conserva deliberadamente el nombre historico `MENSAJES` en sus
+> entradas previas: es un registro de auditoria y reescribirlo destruiria trazabilidad.
 
 ---
 
@@ -15,7 +23,7 @@ No es una sugerencia.
 No es una pauta blanda.
 No es un checklist opcional.
 
-Es la capa de gobierno tecnico que define como se revisa, decide, ejecuta, valida, documenta y coordina cualquier cambio en `MENSAJES` y en su futura integracion con `planespro.cl`.
+Es la capa de gobierno tecnico que define como se revisa, decide, ejecuta, valida, documenta y coordina cualquier cambio en `LeadSeed` y en su futura integracion con `planespro.cl`.
 
 Toda IA que trabaje en este repositorio debe seguirlo.
 
@@ -39,7 +47,7 @@ El objetivo de CONTROL es asegurar que cada cambio:
   - que se decidio no tocar
   - que riesgos siguen abiertos
 - no declare avances falsos
-- no rompa la futura integracion entre `MENSAJES` y `planespro.cl`
+- no rompa la futura integracion entre `LeadSeed` y `planespro.cl`
 
 ---
 
@@ -89,10 +97,10 @@ Nada puede marcarse como `hecho` si contradice esa realidad.
 
 Los documentos operativos vigentes de este repo son:
 
-- [roadmap.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/roadmap.md:1)
-- [implementation_plan.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/implementation_plan.md:1)
-- [AI_SYNC.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/AI_SYNC.md:1)
-- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/landing-gerow-cloudflare-context.md:1)
+- [roadmap.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/roadmap.md:1)
+- [implementation_plan.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/implementation_plan.md:1)
+- [AI_SYNC.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/AI_SYNC.md:1)
+- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/landing-gerow-cloudflare-context.md:1)
 
 Cada uno cumple una funcion distinta:
 
@@ -315,7 +323,7 @@ Cuando una tarea toque cualquiera de estos dominios:
 
 la IA debe leer obligatoriamente:
 
-- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/landing-gerow-cloudflare-context.md:1)
+- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/landing-gerow-cloudflare-context.md:1)
 
 Ese documento es la fuente contextual obligatoria para la integracion con `landing-gerow`.
 
@@ -479,7 +487,7 @@ Cada pasada de CONTROL debe mirar el proyecto desde estos angulos:
 - impacto en deploy
 - impacto en trabajo concurrente con otra IA
 - compatibilidad con futura app movil
-- compatibilidad con la integracion `planespro.cl -> MENSAJES`
+- compatibilidad con la integracion `planespro.cl -> LeadSeed`
 
 ### 10.1 Restricciones obligatorias de UX y UI para este proyecto
 
@@ -489,7 +497,7 @@ Toda auditoria visual y toda implementacion de interfaz deben respetar estas reg
 - la UI debe verse bien en movil porque el dominio evolucionara a app movil
 - la interfaz debe priorizar compacidad real, jerarquia clara y densidad de informacion util
 - no esta permitido resolver pantallas con cajas blancas genericas de bordes redondeados como patron por defecto
-- la referencia visual esperada es el lenguaje mas compacto y sobrio de `MENSAJES`, no el patron generico de tarjetas aisladas
+- la referencia visual esperada es el lenguaje mas compacto y sobrio de `LeadSeed`, no el patron generico de tarjetas aisladas
 - no se deben usar emoticones, emojis ni adornos visuales infantiles en UI, documentos operativos o microcopy de producto salvo instruccion explicita del usuario
 
 Si una propuesta visual incumple cualquiera de estas reglas, CONTROL debe marcarla al menos como observacion y, si afecta el patron general de interfaz, como hallazgo estructural.
@@ -728,7 +736,7 @@ Antes de proponerlo o aplicarlo, una IA debe:
 
 ---
 
-## 16. Reglas especificas para la integracion planespro.cl -> MENSAJES
+## 16. Reglas especificas para la integracion planespro.cl -> LeadSeed
 
 La integracion futura debe obedecer estas reglas:
 
@@ -761,14 +769,14 @@ El orden arquitectonicamente correcto es:
 1. modelar el dominio equivalente a `ppforms` en Supabase
 2. definir funciones/Edge Functions compatibles
 3. integrar archivos, disponibilidad, submit y agenda
-4. conectar `MENSAJES` como consumidor nativo
+4. conectar `LeadSeed` como consumidor nativo
 5. recien despues cambiar el frontend publico
 
 ### 16.4 Fuente obligatoria
 
 Toda decision en esta area debe contrastarse con:
 
-- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/landing-gerow-cloudflare-context.md:1)
+- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/landing-gerow-cloudflare-context.md:1)
 
 ---
 

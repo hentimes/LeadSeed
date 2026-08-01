@@ -1,8 +1,8 @@
 ## Handoff Operativo - Siguiente sesion
 
 Fecha de emision: 2026-07-30
-Proyecto: `MENSAJES`
-Workspace: `C:\Users\henti\OneDrive\Documentos\IA\deepseek\PROYECTOS\MENSAJES`
+Proyecto: `LeadSeed`
+Workspace: `C:\Users\henti\OneDrive\Documentos\IA\deepseek\PROYECTOS\LeadSeed`
 
 Este documento existe para que la siguiente sesion pueda continuar sin reinterpretar el estado del proyecto ni reabrir decisiones ya cerradas.
 
@@ -83,9 +83,9 @@ Es vision futura ya documentada, pero no ejecucion inmediata.
 
 Antes de tocar codigo en la siguiente sesion, leer:
 
-1. [roadmap.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/roadmap.md)
-2. [implementation_plan.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/implementation_plan.md)
-3. [HANDOFF_NEXT_SESSION.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/MENSAJES/HANDOFF_NEXT_SESSION.md)
+1. [roadmap.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/roadmap.md)
+2. [implementation_plan.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/implementation_plan.md)
+3. [HANDOFF_NEXT_SESSION.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/HANDOFF_NEXT_SESSION.md)
 
 ## 4. Donde quedo documentado cada cosa
 
