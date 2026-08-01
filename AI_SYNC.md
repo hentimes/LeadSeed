@@ -6783,3 +6783,96 @@ como `pendiente de validacion real` hasta que se confirmen.
   redesplegarla.
 - `design` y `master` siguen en 853aa3d; `develop` avanzo 12 commits.
 - Sin auditoria cruzada bajo 14.4 (no hay IA-B activa).
+
+---
+
+## Claude | 2026-08-01 CLT | Sistema de alertas multi-tipo y administrador en configuracion
+
+Rol: Implementadora (sin IA-B disponible para revision cruzada).
+
+### Auditoria previa del estado real
+
+Antes de implementar se verifico que existia de cada tipo:
+
+- nuevos leads: completo (unico con sistema real)
+- mensajes: NO habia alerta. El chat tenia Realtime pero solo dentro de
+  ChatPage; sin la pagina abierta no se enteraba nadie
+- agenda: NO habia alerta. El aviso "Cita por iniciar" vivia dentro de la
+  tarjeta, visible solo abriendo la pagina. background.ts no tenia ni una
+  referencia a citas
+- tareas: parcial, notificacion nativa una vez al dia, sin badge
+
+### Decisiones del usuario
+
+- badge exclusivo de leads nuevos (uno solo no puede representar varios
+  tipos sin volverse ambiguo)
+- anticipacion de citas configurable
+- alertas de mensajes: soporte, y respuestas a mensajes propios en salas
+  de chat. Chat privado y foro no existen todavia; el modelo queda
+  preparado para sumarlos como AlertType nuevos.
+
+### Arquitectura: sin tablas nuevas ni migraciones
+
+Se descarto crear un feed generico de notificaciones. Cada fuente usa lo
+que ya existia en el esquema, lo que evita una segunda fuente de verdad
+frente a user_lead_alert_events (seccion 5.3) y no toca lo que funciona:
+
+- soporte: filtro server-side internal_messages.receiver_id
+- respuestas de chat: chat_messages.reply_to_id + resolucion de
+  pertenencia del padre. Realtime no filtra por join, y ademas lo que
+  importa no es el mensaje sino a quien responde. Alertar por cada
+  mensaje de sala habria sido ruido.
+- cita proxima: no es un evento del backend sino el paso del tiempo; se
+  evalua en el alarm sobre citas ya consultadas
+- tareas: se migro la notificacion existente al sistema comun
+
+`alertNotifier.ts` es el punto unico de emision: centraliza las reglas de
+preferencias para que ninguna fuente las reimplemente. Devuelve si
+entrego, lo que permite que tareas no marque el dia como avisado si la
+alerta estaba suprimida.
+
+### Defecto corregido
+
+App.tsx borraba el badge con setBadgeText sin poner en cero el contador
+guardado. Al despertar el service worker, restoreLeadAlertBadge lo
+reponia con el numero viejo. Se elimina el borrado directo: useLeadAlerts
+ya lo hace de forma consistente via LEAD_ALERTS_MARK_SEEN.
+
+### Validacion ejecutada contra produccion
+
+- publicacion Realtime: las 4 tablas (user_lead_alert_events,
+  internal_messages, chat_messages, appointments) ya estaban publicadas.
+  No hizo falta migracion.
+- RLS con rol authenticated: el usuario ve internal_messages=61,
+  chat_messages=4, appointments=19. Lecturas necesarias permitidas.
+- entrega end-to-end: soporte 402 ms, respuesta de chat 679 ms
+- discriminacion de filtros: respuesta a mensaje AJENO no genero alerta;
+  auto-respuesta correctamente filtrada
+- limpieza verificada, base sin residuos
+- tsc y vite build limpios
+
+### Estado
+
+`pendiente de validacion real` para los tipos nuevos.
+
+Certificado: entrega Realtime, filtros, RLS, tipos y build. NO
+certificado: el comportamiento observable en Chrome de los cuatro tipos
+nuevos ni la UI del administrador de alertas. Requiere recargar la
+extension (seccion 5.5).
+
+Sigue tambien sin confirmar del bloque anterior: sonido con extension
+cerrada y color/limpieza del badge.
+
+### Riesgos declarados
+
+- 'solo con extension cerrada' depende de chrome.runtime.getContexts
+  (Chrome 116+). Si no existe, isExtensionUiOpen devuelve false y la
+  alerta se emite igual: degrada hacia avisar de mas, no de menos.
+- La alerta de cita se evalua cada 30s con el alarm de reconciliacion. Si
+  el usuario configura 1 minuto de anticipacion, el aviso puede llegar
+  con hasta 30s de corrimiento.
+- La suscripcion de respuestas de chat escucha todos los INSERT de
+  chat_messages y filtra en cliente. Con salas muy activas eso implica
+  trafico y una consulta por respuesta. Aceptable hoy (4 mensajes en la
+  tabla); revisar si el chat crece.
+- Sin auditoria cruzada bajo 14.4.
