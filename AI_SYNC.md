@@ -6737,3 +6737,49 @@ lo confirme (seccion 5.5).
   con gracia si no existe.
 - Sin auditoria cruzada bajo 14.4: sigue sin haber IA-B activa. Esta
   entrada es auto-auditoria y no la reemplaza.
+
+---
+
+## Claude | 2026-08-01 CLT | Cierre: validacion real del sistema de alertas
+
+Reclasificacion del bloque de alertas de leads.
+
+### Confirmado por el usuario en Chrome
+
+- La alerta de lead nuevo aparece casi de inmediato.
+- Funciona con la extension abierta y tambien cerrada.
+
+Esto valida en condiciones reales las dos piezas que no se podian
+certificar desde consola: la inmediatez del canal Realtime dentro del
+service worker MV3, y la notificacion nativa con la extension cerrada.
+Confirma ademas que las correcciones del commit 29f85d7 (en particular
+la degradacion silenciosa a sondeo de 30s) resolvieron el problema de
+fondo: si esa falla siguiera presente, la alerta con extension cerrada
+habria tardado hasta 30 segundos.
+
+### Estado: `hecho`
+
+Alcance de lo declarado hecho: backend, trigger, entrega Realtime,
+aislamiento por owner, RLS, y las senales de aviso inmediato (toast con
+extension abierta y notificacion nativa con extension cerrada).
+
+### Todavia sin confirmacion explicita del usuario
+
+No fueron mencionados en la validacion, asi que NO se declaran hechos:
+
+- sonido via documento offscreen con la extension cerrada
+- color morado del badge y su limpieza al abrir la extension
+
+No hay indicio de que fallen; simplemente no fueron reportados. Quedan
+como `pendiente de validacion real` hasta que se confirmen.
+
+### Deuda declarada que sigue abierta
+
+- ~140 KB de react-vendor cargados por el service worker sin usarse
+  (artefacto de manualChunks, preexistente).
+- Edge function `google-calendar-create-event` pendiente de redeploy: el
+  fix del nombre 'MENSAJES' -> 'LeadSeed' en la descripcion del evento
+  de Google Calendar (texto que ve el lead) no toma efecto hasta
+  redesplegarla.
+- `design` y `master` siguen en 853aa3d; `develop` avanzo 12 commits.
+- Sin auditoria cruzada bajo 14.4 (no hay IA-B activa).
