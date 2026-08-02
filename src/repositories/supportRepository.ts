@@ -17,7 +17,7 @@ export interface InternalMessageRow {
 type InternalMessagePayload = RealtimePostgresChangesPayload<InternalMessageRow>;
 
 export async function fetchFirstAdminId(): Promise<string | null> {
-  const { data } = await supabase.from('profiles').select('id').eq('role', 'admin').limit(1).single();
+  const { data } = await supabase.from('profiles_public').select('id').eq('role', 'admin').limit(1).single();
   return data?.id ?? null;
 }
 

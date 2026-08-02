@@ -65,7 +65,7 @@ export default function CommunityPage() {
             messages.map(msg => {
               const isMe = msg.sender_id === user?.id;
               const profile = msg.sender_profile;
-              const name = profile?.full_name || profile?.email || 'Desconocido';
+              const name = profile?.full_name || 'Desconocido';
               const avatar = profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
               
               return (
@@ -123,14 +123,14 @@ export default function CommunityPage() {
             <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-900 rounded-xl cursor-pointer transition-colors">
               <div className="relative">
                 <img 
-                  src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.email)}&background=random`} 
+                  src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'Usuario')}&background=random`} 
                   className={`w-10 h-10 rounded-full object-cover ${u.show_premium_frame ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
                   alt=""
                 />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">{u.full_name || u.email.split('@')[0]}</p>
+                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">{u.full_name || 'Usuario'}</p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{u.bio || 'Conectado ahora'}</p>
               </div>
             </div>

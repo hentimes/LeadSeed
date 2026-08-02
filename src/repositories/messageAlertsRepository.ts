@@ -75,6 +75,6 @@ export async function isMyChatMessage(messageId: string, userId: string): Promis
 }
 
 export async function fetchSenderName(userId: string): Promise<string> {
-  const { data } = await supabase.from('profiles').select('full_name, email').eq('id', userId).maybeSingle();
-  return data?.full_name || data?.email || 'Alguien';
+  const { data } = await supabase.from('profiles_public').select('full_name').eq('id', userId).maybeSingle();
+  return data?.full_name || 'Alguien';
 }

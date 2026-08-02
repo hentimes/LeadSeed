@@ -12,7 +12,6 @@ export interface CommunityMessage {
   message: string;
   created_at: string;
   sender_profile?: {
-    email: string;
     full_name?: string;
     avatar_url?: string;
     show_premium_frame?: boolean;
@@ -31,7 +30,6 @@ function mapCommunityMessageRow(row: CommunityMessageRow): CommunityMessage {
     created_at: row.created_at,
     sender_profile: senderProfile
       ? {
-          email: senderProfile.email,
           full_name: senderProfile.full_name ?? undefined,
           avatar_url: senderProfile.avatar_url ?? undefined,
           show_premium_frame: senderProfile.show_premium_frame ?? undefined,

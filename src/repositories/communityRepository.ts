@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 
 export interface CommunitySenderProfileRow {
-  email: string;
   full_name?: string | null;
   avatar_url?: string | null;
   show_premium_frame?: boolean | null;
@@ -17,7 +16,11 @@ export interface CommunityMessageRow {
 }
 
 const COMMUNITY_MESSAGE_SELECT =
-  'id, sender_id, receiver_id, message, created_at, sender_profile:profiles!internal_messages_sender_id_fkey(email, full_name, avatar_url, show_premium_frame)';
+  // sender_profile es una relacion calculada (migracion 059), no una FK. Se
+  // embebe por el nombre de la funcion. No se puede apuntar a profiles_public
+  // con un hint de FK porque internal_messages tiene dos claves hacia profiles
+  // y PostgREST no puede desambiguar a traves de una vista.
+  'id, sender_id, receiver_id, message, created_at, sender_profile(full_name, avatar_url, show_premium_frame)';
 
 export async function fetchCommunityMessageRows(): Promise<CommunityMessageRow[]> {
   const { data, error } = await supabase
@@ -38,8 +41,8 @@ export async function fetchCommunitySenderProfile(
   senderId: string
 ): Promise<CommunitySenderProfileRow | undefined> {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('email, full_name, avatar_url, show_premium_frame')
+    .from('profiles_public')
+    .select('full_name, avatar_url, show_premium_frame')
     .eq('id', senderId)
     .single();
 

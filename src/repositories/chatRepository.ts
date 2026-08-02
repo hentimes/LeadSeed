@@ -15,7 +15,7 @@ export async function fetchChatRoomById(roomId: string): Promise<ChatRoom | null
 }
 
 export async function fetchChatProfileById(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  const { data, error } = await supabase.from('profiles_public').select('*').eq('id', userId).single();
   if (error) return null;
   return data as Profile;
 }
@@ -23,7 +23,7 @@ export async function fetchChatProfileById(userId: string): Promise<Profile | nu
 export async function fetchReplyMessageById(messageId: string): Promise<ChatMessage | null> {
   const { data, error } = await supabase
     .from('chat_messages')
-    .select('id, room_id, user_id, content, reply_to_id, created_at, user_profile:profiles(*)')
+    .select('id, room_id, user_id, content, reply_to_id, created_at, user_profile:profiles_public(*)')
     .eq('id', messageId)
     .single();
 
