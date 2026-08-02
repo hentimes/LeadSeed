@@ -1,5 +1,6 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { chartColors } from '../../design/palette';
 
 interface MonthlyChartProps {
   data: { name: string; value: number }[];
@@ -44,16 +45,16 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
     if (isLast) {
       return (
         <g key={`dot-${index}`} className="animate-fade-in" style={{ animationDelay: '1.2s', animationFillMode: 'both' }}>
-          <circle cx={cx} cy={cy} r="4" fill="#635BFF">
+          <circle cx={cx} cy={cy} r="4" fill={chartColors.primary}>
             <animate attributeName="r" values="4; 10" dur="2s" repeatCount="indefinite" />
             <animate attributeName="opacity" values="0.6; 0" dur="2s" repeatCount="indefinite" />
           </circle>
-          <circle cx={cx} cy={cy} r="4" fill="#635BFF" stroke="#fff" strokeWidth="2" />
+          <circle cx={cx} cy={cy} r="4" fill={chartColors.primary} stroke="#fff" strokeWidth="2" />
         </g>
       );
     }
     return (
-      <circle key={`dot-${index}`} cx={cx} cy={cy} r="3.5" fill="#635BFF" stroke="#fff" strokeWidth="1.5" />
+      <circle key={`dot-${index}`} cx={cx} cy={cy} r="3.5" fill={chartColors.primary} stroke="#fff" strokeWidth="1.5" />
     );
   };
 
@@ -66,11 +67,11 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
         >
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#635BFF" stopOpacity={0.1}/>
-              <stop offset="95%" stopColor="#635BFF" stopOpacity={0}/>
+              <stop offset="5%" stopColor={chartColors.primary} stopOpacity={0.1}/>
+              <stop offset="95%" stopColor={chartColors.primary} stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid vertical={false} stroke="#E2E6F0" strokeDasharray="3 3" opacity={0.5} />
+          <CartesianGrid vertical={false} stroke={chartColors.border} strokeDasharray="3 3" opacity={0.5} />
           <XAxis 
             dataKey="name" 
             axisLine={false} 
@@ -86,16 +87,16 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
             domain={[0, (dataMax: number) => Math.max(600, Math.ceil(dataMax / 100) * 100)]}
             width={45}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#CFC7FF', strokeWidth: 1, strokeDasharray: '4 4' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: chartColors.primaryLight, strokeWidth: 1, strokeDasharray: '4 4' }} />
           <Area 
             type="monotone" 
             dataKey="value" 
-            stroke="#635BFF" 
+            stroke={chartColors.primary} 
             strokeWidth={2}
             fillOpacity={1} 
             fill="url(#colorValue)" 
             dot={renderDot}
-            activeDot={{ r: 6, fill: '#635BFF', stroke: '#E5E0FF', strokeWidth: 4 }}
+            activeDot={{ r: 6, fill: chartColors.primary, stroke: '#E5E0FF', strokeWidth: 4 }}
           />
         </AreaChart>
       </ResponsiveContainer>

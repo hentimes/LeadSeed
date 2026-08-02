@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { chartColors } from '../../design/palette';
 
 function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: string; size?: number }) {
   const strokeWidth = 5;
@@ -65,7 +66,7 @@ function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: 
           cy="50"
           r={radius}
           fill="none"
-          stroke="#E2E6F0"
+          stroke={chartColors.border}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={grayOffset}

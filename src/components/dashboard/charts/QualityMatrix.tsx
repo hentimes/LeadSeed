@@ -1,4 +1,5 @@
 import React from 'react';
+import { chartColors } from '../../../design/palette';
 
 const LinkedinIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>;
 const GlobeIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>;
@@ -9,11 +10,11 @@ const DatabaseIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill=
 
 export default function QualityMatrix() {
   const sources = [
-    { id: 'linkedin', name: 'LinkedIn', leads: 126, winRate: 15.2, cycle: 12, icon: <LinkedinIcon />, color: '#8F85FF' },
-    { id: 'whatsapp', name: 'WhatsApp', leads: 178, winRate: 12.0, cycle: 5, icon: <WhatsAppIcon />, color: '#8F85FF' },
-    { id: 'email', name: 'Email', leads: 142, winRate: 10.3, cycle: 7, icon: <EnvelopeIcon />, color: '#8F85FF' },
-    { id: 'llamado', name: 'Llamado', leads: 96, winRate: 8.1, cycle: 9, icon: <PhoneIcon />, color: '#8F85FF' },
-    { id: 'database', name: 'Base de datos', leads: 88, winRate: 6.4, cycle: 11, icon: <DatabaseIcon />, color: '#8F85FF' },
+    { id: 'linkedin', name: 'LinkedIn', leads: 126, winRate: 15.2, cycle: 12, icon: <LinkedinIcon />, color: chartColors.primaryLight },
+    { id: 'whatsapp', name: 'WhatsApp', leads: 178, winRate: 12.0, cycle: 5, icon: <WhatsAppIcon />, color: chartColors.primaryLight },
+    { id: 'email', name: 'Email', leads: 142, winRate: 10.3, cycle: 7, icon: <EnvelopeIcon />, color: chartColors.primaryLight },
+    { id: 'llamado', name: 'Llamado', leads: 96, winRate: 8.1, cycle: 9, icon: <PhoneIcon />, color: chartColors.primaryLight },
+    { id: 'database', name: 'Base de datos', leads: 88, winRate: 6.4, cycle: 11, icon: <DatabaseIcon />, color: chartColors.primaryLight },
   ];
 
   return (

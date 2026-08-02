@@ -6,6 +6,7 @@ import ConversionBar from '../../components/dashboard/ConversionBar';
 import MetricCard from '../../components/dashboard/MetricCard';
 import AlertCard from '../../components/dashboard/AlertCard';
 import { Icon } from '../../utils/icons';
+import { chartColors } from '../../design/palette';
 
 interface OverviewTabProps {
   snapshot: DashboardSnapshot;
@@ -61,7 +62,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             target={settings.dailyGoalWhatsApp}
             unit="Mensajes"
             trend={{ value: `${Math.abs(waDiff)}%`, isPositive: waDiff >= 0 }}
-            color="#8F85FF"
+            color={chartColors.primaryLight}
             tooltipText={`${waToday} de ${settings.dailyGoalWhatsApp} mensajes enviados hoy.`}
           />
           <GoalRingCard
@@ -72,7 +73,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             target={settings.dailyGoalEmail}
             unit="Correos"
             trend={{ value: `${Math.abs(emailDiff)}%`, isPositive: emailDiff >= 0 }}
-            color="#635BFF"
+            color={chartColors.primary}
             tooltipText={`${emailToday} de ${settings.dailyGoalEmail} correos enviados hoy.`}
           />
           <GoalRingCard
@@ -83,7 +84,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             target={settings.dailyGoalCalls}
             unit="Llamadas"
             trend={{ value: `${Math.abs(callDiff)}%`, isPositive: callDiff >= 0 }}
-            color="#CFC7FF"
+            color={chartColors.primaryLight}
             tooltipText={`${callToday} de ${settings.dailyGoalCalls} llamadas registradas.`}
           />
         </div>

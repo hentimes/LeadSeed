@@ -1,5 +1,6 @@
 import React from 'react';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
+import { chartColors } from '../design/palette';
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
@@ -46,7 +47,7 @@ export default function LoginPage() {
       {/* Top Left Blob */}
       <div className="absolute top-0 left-0 w-64 h-64 -translate-x-10 -translate-y-10 opacity-60 pointer-events-none">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <path fill="#F2EEFF" d="M 0,0 L 200,0 C 150,80 80,150 0,200 Z" />
+          <path fill={chartColors.soft} d="M 0,0 L 200,0 C 150,80 80,150 0,200 Z" />
         </svg>
       </div>
 
@@ -54,7 +55,7 @@ export default function LoginPage() {
       <div className="absolute bottom-0 right-0 w-80 h-64 opacity-80 pointer-events-none">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-full">
           <path fill="#F8F6FF" d="M 0,200 C 50,150 150,180 200,80 L 200,200 Z" />
-          <path fill="#F2EEFF" d="M 40,200 C 100,160 170,190 200,120 L 200,200 Z" />
+          <path fill={chartColors.soft} d="M 40,200 C 100,160 170,190 200,120 L 200,200 Z" />
           <path fill="#EAE4FF" d="M 80,200 C 140,170 180,200 200,150 L 200,200 Z" />
         </svg>
       </div>

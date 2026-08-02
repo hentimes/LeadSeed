@@ -3,6 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, BarChart, Bar, Legend, LabelList
 } from 'recharts';
+import { chartColors } from '../../../design/palette';
 
 export type ChartVisualType = 'area' | 'line' | 'bar' | 'stacked' | 'cumulative';
 
@@ -120,16 +121,16 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
     if (isLast && payload.total > 0) {
       return (
         <g key={`dot-${index}`} className="animate-fade-in" style={{ animationDelay: '1.2s', animationFillMode: 'both' }}>
-          <circle cx={cx} cy={cy} r="4" fill="#5B42F3">
+          <circle cx={cx} cy={cy} r="4" fill={chartColors.primary}>
             <animate attributeName="r" values="4; 10" dur="2s" repeatCount="indefinite" />
             <animate attributeName="opacity" values="0.6; 0" dur="2s" repeatCount="indefinite" />
           </circle>
-          <circle cx={cx} cy={cy} r="4" fill="#5B42F3" stroke="#fff" strokeWidth="2" />
+          <circle cx={cx} cy={cy} r="4" fill={chartColors.primary} stroke="#fff" strokeWidth="2" />
         </g>
       );
     }
     return (
-      <circle key={`dot-${index}`} cx={cx} cy={cy} r="3.5" fill="#5B42F3" stroke="#fff" strokeWidth="1.5" />
+      <circle key={`dot-${index}`} cx={cx} cy={cy} r="3.5" fill={chartColors.primary} stroke="#fff" strokeWidth="1.5" />
     );
   };
 
@@ -140,14 +141,14 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
           <LineChart data={processedData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
             <defs>
               <filter id="colorShadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#5B42F3" floodOpacity="0.2" />
+                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor={chartColors.primary} floodOpacity="0.2" />
               </filter>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F3F7" />
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 600 }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 500 }} />
-            <Tooltip content={renderTooltip} cursor={{ stroke: '#E2E6F0', strokeWidth: 1, strokeDasharray: '4 4' }} />
-            <Line type="monotone" dataKey="total" stroke="#5B42F3" strokeWidth={3} dot={renderDot} activeDot={{ r: 6, fill: '#5B42F3', stroke: '#fff', strokeWidth: 2 }} filter="url(#colorShadow)" />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 600 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 500 }} />
+            <Tooltip content={renderTooltip} cursor={{ stroke: chartColors.border, strokeWidth: 1, strokeDasharray: '4 4' }} />
+            <Line type="monotone" dataKey="total" stroke={chartColors.primary} strokeWidth={3} dot={renderDot} activeDot={{ r: 6, fill: chartColors.primary, stroke: '#fff', strokeWidth: 2 }} filter="url(#colorShadow)" />
           </LineChart>
         );
 
@@ -155,10 +156,10 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
         return (
           <BarChart data={processedData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F3F7" />
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 600 }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 500 }} />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 600 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 500 }} />
             <Tooltip content={renderTooltip} cursor={{ fill: '#F8F9FC' }} />
-            <Bar dataKey="total" fill="#5B42F3" radius={[4, 4, 0, 0]} maxBarSize={40} minPointSize={4} />
+            <Bar dataKey="total" fill={chartColors.primary} radius={[4, 4, 0, 0]} maxBarSize={40} minPointSize={4} />
           </BarChart>
         );
 
@@ -166,18 +167,18 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
         return (
           <BarChart data={processedData} margin={{ top: 20, right: 20, left: -20, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F3F7" />
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 600 }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 500 }} />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 600 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 500 }} />
             <Tooltip content={renderTooltip} cursor={{ fill: '#F8F9FC' }} />
             <Legend verticalAlign="bottom" height={20} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', color: '#66718F', paddingTop: '15px' }} />
             
-            <Bar dataKey="web" name="Web" stackId="a" fill="#635BFF" maxBarSize={40} minPointSize={4}>
+            <Bar dataKey="web" name="Web" stackId="a" fill={chartColors.primary} maxBarSize={40} minPointSize={4}>
               <LabelList dataKey="webPercent" content={(p) => renderCustomizedLabel(p, '#ffffff')} />
             </Bar>
-            <Bar dataKey="whatsapp" name="WhatsApp" stackId="a" fill="#8F85FF" maxBarSize={40}>
+            <Bar dataKey="whatsapp" name="WhatsApp" stackId="a" fill={chartColors.primaryLight} maxBarSize={40}>
               <LabelList dataKey="whatsappPercent" content={(p) => renderCustomizedLabel(p, '#ffffff')} />
             </Bar>
-            <Bar dataKey="linkedin" name="LinkedIn" stackId="a" fill="#CFC7FF" maxBarSize={40}>
+            <Bar dataKey="linkedin" name="LinkedIn" stackId="a" fill={chartColors.primaryLight} maxBarSize={40}>
               <LabelList dataKey="linkedinPercent" content={(p) => renderCustomizedLabel(p, '#5B42F3')} />
             </Bar>
             <Bar dataKey="formulario" name="Formulario" stackId="a" fill="#E8E5FF" maxBarSize={40}>
@@ -192,17 +193,17 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
         return (
           <AreaChart data={processedData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F3F7" />
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 600 }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8F9BB3', fontSize: 10, fontWeight: 500 }} />
-            <Tooltip content={renderTooltip} cursor={{ stroke: '#E2E6F0', strokeWidth: 1, strokeDasharray: '4 4' }} />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 600 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: chartColors.inkMuted, fontSize: 10, fontWeight: 500 }} />
+            <Tooltip content={renderTooltip} cursor={{ stroke: chartColors.border, strokeWidth: 1, strokeDasharray: '4 4' }} />
             <Area 
               type="monotone" 
               dataKey="total" 
-              stroke="#5B42F3" 
+              stroke={chartColors.primary} 
               strokeWidth={3} 
-              fill="#5B42F3"
+              fill={chartColors.primary}
               fillOpacity={0.15}
-              activeDot={{ r: 6, fill: '#5B42F3', stroke: '#fff', strokeWidth: 2 }} 
+              activeDot={{ r: 6, fill: chartColors.primary, stroke: '#fff', strokeWidth: 2 }} 
             />
           </AreaChart>
         );

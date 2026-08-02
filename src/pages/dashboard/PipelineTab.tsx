@@ -5,6 +5,7 @@ import FunnelRow from '../../components/dashboard/FunnelRow';
 import MonthlyChart from '../../components/dashboard/MonthlyChart';
 import SectionHeader from '../../components/dashboard/SectionHeader';
 import { Icon } from '../../utils/icons';
+import { chartColors } from '../../design/palette';
 
 interface PipelineTabProps {
   snapshot: DashboardSnapshot;
@@ -35,7 +36,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       id: 'nuevo', 
       label: 'Nuevo', 
       count: counts.nuevo, 
-      color: '#5B42F3', 
+      color: chartColors.primary, 
       iconBg: 'bg-primary-soft',
       iconColor: 'text-primary',
       percentTotal: Math.round((counts.nuevo / total) * 100),
