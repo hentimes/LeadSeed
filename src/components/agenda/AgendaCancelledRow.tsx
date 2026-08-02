@@ -13,7 +13,7 @@ export default function AgendaCancelledRow({ appointment, isFocused, setRef, onO
   return (
     <div
       ref={setRef}
-      className={`border-l-2 border-[var(--color-border)] pl-3 py-1 rounded-r ${isFocused ? 'bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border)]' : ''}`}
+      className={`border-l-2 border-line pl-3 py-1 rounded-r ${isFocused ? 'bg-surface ring-1 ring-line' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <button
@@ -27,14 +27,14 @@ export default function AgendaCancelledRow({ appointment, isFocused, setRef, onO
           <button
             type="button"
             onClick={() => onView(appointment.id)}
-            className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)]"
+            className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-sm"
           >
             Ver
           </button>
           <button
             type="button"
             onClick={() => onOpenLead(appointment.leadId)}
-            className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)]"
+            className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-sm"
           >
             Agendar
           </button>

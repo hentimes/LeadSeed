@@ -223,7 +223,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
   return (
     <div className="w-full h-[600px]">
       <div className="w-full h-full flex flex-col card-standard overflow-hidden">
-        <div className="bg-[var(--color-surface)] border-b border-[var(--color-border)] p-4 flex items-center justify-between">
+        <div className="bg-[var(--color-surface)] border-b border-line p-4 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-lg text-slate-800 dark:text-slate-200">Chat Maestro</h2>
             <p className="text-xs text-slate-500">En vivo con {selectedUser.full_name || selectedUser.email}</p>
@@ -281,7 +281,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} className="p-4 bg-[var(--color-surface)] border-t border-[var(--color-border)] flex gap-2">
+        <form onSubmit={handleSend} className="p-4 bg-[var(--color-surface)] border-t border-line flex gap-2">
           <input
             type="text"
             value={newMessage}

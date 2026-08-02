@@ -56,7 +56,7 @@ export default function AgendaAppointmentCard({
   return (
     <div
       ref={setRef}
-      className={`border-l-2 pl-3 py-2 rounded-r bg-[var(--color-bg-base)] ${isFocused ? 'bg-[var(--color-bg-surface)] ring-1 ring-[var(--color-border)]' : ''} ${notice ? 'border-l-amber-500' : 'border-l-[var(--color-primary)]'}`}
+      className={`border-l-2 pl-3 py-2 rounded-r bg-surface-muted ${isFocused ? 'bg-surface ring-1 ring-line' : ''} ${notice ? 'border-l-amber-500' : 'border-l-[var(--color-primary)]'}`}
     >
       <div className="flex items-start justify-between gap-2">
         <button
@@ -94,7 +94,7 @@ export default function AgendaAppointmentCard({
             <button
               type="button"
               onClick={() => openMeetLink(appointment.meetLink as string)}
-              className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)]"
+              className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-sm"
             >
               Abrir Meet
             </button>
@@ -109,13 +109,13 @@ export default function AgendaAppointmentCard({
           type="date"
           value={rescheduleForm.date}
           onChange={(event) => onUpdateRescheduleForm({ date: event.target.value })}
-          className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
+          className="border border-line rounded-sm px-2 py-1 text-[11px] bg-surface-muted"
         />
         <input
           type="time"
           value={rescheduleForm.time}
           onChange={(event) => onUpdateRescheduleForm({ time: event.target.value })}
-          className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
+          className="border border-line rounded-sm px-2 py-1 text-[11px] bg-surface-muted"
         />
         <button type="button" onClick={onReschedule} disabled={isBusy} className="btn btn-ghost btn-sm disabled:opacity-40">
           Reprogramar
@@ -141,13 +141,13 @@ export default function AgendaAppointmentCard({
         </div>
 
         {participantsOpen && (
-          <div className="mt-2 border-t border-[var(--color-border)] pt-2">
+          <div className="mt-2 border-t border-line pt-2">
             {participants.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {participants.map((participant) => (
                   <span
                     key={participant.id}
-                    className="inline-flex items-center gap-1 text-[10px] border border-[var(--color-border)] px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[var(--color-text)]"
+                    className="inline-flex items-center gap-1 text-[10px] border border-line px-1.5 py-0.5 rounded-sm text-[var(--color-text)]"
                     title={participant.googleSyncError || participant.invitationStatus}
                   >
                     <span>{participant.name || participant.email}</span>
@@ -170,13 +170,13 @@ export default function AgendaAppointmentCard({
                 value={participantForm.name}
                 onChange={(event) => onUpdateParticipantForm({ name: event.target.value })}
                 placeholder="Nombre"
-                className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
+                className="border border-line rounded-sm px-2 py-1 text-[11px] bg-surface-muted"
               />
               <input
                 value={participantForm.email}
                 onChange={(event) => onUpdateParticipantForm({ email: event.target.value })}
                 placeholder="email@dominio.cl"
-                className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 text-[11px] bg-[var(--color-bg-base)]"
+                className="border border-line rounded-sm px-2 py-1 text-[11px] bg-surface-muted"
               />
               <button type="button" onClick={onAddParticipant} disabled={participantActionId === appointment.id} className="btn btn-ghost btn-sm disabled:opacity-40">
                 Agregar
@@ -186,7 +186,7 @@ export default function AgendaAppointmentCard({
         )}
 
         {historyOpen && (
-          <div className="mt-2 border-t border-[var(--color-border)] pt-2">
+          <div className="mt-2 border-t border-line pt-2">
             {auditEvents.length === 0 ? (
               <p className="text-[11px] text-slate-400">Sin cambios registrados todavia.</p>
             ) : (

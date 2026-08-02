@@ -31,14 +31,14 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
   const pageTitle = PAGE_TITLES[currentPage];
 
   return (
-    <header className="h-[64px] shrink-0 bg-surface dark:bg-slate-900 border-b border-[var(--ls-border,#E6E8F0)] dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 relative">
+    <header className="h-[64px] shrink-0 bg-surface dark:bg-slate-900 border-b border-line dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 relative">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleDrawer}
           className={`p-2 -ml-2 rounded-lg transition-colors focus:outline-none ${
             isDrawerOpen
-              ? 'text-[var(--ls-primary,#6C4CF6)] bg-[var(--ls-soft-purple,#F2EEFF)] dark:bg-slate-800'
-              : 'text-slate-500 hover:text-[var(--ls-primary,#6C4CF6)] hover:bg-[var(--ls-soft-purple,#F2EEFF)] dark:text-slate-400 dark:hover:bg-slate-800'
+              ? 'text-primary bg-primary-soft dark:bg-slate-800'
+              : 'text-slate-500 hover:text-primary hover:bg-primary-soft dark:text-slate-400 dark:hover:bg-slate-800'
           }`}
           aria-label={isDrawerOpen ? "Cerrar menú" : "Abrir menú"}
         >
@@ -77,7 +77,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
         {/* Avatar */}
         <button
           onClick={onToggleUserMenu}
-          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--ls-primary,#6C4CF6)] focus:ring-offset-1 transition-transform hover:scale-105"
+          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 transition-transform hover:scale-105"
         >
           {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
             <img 
@@ -86,7 +86,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
               className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover" 
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-[var(--ls-soft-purple,#F2EEFF)] text-[var(--ls-primary,#6C4CF6)] flex items-center justify-center text-sm font-bold border border-[var(--ls-border,#E6E8F0)]">
+            <div className="w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center text-sm font-bold border border-line">
               {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
           )}

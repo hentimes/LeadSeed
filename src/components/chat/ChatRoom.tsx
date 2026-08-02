@@ -72,11 +72,11 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
   return (
     <div className="panel-container flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-[var(--ls-border,#E6E8F0)] dark:border-gray-700 flex justify-between items-center z-10 shadow-sm">
+      <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-line dark:border-gray-700 flex justify-between items-center z-10 shadow-sm">
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 rounded-full bg-[var(--ls-soft-purple,#F2EEFF)] dark:bg-primary/20 text-[var(--ls-primary,#6C4CF6)] text-xs font-semibold flex items-center gap-1 transition-colors">
+          <button className="px-3 py-1.5 rounded-full bg-primary-soft dark:bg-primary/20 text-primary text-xs font-semibold flex items-center gap-1 transition-colors">
             <span className="text-primary opacity-70">#</span> General
-            <span className="w-1.5 h-1.5 bg-[var(--ls-primary,#6C4CF6)] rounded-full ml-1"></span>
+            <span className="w-1.5 h-1.5 bg-primary rounded-full ml-1"></span>
           </button>
           <button className="px-3 py-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-700 text-xs font-medium flex items-center gap-1 transition-colors">
             <span className="text-slate-400">#</span> Ventas
@@ -121,10 +121,10 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
               <div className={`flex flex-col min-w-0 max-w-[85%] ${isOwn ? 'items-end' : 'items-start'}`}>
                 {!isOwn && (
                   <div className="flex items-baseline gap-2 mb-1 ml-1">
-                    <span className="font-medium text-sm text-[var(--ls-text,#111827)] dark:text-gray-200">
+                    <span className="font-medium text-sm text-ink dark:text-gray-200">
                       {msg.user_profile?.full_name || 'Usuario'}
                     </span>
-                    <span className="text-[10px] text-[var(--ls-text-muted,#667085)] font-medium">
+                    <span className="text-[10px] text-ink-muted font-medium">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -132,8 +132,8 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
                 
                 <div className={`relative px-4 py-2.5 text-[13px] sm:text-sm break-words shadow-sm
                   ${isOwn 
-                    ? 'bg-[var(--ls-soft-purple,#F2EEFF)] text-slate-800 dark:bg-gray-800 dark:text-gray-100 rounded-2xl rounded-tr-sm' 
-                    : 'bg-white dark:bg-gray-800 text-[var(--ls-text,#111827)] dark:text-gray-100 rounded-2xl rounded-tl-sm border border-[var(--ls-border,#E6E8F0)] dark:border-gray-700'
+                    ? 'bg-primary-soft text-slate-800 dark:bg-gray-800 dark:text-gray-100 rounded-2xl rounded-tr-sm' 
+                    : 'bg-white dark:bg-gray-800 text-ink dark:text-gray-100 rounded-2xl rounded-tl-sm border border-line dark:border-gray-700'
                   }`}
                 >
                   {/* Reply Quote */}
@@ -141,7 +141,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
                     <div className={`mb-2 pl-2 border-l-2 text-xs py-1 pr-2 rounded-r flex flex-col
                       ${isOwn 
                         ? 'border-primary bg-white/50 text-slate-600' 
-                        : 'border-blue-400 bg-slate-50 dark:bg-gray-700 text-[var(--ls-text-muted,#667085)]'
+                        : 'border-blue-400 bg-slate-50 dark:bg-gray-700 text-ink-muted'
                       }`}
                     >
                       <span className="font-semibold text-[10px]">
@@ -154,7 +154,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
                   {msg.content}
 
                   {isOwn && (
-                    <span className="absolute -bottom-5 right-1 text-[10px] text-[var(--ls-text-muted,#667085)] font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    <span className="absolute -bottom-5 right-1 text-[10px] text-ink-muted font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     </span>
@@ -166,7 +166,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
               <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center ${isOwn ? 'mr-auto' : 'ml-auto'}`}>
                 <button 
                   onClick={() => setReplyTo(msg)}
-                  className="p-1.5 text-slate-400 hover:text-[var(--ls-primary,#6C4CF6)] hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                   title="Responder"
                 >
                   <Icon.Reply />
@@ -191,12 +191,12 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
       )}
 
       {/* Composer */}
-      <div className="p-4 bg-white dark:bg-gray-900 border-t border-[var(--ls-border,#E6E8F0)] dark:border-gray-800 z-10 flex flex-col">
+      <div className="p-4 bg-white dark:bg-gray-900 border-t border-line dark:border-gray-800 z-10 flex flex-col">
         {replyTo && (
-          <div className="mb-3 pl-3 border-l-2 border-[var(--ls-primary,#6C4CF6)] flex justify-between items-center bg-[var(--ls-bg,#F8F9FC)] dark:bg-gray-800 py-1.5 pr-2 rounded-r-md text-sm shadow-sm transition-all">
+          <div className="mb-3 pl-3 border-l-2 border-primary flex justify-between items-center bg-surface-muted dark:bg-gray-800 py-1.5 pr-2 rounded-r-md text-sm shadow-sm transition-all">
             <div className="flex flex-col overflow-hidden">
-              <span className="font-semibold text-[var(--ls-primary,#6C4CF6)] text-[10px] uppercase tracking-wider">Respondiendo a {replyTo.user_profile?.full_name}</span>
-              <span className="text-[var(--ls-text,#111827)] dark:text-gray-300 truncate text-xs mt-0.5">{replyTo.content}</span>
+              <span className="font-semibold text-primary text-[10px] uppercase tracking-wider">Respondiendo a {replyTo.user_profile?.full_name}</span>
+              <span className="text-ink dark:text-gray-300 truncate text-xs mt-0.5">{replyTo.content}</span>
             </div>
             <button onClick={() => setReplyTo(null)} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
               <Icon.Close />
@@ -205,9 +205,9 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
         )}
         
         <form onSubmit={handleSend} className="relative">
-          <div className="flex items-end gap-1 border border-[var(--ls-border,#E6E8F0)] dark:border-gray-700 bg-white dark:bg-gray-800 rounded-[20px] px-2 py-1.5 focus-within:ring-2 focus-within:ring-[var(--ls-soft-purple,#F2EEFF)] transition-all shadow-sm">
+          <div className="flex items-end gap-1 border border-line dark:border-gray-700 bg-white dark:bg-gray-800 rounded-[20px] px-2 py-1.5 focus-within:ring-2 focus-within:ring-primary-soft transition-all shadow-sm">
             
-            <button type="button" className="p-2 mb-0.5 text-[var(--ls-text-muted,#667085)] hover:bg-slate-50 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0" title="Adjuntar archivo">
+            <button type="button" className="p-2 mb-0.5 text-ink-muted hover:bg-slate-50 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0" title="Adjuntar archivo">
               <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
             </button>
 
@@ -215,7 +215,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Escribe tu mensaje..."
-              className="flex-1 resize-none bg-transparent border-none p-2 text-[14px] text-[var(--ls-text,#111827)] dark:text-gray-100 focus:ring-0 focus:outline-none max-h-32 min-h-[40px] leading-relaxed placeholder:text-slate-400"
+              className="flex-1 resize-none bg-transparent border-none p-2 text-[14px] text-ink dark:text-gray-100 focus:ring-0 focus:outline-none max-h-32 min-h-[40px] leading-relaxed placeholder:text-slate-400"
               rows={1}
               maxLength={120}
               onKeyDown={(e) => {
@@ -226,14 +226,14 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
               }}
             />
             
-            <button type="button" className="p-2 mb-0.5 text-[var(--ls-text-muted,#667085)] hover:bg-slate-50 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0 hidden sm:block" title="Emojis">
+            <button type="button" className="p-2 mb-0.5 text-ink-muted hover:bg-slate-50 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0 hidden sm:block" title="Emojis">
               <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </button>
 
             <button 
               type="submit"
               disabled={!inputText.trim() || inputText.length > 120}
-              className="w-10 h-10 mb-0.5 ml-1 bg-[var(--ls-primary,#6C4CF6)] hover:bg-[#5b3dc4] disabled:bg-[var(--ls-border,#E6E8F0)] disabled:text-slate-400 text-white rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all transform active:scale-95"
+              className="w-10 h-10 mb-0.5 ml-1 bg-primary hover:bg-[#5b3dc4] disabled:bg-line disabled:text-slate-400 text-white rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all transform active:scale-95"
             >
               <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
@@ -241,7 +241,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
           
           <div className="flex justify-end items-center mt-2 px-2">
             <div className="flex gap-3">
-              <span className={`text-[10px] font-medium ${inputText.length >= 110 ? 'text-[var(--ls-danger,#EF4444)]' : 'text-[var(--ls-text-muted,#667085)]'}`}>
+              <span className={`text-[10px] font-medium ${inputText.length >= 110 ? 'text-state-danger' : 'text-ink-muted'}`}>
                 {inputText.length} / 120
               </span>
             </div>

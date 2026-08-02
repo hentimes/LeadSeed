@@ -35,7 +35,7 @@ function ColumnSelector({ columns, onChange }: Props) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="btn flex items-center gap-1 px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-surface)]"
+        className="btn flex items-center gap-1 px-3 py-2 text-sm border border-line bg-[var(--color-surface)]"
       >
         Columnas ({visibleCount}/{columns.length})
         <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>

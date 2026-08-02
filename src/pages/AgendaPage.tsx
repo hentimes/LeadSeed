@@ -32,7 +32,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
 
       {(agenda.message || agenda.error) && (
         <div
-          className={`text-xs p-2 rounded-[var(--radius-md)] border ${agenda.error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}
+          className={`text-xs p-2 rounded-md border ${agenda.error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}
         >
           {agenda.error || agenda.message}
         </div>
@@ -45,7 +45,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
 
       <div className="flex flex-col gap-3">
         {agenda.activeAppointments.length === 0 ? (
-          <p className="text-xs text-slate-400 border-y border-[var(--color-border)] py-4">No hay citas activas en el rango revisado.</p>
+          <p className="text-xs text-slate-400 border-y border-line py-4">No hay citas activas en el rango revisado.</p>
         ) : (
           agenda.activeAppointments.map((appointment) => (
             <AgendaAppointmentCard
@@ -87,7 +87,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         )}
       </div>
 
-      <div className="border-y border-[var(--color-border)] py-3">
+      <div className="border-y border-line py-3">
         <button
           type="button"
           onClick={() => agenda.setShowCancelled((current) => !current)}

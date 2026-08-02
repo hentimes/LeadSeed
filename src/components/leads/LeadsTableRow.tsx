@@ -69,7 +69,7 @@ const LeadsTableRow = ({
   const showRutUnderName = compactMode && !rutColumnVisible && !!lead.rut;
 
   const checkboxBox = (
-    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-[var(--color-border)] bg-[var(--color-bg-surface)]'}`}>
+    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-line bg-surface'}`}>
       <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
         <path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={isSelected ? 1 : 0} />
       </svg>

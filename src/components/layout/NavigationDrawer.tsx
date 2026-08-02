@@ -61,14 +61,14 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
           if (hash) window.location.hash = hash;
           handleNavigate(page);
         }}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-[var(--ls-radius-sm,10px)] text-sm font-medium transition-colors ${
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-sm font-medium transition-colors ${
           isActive 
-            ? 'bg-[var(--ls-soft-purple,#F2EEFF)] dark:bg-slate-800 text-[var(--ls-primary,#6C4CF6)] dark:text-white' 
-            : 'text-[var(--ls-text-muted,#667085)] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[var(--ls-text,#111827)] dark:hover:text-slate-200'
+            ? 'bg-primary-soft dark:bg-slate-800 text-primary dark:text-white' 
+            : 'text-ink-muted dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-ink dark:hover:text-slate-200'
         } ${isSubItem ? 'pl-9 text-[13px]' : ''}`}
       >
         {!isSubItem && (
-          <span className={`w-5 h-5 flex items-center justify-center ${isActive ? 'text-[var(--ls-primary,#6C4CF6)]' : 'text-slate-400'}`}>
+          <span className={`w-5 h-5 flex items-center justify-center ${isActive ? 'text-primary' : 'text-slate-400'}`}>
             {icon()}
           </span>
         )}
@@ -93,13 +93,13 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
       <div key={id} className="flex flex-col">
         <button
           onClick={() => toggleSubmenu(id)}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-[var(--ls-radius-sm,10px)] text-sm font-medium transition-colors ${
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-sm font-medium transition-colors ${
             isAnyActive 
-              ? 'text-[var(--ls-primary,#6C4CF6)] dark:text-white' 
-              : 'text-[var(--ls-text-muted,#667085)] dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              ? 'text-primary dark:text-white' 
+              : 'text-ink-muted dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
           }`}
         >
-          <span className={`w-5 h-5 flex items-center justify-center ${isAnyActive ? 'text-[var(--ls-primary,#6C4CF6)]' : 'text-slate-400'}`}>
+          <span className={`w-5 h-5 flex items-center justify-center ${isAnyActive ? 'text-primary' : 'text-slate-400'}`}>
             {icon()}
           </span>
           {label}
@@ -122,7 +122,7 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
       <div className="fixed inset-0 z-30" onClick={onClose} aria-hidden="true" />
       
       <aside 
-        className="absolute top-[60px] left-2 sm:left-4 w-60 bg-white dark:bg-slate-900 border border-[var(--ls-border,#E6E8F0)] dark:border-slate-800 rounded-[var(--ls-radius-md,14px)] rounded-tl-none z-40 flex flex-col shadow-[var(--ls-shadow-float,0_16px_40px_rgba(17,24,39,0.14))] animate-fade-in origin-top-left overflow-hidden max-h-[calc(100vh-80px)]"
+        className="absolute top-[60px] left-2 sm:left-4 w-60 bg-white dark:bg-slate-900 border border-line dark:border-slate-800 rounded-md rounded-tl-none z-40 flex flex-col shadow-[var(--ls-shadow-float,0_16px_40px_rgba(17,24,39,0.14))] animate-fade-in origin-top-left overflow-hidden max-h-[calc(100vh-80px)]"
       >
         <div className="flex-1 overflow-y-auto py-3 px-3 space-y-5">
           {Object.entries(categorizedRoutes).map(([category, routes]) => {
@@ -130,7 +130,7 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
             
             return (
               <div key={category}>
-                <h3 className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-[var(--ls-text-muted,#667085)] uppercase opacity-70">
+                <h3 className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-ink-muted uppercase opacity-70">
                   {category}
                 </h3>
                 <nav className="space-y-0.5">
