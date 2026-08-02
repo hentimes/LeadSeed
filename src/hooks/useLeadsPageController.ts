@@ -63,7 +63,14 @@ export function useLeadsPageController() {
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
   const [sort, setSort] = useState<{ field: LeadSortField; dir: 'asc' | 'desc' }>({ field: 'createdAt', dir: 'desc' });
 
-  const { filterListId, setFilterListId, filterStatus, setFilterStatus, filterDate, setFilterDate, search, setSearch } = useLeadFilters();
+  const {
+    filterListId, setFilterListId,
+    filterStatus, setFilterStatus,
+    filterDate, setFilterDate,
+    filterOrigin, setFilterOrigin,
+    filterCaptureLinkId, setFilterCaptureLinkId,
+    search, setSearch,
+  } = useLeadFilters();
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -162,6 +169,8 @@ export function useLeadsPageController() {
       listId: filterListId,
       status: filterStatus,
       dateFilter: filterDate,
+      origin: filterOrigin,
+      captureLinkId: filterCaptureLinkId,
       sortField: sort.field,
       sortDirection: sort.dir,
       deleted: showTrash,
@@ -247,9 +256,11 @@ export function useLeadsPageController() {
     setIsLoadingPage(false);
   }, [
     currentPage,
+    filterCaptureLinkId,
     filterDate,
     filterListId,
     filterMode,
+    filterOrigin,
     filterStatus,
     getAll,
     getById,
@@ -278,7 +289,7 @@ export function useLeadsPageController() {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedIds(new Set());
-  }, [filterDate, filterListId, filterMode, filterStatus, search, showTrash, sort.field, sort.dir]);
+  }, [filterCaptureLinkId, filterDate, filterListId, filterMode, filterOrigin, filterStatus, search, showTrash, sort.field, sort.dir]);
 
   const onSort = useCallback((field: LeadSortField) => {
     setSort((prev) => ({
@@ -528,6 +539,10 @@ export function useLeadsPageController() {
     setFilterStatus,
     filterDate,
     setFilterDate,
+    filterOrigin,
+    setFilterOrigin,
+    filterCaptureLinkId,
+    setFilterCaptureLinkId,
     search,
     setSearch,
 

@@ -41,6 +41,8 @@ export interface LeadSortConfig {
   dir: LeadSortDirection;
 }
 
+export type LeadOrigin = 'manual' | 'imported' | 'web_form';
+
 export interface LeadPageQuery {
   page: number;
   pageSize: number;
@@ -51,6 +53,9 @@ export interface LeadPageQuery {
   sortField?: LeadSortField;
   sortDirection?: LeadSortDirection;
   deleted?: boolean;
+  origin?: LeadOrigin | null;
+  /** Solo tiene efecto combinado con origin: 'web_form'. */
+  captureLinkId?: number | null;
 }
 
 export interface LeadPageRowResult {
@@ -154,6 +159,18 @@ function applyLeadPageFilters(
     nextQuery = nextQuery.eq('status', params.status);
   }
 
+  if (params.origin) {
+    // Igualdad simple porque metadata.origin se backfillo explicitamente
+    // para todos los leads existentes (migracion 069): no hace falta un
+    // filtro de exclusion sobre metadata ausente, que dependeria de como
+    // PostgREST traduce not.eq sobre NULL.
+    nextQuery = nextQuery.eq('metadata->>origin', params.origin);
+
+    if (params.origin === 'web_form' && params.captureLinkId != null) {
+      nextQuery = nextQuery.eq('metadata->>capture_link_id', String(params.captureLinkId));
+    }
+  }
+
   if (params.dateFilter) {
     const now = new Date();
     let cutoffIso = '';
@@ -196,7 +213,8 @@ function hasActiveLeadFilters(params: LeadPageQuery): boolean {
     params.search?.trim() ||
     params.listId !== undefined && params.listId !== null ||
     params.status ||
-    params.dateFilter
+    params.dateFilter ||
+    params.origin
   );
 }
 

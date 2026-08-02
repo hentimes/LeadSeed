@@ -258,6 +258,11 @@ export async function saveLeadForUser(userId: string, lead: Lead): Promise<strin
     lista_ids: lead.listaIds || [],
     scheduled_at: lead.scheduledAt,
     metadata: {
+      // origin distingue de donde vino el lead para el filtro de la tabla
+      // (migracion 069). Solo se estampa aca, en la creacion: un lead
+      // importado o de formulario web no deberia pasar a 'manual' por
+      // editarlo despues.
+      origin: 'manual',
       ...(lead.metadata || {}),
       isPinned: lead.isPinned || false
     },
@@ -313,6 +318,9 @@ export async function importLeadsForUser(
       status: normalizedStatus,
       notes: lead.notes || '',
       user_id: userId,
+      // origin distingue de donde vino el lead para el filtro de la tabla
+      // (migracion 069).
+      metadata: { origin: 'imported' },
     };
   });
 

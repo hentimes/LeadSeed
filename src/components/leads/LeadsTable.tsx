@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import type { Lead, LeadList, LeadStatus } from '../../types';
-import type { LeadSortConfig, LeadSortField } from '../../repositories/leadsRepository';
+import type { LeadOrigin, LeadSortConfig, LeadSortField } from '../../repositories/leadsRepository';
 import type { ColumnDef } from '../ColumnSelector';
 import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
@@ -30,6 +30,10 @@ interface Props {
   onFilterStatusChange: (status: LeadStatus | null) => void;
   filterDate: string;
   onFilterDateChange: (v: string) => void;
+  filterOrigin: LeadOrigin | null;
+  onFilterOriginChange: (origin: LeadOrigin | null) => void;
+  filterCaptureLinkId: number | null;
+  onFilterCaptureLinkIdChange: (id: number | null) => void;
   search: string;
   onSearchChange: (search: string) => void;
   sort: LeadSortConfig;
@@ -79,7 +83,8 @@ function shortName(full: string): string {
 
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
-  onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange, search, onSearchChange,
+  onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange,
+  filterOrigin, onFilterOriginChange, filterCaptureLinkId, onFilterCaptureLinkIdChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
   compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
   onReorderCols, onReorderPinned,
@@ -215,6 +220,10 @@ export default function LeadsTable({
         onFilterStatusChange={onFilterStatusChange}
         filterDate={filterDate}
         onFilterDateChange={onFilterDateChange}
+        filterOrigin={filterOrigin}
+        onFilterOriginChange={onFilterOriginChange}
+        filterCaptureLinkId={filterCaptureLinkId}
+        onFilterCaptureLinkIdChange={onFilterCaptureLinkIdChange}
       />
 
       <div ref={containerRef} className="card-standard overflow-x-auto w-full min-w-0">
