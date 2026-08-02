@@ -1,6 +1,6 @@
 import { getCurrentSession } from './authService';
 import { fetchDueScheduledEmailLogs, fetchPendingTaskAlertRows } from '../repositories/appMaintenanceRepository';
-import { supabase } from '../lib/supabaseClient';
+import { countUnreadNewLeads } from '../repositories/leadsRepository';
 
 export interface BackgroundTaskAlertSummary {
   overdueCount: number;
@@ -16,13 +16,7 @@ function toIsoDay(date: Date): string {
 }
 
 export async function fetchNewLeadsCount(userId: string): Promise<number> {
-  const { count } = await supabase
-    .from('leads')
-    .select('id, metadata', { count: 'exact', head: true })
-    .eq('status', 'nuevo')
-    .eq('user_id', userId)
-    .not('metadata', 'cs', '{"is_read":true}');
-  return count || 0;
+  return countUnreadNewLeads(userId);
 }
 
 export async function loadBackgroundTaskAlertSummary(): Promise<BackgroundTaskAlertSummary | null> {

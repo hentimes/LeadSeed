@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, EmailDeliveryChannelOption, EmailTemplate, EmailTemplateList, LeadList, SendLog } from '../../types';
 import { replaceVariables } from '../../utils/waHelper';
-import type { EmailAttachment } from '../../utils/emailSender';
+import type { EmailAttachment } from '../../types';
 import { Icon } from '../../utils/icons';
 import EmailEditor from './EmailEditor';
 import EmailScheduler from './EmailScheduler';

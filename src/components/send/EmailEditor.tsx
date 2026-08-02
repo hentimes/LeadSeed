@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import type { EmailTemplate } from '../../types';
-import type { EmailAttachment } from '../../utils/emailSender';
+import type { EmailAttachment } from '../../types';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { Icon } from '../../utils/icons';

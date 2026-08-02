@@ -4,6 +4,13 @@ export type ComparePeriod = 'yesterday' | 'lastWeek' | 'lastMonth' | 'lastYear';
 
 export type EmailProvider = 'emailjs' | 'resend' | 'gmail';
 
+/** Adjunto de correo, en base64. Vive aca y no en utils para que los
+ *  repositorios puedan usarlo sin depender de una capa superior. */
+export interface EmailAttachment {
+  filename: string;
+  content: string;
+}
+
 export interface EmailChannelSummary {
   id: string;
   provider: string;

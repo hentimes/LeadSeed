@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { fetchBackupSnapshotRows } from '../repositories/backupRepository';
 import { getCurrentSession } from '../services/authService';
 
 export async function exportBackup(): Promise<void> {
@@ -6,19 +6,8 @@ export async function exportBackup(): Promise<void> {
   const userId = session?.user?.id;
   if (!userId) return;
 
-  const [
-    { data: leads },
-    { data: leadLists },
-    { data: templates },
-    { data: templateLists },
-    { data: sendLogs },
-  ] = await Promise.all([
-    supabase.from('leads').select('*').eq('user_id', userId),
-    supabase.from('lead_lists').select('*').eq('user_id', userId),
-    supabase.from('templates').select('*').eq('user_id', userId),
-    supabase.from('template_lists').select('*').eq('user_id', userId),
-    supabase.from('send_logs').select('*').eq('user_id', userId),
-  ]);
+  const { leads, leadLists, templates, templateLists, sendLogs } =
+    await fetchBackupSnapshotRows(userId);
 
   const data = {
     version: 3,

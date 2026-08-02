@@ -1,13 +1,9 @@
 import emailjs from '@emailjs/browser';
 import { getSettings } from '../services/appSettingsService';
-import { supabase } from '../lib/supabaseClient';
-import type { EmailProvider, Lead } from '../types';
+import { invokeSendEmailBatch } from '../repositories/emailDeliveryRepository';
+import type { EmailAttachment, EmailProvider, Lead } from '../types';
 import { replaceVariables } from './waHelper';
 
-export interface EmailAttachment {
-  filename: string;
-  content: string;
-}
 
 type DeliveryPayload = {
   to: string;
@@ -43,33 +39,7 @@ async function sendBackendBatch(
   channelSelection?: ChannelSelection,
   fallbackProvider?: EmailProvider,
 ) {
-  const { data, error } = await supabase.functions.invoke('send-email', {
-    body: {
-      deliveries,
-      requestedProvider: channelSelection?.provider || fallbackProvider,
-      requestedChannelId: channelSelection?.channelId,
-    },
-  });
-
-  if (error) {
-    return {
-      ok: false,
-      errors: [error.message || 'No se pudo invocar send-email'],
-      deliveries: [] as Array<{ to: string; ok: boolean; error?: string }>,
-    };
-  }
-
-  return {
-    ok: Boolean(data?.ok),
-    errors: Array.isArray(data?.errors) ? data.errors.map(String) : [],
-    deliveries: Array.isArray(data?.deliveries)
-      ? data.deliveries.map((entry: Record<string, unknown>) => ({
-          to: String(entry.to || ''),
-          ok: Boolean(entry.ok),
-          error: typeof entry.error === 'string' ? entry.error : undefined,
-        }))
-      : [],
-  };
+  return invokeSendEmailBatch(deliveries, channelSelection, fallbackProvider);
 }
 
 async function sendEmailJsEmail(

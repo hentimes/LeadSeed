@@ -3,6 +3,7 @@ import { useSaaS } from '../../hooks/useSaaS';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
 import type { Plan } from '../../types';
+import { saveProfileFields } from '../../services/profileService';
 
 export default function OnboardingPlanSelect() {
   const { getPlans } = useSaaS();
@@ -30,18 +31,8 @@ export default function OnboardingPlanSelect() {
     if (!user) return;
     setSelectingId(plan.id);
     try {
-      // Necesitamos instanciar el hook o usar supabase directo porque updateProfile
-      // es un useCallback que depende del hook useSaaS.
-      // Lo mejor es llamarlo directamente aquí con supabase:
-      const { supabase } = await import('../../lib/supabaseClient');
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({ plan_id: plan.id })
-        .eq('id', user.id);
-        
-      if (error) throw error;
-      
+      await saveProfileFields(user.id, { plan_id: plan.id });
+
       // Refrescar el perfil en el contexto para que App.tsx nos deje pasar
       await refreshProfile();
     } catch (err) {

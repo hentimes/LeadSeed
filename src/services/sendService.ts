@@ -1,6 +1,6 @@
 import type { Lead, SendLog } from '../types';
 import { fetchSendLogRowsByTemplate, insertSendLogs, markLeadRowsAsContacted } from '../repositories/sendRepository';
-import type { EmailAttachment } from '../utils/emailSender';
+import type { EmailAttachment } from '../types';
 import { sendEmailToLeads } from '../utils/emailSender';
 
 function mapSendLogRow(row: Awaited<ReturnType<typeof fetchSendLogRowsByTemplate>>[number]): SendLog {

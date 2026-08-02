@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabaseClient';
+import { changeAvatar, saveProfileFields } from '../../services/profileService';
 import { Icon } from '../../utils/icons';
 
 interface Props {
@@ -27,29 +27,8 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
     setLoading(true);
     setError('');
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      await changeAvatar(user.id, file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const avatarUrl = publicUrlData.publicUrl;
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: avatarUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-      
       await refreshProfile();
       setSuccess('Foto de perfil actualizada');
     } catch (err: any) {
@@ -66,16 +45,11 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
     setError('');
     setSuccess('');
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          bio,
-          show_premium_frame: showFrame,
-          is_invisible: isInvisible
-        })
-        .eq('id', user.id);
-      
-      if (error) throw error;
+      await saveProfileFields(user.id, {
+        bio,
+        show_premium_frame: showFrame,
+        is_invisible: isInvisible,
+      });
       
       await refreshProfile();
       setSuccess('Perfil guardado exitosamente');

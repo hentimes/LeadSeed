@@ -16,9 +16,9 @@ export type LeadSortField =
 /**
  * Columna real por la que ordena cada campo.
  *
- * Los cuatro ultimos viven dentro del JSON del formulario publico, asi que
- * se ordenan por su ruta. Ojo: al ser texto, 'income' ordena
- * alfabeticamente y no por monto.
+ * Los que vienen del formulario publico viven dentro del JSON, asi que se
+ * ordenan por su ruta. 'income' es la excepcion: usa el campo calculado
+ * income_rank porque como texto ordenaba alfabeticamente y no por monto.
  */
 const LEAD_SORT_COLUMNS: Record<LeadSortField, string> = {
   createdAt: 'created_at',
@@ -451,4 +451,26 @@ export async function importLeadRows(rows: Array<Partial<LeadRow>>): Promise<voi
 export async function fetchLeadListIds(leadId: string): Promise<number[]> {
   const { data } = await supabase.from('leads').select('lista_ids').eq('id', leadId).single();
   return data?.lista_ids || [];
+}
+
+/**
+ * Cantidad de leads nuevos sin leer del usuario.
+ *
+ * Se cuenta con head:true para no traer filas: el service worker solo necesita
+ * el numero para el badge.
+ */
+export async function countUnreadNewLeads(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('leads')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'nuevo')
+    .eq('user_id', userId)
+    .not('metadata', 'cs', '{"is_read":true}');
+
+  if (error) {
+    console.error('Error contando leads nuevos sin leer:', error.message);
+    return 0;
+  }
+
+  return count || 0;
 }
