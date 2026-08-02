@@ -1,6 +1,7 @@
 import { getDefaultAgendaRange, listMyAppointments } from './agendaService';
 import { getCurrentSession } from './authService';
 import { dispatchAlert, getAlertPreferences } from './alertNotifier';
+import { incrementBadgeCount } from './extensionBadgeTheme';
 
 const STORAGE_KEY = 'agendaAlerts';
 const NOTIFIED_LIMIT = 50;
@@ -56,11 +57,14 @@ export async function checkUpcomingAppointments(): Promise<void> {
     for (const appointment of due) {
       notified.add(appointment.id);
       const minutes = Math.max(1, Math.round((new Date(appointment.startsAt).getTime() - now) / 60_000));
-      await dispatchAlert('upcoming_appointment', {
+      // Tono critico: una cita que empieza en minutos no puede quedar detras
+      // del contador de leads si conviven.
+      const result = await dispatchAlert('upcoming_appointment', {
         id: `appointment-${appointment.id}`,
         title: `Cita en ${minutes} min`,
         message: `${appointment.leadName} - ${formatTime(appointment.startsAt)}`,
       });
+      if (result.delivered) await incrementBadgeCount('critical');
     }
 
     if (due.length > 0) {

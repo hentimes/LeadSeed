@@ -4,7 +4,7 @@ import {
   subscribeToLeadAlertEvents,
 } from '../repositories/leadAlertsRepository';
 import { getCurrentSession } from './authService';
-import { setBadge } from './extensionBadgeTheme';
+import { restoreBadge, setBadgeCount } from './extensionBadgeTheme';
 import { dispatchAlert } from './alertNotifier';
 import type { LeadAlertEvent } from '../types';
 
@@ -91,7 +91,7 @@ async function processIncomingEventsUnsafe(events: LeadAlertEvent[]): Promise<vo
     unseenCount,
   });
 
-  setBadge(unseenCount, 'newLeads');
+  void setBadgeCount('newLeads', unseenCount);
 
   // La UI abierta escucha esto para mostrar el toast y refrescar la lista.
   chrome.runtime.sendMessage({ type: 'LEAD_ALERTS_INCOMING', events: fresh }).catch(() => {
@@ -102,7 +102,7 @@ async function processIncomingEventsUnsafe(events: LeadAlertEvent[]): Promise<vo
 /** Se llama cuando el usuario abre la extension: el badge deja de tener sentido. */
 export async function markLeadAlertsAsSeen(): Promise<void> {
   await saveLeadAlertsState({ unseenCount: 0 });
-  setBadge(0, 'newLeads');
+  void setBadgeCount('newLeads', 0);
 }
 
 /**
@@ -199,5 +199,8 @@ export function isReconcileAlarm(alarmName: string): boolean {
 
 export async function restoreLeadAlertBadge(): Promise<void> {
   const state = await getLeadAlertsState();
-  setBadge(state.unseenCount, 'newLeads');
+  // Se refresca el contador de leads con lo persistido y despues se repinta el
+  // badge completo, para no borrar lo que hayan dejado mensajes o criticos.
+  await setBadgeCount('newLeads', state.unseenCount);
+  await restoreBadge();
 }

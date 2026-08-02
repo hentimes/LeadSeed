@@ -6,6 +6,7 @@ import {
 } from '../repositories/messageAlertsRepository';
 import { getCurrentSession } from './authService';
 import { dispatchAlert } from './alertNotifier';
+import { incrementBadgeCount } from './extensionBadgeTheme';
 
 function truncate(text: string, max = 90): string {
   const clean = text.replace(/\s+/g, ' ').trim();
@@ -29,11 +30,15 @@ async function startOnce(): Promise<void> {
   unsubscribeSupport = subscribeToIncomingSupportMessages(userId, (row) => {
     void (async () => {
       const senderName = await fetchSenderName(row.sender_id);
-      await dispatchAlert('support_message', {
+      const result = await dispatchAlert('support_message', {
         id: `support-msg-${row.id}`,
         title: `Mensaje de ${senderName}`,
         message: truncate(row.message || ''),
       });
+      // Solo suma si de verdad se aviso. Si la alerta esta desactivada o
+      // suprimida por "solo con extension cerrada", el badge tampoco debe
+      // contarla: seria un pendiente que el usuario nunca vio anunciarse.
+      if (result.delivered) await incrementBadgeCount('messages');
     })();
   });
 
@@ -47,11 +52,12 @@ async function startOnce(): Promise<void> {
       if (!mine) return;
 
       const senderName = await fetchSenderName(row.user_id);
-      await dispatchAlert('chat_reply', {
+      const result = await dispatchAlert('chat_reply', {
         id: `chat-reply-${row.id}`,
         title: `${senderName} respondio tu mensaje`,
         message: truncate(row.content || ''),
       });
+      if (result.delivered) await incrementBadgeCount('messages');
     })();
   });
 }

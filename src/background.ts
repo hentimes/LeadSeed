@@ -13,6 +13,7 @@ import {
 } from './services/backgroundMessageAlertsService';
 import { checkUpcomingAppointments } from './services/backgroundAgendaAlertsService';
 import { dispatchAlert } from './services/alertNotifier';
+import { clearBadge, setBadgeCount } from './services/extensionBadgeTheme';
 
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
@@ -51,6 +52,9 @@ async function updateTaskAlerts() {
         // o suprimida por 'solo con extension cerrada', se reintenta luego.
         if (result.delivered) {
           chrome.storage.local.set({ lastOverdueNotify: today });
+          // Tono critico. Es un contador fijo, no acumulativo: el aviso sale
+          // una vez por dia y refleja cuantas tareas hay vencidas ahora.
+          await setBadgeCount('critical', summary.overdueCount);
         }
       }
     }
@@ -99,10 +103,36 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-// Abrir la extension desde la notificacion nativa.
+/**
+ * Abre el panel lateral desde una notificacion nativa.
+ *
+ * sidePanel.open() exige un gesto del usuario; el click en la notificacion
+ * cuenta como tal. Necesita una ventana concreta, y desde el service worker
+ * no hay pestaña de contexto, asi que se usa la ultima con foco.
+ */
+async function openSidePanelFromNotification() {
+  try {
+    const window = await chrome.windows.getLastFocused();
+    if (window?.id === undefined) return;
+    await chrome.sidePanel.open({ windowId: window.id });
+  } catch (error) {
+    // Si Chrome rechaza la apertura no hay forma de recuperarlo desde aca,
+    // pero no se puede dejar pasar en silencio: es la unica pista de que el
+    // click no hizo nada.
+    console.error('No se pudo abrir el panel desde la notificacion:', error);
+  }
+}
+
+// Cualquier notificacion de la extension abre el panel: todas invitan a
+// hacerlo. Antes solo se manejaban las de leads, y ademas se limitaban a
+// marcarlas como vistas, asi que el click no abria nada.
 chrome.notifications.onClicked.addListener((notificationId) => {
-  if (!notificationId.startsWith('lead-alert-')) return;
-  void markLeadAlertsAsSeen();
+  void openSidePanelFromNotification();
+
+  if (notificationId.startsWith('lead-alert-')) {
+    void markLeadAlertsAsSeen();
+  }
+
   chrome.notifications.clear(notificationId);
 });
 
@@ -157,7 +187,11 @@ async function abrirWhatsAppWeb(numero: string, mensaje: string) {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "LEAD_ALERTS_MARK_SEEN") {
+    // Este mensaje lo manda la UI al abrirse. Ademas de los leads hay que
+    // apagar mensajes y criticos: ahora tambien suman al badge, y si no se
+    // limpian aca quedan pegados aunque el usuario ya haya entrado.
     void markLeadAlertsAsSeen();
+    void clearBadge();
     return false;
   }
 
