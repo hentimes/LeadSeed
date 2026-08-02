@@ -6971,3 +6971,93 @@ antes de declararlo hecho (seccion 5.5).
   sesion, se podria pisar. Aceptable para una accion inmediata del
   propio usuario sobre sus leads.
 - Sin auditoria cruzada bajo 14.4.
+
+---
+
+## Claude | 2026-08-01 CLT | Sistema de diseno centralizado
+
+Rol: Implementadora (sin IA-B disponible para revision cruzada).
+
+### Auditoria previa
+
+El pedido fue tomar el estilo de Dashboard y Leads y estandarizarlo. La
+auditoria encontro que el problema era mas profundo:
+
+- DOS sistemas de tokens conviviendo, `--ls-*` y `--color-*`, con valores
+  duplicados y contradictorios (`--color-primary-hover` definido dos
+  veces con valores distintos en el mismo bloque)
+- una capa de clases (.card-standard, .btn, .text-heading-*) que existia
+  pero casi no se usaba: 12 archivos de 46
+- 759 colores literales repartidos en 46 archivos
+- seis anchos de contenedor distintos entre paginas (max-w-2xl, 4xl, 5xl,
+  6xl, ninguno), cada pagina eligiendo el suyo
+- las DOS secciones de referencia no coincidian entre si: Dashboard usaba
+  #635BFF/#5B42F3 y Leads #6C4CF6
+
+### Decision declarada
+
+Se unifica la marca en #6C4CF6 (color del logo, el mas extendido). Esto
+cambia levemente el tono del Dashboard, que usaba #635BFF. Es un cambio
+visual deliberado, no un efecto colateral.
+
+### Implementado
+
+- `src/design/tokens.css`: fuente unica de color, radio, sombra,
+  tipografia y espaciado. Modo oscuro incluido. Alias de compatibilidad
+  para el codigo previo.
+- `tailwind.config.js`: deja de declarar colores literales; solo expone
+  los tokens (bg-primary, text-ink, border-line, text-body...).
+- `src/design/`: primitivas Card, Panel, Button, IconButton, Badge,
+  PageShell, SectionHeader, EmptyState y escala tipografica.
+- `src/design/palette.ts`: puente para SVG y Recharts, que necesitan un
+  literal en la prop. Lee los tokens en runtime con getComputedStyle
+  memoizado, para que los graficos tampoco queden desincronizados.
+- Armazon centralizado: el ancho por seccion se declara una vez en
+  AppPageRenderer (PAGE_WIDTH) y lo aplica PageShell. Las paginas dejaron
+  de elegir su contenedor.
+- Migracion mecanica en varias pasadas: 656 reemplazos de literales a
+  tokens, 100 clases con var() y respaldo obsoleto, y la cola larga de
+  variantes (dos verdes, dos rojos, cuatro morados claros, cuatro grises
+  que significaban lo mismo).
+- `src/design/README.md`: como cambiar algo en toda la extension y cuales
+  son las excepciones legitimas.
+
+Hallazgo lateral: habia respaldos desactualizados que mentian, por
+ejemplo `rounded-[var(--ls-radius-md,14px)]` cuando el token vale 6px.
+
+### Validacion ejecutada
+
+- tsc --noEmit y vite build limpios despues de cada pasada
+- checkpoints commiteados entre fases para tener puntos de retorno
+- PRUEBA DE PROPAGACION: se cambio --ls-primary a un verde, se compilo y
+  se verifico que el morado anterior desaparece por completo del CSS
+  compilado (0 ocurrencias) y el nuevo queda definido una sola vez.
+  Token restaurado despues.
+
+Balance: 759 -> 103 literales (-86%). Los 103 restantes son legitimos y
+estan documentados: la paleta que el usuario elige para sus listas, el
+verde de marca de WhatsApp y grises de tooltips de graficos.
+
+### Estado
+
+`pendiente de validacion real`.
+
+Certificado: tipos, build y propagacion de tokens. NO certificado: el
+resultado visual en Chrome. Este bloque toca el aspecto de TODA la
+extension, asi que la validacion del usuario es imprescindible antes de
+declararlo hecho (seccion 5.5).
+
+### Riesgos declarados
+
+- El cambio de #635BFF a #6C4CF6 altera el tono del Dashboard. Es
+  intencional pero conviene confirmarlo visualmente.
+- La consolidacion de la cola larga asume que las variantes cercanas
+  significaban lo mismo. Si alguna distincion era deliberada, se perdio;
+  se revierte agregando el token que falte.
+- Las primitivas nuevas (Card, Button, Badge) todavia no reemplazan el
+  markup existente: conviven. Migrar los consumidores queda pendiente y
+  es incremental, no bloqueante.
+- `index.css` importa Inter desde Google Fonts por red y la CSP de MV3
+  bloquea recursos remotos: la fuente probablemente nunca carga y cae al
+  system-ui. Detectado, no corregido en este bloque.
+- Sin auditoria cruzada bajo 14.4.
