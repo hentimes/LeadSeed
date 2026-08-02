@@ -262,7 +262,7 @@ export async function saveLeadForUser(userId: string, lead: Lead): Promise<strin
       // (migracion 069). Solo se estampa aca, en la creacion: un lead
       // importado o de formulario web no deberia pasar a 'manual' por
       // editarlo despues.
-      origin: 'manual',
+      origin: 'manual' as const,
       ...(lead.metadata || {}),
       isPinned: lead.isPinned || false
     },
@@ -320,7 +320,7 @@ export async function importLeadsForUser(
       user_id: userId,
       // origin distingue de donde vino el lead para el filtro de la tabla
       // (migracion 069).
-      metadata: { origin: 'imported' },
+      metadata: { origin: 'imported' as const },
     };
   });
 

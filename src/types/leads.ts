@@ -60,6 +60,8 @@ export interface PlanesproIntakeJourneyStep1 {
 }
 
 export interface PlanesproLeadMetadata {
+  /** manual | imported | web_form. Migracion 069. */
+  origin?: 'manual' | 'imported' | 'web_form';
   source_system?: string;
   source_channel?: string;
   source_form_variant?: string;

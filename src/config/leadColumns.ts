@@ -51,7 +51,14 @@ export const LEAD_COLUMN_CATALOG: LeadColumnDef[] = [
   { key: 'income', label: 'Renta', defaultVisible: false, width: 110, sortField: 'income' },
   { key: 'comuna', label: 'Comuna', defaultVisible: false, width: 110, sortField: 'comuna' },
   { key: 'score', label: 'Score', defaultVisible: false, width: 70, sortField: 'score' },
+  { key: 'origin', label: 'Origen', defaultVisible: false, width: 150 },
 ];
+
+const ORIGIN_LABELS: Record<string, string> = {
+  manual: 'Manual',
+  imported: 'Importado',
+  web_form: 'Formulario web',
+};
 
 export const LEAD_COLUMN_BY_KEY = new Map(LEAD_COLUMN_CATALOG.map((column) => [column.key, column]));
 
@@ -91,6 +98,14 @@ export function getLeadColumnValue(lead: Lead, key: string, lists: LeadList[]): 
       return text(raw(lead).rango_renta || raw(lead).renta);
     case 'comuna':
       return text(raw(lead).comuna);
+    case 'origin': {
+      const metadata = (lead.metadata || {}) as PlanesproLeadMetadata;
+      const label = metadata.origin ? ORIGIN_LABELS[metadata.origin] : '';
+      if (metadata.origin === 'web_form' && metadata.capture_link_name) {
+        return `${label} · ${metadata.capture_link_name}`;
+      }
+      return label;
+    }
     default:
       return '';
   }

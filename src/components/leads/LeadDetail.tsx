@@ -3,6 +3,7 @@ import { Icon } from '../../utils/icons';
 import { useLeadDetail, toJourneyLabel } from '../../hooks/useLeadDetail';
 import LeadDetailHeader from './detail/LeadDetailHeader';
 import LeadDetailContact from './detail/LeadDetailContact';
+import LeadDetailOrigin from './detail/LeadDetailOrigin';
 import LeadDetailCrossExecAlert from './detail/LeadDetailCrossExecAlert';
 import LeadDetailHistory from './detail/LeadDetailHistory';
 import { Modal } from '../../design/Modal';
@@ -58,6 +59,8 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
 
         <div className="flex-1 p-4 pt-3 space-y-4">
           <LeadDetailContact phone={lead.phone} email={lead.email} onCopy={copyToClipboard} />
+
+          <LeadDetailOrigin metadata={detail.planesproMetadata} />
 
           <LeadDetailCrossExecAlert alerts={detail.crossExecAlerts} getMessage={detail.getCrossExecMessage} />
 
