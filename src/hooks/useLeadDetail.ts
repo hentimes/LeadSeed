@@ -24,7 +24,7 @@ import {
   loadLeadDetailData,
   markLeadCrossExecAlertsAsRead,
 } from '../services/leadDetailService';
-import { updateLead } from '../repositories/leadsRepository';
+import { markLeadAsRead } from '../services/leadsService';
 
 const TECHNICAL_METADATA_KEYS = new Set([
   'raw_payload',
@@ -229,8 +229,7 @@ export function useLeadDetail(lead: Lead) {
 
       if (metadata.is_read !== true) {
         try {
-          const updatedMetadata = { ...metadata, is_read: true };
-          await updateLead(leadId, { metadata: updatedMetadata });
+          await markLeadAsRead(leadId, metadata);
         } catch (e) {
           console.error('Error marcando lead como leido:', e);
         }

@@ -9,7 +9,7 @@ import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../../services/sendService';
 import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
-import { listEmailChannels } from '../../repositories/emailChannelsRepository';
+import { listChannels } from '../../services/emailChannelsService';
 
 interface Props {
   leads: Lead[];
@@ -80,7 +80,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       try {
         const [settings, channels, googleStatus] = await Promise.all([
           getSettings(),
-          listEmailChannels().catch(() => []),
+          listChannels().catch(() => []),
           getMyCalendarConnectionStatus().catch(() => null),
         ]);
         if (!active) return;

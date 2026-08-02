@@ -265,6 +265,14 @@ export async function saveLeadForUser(userId: string, lead: Lead): Promise<strin
   return createLead(row);
 }
 
+/**
+ * Marca el lead como leido preservando el resto de su metadata.
+ * Vive aca y no en el hook para que la UI no toque el repositorio.
+ */
+export async function markLeadAsRead(leadId: string, metadata: Record<string, unknown>): Promise<void> {
+  await updateLead(leadId, { metadata: { ...metadata, is_read: true } });
+}
+
 export async function softDeleteLead(id: string): Promise<void> {
   await updateLead(id, { deleted_at: new Date().toISOString() });
 }

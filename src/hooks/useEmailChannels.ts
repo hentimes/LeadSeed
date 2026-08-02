@@ -4,11 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { getMyCalendarConnectionStatus } from '../services/agendaService';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import {
-  createResendChannel,
-  deleteEmailChannel,
-  listEmailChannels,
-  updateEmailChannel,
-} from '../repositories/emailChannelsRepository';
+  createChannel,
+  listChannels,
+  removeChannel,
+  updateChannel,
+} from '../services/emailChannelsService';
 import type { CalendarConnectionStatus, EmailChannelSummary, EmailProvider } from '../types';
 
 export type EmailJsConfig = {
@@ -115,7 +115,7 @@ export function useEmailChannels() {
 
         const [settings, nextChannels, nextGoogleStatus] = await Promise.all([
           getSettings(),
-          listEmailChannels(),
+          listChannels(),
           getMyCalendarConnectionStatus().catch(() => null),
         ]);
         if (!active) return;
@@ -169,7 +169,7 @@ export function useEmailChannels() {
   };
 
   const reloadChannels = async () => {
-    const nextChannels = await listEmailChannels();
+    const nextChannels = await listChannels();
     setChannels(nextChannels);
     return nextChannels;
   };
@@ -220,7 +220,7 @@ export function useEmailChannels() {
       setChannelMessage('');
       setErrorMessage('');
 
-      const created = await createResendChannel({
+      const created = await createChannel({
         channelName: draft.channelName,
         fromName: draft.fromName,
         fromEmail: draft.fromEmail,
@@ -259,7 +259,7 @@ export function useEmailChannels() {
       setChannelMessage('');
       setErrorMessage('');
 
-      await updateEmailChannel({
+      await updateChannel({
         id: editingChannelId,
         channelName: editingDraft.channelName,
         fromName: editingDraft.fromName,
@@ -285,7 +285,7 @@ export function useEmailChannels() {
       setBusyChannelId(channel.id);
       setChannelMessage('');
       setErrorMessage('');
-      await updateEmailChannel({ id: channel.id, isActive: !channel.isActive });
+      await updateChannel({ id: channel.id, isActive: !channel.isActive });
       const nextChannels = await reloadChannels();
       await persistSettings(provider, emailJsConfig, nextChannels);
       setChannelMessage(!channel.isActive ? `"${channel.channelName}" quedo conectado.` : `"${channel.channelName}" quedo pausado.`);
@@ -301,7 +301,7 @@ export function useEmailChannels() {
       setBusyChannelId(channel.id);
       setChannelMessage('');
       setErrorMessage('');
-      await deleteEmailChannel(channel.id);
+      await removeChannel(channel.id);
       const nextChannels = await reloadChannels();
       await persistSettings(provider, emailJsConfig, nextChannels);
       if (editingChannelId === channel.id) {
@@ -380,7 +380,7 @@ export function useEmailChannels() {
       if (nextProvider === 'resend') {
         if (!channel) throw new Error('Selecciona un canal Resend para activarlo');
         if (!channel.isDefault || !channel.isActive) {
-          await updateEmailChannel({ id: channel.id, isDefault: true, isActive: true });
+          await updateChannel({ id: channel.id, isDefault: true, isActive: true });
           nextChannels = await reloadChannels();
         }
       }
