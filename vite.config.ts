@@ -17,29 +17,21 @@ export default defineConfig({
       },
       output: {
         manualChunks(id) {
+          // Solo se agrupan dependencias de node_modules. Antes habia
+          // reglas por directorio de src/ que agrupaban modulos sin
+          // relacion: supabaseClient terminaba en el mismo chunk que
+          // componentes React, y por eso el service worker cargaba ~140 KB
+          // de React que nunca ejecuta. Rollup calcula mejor los chunks
+          // por punto de entrada cuando no se le fuerza el agrupamiento.
           if (id.includes('@supabase')) return 'supabase';
           if (id.includes('react-dom') || id.includes('/react/') || id.includes('scheduler')) return 'react-vendor';
           if (id.includes('xlsx')) return 'xlsx';
           if (id.includes('recharts')) return 'charts';
           if (id.includes('@fortawesome')) return 'icons';
           if (id.includes('@emailjs')) return 'email';
-          if (
-            id.includes('/src/pages/admin/') ||
-            id.includes('/src/components/admin/') ||
-            id.includes('/src/services/adminService') ||
-            id.includes('/src/repositories/adminRepository')
-          ) return 'admin';
-          if (
-            id.includes('/src/components/support/') ||
-            id.includes('/src/services/supportService') ||
-            id.includes('/src/repositories/supportRepository')
-          ) return 'support';
-          if (
-            id.includes('/src/components/send/') ||
-            id.includes('/src/services/sendService') ||
-            id.includes('/src/repositories/sendRepository')
-          ) return 'send';
-          if (id.includes('node_modules')) return 'vendor';
+          // Sin cajon de sastre 'vendor': agrupaba TODO node_modules, y
+          // como alguna dependencia de ahi importa React, el service
+          // worker terminaba arrastrandolo. Rollup divide mejor solo.
           return undefined;
         },
       },
