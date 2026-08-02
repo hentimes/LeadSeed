@@ -76,13 +76,13 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
             dataKey="name" 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fontSize: 10, fill: '#66718F', fontWeight: 600 }}
+            tick={{ fontSize: 10, fill: chartColors.inkSecondary, fontWeight: 600 }}
             dy={10}
           />
           <YAxis 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fontSize: 10, fill: '#66718F' }}
+            tick={{ fontSize: 10, fill: chartColors.inkSecondary }}
             tickCount={7}
             domain={[0, (dataMax: number) => Math.max(600, Math.ceil(dataMax / 100) * 100)]}
             width={45}

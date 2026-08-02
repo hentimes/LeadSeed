@@ -19,7 +19,7 @@ export default function ChannelPerformanceChart({ totalConversions }: ChannelPer
     { name: 'WhatsApp', value: Math.round(totalConversions * 0.40), conversionRate: 8.3, color: chartColors.primaryLight },
     { name: 'LinkedIn', value: Math.round(totalConversions * 0.30), conversionRate: 6.1, color: chartColors.primaryLight },
     { name: 'Web',      value: Math.round(totalConversions * 0.20), conversionRate: 5.2, color: chartColors.primary },
-    { name: 'Formulario', value: Math.round(totalConversions * 0.10), conversionRate: 3.8, color: '#E8E5FF' },
+    { name: 'Formulario', value: Math.round(totalConversions * 0.10), conversionRate: 3.8, color: chartColors.soft },
   ];
 
   return (

@@ -56,7 +56,7 @@ export default function LoginPage() {
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-full">
           <path fill="#F8F6FF" d="M 0,200 C 50,150 150,180 200,80 L 200,200 Z" />
           <path fill={chartColors.soft} d="M 40,200 C 100,160 170,190 200,120 L 200,200 Z" />
-          <path fill="#EAE4FF" d="M 80,200 C 140,170 180,200 200,150 L 200,200 Z" />
+          <path fill={chartColors.soft} d="M 80,200 C 140,170 180,200 200,150 L 200,200 Z" />
         </svg>
       </div>
 
