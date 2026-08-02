@@ -101,6 +101,8 @@ export interface Lead {
   listaIds: number[];
   score: number;
   isPinned?: boolean;
+  /** El detalle del lead todavia no fue abierto. */
+  isUnread?: boolean;
 
   // Campos de Negocio y Marketing (Nuevos)
   scheduledAt?: string;

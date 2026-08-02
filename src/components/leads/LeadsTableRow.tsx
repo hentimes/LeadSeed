@@ -59,9 +59,17 @@ const LeadsTableRow = ({
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
 
   const cellPad = compactMode ? 'px-2.5 py-1.5' : 'px-2.5 py-2';
-  const trClass = `border-b border-line transition-colors cursor-pointer ${
-    isSelected ? 'bg-primary-soft-strong hover:bg-primary-soft-strong' : 'bg-white hover:bg-gray-50'
-  } ${lead.isPinned ? 'cursor-grab active:cursor-grabbing active:opacity-50' : ''}`;
+  // Un lead sin abrir se tiñe hasta que se ve su detalle. No depende del badge
+  // de la extension, que se limpia con solo abrirla: son cosas distintas.
+  const rowBackground = isSelected
+    ? 'bg-primary-soft-strong hover:bg-primary-soft-strong'
+    : lead.isUnread
+      ? 'bg-surface-unread hover:bg-surface-unread-hover'
+      : 'bg-white hover:bg-gray-50';
+
+  const trClass = `border-b border-line transition-colors cursor-pointer ${rowBackground} ${
+    lead.isPinned ? 'cursor-grab active:cursor-grabbing active:opacity-50' : ''
+  }`;
 
   // El RUT se muestra bajo el nombre solo si su columna no esta a la vista,
   // asi no se pierde el dato al angostar el panel ni se duplica al abrirlo.

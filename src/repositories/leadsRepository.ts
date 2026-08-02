@@ -186,7 +186,8 @@ export async function fetchLeadRows(userId: string): Promise<LeadRow[]> {
     .select(LEAD_SELECT)
     .eq('user_id', userId)
     .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true });
 
   if (error) {
     console.error('Error fetching leads:', error);
@@ -207,7 +208,13 @@ export async function fetchPinnedLeads(userId: string): Promise<LeadRow[]> {
     // Es texto en JSON, asi que Postgres ordena lexicograficamente: por eso
     // se guarda con padding de ceros al escribirlo.
     .order('metadata->>pinnedOrder', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    // Desempate obligatorio: 1962 de 1974 leads comparten created_at (un solo
+    // grupo tiene 1331 filas con el mismo timestamp). Sin una clave unica al
+    // final, Postgres devuelve ese bloque en el orden que le convenga y ese
+    // orden cambia al actualizar una fila, asi que los leads saltaban de
+    // posicion y hasta de pagina al abrirlos.
+    .order('id', { ascending: true });
 
   if (error) {
     console.error('Error fetching pinned leads:', error);
@@ -256,6 +263,12 @@ export async function fetchLeadPageRows(userId: string, params: LeadPageQuery): 
     // nullsFirst false siempre: en DESC Postgres pone los NULL primero, lo
     // que hacia flotar arriba los leads sin RUT o sin nombre.
     .order(column, { ascending, nullsFirst: false })
+    // Desempate obligatorio: 1962 de 1974 leads comparten created_at (un solo
+    // grupo tiene 1331 filas con el mismo timestamp). Sin una clave unica al
+    // final, Postgres devuelve ese bloque en el orden que le convenga y ese
+    // orden cambia al actualizar una fila, asi que los leads saltaban de
+    // posicion y hasta de pagina al abrirlos.
+    .order('id', { ascending: true })
     .range(from, to);
 
   const filteredCountQuery = applyLeadPageFilters(
@@ -337,7 +350,8 @@ export async function fetchDeletedLeadRows(userId: string): Promise<LeadRow[]> {
     .select(LEAD_SELECT)
     .eq('user_id', userId)
     .not('deleted_at', 'is', null)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true });
 
   if (error) {
     return [];
@@ -393,7 +407,8 @@ export async function fetchCrossExecEventRowsByLeadIds(leadIds: string[]): Promi
     .from('lead_cross_exec_events')
     .select(CROSS_EXEC_EVENT_SELECT)
     .in('lead_id', leadIds)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true });
 
   if (error) {
     console.error('Error fetching lead cross-exec events:', error);

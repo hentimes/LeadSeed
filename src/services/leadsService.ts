@@ -74,6 +74,9 @@ export const mapLeadRowToDomain = (row: LeadRow): Lead => ({
   estimatedValue: row.estimated_value || undefined,
   metadata: row.metadata || {},
   isPinned: row.metadata?.isPinned === true,
+  // "Sin abrir" no es lo mismo que "nuevo": el badge se limpia al abrir la
+  // extension, pero un lead sigue sin leer hasta que se ve su detalle.
+  isUnread: row.metadata?.is_read !== true,
   crossExecAlerts: [],
   hasUnreadCrossExecAlert: false,
   crossExecPriorityAt: undefined,

@@ -44,6 +44,12 @@
   --ls-surface: #ffffff;
   --ls-surface-hover: #f6f7fa;
   --ls-border: #e6eaf0;
+
+  /* Fila de un lead que todavia no fue abierto. Es un teñido de marca muy
+     leve: tiene que distinguirse de un vistazo sin competir con la seleccion
+     ni cansar en una tabla de 50 filas. */
+  --ls-surface-unread: #f7f4ff;
+  --ls-surface-unread-hover: #efe9ff;
   --ls-border-strong: #d5dae3;
 
   /* ---------------------------------------------------------------
@@ -125,6 +131,8 @@
   --ls-surface: #171a21;
   --ls-surface-hover: #1f232c;
   --ls-border: rgba(255, 255, 255, 0.09);
+  --ls-surface-unread: rgba(108, 76, 246, 0.10);
+  --ls-surface-unread-hover: rgba(108, 76, 246, 0.16);
   --ls-border-strong: rgba(255, 255, 255, 0.16);
 
   --ls-primary-soft: rgba(108, 76, 246, 0.16);

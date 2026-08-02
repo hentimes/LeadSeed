@@ -30,6 +30,8 @@ export default {
           DEFAULT: 'var(--ls-surface)',
           hover: 'var(--ls-surface-hover)',
           muted: 'var(--ls-bg)',
+          unread: 'var(--ls-surface-unread)',
+          'unread-hover': 'var(--ls-surface-unread-hover)',
         },
         line: {
           DEFAULT: 'var(--ls-border)',

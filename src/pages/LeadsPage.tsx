@@ -127,7 +127,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
           p.setEditing(lead);
           p.setShowForm(true);
         }}
-        onView={p.setViewing}
+        onView={p.viewLead}
         onDelete={p.handleDelete}
         onRestore={p.showTrash ? p.handleRestore : undefined}
         isTrash={p.showTrash}

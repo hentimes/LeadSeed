@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLeads } from './useLeads';
 import { useLists } from './useLists';
 import { useLeadFilters } from './useLeadFilters';
@@ -43,6 +43,21 @@ export function useLeadsPageController() {
   const [viewing, setViewing] = useState<Lead | null>(null);
   const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
   const [newLeadToast, setNewLeadToast] = useState<{ id: string; name: string } | null>(null);
+  // Momento en que se abrio la seccion. Solo se avisa de leads creados despues
+  // de este instante: comparar contra los ids de la pagina anterior daba falsos
+  // positivos al cambiar de pagina y al reordenarse la lista.
+  const openedAtRef = useRef(Date.now());
+
+  // Abre el detalle y apaga el resaltado de "sin abrir" en el acto. El detalle
+  // ya persiste is_read en la base; esto solo evita que la fila siga teñida
+  // hasta el proximo refetch.
+  const viewLead = useCallback((lead: Lead) => {
+    setViewing(lead);
+    if (!lead.isUnread) return;
+    setLeads((current) =>
+      current.map((item) => (item.id === lead.id ? { ...item, isUnread: false } : item)),
+    );
+  }, []);
   const [pinToast, setPinToast] = useState<{ name: string; isPinned: boolean } | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
@@ -207,7 +222,16 @@ export function useLeadsPageController() {
     setLeads((prev) => {
       if (!showTrash && prev.length > 0) {
         const previousIds = new Set(prev.map((lead) => lead.id));
-        const incomingNewLeads = data.filter((lead) => lead.id && !previousIds.has(lead.id));
+        // Un lead avisa solo si ademas de no estar antes fue creado despues de
+        // abrir la seccion. Sin esa segunda condicion bastaba con pasar de
+        // pagina (ningun id coincide) o con que la lista se reordenara para
+        // que apareciera un aviso de lead nuevo que no lo era.
+        const incomingNewLeads = data.filter(
+          (lead) =>
+            lead.id &&
+            !previousIds.has(lead.id) &&
+            Date.parse(lead.createdAt) > openedAtRef.current,
+        );
         const newestLead = incomingNewLeads.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
 
         if (newestLead?.id) {
@@ -487,6 +511,7 @@ export function useLeadsPageController() {
     setShowImport,
     viewing,
     setViewing,
+    viewLead,
     toast,
     setToast,
     newLeadToast,
