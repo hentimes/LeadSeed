@@ -18,9 +18,13 @@ export function PageShell({
   actions,
   toolbar,
   children,
-  /** Ancho maximo; el panel lateral es angosto, por eso se limita. */
+  /**
+   * Ancho maximo del contenido. Antes cada pagina elegia el suyo
+   * (max-w-4xl, max-w-6xl, sin limite), y por eso no coincidian entre si.
+   */
   maxWidth = 'full',
 }: {
+  /** Opcional: la barra superior ya muestra el nombre de la seccion. */
   title?: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;

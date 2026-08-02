@@ -3,6 +3,7 @@ import { primaryRoutes, secondaryRoutes } from '../../config/routes';
 import type { ColumnDef } from '../ColumnSelector';
 import type { Page } from '../../types';
 import AppStatusScreen from './AppStatusScreen';
+import { PageShell } from '../../design';
 
 const LeadsPage = lazy(() => import('../../pages/LeadsPage'));
 const ListsPage = lazy(() => import('../../pages/ListsPage'));
@@ -17,6 +18,29 @@ const SettingsPage = lazy(() => import('../../pages/SettingsPage'));
 const CommunityPage = lazy(() => import('../../pages/CommunityPage'));
 const ChatPage = lazy(() => import('../../pages/ChatPage'));
 const AdminLayout = lazy(() => import('../../pages/admin/AdminLayout'));
+
+/**
+ * Ancho de contenido por seccion.
+ *
+ * Antes cada pagina definia el suyo (max-w-2xl, 4xl, 5xl, 6xl o ninguno),
+ * por eso el contenido no quedaba alineado al cambiar de seccion. El
+ * armazon vive aca, no en cada pagina.
+ */
+const PAGE_WIDTH: Partial<Record<Page, 'full' | 'md' | 'lg'>> = {
+  leads: 'full',
+  dashboard: 'full',
+  pipeline: 'full',
+  admin: 'full',
+  chat: 'full',
+  agenda: 'md',
+  settings: 'md',
+  tasks: 'lg',
+  lists: 'lg',
+  templates: 'lg',
+  send: 'lg',
+  history: 'lg',
+  community: 'lg',
+};
 
 interface HighlightTemplate {
   type: 'whatsapp' | 'email' | 'call';
@@ -169,5 +193,9 @@ export default function AppPageRenderer({
       pageContent = <LeadsPage compactMode={compactMode} visibleCols={visibleCols} />;
   }
 
-  return <PageSuspense>{pageContent}</PageSuspense>;
+  return (
+    <PageSuspense>
+      <PageShell maxWidth={PAGE_WIDTH[page] || 'lg'}>{pageContent}</PageShell>
+    </PageSuspense>
+  );
 }

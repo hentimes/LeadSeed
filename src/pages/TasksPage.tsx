@@ -106,7 +106,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
   }, [stats, filter]);
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <div className="flex justify-end items-center mb-4">
         <div className="flex gap-1.5 mr-2 self-center">
           {stats.overdue.length > 0 && (

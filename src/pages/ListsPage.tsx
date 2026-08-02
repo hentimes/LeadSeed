@@ -382,7 +382,7 @@ export default function ListsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto pb-20">
+    <div className="pb-20">
       
       {/* Header and Creation Row */}
       <div className="flex gap-2 mb-5 items-center">

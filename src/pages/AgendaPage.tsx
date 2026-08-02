@@ -23,7 +23,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in p-3 flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <div className="flex justify-end mb-4">
         <button type="button" onClick={() => onNavigate('settings')} className="btn btn-ghost btn-sm">
           Configurar

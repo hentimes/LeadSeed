@@ -24,7 +24,7 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden font-sans bg-[var(--ls-bg,#F8F9FC)] dark:bg-slate-900 text-[var(--ls-text,#111827)] dark:text-slate-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-surface-muted font-sans text-ink">
       <Header 
         isDrawerOpen={isDrawerOpen}
         onToggleDrawer={() => setIsDrawerOpen(prev => !prev)}

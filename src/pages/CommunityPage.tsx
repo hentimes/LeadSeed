@@ -47,7 +47,7 @@ export default function CommunityPage() {
   if (loading) return <LoadingOverlay message="Cargando sala..." />;
 
   return (
-    <div className="flex h-full gap-4 max-w-6xl mx-auto p-4">
+    <div className="flex h-full gap-4">
       {/* Sala de Chat (Centro) */}
       <div className="flex-1 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm flex flex-col overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
