@@ -98,6 +98,48 @@ Deno.serve(async (request) => {
       })
     }
 
+    // IDOR: hasta aca solo se comprobaba que el token fuera de ALGUN usuario
+    // valido, no que la ruta pedida perteneciera a un lead suyo. Con
+    // service_role la descarga de storage salta cualquier RLS, asi que sin
+    // este chequeo cualquier usuario autenticado podia pedir el PDF de
+    // cualquier lead con solo adivinar o filtrar la ruta.
+    //
+    // finalizeAttachmentForLead guarda la ruta final en leads.metadata.pdf_path
+    // (unica por lead, verificado en produccion), asi que sirve para resolver
+    // el dueño sin depender del formato del nombre de archivo.
+    const { data: ownerLead, error: ownerError } = await supabase
+      .from('leads')
+      .select('user_id')
+      .eq('metadata->>pdf_path', path)
+      .maybeSingle()
+
+    if (ownerError || !ownerLead) {
+      return new Response(JSON.stringify({ error: 'File not found' }), {
+        status: 404,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      })
+    }
+
+    let isAuthorized = ownerLead.user_id === userData.user.id
+
+    if (!isAuthorized) {
+      const { data: requesterProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userData.user.id)
+        .maybeSingle()
+      isAuthorized = requesterProfile?.role === 'admin'
+    }
+
+    if (!isAuthorized) {
+      // Mismo 404 que "no existe": no hay que confirmarle a quien no es dueño
+      // que el archivo si existe pero pertenece a otro.
+      return new Response(JSON.stringify({ error: 'File not found' }), {
+        status: 404,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      })
+    }
+
     const { data, error } = await supabase.storage.from(UPLOAD_BUCKET).download(path)
 
     if (error || !data) {
