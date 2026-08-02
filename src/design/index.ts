@@ -16,3 +16,4 @@ export { Button, IconButton } from './Button';
 export { Badge } from './Badge';
 export { PageShell, SectionHeader, EmptyState } from './PageShell';
 export { PageTitle, SectionTitle, CardTitle, GroupLabel, Body, Hint } from './Text';
+export { Modal } from './Modal';

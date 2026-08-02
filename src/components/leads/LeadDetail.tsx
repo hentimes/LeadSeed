@@ -5,6 +5,7 @@ import LeadDetailHeader from './detail/LeadDetailHeader';
 import LeadDetailContact from './detail/LeadDetailContact';
 import LeadDetailCrossExecAlert from './detail/LeadDetailCrossExecAlert';
 import LeadDetailHistory from './detail/LeadDetailHistory';
+import { Modal } from '../../design/Modal';
 
 interface Props {
   lead: Lead;
@@ -38,20 +39,13 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
     detail.rawPayload.rut ||
     detail.rawPayload.document_id;
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
-  };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
 
   return (
-    <div
-      onClick={handleBackdropClick}
-      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-start justify-center pt-8 p-4 overflow-y-auto custom-scrollbar"
-    >
-      <div className="bg-white rounded-[8px] shadow-2xl w-full max-w-[460px] flex flex-col mx-auto animate-scale-in border border-slate-100 mb-8 relative">
+    <Modal onClose={onClose} label={`Detalle de ${lead.name}`}>
+      <>
         <LeadDetailHeader
           lead={lead}
           documentId={documentId ? String(documentId) : undefined}
@@ -385,7 +379,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
             isEmailTemplateHtml={detail.isEmailTemplateHtml}
           />
         </div>
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 }

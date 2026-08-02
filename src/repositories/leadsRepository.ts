@@ -115,6 +115,24 @@ export const LEAD_SELECT =
 export const CROSS_EXEC_EVENT_SELECT =
   'id, lead_id, related_lead_id, event_kind, counterpart_captured_at, matched_by, is_read, created_at';
 
+/** Cuantas palabras del buscador se tienen en cuenta, para no armar consultas absurdas. */
+const MAX_SEARCH_TOKENS = 6;
+
+/**
+ * Parte el texto buscado en palabras utilizables.
+ *
+ * Se quitan los caracteres que rompen la sintaxis de or() de PostgREST
+ * (coma y parentesis) y los comodines de like, que si no permitirian que el
+ * texto del usuario altere la consulta.
+ */
+export function tokenizeSearch(rawSearch?: string): string[] {
+  return (rawSearch || '')
+    .split(/\s+/)
+    .map((token) => token.replace(/[%_,()*\\"']/g, '').trim())
+    .filter(Boolean)
+    .slice(0, MAX_SEARCH_TOKENS);
+}
+
 function applyLeadPageFilters(
   query: any,
   userId: string,
@@ -152,11 +170,13 @@ function applyLeadPageFilters(
     }
   }
 
-  const search = params.search?.trim();
-  if (search) {
-    const escaped = search.replace(/[%]/g, '');
+  for (const token of tokenizeSearch(params.search)) {
+    // Un .or() por palabra: PostgREST une con AND las llamadas sucesivas, asi
+    // que cada palabra tiene que aparecer en algun campo, pero no todas en el
+    // mismo ni en ese orden. Antes se mandaba la frase entera a un solo ilike,
+    // y "Henry Farias" no encontraba a "Henry Jose Farias Pacheco".
     nextQuery = nextQuery.or(
-      `name.ilike.%${escaped}%,email.ilike.%${escaped}%,phone.ilike.%${escaped}%,company.ilike.%${escaped}%,rut.ilike.%${escaped}%`,
+      `name.ilike.%${token}%,email.ilike.%${token}%,phone.ilike.%${token}%,company.ilike.%${token}%,rut.ilike.%${token}%`,
     );
   }
 

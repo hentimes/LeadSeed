@@ -30,6 +30,7 @@ design/
   Badge.tsx      Badge
   Text.tsx       PageTitle, SectionTitle, CardTitle, GroupLabel, Body, Hint
   PageShell.tsx  PageShell (armazón), SectionHeader, EmptyState
+  Modal.tsx      Modal (portal a body, centrado, bloquea el scroll de atrás)
   index.ts       Punto de entrada
 ```
 
@@ -52,6 +53,17 @@ bg-primary  bg-primary-soft  text-ink  text-ink-secondary  text-ink-muted
 border-line  bg-surface  bg-surface-muted  shadow-card  rounded-md
 text-page-title  text-section-title  text-body  text-micro
 ```
+
+## Por qué el modal usa un portal
+
+Un elemento `fixed` deja de posicionarse contra el viewport si algún ancestro
+tiene `transform`, `filter` o `contain`: pasa a posicionarse contra ese
+ancestro. Los modales vivían dentro de `<main>`, que además hace scroll, así
+que aparecían recortados y anclados a la lista en vez de al panel.
+
+`Modal` se monta con `createPortal` en `document.body`. Al quedar fuera del
+árbol de la app, ninguna clase que se agregue después a los contenedores puede
+volver a romperlo. **No armes overlays con `fixed inset-0` a mano: usá `Modal`.**
 
 ## Excepciones legítimas a la regla
 

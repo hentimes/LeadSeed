@@ -8,6 +8,7 @@ import LeadsPageToasts from '../components/leads/LeadsPageToasts';
 import type { ColumnDef } from '../components/ColumnSelector';
 import { Icon } from '../utils/icons';
 import { useLeadsPageController } from '../hooks/useLeadsPageController';
+import { Modal } from '../design/Modal';
 
 interface LeadsPageProps {
   compactMode: boolean;
@@ -22,17 +23,14 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
   return (
     <div className="flex flex-col animate-ios-slide-up pb-4 w-full min-w-0">
       {p.showForm && (
-        <div
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-start justify-center pt-8 p-4 overflow-y-auto custom-scrollbar"
-          onClick={() => {
+        <Modal
+          onClose={() => {
             p.setShowForm(false);
             p.setEditing(null);
           }}
+          label={p.editing ? 'Editar lead' : 'Nuevo lead'}
         >
-          <div
-            className="bg-white rounded-[8px] shadow-2xl w-full max-w-[460px] flex flex-col mx-auto animate-scale-in border border-slate-100 mb-8 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <>
             <div className="flex items-center justify-between p-4 pb-3 border-b border-slate-100 shrink-0">
               <h2 className="text-[15px] font-bold text-slate-800 leading-tight">{p.editing ? 'Editar Lead' : 'Nuevo Lead'}</h2>
               <button
@@ -59,8 +57,8 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
                 }}
               />
             </div>
-          </div>
-        </div>
+          </>
+        </Modal>
       )}
 
       <LeadsTable
