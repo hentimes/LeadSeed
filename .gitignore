@@ -16,3 +16,6 @@ temp_*
 tmp-*
 testDb.js
 *.py
+
+# metadata local del CLI de Supabase, no del proyecto
+supabase/.temp/
