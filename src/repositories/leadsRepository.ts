@@ -29,7 +29,9 @@ const LEAD_SORT_COLUMNS: Record<LeadSortField, string> = {
   lists: 'lista_ids',
   healthSystem: 'metadata->raw_payload->>sistema_actual',
   isapre: 'metadata->raw_payload->>isapre_especifica',
-  income: 'metadata->raw_payload->>rango_renta',
+  // Campo calculado (migracion 057), no una columna. Ordena por el monto y no
+  // alfabeticamente, que ponia "$500.000 - $1.000.000" antes que "Mas de $2.000.000".
+  income: 'income_rank',
   comuna: 'metadata->raw_payload->>comuna',
 };
 export type LeadSortDirection = 'asc' | 'desc';
