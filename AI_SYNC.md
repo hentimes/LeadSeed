@@ -6,6 +6,22 @@
 > destruiria la trazabilidad que CONTROL exige preservar.
 > Ruta de trabajo actual: `PROYECTOS/LeadSeed-Project/LeadSeed`.
 
+### 2026-08-02 - Codex - Reemplazo de icono de extension / CONTROL
+- Tipo: ajuste visual aislado
+- Rol: implementadora
+- Estado: hecho
+- Objetivo:
+  - usar el nuevo logo LeadSeed como icono oficial de la extension
+- Archivos tocados:
+  - `public/icons/icon16.png`
+  - `public/icons/icon48.png`
+  - `public/icons/icon128.png`
+- Validacion:
+  - dimensiones y canal alfa verificados en las tres variantes
+  - `npm run build`: OK
+- Riesgos abiertos:
+  - Chrome requiere recargar la extension desempaquetada para refrescar el icono visible
+
 ### 2026-07-21 22:30 CLT - Antigravity (IA Implementadora)
 - Tipo: Refactorizaci+�n Visual M+�dulo 1 y 2 / CONTROL
 - Rol: Implementadora
