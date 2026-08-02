@@ -1,6 +1,7 @@
 import React from 'react';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import { chartColors } from '../design/palette';
+import { launchOAuthInTab } from '../utils/oauthTab';
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
@@ -14,25 +15,15 @@ export default function LoginPage() {
       const oauthUrl = await beginGoogleLogin(redirectUrl, isExtension);
 
       if (isExtension && oauthUrl && chrome.identity) {
-        console.log("URL de OAuth generada (abre esto en una pestaña normal para ver el error real):", oauthUrl);
-        chrome.identity.launchWebAuthFlow(
-          { url: oauthUrl, interactive: true },
-          async (callbackUrl) => {
-            if (chrome.runtime.lastError || !callbackUrl) {
-              alert(`Error nativo de Chrome: ${chrome.runtime.lastError?.message}.\n\nRevisa la consola (click derecho > Inspeccionar) para ver la URL exacta y probarla manualmente.`);
-              return;
-            }
-
-            try {
-              await completeGoogleExtensionLogin(callbackUrl);
-              window.location.reload();
-            } catch (callbackError) {
-              const message =
-                callbackError instanceof Error ? callbackError.message : 'No se pudo completar el login.';
-              alert(message);
-            }
-          }
-        );
+        try {
+          const callbackUrl = await launchOAuthInTab(oauthUrl, redirectUrl);
+          await completeGoogleExtensionLogin(callbackUrl);
+          window.location.reload();
+        } catch (callbackError) {
+          const message =
+            callbackError instanceof Error ? callbackError.message : 'No se pudo completar el login.';
+          alert(message);
+        }
       }
     } catch (error) {
       console.error('Error al iniciar sesion con Google:', error);

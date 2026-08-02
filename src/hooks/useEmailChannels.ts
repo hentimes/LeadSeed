@@ -3,6 +3,7 @@ import { getSettings, saveSettings } from '../services/appSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 import { getMyCalendarConnectionStatus } from '../services/agendaService';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
+import { launchOAuthInTab } from '../utils/oauthTab';
 import {
   createChannel,
   listChannels,
@@ -334,21 +335,8 @@ export function useEmailChannels() {
       });
 
       if (isExtension && oauthUrl && chrome.identity) {
-        await new Promise<void>((resolve, reject) => {
-          chrome.identity.launchWebAuthFlow({ url: oauthUrl, interactive: true }, async (callbackUrl) => {
-            if (chrome.runtime.lastError || !callbackUrl) {
-              reject(new Error(chrome.runtime.lastError?.message || 'No se pudo completar la conexion con Google.'));
-              return;
-            }
-
-            try {
-              await completeGoogleExtensionLogin(callbackUrl);
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          });
-        });
+        const callbackUrl = await launchOAuthInTab(oauthUrl, redirectUrl);
+        await completeGoogleExtensionLogin(callbackUrl);
       } else if (oauthUrl) {
         window.location.assign(oauthUrl);
         return;
