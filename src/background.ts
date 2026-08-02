@@ -104,30 +104,40 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 /**
- * Abre el panel lateral desde una notificacion nativa.
+ * Abre la extension desde una notificacion nativa.
  *
- * sidePanel.open() exige un gesto del usuario; el click en la notificacion
- * cuenta como tal. Necesita una ventana concreta, y desde el service worker
- * no hay pestaña de contexto, asi que se usa la ultima con foco.
+ * chrome.sidePanel.open() exige "user gesture" y Chrome NO considera el
+ * click en una notificacion como tal (probado en produccion: "may only be
+ * called in response to a user gesture" incluso llamandolo directo desde
+ * el handler de notifications.onClicked). No hay forma de abrir el panel
+ * lateral por este camino. Se abre en una pestaña normal en su lugar,
+ * igual que ya hace abrirWhatsAppWeb: chrome.tabs.create no tiene esa
+ * restriccion de gesto.
  */
-async function openSidePanelFromNotification() {
+async function openAppFromNotification() {
   try {
-    const window = await chrome.windows.getLastFocused();
-    if (window?.id === undefined) return;
-    await chrome.sidePanel.open({ windowId: window.id });
+    const url = chrome.runtime.getURL('index.html');
+    const tabs = await chrome.tabs.query({ url: `${url}*` });
+
+    if (tabs.length > 0 && tabs[0].id !== undefined) {
+      await chrome.tabs.update(tabs[0].id, { active: true });
+      if (tabs[0].windowId !== undefined) {
+        await chrome.windows.update(tabs[0].windowId, { focused: true });
+      }
+      return;
+    }
+
+    await chrome.tabs.create({ url, active: true });
   } catch (error) {
-    // Si Chrome rechaza la apertura no hay forma de recuperarlo desde aca,
-    // pero no se puede dejar pasar en silencio: es la unica pista de que el
-    // click no hizo nada.
-    console.error('No se pudo abrir el panel desde la notificacion:', error);
+    console.error('No se pudo abrir la extension desde la notificacion:', error);
   }
 }
 
-// Cualquier notificacion de la extension abre el panel: todas invitan a
+// Cualquier notificacion de la extension abre la app: todas invitan a
 // hacerlo. Antes solo se manejaban las de leads, y ademas se limitaban a
 // marcarlas como vistas, asi que el click no abria nada.
 chrome.notifications.onClicked.addListener((notificationId) => {
-  void openSidePanelFromNotification();
+  void openAppFromNotification();
 
   if (notificationId.startsWith('lead-alert-')) {
     void markLeadAlertsAsSeen();
