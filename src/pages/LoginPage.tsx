@@ -61,19 +61,19 @@ export default function LoginPage() {
       </div>
 
       {/* Sparkles / Stars */}
-      <svg viewBox="0 0 24 24" className="absolute top-[20%] left-[15%] w-3 h-3 text-[#EAE4FF] pointer-events-none" fill="currentColor">
+      <svg viewBox="0 0 24 24" className="absolute top-[20%] left-[15%] w-3 h-3 text-primary-soft-strong pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
       <svg viewBox="0 0 24 24" className="absolute top-[15%] right-[20%] w-4 h-4 text-primary-soft pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
-      <svg viewBox="0 0 24 24" className="absolute bottom-[40%] right-[10%] w-3 h-3 text-[#EAE4FF] pointer-events-none" fill="currentColor">
+      <svg viewBox="0 0 24 24" className="absolute bottom-[40%] right-[10%] w-3 h-3 text-primary-soft-strong pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
       <svg viewBox="0 0 24 24" className="absolute bottom-[20%] left-[10%] w-4 h-4 text-primary-soft pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
-      <svg viewBox="0 0 24 24" className="absolute top-[30%] left-[8%] w-2 h-2 text-[#EAE4FF] pointer-events-none" fill="currentColor">
+      <svg viewBox="0 0 24 24" className="absolute top-[30%] left-[8%] w-2 h-2 text-primary-soft-strong pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
 

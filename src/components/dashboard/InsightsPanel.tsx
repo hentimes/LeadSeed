@@ -15,14 +15,14 @@ export default function InsightsPanel() {
         <div className="flex flex-col">
           <span className="text-[11px] font-bold text-ink">Mejor mes: Julio</span>
           <span className="text-[10px] text-ink-secondary leading-tight">
-            Se alcanzó el mayor volumen con 598 leads, <strong className="text-[#16B364] font-medium">+42%</strong> más que en junio.
+            Se alcanzó el mayor volumen con 598 leads, <strong className="text-state-success font-medium">+42%</strong> más que en junio.
           </span>
         </div>
       </div>
 
       {/* Mejor fuente de conversión */}
       <div className="flex gap-2 items-start">
-        <div className="w-5 h-5 rounded-full bg-[#E6F9F0] text-[#16B364] flex items-center justify-center shrink-0">
+        <div className="w-5 h-5 rounded-full bg-[#E6F9F0] text-state-success flex items-center justify-center shrink-0">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -31,14 +31,14 @@ export default function InsightsPanel() {
         <div className="flex flex-col">
           <span className="text-[11px] font-bold text-ink">Mejor fuente de conversión: WhatsApp</span>
           <span className="text-[10px] text-ink-secondary leading-tight">
-            Generó el 29.8% de los leads y presenta la mayor tasa de conversión (<strong className="text-[#16B364] font-medium">8.3%</strong>).
+            Generó el 29.8% de los leads y presenta la mayor tasa de conversión (<strong className="text-state-success font-medium">8.3%</strong>).
           </span>
         </div>
       </div>
 
       {/* Recomendación */}
       <div className="flex gap-2 items-start">
-        <div className="w-5 h-5 rounded-full bg-[#FFF9F0] text-[#F6A400] flex items-center justify-center shrink-0">
+        <div className="w-5 h-5 rounded-full bg-[#FFF9F0] text-state-warning flex items-center justify-center shrink-0">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2v2"></path>
             <path d="M12 20v2"></path>

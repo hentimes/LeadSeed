@@ -26,10 +26,10 @@ export default function AdvancedFunnelChart({ snapshot }: AdvancedFunnelChartPro
   const convertido = getCount('convertido');
 
   const funnel = [
-    { id: 'nuevo', label: 'Nuevo', count: nuevo, color: 'bg-[#7B5CFF]' },
+    { id: 'nuevo', label: 'Nuevo', count: nuevo, color: 'bg-primary-light' },
     { id: 'contactado', label: 'Contactado', count: contactado, color: 'bg-primary-light' },
     { id: 'interesado', label: 'Interesado', count: interesado, color: 'bg-[#BCAFFF]' },
-    { id: 'convertido', label: 'Convertido', count: convertido, color: 'bg-[#F2F4F7]' },
+    { id: 'convertido', label: 'Convertido', count: convertido, color: 'bg-surface-muted' },
   ];
 
   const maxCount = Math.max(...funnel.map(s => s.count));
@@ -73,7 +73,7 @@ export default function AdvancedFunnelChart({ snapshot }: AdvancedFunnelChartPro
                 <div className="w-[65px]" />
                 <div className="flex flex-col items-start border-l border-dashed border-line ml-3 py-1.5 pl-3 relative">
                   <div className="absolute -left-[4px] top-1/2 -translate-y-1/2 w-[7px] h-[7px] bg-line rounded-full" />
-                  <span className="text-[9px] font-bold text-[#EF3340] bg-[#FFEDED] px-1.5 py-0.5 rounded-[4px] leading-none">
+                  <span className="text-[9px] font-bold text-state-danger bg-[#FFEDED] px-1.5 py-0.5 rounded-[4px] leading-none">
                     {dropoff}% fuga
                   </span>
                 </div>

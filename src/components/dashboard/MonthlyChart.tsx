@@ -19,8 +19,8 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
         const percent = prevVal === 0 ? (currentVal > 0 ? 100 : 0) : Math.round(((currentVal - prevVal) / prevVal) * 100);
         const isPositive = percent >= 0;
         trendEl = (
-          <div className={`text-[10px] font-bold mt-0.5 ${isPositive ? 'text-[#16C26E]' : 'text-[#EF3340]'}`}>
-            {isPositive ? '↑' : '↓'} {Math.abs(percent)}% <span className="font-medium text-[#66718F]">vs {prevData.name}</span>
+          <div className={`text-[10px] font-bold mt-0.5 ${isPositive ? 'text-state-success' : 'text-state-danger'}`}>
+            {isPositive ? '↑' : '↓'} {Math.abs(percent)}% <span className="font-medium text-ink-secondary">vs {prevData.name}</span>
           </div>
         );
       } else {
@@ -28,8 +28,8 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
       }
 
       return (
-        <div className="bg-white border border-[#E2E6F0] rounded-[8px] p-2 shadow-[0_4px_12px_rgba(28,38,75,0.08)] min-w-[100px] outline-none">
-          <div className="text-[11px] font-bold text-[#66718F] uppercase tracking-wider">{label}</div>
+        <div className="bg-white border border-line rounded-[8px] p-2 shadow-[0_4px_12px_rgba(28,38,75,0.08)] min-w-[100px] outline-none">
+          <div className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">{label}</div>
           <div className="text-[14px] font-bold text-ink mt-0.5">{currentVal} leads</div>
           {trendEl}
         </div>

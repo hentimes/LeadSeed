@@ -48,7 +48,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         >
           <span className="text-[14px]">←</span> Volver al pipeline
         </button>
-        <div className="w-[1px] h-4 bg-[#E2E6F0]"></div>
+        <div className="w-[1px] h-4 bg-line"></div>
         <h2 className="text-[15px] font-normal text-ink">Reporte completo de adquisición</h2>
       </div>
 
@@ -65,7 +65,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
           <div className="flex flex-col gap-1 mt-1">
             <div className="flex items-end gap-2">
               <span className="text-[22px] font-bold text-ink leading-none">{acquired || 598}</span>
-              <span className="text-[11px] font-bold text-[#16B364] leading-none mb-0.5">↑ 42%</span>
+              <span className="text-[11px] font-bold text-state-success leading-none mb-0.5">↑ 42%</span>
             </div>
             <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
           </div>
@@ -82,7 +82,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
           <div className="flex flex-col gap-1 mt-1">
             <div className="flex items-end gap-2">
               <span className="text-[22px] font-bold text-ink leading-none">{converted || 27}</span>
-              <span className="text-[11px] font-bold text-[#16B364] leading-none mb-0.5">↑ 23%</span>
+              <span className="text-[11px] font-bold text-state-success leading-none mb-0.5">↑ 23%</span>
             </div>
             <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
           </div>
@@ -99,7 +99,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
           <div className="flex flex-col gap-1 mt-1">
             <div className="flex items-end gap-2">
               <span className="text-[22px] font-bold text-ink leading-none">{conversionRate || 6}%</span>
-              <span className="text-[11px] font-bold text-[#16B364] leading-none mb-0.5">↑ 2 pp</span>
+              <span className="text-[11px] font-bold text-state-success leading-none mb-0.5">↑ 2 pp</span>
             </div>
             <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
           </div>

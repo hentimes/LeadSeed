@@ -64,7 +64,7 @@ export default function FunnelRow({
             <span className="text-[14px] font-bold text-ink leading-none">{count}</span>
             <span className="text-[11px] font-medium text-ink-muted">({percentTotal}%)</span>
           </div>
-          <div className="h-[3px] w-full bg-[#F2F4F7] rounded-full overflow-hidden flex">
+          <div className="h-[3px] w-full bg-surface-muted rounded-full overflow-hidden flex">
             <div 
               className="h-full rounded-full transition-all duration-500 bg-primary" 
               style={{ width: `${percentTotal}%` }} 

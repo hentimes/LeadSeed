@@ -233,7 +233,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
             <button 
               type="submit"
               disabled={!inputText.trim() || inputText.length > 120}
-              className="w-10 h-10 mb-0.5 ml-1 bg-primary hover:bg-[#5b3dc4] disabled:bg-line disabled:text-slate-400 text-white rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all transform active:scale-95"
+              className="w-10 h-10 mb-0.5 ml-1 bg-primary hover:bg-primary-hover disabled:bg-line disabled:text-slate-400 text-white rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all transform active:scale-95"
             >
               <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>

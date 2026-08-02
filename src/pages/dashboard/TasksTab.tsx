@@ -145,7 +145,7 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
            {/* Progress Bar Row */}
            <div className="flex flex-col w-full gap-2">
              <div className="flex items-center gap-3">
-               <div className="h-[6px] flex-1 bg-[#F2F4F7] rounded-full overflow-hidden">
+               <div className="h-[6px] flex-1 bg-surface-muted rounded-full overflow-hidden">
                  <div className="h-full bg-primary transition-all" style={{ width: `${rate}%` }} />
                </div>
                <span className="text-[14px] font-medium text-ink">{rate}%</span>

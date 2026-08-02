@@ -48,7 +48,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       <div className="card-standard">
         <div className="card-header">
           <h2 className="card-title">Progreso de metas (hoy)</h2>
-          <div className="text-[11px] font-medium text-ink-secondary bg-[#F7F8FB] px-3 py-1 rounded-[6px]">
+          <div className="text-[11px] font-medium text-ink-secondary bg-surface-muted px-3 py-1 rounded-[6px]">
             {compareLabel}
           </div>
         </div>
@@ -158,29 +158,29 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
               <div className="flex items-center justify-between gap-1.5">
                 <span className="text-ink-secondary w-14">Web</span>
-                <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
                   <div className="h-full bg-primary rounded-full" style={{ width: '100%' }}></div>
                 </div>
                 <span className="text-ink w-7 text-right">100%</span>
               </div>
               <div className="flex items-center justify-between gap-1.5">
                 <span className="text-ink-secondary w-14">WhatsApp</span>
-                <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
                   <div className="h-full bg-primary-light rounded-full" style={{ width: '0%' }}></div>
                 </div>
                 <span className="text-ink w-7 text-right">0%</span>
               </div>
               <div className="flex items-center justify-between gap-1.5">
                 <span className="text-ink-secondary w-14">LinkedIn</span>
-                <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
                   <div className="h-full bg-[#CFC7FF] rounded-full" style={{ width: '0%' }}></div>
                 </div>
                 <span className="text-ink w-7 text-right">0%</span>
               </div>
               <div className="flex items-center justify-between gap-1.5">
                 <span className="text-ink-secondary w-14">Formulario</span>
-                <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#E8E5FF] rounded-full" style={{ width: '0%' }}></div>
+                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary-soft-strong rounded-full" style={{ width: '0%' }}></div>
                 </div>
                 <span className="text-ink w-7 text-right">0%</span>
               </div>

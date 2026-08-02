@@ -152,7 +152,7 @@ export default function GoalRingCard({
           <span className="text-[12px] text-ink-secondary font-normal leading-none mb-2">{unit}</span>
           
           {trend && (
-            <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${trend.isPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
+            <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${trend.isPositive ? 'text-state-success' : 'text-state-danger'}`}>
               {trend.isPositive ? '↑' : '↓'} {trend.value}
               <span className="text-ink-muted text-[11px] font-normal">vs ayer</span>
             </span>

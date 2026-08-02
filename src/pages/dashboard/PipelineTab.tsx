@@ -59,7 +59,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       count: counts.interesado, 
       color: '#F6A400',
       iconBg: 'bg-[#FFF9F0]',
-      iconColor: 'text-[#F6A400]',
+      iconColor: 'text-state-warning',
       percentTotal: Math.round((counts.interesado / total) * 100),
       prevConv: counts.contactado > 0 ? Math.round((counts.interesado / counts.contactado) * 100) : 0,
       prevLabel: 'Contactado'
@@ -70,7 +70,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       count: counts.convertido, 
       color: '#16C26E',
       iconBg: 'bg-[#E6F9F0]',
-      iconColor: 'text-[#16C26E]',
+      iconColor: 'text-state-success',
       percentTotal: Math.round((counts.convertido / total) * 100),
       prevConv: counts.interesado > 0 ? Math.round((counts.convertido / counts.interesado) * 100) : 0,
       prevLabel: 'Interesado'
@@ -81,7 +81,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       count: counts.descartado, 
       color: '#EF3340',
       iconBg: 'bg-[#FFEDED]',
-      iconColor: 'text-[#EF3340]',
+      iconColor: 'text-state-danger',
       percentTotal: Math.round((counts.descartado / total) * 100),
       prevConv: counts.interesado > 0 ? Math.round((counts.descartado / counts.interesado) * 100) : 0,
       prevLabel: 'Interesado'
@@ -107,10 +107,10 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
     let color = 'text-[#8F9BB3]';
     let icon = '';
     if (value > 0) {
-      color = 'text-[#16C26E]';
+      color = 'text-state-success';
       icon = '↑ ';
     } else if (value < 0) {
-      color = 'text-[#EF3340]';
+      color = 'text-state-danger';
       icon = '↓ ';
     } else {
       icon = '- ';
@@ -119,7 +119,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
     return (
       <div className="mt-1">
         <span className={`text-[10px] font-bold ${color}`}>
-          {icon}{Math.abs(value)}{type} <span className="font-medium text-[#66718F]">vs {periodLabel}</span>
+          {icon}{Math.abs(value)}{type} <span className="font-medium text-ink-secondary">vs {periodLabel}</span>
         </span>
       </div>
     );
@@ -197,7 +197,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
             <div className="flex flex-col">
               <span className="text-[24px] font-bold text-primary leading-none mb-1">{chartData.reduce((a: any, b: any) => a + b.value, 0)}</span>
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Leads adquiridos</span>
-              <span className={`text-[10px] font-bold ${isGrowthPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
+              <span className={`text-[10px] font-bold ${isGrowthPositive ? 'text-state-success' : 'text-state-danger'}`}>
                 {isGrowthPositive ? '↑' : '↓'} {Math.abs(monthlyGrowth)}% <span className="font-normal text-ink-muted">vs periodo anterior</span>
               </span>
             </div>
@@ -205,7 +205,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
             <div className="w-full h-[1px] bg-line" />
             
             <div className="flex flex-col">
-              <span className="text-[24px] font-bold text-[#16B364] leading-none mb-1">{counts.convertido}</span>
+              <span className="text-[24px] font-bold text-state-success leading-none mb-1">{counts.convertido}</span>
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Leads convertidos</span>
               <span className="text-[10px] text-ink-secondary">
                 - 0% vs periodo anterior

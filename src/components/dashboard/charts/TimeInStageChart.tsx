@@ -29,7 +29,7 @@ export default function TimeInStageChart() {
               {stage.name}
             </div>
             
-            <div className="flex-1 bg-[#F2F4F7] h-[8px] rounded-[10px] relative">
+            <div className="flex-1 bg-surface-muted h-[8px] rounded-[10px] relative">
               <div 
                 className={`absolute top-0 left-0 h-full rounded-[10px] transition-all duration-1000 ease-out ${stage.color}`}
                 style={{ width: mounted ? `${widthPercent}%` : '0%' }}

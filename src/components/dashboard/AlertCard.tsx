@@ -25,16 +25,16 @@ export default function AlertCard({
         return {
           bg: 'bg-[#FFF5F5]',
           border: 'border-[#FFEBEB]',
-          text: 'text-[#F04461]',
+          text: 'text-state-danger',
           iconBg: 'bg-[#FFD6D6]',
-          icon: 'text-[#F04461]'
+          icon: 'text-state-danger'
         };
       case 'warning':
         return {
           bg: 'bg-[#FFF9F0]',
           border: 'border-transparent',
-          text: 'text-[#F6A400]',
-          iconBg: 'bg-[#F6A400]',
+          text: 'text-state-warning',
+          iconBg: 'bg-state-warning',
           icon: 'text-white'
         };
       case 'info':

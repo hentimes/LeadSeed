@@ -42,7 +42,7 @@ export default function MetricCard({
         {(trend || subtitle) && (
           <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium whitespace-nowrap">
             {trend && (
-              <span className={`flex items-center gap-1 ${trend.isPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
+              <span className={`flex items-center gap-1 ${trend.isPositive ? 'text-state-success' : 'text-state-danger'}`}>
                 {trend.isPositive ? '↑' : '↓'} {trend.value}
                 <span className="text-ink-muted text-[11px] font-normal">vs ayer</span>
               </span>

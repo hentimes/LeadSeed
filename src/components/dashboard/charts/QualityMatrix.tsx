@@ -39,7 +39,7 @@ export default function QualityMatrix() {
               </td>
               <td className="py-2.5 text-right text-[12px] text-ink-secondary">{source.leads}</td>
               <td className="py-2.5 text-right">
-                <span className="text-[12px] font-bold text-[#16C26E] bg-[#E6F9F0] px-1.5 py-0.5 rounded-[4px]">
+                <span className="text-[12px] font-bold text-state-success bg-[#E6F9F0] px-1.5 py-0.5 rounded-[4px]">
                   {source.winRate}%
                 </span>
               </td>

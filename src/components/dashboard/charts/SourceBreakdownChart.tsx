@@ -62,7 +62,7 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
       name: 'Formulario',
       count: Math.round(totalLeads * 0.103),
       percentage: 10.3,
-      color: 'bg-[#E8E5FF]',
+      color: 'bg-primary-soft-strong',
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -97,7 +97,7 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
             
             {/* Progress Bar */}
             <div className="flex-1 px-2 flex items-center">
-              <div className="w-full h-[4px] bg-[#F2F4F7] rounded-full overflow-hidden">
+              <div className="w-full h-[4px] bg-surface-muted rounded-full overflow-hidden">
                 <div 
                   className={`h-full ${source.color} rounded-full transition-all duration-500`}
                   style={{ width: `${source.percentage}%` }}
