@@ -1,5 +1,5 @@
 import type { LeadList, LeadStatus, ExportFormat } from '../../types';
-import { STATUS_LABELS } from '../../types';
+import { PIPELINE_STAGES, STATUS_LABELS } from '../../types';
 
 interface BulkActionBarProps {
   selectedIds: Set<string>;
@@ -62,7 +62,7 @@ export default function BulkActionBar({
             defaultValue=""
           >
             <option value="" disabled>Estado...</option>
-            {(['nuevo', 'contactado', 'interesado', 'convertido', 'descartado'] as LeadStatus[]).map((s) => (
+            {PIPELINE_STAGES.map((s) => (
               <option key={s} value={s}>{STATUS_LABELS[s]}</option>
             ))}
           </select>

@@ -1,5 +1,17 @@
 export type LeadStatus = 'nuevo' | 'contactado' | 'interesado' | 'convertido' | 'descartado';
 
+/**
+ * Las cuatro etapas reales del pipeline, que son las del tablero.
+ *
+ * 'nuevo' queda fuera a proposito: no es una etapa sino la ausencia de una
+ * ("todavia no lo gestione"). Se muestra y se puede filtrar, pero no se
+ * asigna a mano, porque un lead ya gestionado no vuelve a estar sin gestionar.
+ * Lo apaga solo el trigger de la migracion 062 al escribirle o agendarle algo.
+ */
+export const PIPELINE_STAGES = ['contactado', 'interesado', 'convertido', 'descartado'] as const;
+
+export type PipelineStage = (typeof PIPELINE_STAGES)[number];
+
 export const STATUS_LABELS: Record<LeadStatus, string> = {
   nuevo: 'Nuevo',
   contactado: 'Contactado',
