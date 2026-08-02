@@ -184,7 +184,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
             placeholder="Ej. Juan Pérez"
             required
             autoFocus
@@ -198,7 +198,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
             onChange={(e) => handleRutChange(e.target.value)}
             onBlur={handleRutBlur}
             placeholder="12.345.678-9"
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
           />
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="correo@ejemplo.com"
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
           />
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           placeholder="Escribe algún comentario o nota importante..."
-          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400 resize-none"
+          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400 resize-none"
         />
       </div>
 

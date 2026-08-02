@@ -31,12 +31,12 @@ interface Props {
 
 const getPurpleShade = (id: string) => {
   const shades = [
-    'bg-[#F2EEFF] text-[#6C4CF6]',
-    'bg-[#E0D4FF] text-[#5b3ce0]',
-    'bg-[#D6C7FF] text-[#4a2bb5]',
-    'bg-[#8b73f8] text-white',
-    'bg-[#6C4CF6] text-white',
-    'bg-[#4a2bb5] text-white',
+    'bg-primary-soft text-primary',
+    'bg-primary-soft-strong text-primary-hover',
+    'bg-primary-soft-strong text-primary-deep',
+    'bg-primary-light text-white',
+    'bg-primary text-white',
+    'bg-primary-deep text-white',
   ];
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
@@ -59,8 +59,8 @@ const LeadsTableRow = ({
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
 
   const cellPad = compactMode ? 'px-2.5 py-1.5' : 'px-2.5 py-2';
-  const trClass = `border-b border-[#E6EAF0] transition-colors cursor-pointer ${
-    isSelected ? 'bg-[#E0D4FF] hover:bg-[#D6C7FF]' : 'bg-white hover:bg-gray-50'
+  const trClass = `border-b border-line transition-colors cursor-pointer ${
+    isSelected ? 'bg-primary-soft-strong hover:bg-primary-soft-strong' : 'bg-white hover:bg-gray-50'
   } ${lead.isPinned ? 'cursor-grab active:cursor-grabbing active:opacity-50' : ''}`;
 
   // El RUT se muestra bajo el nombre solo si su columna no esta a la vista,
@@ -69,7 +69,7 @@ const LeadsTableRow = ({
   const showRutUnderName = compactMode && !rutColumnVisible && !!lead.rut;
 
   const checkboxBox = (
-    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[var(--color-border)] bg-[var(--color-bg-surface)]'}`}>
+    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-[var(--color-border)] bg-[var(--color-bg-surface)]'}`}>
       <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
         <path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={isSelected ? 1 : 0} />
       </svg>
@@ -138,7 +138,7 @@ const LeadsTableRow = ({
           )}
         </div>
         {showRutUnderName && (
-          <div className="text-[11px] text-[#5B6475] font-mono mt-0.5 truncate">RUT: {lead.rut}</div>
+          <div className="text-[11px] text-ink-secondary font-mono mt-0.5 truncate">RUT: {lead.rut}</div>
         )}
       </div>
     </div>
@@ -146,16 +146,16 @@ const LeadsTableRow = ({
 
   const actions = (
     <div className="flex gap-1.5 justify-end items-center pr-1 min-w-[64px]">
-      <button onClick={(event) => { event.stopPropagation(); onView(lead); }} title="Ver" className="text-[#5B6475] hover:text-[#161A24] text-xs p-1">{Icon.View()}</button>
+      <button onClick={(event) => { event.stopPropagation(); onView(lead); }} title="Ver" className="text-ink-secondary hover:text-ink text-xs p-1">{Icon.View()}</button>
       {isTrash ? (
         <>
-          {onRestore && <button onClick={(event) => { event.stopPropagation(); onRestore(lead.id!); }} title="Restaurar" className="text-[#5B6475] hover:text-green-600 text-xs p-1">{Icon.Restore()}</button>}
-          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar definitivo" className="text-[#5B6475] hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
+          {onRestore && <button onClick={(event) => { event.stopPropagation(); onRestore(lead.id!); }} title="Restaurar" className="text-ink-secondary hover:text-green-600 text-xs p-1">{Icon.Restore()}</button>}
+          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar definitivo" className="text-ink-secondary hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
         </>
       ) : (
         <>
-          <button onClick={(event) => { event.stopPropagation(); onEdit(lead); }} title="Editar" className="text-[#5B6475] hover:text-[#161A24] text-xs p-1">{Icon.Edit()}</button>
-          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar" className="text-[#5B6475] hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
+          <button onClick={(event) => { event.stopPropagation(); onEdit(lead); }} title="Editar" className="text-ink-secondary hover:text-ink text-xs p-1">{Icon.Edit()}</button>
+          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar" className="text-ink-secondary hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
         </>
       )}
     </div>

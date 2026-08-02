@@ -39,7 +39,7 @@ function Checkbox({
       disabled={disabled}
       title={title}
       onChange={(event) => onChange(event.target.checked)}
-      className="h-4 w-4 rounded border-slate-300 text-[#6C4CF6] focus:ring-[#6C4CF6] disabled:opacity-30"
+      className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary disabled:opacity-30"
     />
   );
 }
@@ -141,7 +141,7 @@ export default function AlertsManager() {
                     value={minutesDraft}
                     onChange={(event) => setMinutesDraft(event.target.value)}
                     onBlur={() => void commitMinutes()}
-                    className="w-16 rounded-[4px] border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 focus:border-[#6C4CF6] focus:outline-none dark:border-slate-600/50 dark:bg-slate-800"
+                    className="w-16 rounded-[4px] border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 focus:border-primary focus:outline-none dark:border-slate-600/50 dark:bg-slate-800"
                   />
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">minutos antes</span>
                 </div>

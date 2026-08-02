@@ -42,7 +42,7 @@ export default function LeadDetailHistory({
           <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Historial de Interacciones</h3>
           <button
             onClick={onToggleNotes}
-            className="text-[10px] font-bold text-[#6C4CF6] hover:underline bg-[#F2EEFF] px-2 py-0.5 rounded-[4px]"
+            className="text-[10px] font-bold text-primary hover:underline bg-primary-soft px-2 py-0.5 rounded-[4px]"
           >
             {showNotes ? 'Ocultar' : `Ver historial (${notes.length})`}
           </button>
@@ -55,11 +55,11 @@ export default function LeadDetailHistory({
             onChange={(e) => onNewNoteChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onAddNote()}
             placeholder="Registrar interacción (ej. Se llamó y no contestó)..."
-            className="flex-1 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] text-[11px] text-slate-700 focus:outline-none focus:border-[#6C4CF6] focus:bg-white transition-colors"
+            className="flex-1 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] text-[11px] text-slate-700 focus:outline-none focus:border-primary focus:bg-white transition-colors"
           />
           <button
             onClick={onAddNote}
-            className="px-3 py-1.5 bg-[#F2EEFF] text-[#6C4CF6] text-[12px] font-bold rounded-[6px] hover:bg-[#E0D4FF] transition-colors"
+            className="px-3 py-1.5 bg-primary-soft text-primary text-[12px] font-bold rounded-[6px] hover:bg-primary-soft-strong transition-colors"
             title="Guardar"
           >
             {Icon.Send()}
@@ -90,7 +90,7 @@ export default function LeadDetailHistory({
         <div>
           <button
             onClick={onToggleLogs}
-            className="w-full flex justify-between items-center text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-2 border-b border-slate-100 pb-1.5 hover:text-[#6C4CF6] transition-colors"
+            className="w-full flex justify-between items-center text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-2 border-b border-slate-100 pb-1.5 hover:text-primary transition-colors"
           >
             <span>Historial de envios ({sendLogs.length})</span>
             <span>{showLogs ? Icon.ChevronDown() : Icon.ChevronRight()}</span>
@@ -113,7 +113,7 @@ export default function LeadDetailHistory({
                         onClick={() => log.id != null && onToggleExpandedLog(log.id)}
                         className={
                           hasContent
-                            ? 'text-left text-[#6C4CF6] hover:underline decoration-dotted underline-offset-2'
+                            ? 'text-left text-primary hover:underline decoration-dotted underline-offset-2'
                             : 'text-left text-slate-400 cursor-default'
                         }
                         disabled={!hasContent}

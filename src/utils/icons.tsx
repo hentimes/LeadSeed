@@ -100,14 +100,14 @@ export const Icon = {
   ),
   SortUp: () => (
     <span className="inline-flex flex-col leading-none">
-      <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-[#6C4CF6]" />
+      <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-primary" />
       <I icon={faCaretDown} className="text-[9px] text-gray-300" />
     </span>
   ),
   SortDown: () => (
     <span className="inline-flex flex-col leading-none">
       <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-gray-300" />
-      <I icon={faCaretDown} className="text-[9px] text-[#6C4CF6]" />
+      <I icon={faCaretDown} className="text-[9px] text-primary" />
     </span>
   ),
   Grip: () => <I icon={faGripVertical} className="text-[10px] text-gray-400" />,

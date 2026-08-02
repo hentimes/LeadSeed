@@ -49,24 +49,24 @@ export default function FunnelRow({
         <div className="w-[105px] shrink-0 flex items-center gap-2 h-full relative">
           <div className="w-8 h-full flex items-center justify-center relative">
             {!isLast && (
-              <div className="absolute top-[50%] left-[50%] -translate-x-1/2 w-[1px] h-[46px] bg-[#E6EAF0] z-0" />
+              <div className="absolute top-[50%] left-[50%] -translate-x-1/2 w-[1px] h-[46px] bg-line z-0" />
             )}
-            <div className={`w-8 h-8 rounded-full border border-[#E6EAF0] flex items-center justify-center shrink-0 z-10 bg-white ${percentTotal > 0 ? 'text-[#161A24]' : 'text-[#8C95A6]'}`}>
+            <div className={`w-8 h-8 rounded-full border border-line flex items-center justify-center shrink-0 z-10 bg-white ${percentTotal > 0 ? 'text-ink' : 'text-ink-muted'}`}>
               {getIcon()}
             </div>
           </div>
-          <span className="text-[12px] font-bold text-[#161A24] w-[70px] truncate">{label}</span>
+          <span className="text-[12px] font-bold text-ink w-[70px] truncate">{label}</span>
         </div>
 
         {/* Barra principal y porcentaje del total */}
         <div className="flex-1 flex flex-col justify-center px-4">
           <div className="flex items-end gap-1.5 mb-1.5">
-            <span className="text-[14px] font-bold text-[#161A24] leading-none">{count}</span>
-            <span className="text-[11px] font-medium text-[#8C95A6]">({percentTotal}%)</span>
+            <span className="text-[14px] font-bold text-ink leading-none">{count}</span>
+            <span className="text-[11px] font-medium text-ink-muted">({percentTotal}%)</span>
           </div>
           <div className="h-[3px] w-full bg-[#F2F4F7] rounded-full overflow-hidden flex">
             <div 
-              className="h-full rounded-full transition-all duration-500 bg-[#635BFF]" 
+              className="h-full rounded-full transition-all duration-500 bg-primary" 
               style={{ width: `${percentTotal}%` }} 
             />
           </div>
@@ -76,15 +76,15 @@ export default function FunnelRow({
         <div className="w-[85px] shrink-0 flex flex-col justify-center items-start pl-2">
           {prevConv !== null ? (
             <>
-              <span className="text-[9px] font-medium text-[#8C95A6] text-left leading-tight mb-0.5">
+              <span className="text-[9px] font-medium text-ink-muted text-left leading-tight mb-0.5">
                 conv. desde<br/>{prevLabel}
               </span>
-              <span className={`text-[12px] font-bold ${prevConv > 0 ? 'text-[#635BFF]' : 'text-[#161A24]'}`}>{prevConv}%</span>
+              <span className={`text-[12px] font-bold ${prevConv > 0 ? 'text-primary' : 'text-ink'}`}>{prevConv}%</span>
             </>
           ) : (
             <>
-              <span className="text-[9px] font-medium text-[#8C95A6] text-left leading-tight mb-0.5">Inicio<br/>&nbsp;</span>
-              <span className={`text-[12px] font-bold ${percentTotal > 0 ? 'text-[#635BFF]' : 'text-[#161A24]'}`}>{percentTotal}%</span>
+              <span className="text-[9px] font-medium text-ink-muted text-left leading-tight mb-0.5">Inicio<br/>&nbsp;</span>
+              <span className={`text-[12px] font-bold ${percentTotal > 0 ? 'text-primary' : 'text-ink'}`}>{percentTotal}%</span>
             </>
           )}
         </div>

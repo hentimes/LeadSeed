@@ -292,7 +292,7 @@ export default function ListsPage() {
         onDragOver={(e) => handleDragOver(e, list.id)}
         onDragLeave={handleDragLeave}
         onDrop={() => handleDropOnList(list.id)}
-        className={`bg-[#ffffff] dark:bg-slate-800 border-b border-[#E6EAF0] dark:border-slate-700/50 last:border-b-0 transition-colors group ${dragOverTarget === list.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-[#635BFF]' : ''}`}
+        className={`bg-[#ffffff] dark:bg-slate-800 border-b border-line dark:border-slate-700/50 last:border-b-0 transition-colors group ${dragOverTarget === list.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-primary' : ''}`}
       >
         <div
           onClick={() => { setExpandedId(isExpanded ? null : list.id); setSelectedLeadIds(new Set()); setLeadSearch(''); }}
@@ -300,11 +300,11 @@ export default function ListsPage() {
         >
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: list.color }} />
-            <span className="font-medium text-[13px] text-[#161A24] dark:text-slate-200 flex items-center gap-2">
+            <span className="font-medium text-[13px] text-ink dark:text-slate-200 flex items-center gap-2">
               {list.name}
               {list.isSmart && <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">Automática</span>}
             </span>
-            <span className="bg-slate-100 dark:bg-slate-700/50 text-[#5B6475] dark:text-slate-400 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-[#E6EAF0] dark:border-slate-600">{leads.length} leads</span>
+            <span className="bg-slate-100 dark:bg-slate-700/50 text-ink-secondary dark:text-slate-400 text-[10px] px-2 py-0.5 rounded-md font-semibold border border-line dark:border-slate-600">{leads.length} leads</span>
           </div>
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -386,7 +386,7 @@ export default function ListsPage() {
       
       {/* Header and Creation Row */}
       <div className="flex gap-2 mb-5 items-center">
-         <form onSubmit={handleCreateList} className="flex gap-2 bg-white dark:bg-slate-800 border border-[#E6EAF0] p-1 rounded-md shadow-sm items-center">
+         <form onSubmit={handleCreateList} className="flex gap-2 bg-white dark:bg-slate-800 border border-line p-1 rounded-md shadow-sm items-center">
             <input 
               type="text" 
               placeholder="Nueva Lista (Ej: Prioritarios)" 
@@ -424,11 +424,11 @@ export default function ListsPage() {
          </button>
       </div>
 
-      <div className="bg-[#ffffff] dark:bg-slate-800 rounded-md shadow-sm border border-[#E6EAF0] dark:border-slate-700 overflow-hidden">
+      <div className="bg-[#ffffff] dark:bg-slate-800 rounded-md shadow-sm border border-line dark:border-slate-700 overflow-hidden">
          {renderedItems.groups.map(group => (
             <div 
                key={group.id} 
-               className={`border-b border-[#E6EAF0] dark:border-slate-700/50 last:border-0 ${dragOverTarget === group.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-[#635BFF]' : ''}`}
+               className={`border-b border-line dark:border-slate-700/50 last:border-0 ${dragOverTarget === group.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-primary' : ''}`}
                onDragOver={(e) => handleDragOver(e, group.id)}
                onDragLeave={handleDragLeave}
                onDrop={() => handleDropOnGroup(group.id)}
@@ -443,7 +443,7 @@ export default function ListsPage() {
                         className="bg-transparent font-semibold text-slate-700 dark:text-slate-200 text-sm outline-none border-b border-transparent focus:border-blue-500 hover:border-slate-300 px-1 py-0.5 w-48"
                      />
                   </div>
-                  <span className="text-[10px] text-[#5B6475] font-medium bg-[#ffffff] dark:bg-slate-800 border border-[#E6EAF0] dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">
+                  <span className="text-[10px] text-ink-secondary font-medium bg-[#ffffff] dark:bg-slate-800 border border-line dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">
                      {group.listIds.length} listas
                   </span>
                </div>

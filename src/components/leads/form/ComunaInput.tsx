@@ -104,7 +104,7 @@ export function ComunaInput({ comuna, region, onComunaChange, onRegionChange }: 
             if (suggestions.length > 0) setShowSuggestions(true);
           }}
           placeholder="Escribe la comuna..."
-          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all placeholder:text-slate-400"
+          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
           autoComplete="off"
         />
         {showSuggestions && (

@@ -61,14 +61,14 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
     <div className="flex w-full flex-col">
       
       {/* Navegación de Tabs Sticky y Date Picker */}
-      <div className="flex w-full mb-3 border-b border-[#E6EAF0] justify-between items-end pb-1">
+      <div className="flex w-full mb-3 border-b border-line justify-between items-end pb-1">
         <div className="flex gap-2 w-1/2">
           <button
             onClick={() => { setActiveTab('overview'); setReportType(null); }}
             className={`flex-1 flex justify-center pb-3 text-[14px] font-medium items-center gap-2 transition-all border-b-[2px] -mb-[5px] ${
               activeTab === 'overview'
-                ? 'border-[#635BFF] text-[#161A24]'
-                : 'border-transparent text-[#5B6475] hover:text-[#161A24]'
+                ? 'border-primary text-ink'
+                : 'border-transparent text-ink-secondary hover:text-ink'
             }`}
           >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -78,8 +78,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
           onClick={() => { setActiveTab('pipeline'); setReportType(null); }}
           className={`flex-1 flex justify-center pb-3 text-[14px] font-medium items-center gap-2 transition-all border-b-[2px] -mb-[5px] ${
             activeTab === 'pipeline'
-              ? 'border-[#635BFF] text-[#161A24]'
-              : 'border-transparent text-[#5B6475] hover:text-[#161A24]'
+              ? 'border-primary text-ink'
+              : 'border-transparent text-ink-secondary hover:text-ink'
           }`}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -89,8 +89,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
           onClick={() => { setActiveTab('tasks'); setReportType(null); }}
           className={`flex-1 flex justify-center pb-3 text-[14px] font-medium items-center gap-2 transition-all border-b-[2px] -mb-[5px] ${
             activeTab === 'tasks'
-              ? 'border-[#635BFF] text-[#161A24]'
-              : 'border-transparent text-[#5B6475] hover:text-[#161A24]'
+              ? 'border-primary text-ink'
+              : 'border-transparent text-ink-secondary hover:text-ink'
           }`}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -103,7 +103,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
           <button className="btn btn-secondary btn-sm flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             Hoy, {new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#5B6475] ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-secondary ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
         </div>
       </div>

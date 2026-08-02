@@ -57,9 +57,9 @@ export default function ChannelPerformanceChart({ totalConversions }: ChannelPer
           <div key={item.name} className="flex justify-between items-center text-[10px]">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="font-medium text-[#5B6475]">{item.name}</span>
+              <span className="font-medium text-ink-secondary">{item.name}</span>
             </div>
-            <span className="font-bold text-[#161A24]">{item.conversionRate}%</span>
+            <span className="font-bold text-ink">{item.conversionRate}%</span>
           </div>
         ))}
       </div>

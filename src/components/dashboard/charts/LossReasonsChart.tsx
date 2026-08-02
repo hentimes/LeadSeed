@@ -14,7 +14,7 @@ export default function LossReasonsChart() {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#111936] rounded-[6px] p-2 shadow-lg">
+        <div className="bg-ink rounded-[6px] p-2 shadow-lg">
           <p className="text-[11px] text-white">
             <span className="font-bold">{payload[0].name}:</span> {payload[0].value}%
           </p>
@@ -52,9 +52,9 @@ export default function LossReasonsChart() {
       </div>
       <div className="w-full flex flex-col gap-2 mt-2 px-6">
         {data.map((entry, idx) => (
-          <div key={entry.name} className="flex items-center gap-2 text-[11px] font-medium text-[#161A24]">
+          <div key={entry.name} className="flex items-center gap-2 text-[11px] font-medium text-ink">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-            <span className="text-[#5B6475] leading-none">{entry.name}</span>
+            <span className="text-ink-secondary leading-none">{entry.name}</span>
           </div>
         ))}
       </div>

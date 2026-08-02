@@ -87,7 +87,7 @@ function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: 
         />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[14px] font-bold text-[#111936]">
+        <span className="text-[14px] font-bold text-ink">
           {displayPercent}%
         </span>
       </div>
@@ -113,7 +113,7 @@ interface GoalRingCardProps {
 
 export default function GoalRingCard({
   icon,
-  iconColor = 'text-[#5B6475]',
+  iconColor = 'text-ink-secondary',
   title,
   current,
   target,
@@ -132,7 +132,7 @@ export default function GoalRingCard({
         <div className={`flex items-center justify-center w-5 h-5 ${iconColor}`}>
           <div className="scale-110">{icon}</div>
         </div>
-        <span className="text-[14px] font-medium text-[#161A24]">{title}</span>
+        <span className="text-[14px] font-medium text-ink">{title}</span>
       </div>
 
       {/* Contenido principal */}
@@ -145,15 +145,15 @@ export default function GoalRingCard({
         {/* Textos y Trend */}
         <div className="flex flex-col items-start justify-center">
           <div className="flex items-baseline gap-1">
-            <span className="text-[24px] font-medium text-[#161A24] tracking-tight">{current}</span>
-            <span className="text-[12px] font-medium text-[#5B6475]">/ {target > 0 ? target : '-'}</span>
+            <span className="text-[24px] font-medium text-ink tracking-tight">{current}</span>
+            <span className="text-[12px] font-medium text-ink-secondary">/ {target > 0 ? target : '-'}</span>
           </div>
-          <span className="text-[12px] text-[#5B6475] font-normal leading-none mb-2">{unit}</span>
+          <span className="text-[12px] text-ink-secondary font-normal leading-none mb-2">{unit}</span>
           
           {trend && (
             <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${trend.isPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
               {trend.isPositive ? '↑' : '↓'} {trend.value}
-              <span className="text-[#8C95A6] text-[11px] font-normal">vs ayer</span>
+              <span className="text-ink-muted text-[11px] font-normal">vs ayer</span>
             </span>
           )}
         </div>

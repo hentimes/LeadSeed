@@ -33,14 +33,14 @@ function renderContent(columnKey: string, ctx: CellContext) {
 
   switch (columnKey) {
     case 'phone':
-      if (!lead.phone) return <span className="text-[#5B6475]">-</span>;
+      if (!lead.phone) return <span className="text-ink-secondary">-</span>;
       return (
         <a
           href={`https://wa.me/${lead.phone.replace(/[^+\d]/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(event) => event.stopPropagation()}
-          className="text-[#6C4CF6] hover:text-[#5b3ce0] font-medium"
+          className="text-primary hover:text-primary-hover font-medium"
           title="Abrir WhatsApp"
         >
           {isSelected ? lead.phone : `...${lead.phone.slice(-4)}`}
@@ -48,12 +48,12 @@ function renderContent(columnKey: string, ctx: CellContext) {
       );
 
     case 'email':
-      if (!lead.email) return <span className="text-[#5B6475]">-</span>;
+      if (!lead.email) return <span className="text-ink-secondary">-</span>;
       return (
         <a
           href={`mailto:${lead.email}`}
           onClick={(event) => event.stopPropagation()}
-          className="text-[#5B6475] hover:text-[#161A24] truncate block"
+          className="text-ink-secondary hover:text-ink truncate block"
           title={lead.email}
         >
           {lead.email}
@@ -65,7 +65,7 @@ function renderContent(columnKey: string, ctx: CellContext) {
 
     case 'lists': {
       const leadLists = (lead.listaIds || []).map((id) => listsMap.get(id)).filter(Boolean) as LeadList[];
-      if (leadLists.length === 0) return <span className="text-[#5B6475]">-</span>;
+      if (leadLists.length === 0) return <span className="text-ink-secondary">-</span>;
       return (
         <div className="flex gap-1 flex-wrap">
           {leadLists.map((list) => (
@@ -96,7 +96,7 @@ function renderContent(columnKey: string, ctx: CellContext) {
     case 'score': {
       const score = getScore(lead);
       return (
-        <span className="text-[11px] font-semibold text-[#6C4CF6]" title={`${score} de 5 datos completos`}>
+        <span className="text-[11px] font-semibold text-primary" title={`${score} de 5 datos completos`}>
           {score}/5
         </span>
       );
@@ -104,7 +104,7 @@ function renderContent(columnKey: string, ctx: CellContext) {
 
     default: {
       const value = getLeadColumnValue(lead, columnKey, Array.from(listsMap.values()));
-      if (!value) return <span className="text-[#5B6475]">-</span>;
+      if (!value) return <span className="text-ink-secondary">-</span>;
       return (
         <span className={compactMode ? 'truncate block' : 'truncate block'} title={value}>
           {value}

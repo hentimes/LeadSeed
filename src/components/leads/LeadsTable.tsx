@@ -218,12 +218,12 @@ export default function LeadsTable({
       />
 
       <div ref={containerRef} className="card-standard overflow-x-auto w-full min-w-0">
-        <table className="w-full table-fixed text-[13px] text-[#161A24]">
-          <thead className="border-b border-[#E6EAF0] text-[#5B6475] bg-white">
+        <table className="w-full table-fixed text-[13px] text-ink">
+          <thead className="border-b border-line text-ink-secondary bg-white">
             <tr>
               <th className={`w-8 ${headPad}`}>
                 <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${allSelected ? 'bg-[#6C4CF6] border-[#6C4CF6]' : 'border-[#E6EAF0] bg-white'}`}
+                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${allSelected ? 'bg-primary border-primary' : 'border-line bg-white'}`}
                   onClick={onSelectAll}
                 >
                   <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
@@ -265,7 +265,7 @@ export default function LeadsTable({
                     style={{ width: definition?.width, maxWidth: definition?.width }}
                     className={`text-left align-middle ${headPad} font-medium select-none whitespace-nowrap ${
                       sortField ? 'cursor-pointer hover:bg-gray-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-50'
-                    } ${isDragTarget ? 'bg-[#F2EEFF] border-l-2 border-l-[#6C4CF6]' : ''} ${dragColKey === column.key ? 'opacity-40' : ''}`}
+                    } ${isDragTarget ? 'bg-primary-soft border-l-2 border-l-primary' : ''} ${dragColKey === column.key ? 'opacity-40' : ''}`}
                     title={definition?.fixed ? undefined : 'Arrastra para reordenar'}
                   >
                     <div className="flex items-center gap-1">
@@ -285,25 +285,25 @@ export default function LeadsTable({
                         onClick={scrollBack}
                         disabled={!canScrollBack}
                         title="Ver columnas anteriores"
-                        className="w-5 h-5 flex items-center justify-center rounded-[4px] text-[#5B6475] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+                        className="w-5 h-5 flex items-center justify-center rounded-[4px] text-ink-secondary hover:bg-primary-soft hover:text-primary disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                       </button>
                       {hiddenCount > 0 && (
-                        <span className="text-[10px] text-[#5B6475] font-medium tabular-nums">{hiddenCount}</span>
+                        <span className="text-[10px] text-ink-secondary font-medium tabular-nums">{hiddenCount}</span>
                       )}
                       <button
                         type="button"
                         onClick={scrollForward}
                         disabled={!canScrollForward}
                         title="Ver mas columnas"
-                        className="w-5 h-5 flex items-center justify-center rounded-[4px] text-[#5B6475] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+                        className="w-5 h-5 flex items-center justify-center rounded-[4px] text-ink-secondary hover:bg-primary-soft hover:text-primary disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                       </button>
                     </>
                   ) : (
-                    <span className="text-[11px] text-[#5B6475] font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
+                    <span className="text-[11px] text-ink-secondary font-medium whitespace-nowrap">Pag. {currentPage}/{pageCount}</span>
                   )}
                 </div>
               </th>
@@ -358,13 +358,13 @@ export default function LeadsTable({
           {Array.from({ length: pageCount }, (_, i) => i + 1).map(p => {
             if (p === 1 || p === pageCount || (p >= currentPage - 1 && p <= currentPage + 1)) {
               return (
-                <button key={p} onClick={() => onPageChange(p)} disabled={!!isLoadingPage} className={`w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors ${p === currentPage ? 'bg-[#F2EEFF] text-[#6C4CF6]' : 'text-[#5B6475] hover:bg-gray-50'}`}>
+                <button key={p} onClick={() => onPageChange(p)} disabled={!!isLoadingPage} className={`w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors ${p === currentPage ? 'bg-primary-soft text-primary' : 'text-ink-secondary hover:bg-gray-50'}`}>
                   {p}
                 </button>
               );
             }
             if (p === currentPage - 2 || p === currentPage + 2) {
-              return <span key={p} className="w-8 h-8 flex items-center justify-center text-[#5B6475]">...</span>;
+              return <span key={p} className="w-8 h-8 flex items-center justify-center text-ink-secondary">...</span>;
             }
             return null;
           })}

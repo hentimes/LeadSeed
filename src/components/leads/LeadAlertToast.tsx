@@ -15,14 +15,14 @@ export default function LeadAlertToast({ alerts, onDismiss, onOpenLead }: Props)
       {alerts.map((alert) => (
         <div
           key={alert.id}
-          className="pointer-events-auto w-full max-w-[420px] bg-white border border-[#E0D4FF] rounded-[8px] shadow-xl p-3 flex items-start gap-3 animate-toast-in"
+          className="pointer-events-auto w-full max-w-[420px] bg-white border border-primary-soft-strong rounded-[8px] shadow-xl p-3 flex items-start gap-3 animate-toast-in"
         >
-          <div className="w-8 h-8 rounded-[6px] bg-[#F2EEFF] text-[#6C4CF6] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-[6px] bg-primary-soft text-primary flex items-center justify-center shrink-0">
             {Icon.Leads()}
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[#6C4CF6]">Nuevo lead</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-primary">Nuevo lead</p>
             <p className="text-[13px] font-semibold text-slate-800 truncate">{alert.leadName}</p>
             {!!alert.leadPhone && <p className="text-[11px] text-slate-500 truncate">{alert.leadPhone}</p>}
           </div>
@@ -33,7 +33,7 @@ export default function LeadAlertToast({ alerts, onDismiss, onOpenLead }: Props)
                 onOpenLead(alert.leadId);
                 onDismiss(alert.id);
               }}
-              className="px-2.5 py-1.5 bg-[#6C4CF6] text-white rounded-[4px] text-[11px] font-bold hover:bg-[#5b3ce0] transition-colors"
+              className="px-2.5 py-1.5 bg-primary text-white rounded-[4px] text-[11px] font-bold hover:bg-primary-hover transition-colors"
             >
               Ver
             </button>

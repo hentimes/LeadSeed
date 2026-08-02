@@ -17,7 +17,7 @@ interface MetricCardProps {
 
 export default function MetricCard({
   icon,
-  iconColor = 'text-[#161A24]',
+  iconColor = 'text-ink',
   title,
   value,
   subtitle,
@@ -36,18 +36,18 @@ export default function MetricCard({
       </div>
       
       <div className="flex flex-col items-start text-left overflow-hidden">
-        <span className="text-[24px] font-medium leading-none tracking-tight text-[#161A24]">{value}</span>
-        <span className="text-[12px] font-medium text-[#5B6475] mt-1.5 leading-tight whitespace-nowrap">{title}</span>
+        <span className="text-[24px] font-medium leading-none tracking-tight text-ink">{value}</span>
+        <span className="text-[12px] font-medium text-ink-secondary mt-1.5 leading-tight whitespace-nowrap">{title}</span>
         
         {(trend || subtitle) && (
           <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium whitespace-nowrap">
             {trend && (
               <span className={`flex items-center gap-1 ${trend.isPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
                 {trend.isPositive ? '↑' : '↓'} {trend.value}
-                <span className="text-[#8C95A6] text-[11px] font-normal">vs ayer</span>
+                <span className="text-ink-muted text-[11px] font-normal">vs ayer</span>
               </span>
             )}
-            {subtitle && !trend && <span className="text-[#5B6475]">{subtitle}</span>}
+            {subtitle && !trend && <span className="text-ink-secondary">{subtitle}</span>}
           </div>
         )}
       </div>

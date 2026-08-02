@@ -211,7 +211,7 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
           <h3 className="text-[14px] font-semibold text-slate-800 mb-3">Categorías</h3>
           <form onSubmit={handleCreateCategory} className="flex gap-2 mb-4">
             <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)}
-              placeholder="Nueva categoría" className="flex-1 border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6]" required />
+              placeholder="Nueva categoría" className="flex-1 border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none focus:border-primary focus:ring-1 focus:ring-primary" required />
             <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none">
               {COLORS.map((c) => <option key={c.value} value={c.value}>{c.name}</option>)}
             </select>
@@ -245,8 +245,8 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
       <div className="grid gap-3">
         {filtered.map((t) => (
           <div key={t.id}>
-            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${selectedIds.has(t.id!) ? 'border-[#6C4CF6] bg-[#F2EEFF]/30' : 'hover:border-slate-300'}`}>
-              <input type="checkbox" checked={selectedIds.has(t.id!)} onChange={() => toggleSel(t.id!)} className="rounded mt-1 border-slate-300 text-[#6C4CF6] focus:ring-[#6C4CF6]" />
+            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${selectedIds.has(t.id!) ? 'border-primary bg-primary-soft/30' : 'hover:border-slate-300'}`}>
+              <input type="checkbox" checked={selectedIds.has(t.id!)} onChange={() => toggleSel(t.id!)} className="rounded mt-1 border-slate-300 text-primary focus:ring-primary" />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <button onClick={() => { setEditing(t); }} className="text-left flex-1 min-w-0">

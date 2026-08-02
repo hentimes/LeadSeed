@@ -20,7 +20,7 @@ export default function QualityMatrix() {
     <div className="w-full pt-1">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="text-[10px] text-[#5B6475] border-b border-[#E6EAF0]">
+          <tr className="text-[10px] text-ink-secondary border-b border-line">
             <th className="font-medium pb-2 w-[40%]">Fuente</th>
             <th className="font-medium pb-2 text-right">Volumen</th>
             <th className="font-medium pb-2 text-right">Win Rate</th>
@@ -29,20 +29,20 @@ export default function QualityMatrix() {
         </thead>
         <tbody>
           {sources.map((source, idx) => (
-            <tr key={source.id} className="border-b border-[#E6EAF0] last:border-0 hover:bg-[#F8F9FC] transition-colors">
+            <tr key={source.id} className="border-b border-line last:border-0 hover:bg-surface-muted transition-colors">
               <td className="py-2.5 flex items-center gap-2">
                 <div className="w-4 h-4 flex items-center justify-center" style={{ color: source.color }}>
                   {source.icon}
                 </div>
-                <span className="text-[12px] font-semibold text-[#161A24]">{source.name}</span>
+                <span className="text-[12px] font-semibold text-ink">{source.name}</span>
               </td>
-              <td className="py-2.5 text-right text-[12px] text-[#5B6475]">{source.leads}</td>
+              <td className="py-2.5 text-right text-[12px] text-ink-secondary">{source.leads}</td>
               <td className="py-2.5 text-right">
                 <span className="text-[12px] font-bold text-[#16C26E] bg-[#E6F9F0] px-1.5 py-0.5 rounded-[4px]">
                   {source.winRate}%
                 </span>
               </td>
-              <td className="py-2.5 text-right text-[12px] text-[#111936] font-medium">{source.cycle}d</td>
+              <td className="py-2.5 text-right text-[12px] text-ink font-medium">{source.cycle}d</td>
             </tr>
           ))}
         </tbody>

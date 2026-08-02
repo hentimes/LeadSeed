@@ -10,9 +10,9 @@ export default function TimeInStageChart() {
   }, []);
 
   const data = [
-    { name: 'Nuevo', days: 1.2, color: 'bg-[#8F85FF]' },
-    { name: 'Contactado', days: 2.5, color: 'bg-[#8F85FF]' },
-    { name: 'Interesado', days: 7.4, color: 'bg-[#8F85FF]' },
+    { name: 'Nuevo', days: 1.2, color: 'bg-primary-light' },
+    { name: 'Contactado', days: 2.5, color: 'bg-primary-light' },
+    { name: 'Interesado', days: 7.4, color: 'bg-primary-light' },
     { name: 'Convertido', days: 0.5, color: 'bg-[#CFC7FF]' },
   ];
 
@@ -25,7 +25,7 @@ export default function TimeInStageChart() {
         
         return (
           <div key={stage.name} className="flex items-center gap-3 group relative cursor-pointer">
-            <div className="w-[70px] text-[11px] font-medium text-[#161A24] text-left shrink-0 leading-none">
+            <div className="w-[70px] text-[11px] font-medium text-ink text-left shrink-0 leading-none">
               {stage.name}
             </div>
             
@@ -36,7 +36,7 @@ export default function TimeInStageChart() {
               />
             </div>
             
-            <div className="w-[30px] text-[10px] font-medium text-[#5B6475] text-right shrink-0">
+            <div className="w-[30px] text-[10px] font-medium text-ink-secondary text-right shrink-0">
               {stage.days}d
             </div>
           </div>

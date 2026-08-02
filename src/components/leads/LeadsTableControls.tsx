@@ -46,7 +46,7 @@ export default function LeadsTableControls({
           </svg>
           <input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Buscar..." 
-            className="w-full pl-8 pr-2 h-[34px] bg-white border border-[#E6EAF0] rounded-[6px] text-[13px] focus:ring-2 focus:ring-[#6C4CF6] focus:border-[#6C4CF6] outline-none transition-all shadow-sm" />
+            className="w-full pl-8 pr-2 h-[34px] bg-white border border-line rounded-[6px] text-[13px] focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all shadow-sm" />
         </div>
         
         <div className="shrink-0">
@@ -61,7 +61,7 @@ export default function LeadsTableControls({
       </div>
 
       {/* Bulk Actions and inline Filters */}
-      <div className="flex items-center gap-3 mb-2 min-h-[28px] overflow-x-auto scrollbar-hide text-[12px] font-semibold text-[#5B6475]">
+      <div className="flex items-center gap-3 mb-2 min-h-[28px] overflow-x-auto scrollbar-hide text-[12px] font-semibold text-ink-secondary">
         {bulkActions && (
           <div className="flex items-center gap-3 shrink-0">
             {bulkActions}

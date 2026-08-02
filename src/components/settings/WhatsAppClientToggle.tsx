@@ -31,8 +31,8 @@ export default function WhatsAppClientToggle() {
           {Icon.Phone()} 
         </div>
         <div>
-          <h3 className="text-heading-2">Cliente de WhatsApp</h3>
-          <p className="text-body text-slate-500 mt-1">
+          <h3 className="text-section-title font-semibold text-ink tracking-tight">Cliente de WhatsApp</h3>
+          <p className="text-body text-ink-secondary text-slate-500 mt-1">
             Elige cómo quieres que se abran los chats al enviar mensajes.
           </p>
         </div>

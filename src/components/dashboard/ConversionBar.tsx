@@ -65,13 +65,13 @@ export default function ConversionBar({
   }, [contactRate, conversionRate]);
 
   return (
-    <div className="bg-white border border-[#E6EAF0] rounded-[6px] py-2 px-4 flex flex-col gap-2">
+    <div className="bg-white border border-line rounded-[6px] py-2 px-4 flex flex-col gap-2">
       <div className="flex justify-between items-center mb-1">
-        <h2 className="text-[15px] font-medium text-[#161A24]">Conversión global</h2>
+        <h2 className="text-[15px] font-medium text-ink">Conversión global</h2>
         
         {onPeriodChange && (
           <select 
-            className="text-[13px] border border-[#F1F3F7] rounded-[8px] px-3 py-1.5 text-[#111936] font-medium bg-[#F8F9FC] outline-none hover:bg-gray-100 transition-all cursor-pointer"
+            className="text-[13px] border border-[#F1F3F7] rounded-[8px] px-3 py-1.5 text-ink font-medium bg-surface-muted outline-none hover:bg-gray-100 transition-all cursor-pointer"
             onChange={onPeriodChange}
             value={periodLabel.toLowerCase()}
           >
@@ -85,14 +85,14 @@ export default function ConversionBar({
 
       <div className="flex items-center justify-between mt-1 gap-4">
         <div className="flex flex-col items-center min-w-[70px]">
-          <span className="text-[24px] font-medium text-[#635BFF] leading-none tracking-tight">{displayContact}%</span>
-          <span className="text-[12px] font-medium text-[#5B6475] mt-1.5">Contactados</span>
+          <span className="text-[24px] font-medium text-primary leading-none tracking-tight">{displayContact}%</span>
+          <span className="text-[12px] font-medium text-ink-secondary mt-1.5">Contactados</span>
         </div>
         
         <div className="flex-1 relative flex items-center py-1">
           <div className="h-1.5 w-full bg-[#F7F8FB] rounded-full overflow-hidden relative">
             <div 
-              className="absolute top-0 left-0 h-full bg-[#635BFF] rounded-full" 
+              className="absolute top-0 left-0 h-full bg-primary rounded-full" 
               style={{ width: `${blueWidth}%`, transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}
             ></div>
             <div 
@@ -108,13 +108,13 @@ export default function ConversionBar({
 
         <div className="flex flex-col items-center min-w-[70px]">
           <span className="text-[24px] font-medium text-[#16B364] leading-none tracking-tight">{displayConversion}%</span>
-          <span className="text-[12px] font-medium text-[#5B6475] mt-1.5">Convertidos</span>
+          <span className="text-[12px] font-medium text-ink-secondary mt-1.5">Convertidos</span>
         </div>
       </div>
       
-      <div className="flex justify-center items-center gap-1.5 text-[12px] text-[#5B6475] font-medium mt-1">
-        <strong className="text-[#161A24]">{contacted}</strong> de {total} leads
-        <span className="w-1 h-1 rounded-full bg-[#E6EAF0] mx-1"></span>
+      <div className="flex justify-center items-center gap-1.5 text-[12px] text-ink-secondary font-medium mt-1">
+        <strong className="text-ink">{contacted}</strong> de {total} leads
+        <span className="w-1 h-1 rounded-full bg-line mx-1"></span>
         <strong className="text-[#16B364]">{converted} convertidos</strong>
       </div>
     </div>

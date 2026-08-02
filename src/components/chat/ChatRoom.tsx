@@ -74,8 +74,8 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
       {/* Header */}
       <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-[var(--ls-border,#E6E8F0)] dark:border-gray-700 flex justify-between items-center z-10 shadow-sm">
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 rounded-full bg-[var(--ls-soft-purple,#F2EEFF)] dark:bg-[#6C4CF6]/20 text-[var(--ls-primary,#6C4CF6)] text-xs font-semibold flex items-center gap-1 transition-colors">
-            <span className="text-[#6C4CF6] opacity-70">#</span> General
+          <button className="px-3 py-1.5 rounded-full bg-[var(--ls-soft-purple,#F2EEFF)] dark:bg-primary/20 text-[var(--ls-primary,#6C4CF6)] text-xs font-semibold flex items-center gap-1 transition-colors">
+            <span className="text-primary opacity-70">#</span> General
             <span className="w-1.5 h-1.5 bg-[var(--ls-primary,#6C4CF6)] rounded-full ml-1"></span>
           </button>
           <button className="px-3 py-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-700 text-xs font-medium flex items-center gap-1 transition-colors">
@@ -140,7 +140,7 @@ export default function ChatRoom({ roomId }: ChatRoomProps) {
                   {msg.reply_to_message && (
                     <div className={`mb-2 pl-2 border-l-2 text-xs py-1 pr-2 rounded-r flex flex-col
                       ${isOwn 
-                        ? 'border-[#6C4CF6] bg-white/50 text-slate-600' 
+                        ? 'border-primary bg-white/50 text-slate-600' 
                         : 'border-blue-400 bg-slate-50 dark:bg-gray-700 text-[var(--ls-text-muted,#667085)]'
                       }`}
                     >

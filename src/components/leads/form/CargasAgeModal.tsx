@@ -107,14 +107,14 @@ export function CargasAgeModal({ numeroCargas, edadCargas, onChange }: Props) {
                   value={age}
                   onChange={(e) => handleAgeChange(i, e.target.value)}
                   placeholder="Ej: 5"
-                  className="flex-1 rounded-[6px] border border-slate-200 px-2 py-1 text-[12px] font-medium focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all"
+                  className="flex-1 rounded-[6px] border border-slate-200 px-2 py-1 text-[12px] font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </div>
             ))}
             <button
               type="button"
               onClick={handleSave}
-              className="w-full mt-1 rounded-[6px] bg-[#6C4CF6] py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#5b3ce0]"
+              className="w-full mt-1 rounded-[6px] bg-primary py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-primary-hover"
             >
               Confirmar
             </button>

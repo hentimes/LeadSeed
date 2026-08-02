@@ -32,7 +32,7 @@ export function PhoneInput({ value, onChange, onBlur }: Props) {
   return (
     <div>
       <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Teléfono</label>
-      <div className="flex items-center w-full rounded-[6px] border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:border-[#6C4CF6] focus-within:ring-1 focus-within:ring-[#6C4CF6] transition-all overflow-hidden">
+      <div className="flex items-center w-full rounded-[6px] border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all overflow-hidden">
         <span className="pl-3 pr-1 text-[13px] text-slate-500 font-medium select-none pointer-events-none">
           +56
         </span>

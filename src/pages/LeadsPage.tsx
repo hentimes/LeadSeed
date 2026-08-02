@@ -96,7 +96,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
             )}
             <button
               onClick={p.handleNewLeadClick}
-              className="bg-[#6C4CF6] text-white px-3 h-[34px] rounded-[6px] text-[13px] font-medium hover:bg-[#5b3ce0] transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
+              className="bg-primary text-white px-3 h-[34px] rounded-[6px] text-[13px] font-medium hover:bg-primary-hover transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -109,7 +109,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
                 p.setShowTrash(!p.showTrash);
                 p.setSelectedIds(new Set());
               }}
-              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-white text-[#5B6475] border-[#E6EAF0] hover:bg-gray-50'}`}
+              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-white text-ink-secondary border-line hover:bg-gray-50'}`}
               title={p.showTrash ? 'Volver a leads' : 'Papelera'}
             >
               {p.showTrash ? 'Salir de papelera' : <div className="w-[14px] h-[14px] flex items-center justify-center scale-90 opacity-80">{Icon.Trash()}</div>}

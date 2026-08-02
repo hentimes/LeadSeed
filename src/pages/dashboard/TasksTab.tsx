@@ -29,12 +29,12 @@ function TaskAlertCard({ title, count, description, onClick, type }: TaskAlertCa
       }
     : {
         cardBg: 'bg-white',
-        cardBorder: 'border-[#E6EAF0]',
+        cardBorder: 'border-line',
         iconBg: 'bg-white',
-        iconBorder: 'border-[#E6EAF0]',
-        iconColor: 'text-[#161A24]',
-        numberColor: 'text-[#161A24]',
-        arrowColor: 'text-[#8C95A6]'
+        iconBorder: 'border-line',
+        iconColor: 'text-ink',
+        numberColor: 'text-ink',
+        arrowColor: 'text-ink-muted'
       };
 
   return (
@@ -60,7 +60,7 @@ function TaskAlertCard({ title, count, description, onClick, type }: TaskAlertCa
              </svg>
            )}
         </div>
-        <h3 className="text-[15px] font-medium text-[#161A24]">{title}</h3>
+        <h3 className="text-[15px] font-medium text-ink">{title}</h3>
       </div>
 
       {/* Bottom Row: Number and Description + Arrow */}
@@ -71,7 +71,7 @@ function TaskAlertCard({ title, count, description, onClick, type }: TaskAlertCa
           </span>
         </div>
         <div className="flex flex-1 items-center justify-between">
-          <p className="text-[14px] text-[#5B6475] leading-relaxed max-w-[280px]">
+          <p className="text-[14px] text-ink-secondary leading-relaxed max-w-[280px]">
             {description}
           </p>
           <div className="pr-2">
@@ -116,9 +116,9 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
       />
 
       {/* Eficiencia histórica */}
-      <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-6 flex gap-6">
+      <div className="bg-white border border-line rounded-[6px] p-6 flex gap-6">
         {/* Icon */}
-        <div className="w-[52px] h-[52px] rounded-full border border-[#E6EAF0] flex items-center justify-center shrink-0 bg-white text-[#161A24]">
+        <div className="w-[52px] h-[52px] rounded-full border border-line flex items-center justify-center shrink-0 bg-white text-ink">
            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
              <polyline points="17 6 23 6 23 12"></polyline>
@@ -129,8 +129,8 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
         <div className="flex flex-1 flex-col justify-center">
            {/* Title & Dropdown */}
            <div className="flex items-center justify-between mb-4">
-             <h3 className="text-[15px] font-medium text-[#161A24]">Eficiencia histórica</h3>
-             <select className="text-[12px] border border-[#E6EAF0] rounded-[6px] px-3 py-1 text-[#161A24] bg-white cursor-pointer hover:border-[#635BFF] transition-colors outline-none">
+             <h3 className="text-[15px] font-medium text-ink">Eficiencia histórica</h3>
+             <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
                <option value="30d">Últimos 30 días</option>
                <option value="7d">Últimos 7 días</option>
                <option value="90d">Últimos 90 días</option>
@@ -138,7 +138,7 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
            </div>
 
            {/* Large Percentage */}
-           <div className="text-[32px] font-bold text-[#635BFF] leading-none mb-4">
+           <div className="text-[32px] font-bold text-primary leading-none mb-4">
              {rate}%
            </div>
 
@@ -146,12 +146,12 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
            <div className="flex flex-col w-full gap-2">
              <div className="flex items-center gap-3">
                <div className="h-[6px] flex-1 bg-[#F2F4F7] rounded-full overflow-hidden">
-                 <div className="h-full bg-[#635BFF] transition-all" style={{ width: `${rate}%` }} />
+                 <div className="h-full bg-primary transition-all" style={{ width: `${rate}%` }} />
                </div>
-               <span className="text-[14px] font-medium text-[#161A24]">{rate}%</span>
+               <span className="text-[14px] font-medium text-ink">{rate}%</span>
              </div>
-             <div className="text-[12px] text-[#5B6475]">
-               <strong className="text-[#161A24]">{completed}</strong> de {taskSummary.total} tareas
+             <div className="text-[12px] text-ink-secondary">
+               <strong className="text-ink">{completed}</strong> de {taskSummary.total} tareas
              </div>
            </div>
         </div>

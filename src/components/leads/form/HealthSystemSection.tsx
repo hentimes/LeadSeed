@@ -49,7 +49,7 @@ export function HealthSystemSection({
           <select
             value={rangoEdad}
             onChange={(e) => onRangoEdadChange(e.target.value)}
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all cursor-pointer"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
           >
             <option value="">Exacta o Rango...</option>
             <option value="Menor a 30">Menor a 30</option>
@@ -71,7 +71,7 @@ export function HealthSystemSection({
               // onNumeroCargasChange('');
               // onEdadCargasChange('');
             }}
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all cursor-pointer"
+            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
           >
             <option value="Fonasa">Fonasa</option>
             <option value="Isapre">Isapre</option>
@@ -84,7 +84,7 @@ export function HealthSystemSection({
             <select
               value={rangoRenta}
               onChange={(e) => onRangoRentaChange(e.target.value)}
-              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all cursor-pointer"
+              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
             >
               <option value="">Seleccione...</option>
               {RENTAS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -98,7 +98,7 @@ export function HealthSystemSection({
             <select
               value={isapre}
               onChange={(e) => onIsapreChange(e.target.value)}
-              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all cursor-pointer"
+              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
             >
               <option value="">Seleccione...</option>
               {ISAPRES.map(i => <option key={i} value={i}>{i}</option>)}
@@ -119,7 +119,7 @@ export function HealthSystemSection({
             <select
               value={numeroCargas}
               onChange={(e) => onNumeroCargasChange(e.target.value)}
-              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-[#6C4CF6] focus:ring-1 focus:ring-[#6C4CF6] outline-none transition-all cursor-pointer"
+              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
             >
               <option value="">Seleccione...</option>
               {CARGAS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}

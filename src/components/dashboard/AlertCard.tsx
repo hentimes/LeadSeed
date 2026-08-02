@@ -40,10 +40,10 @@ export default function AlertCard({
       case 'info':
       default:
         return {
-          bg: 'bg-[#F2EFFF]',
+          bg: 'bg-primary-soft',
           border: 'border-transparent',
-          text: 'text-[#5B42F3]',
-          iconBg: 'bg-[#5B42F3]',
+          text: 'text-primary',
+          iconBg: 'bg-primary',
           icon: 'text-white'
         };
     }
@@ -68,7 +68,7 @@ export default function AlertCard({
         </div>
         <div className="flex flex-col">
           <span className={`text-[15px] font-medium ${colors.text} leading-tight`}>{title}</span>
-          <span className="text-[12px] font-medium text-[#5B6475] mt-1">{description}</span>
+          <span className="text-[12px] font-medium text-ink-secondary mt-1">{description}</span>
         </div>
       </div>
       

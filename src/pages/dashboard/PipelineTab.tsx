@@ -36,8 +36,8 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       label: 'Nuevo', 
       count: counts.nuevo, 
       color: '#5B42F3', 
-      iconBg: 'bg-[#F2EFFF]',
-      iconColor: 'text-[#5B42F3]',
+      iconBg: 'bg-primary-soft',
+      iconColor: 'text-primary',
       percentTotal: Math.round((counts.nuevo / total) * 100),
       prevConv: null
     },
@@ -131,7 +131,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="card-header">
           <h2 className="card-title">Embudo de ventas</h2>
           
-          <select className="text-[12px] border border-[#E6EAF0] rounded-[6px] px-3 py-1 text-[#161A24] bg-white cursor-pointer hover:border-[#635BFF] transition-colors outline-none">
+          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
             <option>Hoy</option>
             <option>Últimos 7 días</option>
             <option>Últimos 30 días</option>
@@ -140,19 +140,19 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
 
         <div className="flex">
           {/* Total Leads Column */}
-          <div className="w-[140px] shrink-0 border-r border-[#E6EAF0] pr-4 flex flex-col">
+          <div className="w-[140px] shrink-0 border-r border-line pr-4 flex flex-col">
             <div className="flex-1 flex flex-col justify-center">
-              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Total leads</span>
-              <span className="text-[32px] font-bold text-[#161A24] leading-none mb-1.5">{total}</span>
-              <span className="text-[10px] text-[#5B6475]">- 0% vs ayer</span>
+              <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Total leads</span>
+              <span className="text-[32px] font-bold text-ink leading-none mb-1.5">{total}</span>
+              <span className="text-[10px] text-ink-secondary">- 0% vs ayer</span>
             </div>
 
-            <div className="w-full h-[1px] bg-[#E6EAF0]" />
+            <div className="w-full h-[1px] bg-line" />
 
             <div className="flex-1 flex flex-col justify-center">
-              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Tasa de conversión</span>
-              <span className="text-[32px] font-bold text-[#635BFF] leading-none mb-1.5">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
-              <span className="text-[10px] text-[#5B6475]">- 0 pp vs ayer</span>
+              <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Tasa de conversión</span>
+              <span className="text-[32px] font-bold text-primary leading-none mb-1.5">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
+              <span className="text-[10px] text-ink-secondary">- 0 pp vs ayer</span>
             </div>
           </div>
 
@@ -165,14 +165,14 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         </div>
         
         {/* Footer actions */}
-        <div className="mt-3 border-t border-[#E6EAF0] flex justify-between items-center pt-3">
-          <div className="flex items-center gap-2 text-[12px] font-medium text-[#5B6475]">
-            <div className="flex items-center justify-center text-[#8C95A6] w-4 h-4"><Icon.Lists /></div>
+        <div className="mt-3 border-t border-line flex justify-between items-center pt-3">
+          <div className="flex items-center gap-2 text-[12px] font-medium text-ink-secondary">
+            <div className="flex items-center justify-center text-ink-muted w-4 h-4"><Icon.Lists /></div>
             {counts.nuevo} leads → {counts.convertido} clientes
           </div>
           <button 
             onClick={() => onViewReport('funnel')}
-            className="text-[12px] font-semibold text-[#635BFF] flex items-center gap-1.5 hover:text-[#5B42F3] transition-colors group"
+            className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:text-primary transition-colors group"
           >
             Ver detalle del embudo
             <Icon.ArrowRight />
@@ -185,38 +185,38 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="card-header">
           <h2 className="card-title">Adquisición mensual</h2>
           
-          <select className="text-[12px] border border-[#E6EAF0] rounded-[6px] px-3 py-1 text-[#161A24] bg-white cursor-pointer hover:border-[#635BFF] transition-colors outline-none">
+          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
             <option>Últimos 6 meses</option>
             <option>Este año</option>
           </select>
         </div>
 
         <div className="flex gap-4 mt-4">
-          <div className="w-[140px] shrink-0 border-r border-[#E6EAF0] pr-4 flex flex-col gap-3 pt-2">
+          <div className="w-[140px] shrink-0 border-r border-line pr-4 flex flex-col gap-3 pt-2">
             <div className="flex flex-col">
-              <span className="text-[24px] font-bold text-[#635BFF] leading-none mb-1">{chartData.reduce((a: any, b: any) => a + b.value, 0)}</span>
-              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Leads adquiridos</span>
+              <span className="text-[24px] font-bold text-primary leading-none mb-1">{chartData.reduce((a: any, b: any) => a + b.value, 0)}</span>
+              <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Leads adquiridos</span>
               <span className={`text-[10px] font-bold ${isGrowthPositive ? 'text-[#16B364]' : 'text-[#F04461]'}`}>
-                {isGrowthPositive ? '↑' : '↓'} {Math.abs(monthlyGrowth)}% <span className="font-normal text-[#8C95A6]">vs periodo anterior</span>
+                {isGrowthPositive ? '↑' : '↓'} {Math.abs(monthlyGrowth)}% <span className="font-normal text-ink-muted">vs periodo anterior</span>
               </span>
             </div>
             
-            <div className="w-full h-[1px] bg-[#E6EAF0]" />
+            <div className="w-full h-[1px] bg-line" />
             
             <div className="flex flex-col">
               <span className="text-[24px] font-bold text-[#16B364] leading-none mb-1">{counts.convertido}</span>
-              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Leads convertidos</span>
-              <span className="text-[10px] text-[#5B6475]">
+              <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Leads convertidos</span>
+              <span className="text-[10px] text-ink-secondary">
                 - 0% vs periodo anterior
               </span>
             </div>
             
-            <div className="w-full h-[1px] bg-[#E6EAF0]" />
+            <div className="w-full h-[1px] bg-line" />
             
             <div className="flex flex-col">
-              <span className="text-[24px] font-bold text-[#635BFF] leading-none mb-1">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
-              <span className="text-[11px] font-medium text-[#5B6475] mb-1.5">Tasa de conversión</span>
-              <span className="text-[10px] text-[#5B6475]">
+              <span className="text-[24px] font-bold text-primary leading-none mb-1">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
+              <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Tasa de conversión</span>
+              <span className="text-[10px] text-ink-secondary">
                 - 0 pp vs periodo anterior
               </span>
             </div>
@@ -229,9 +229,9 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
           </div>
         </div>
 
-        <div className="mt-3 border-t border-[#E6EAF0] flex justify-between items-center pt-3">
-          <div className="flex items-center gap-2 text-[12px] font-medium text-[#5B6475]">
-            <div className="flex items-center justify-center text-[#635BFF]"><Icon.Crown /></div>
+        <div className="mt-3 border-t border-line flex justify-between items-center pt-3">
+          <div className="flex items-center gap-2 text-[12px] font-medium text-ink-secondary">
+            <div className="flex items-center justify-center text-primary"><Icon.Crown /></div>
             {isGrowthPositive 
               ? `Crecimiento: +${monthlyGrowth}% vs mes anterior`
               : `Disminución: ${monthlyGrowth}% vs mes anterior`
@@ -239,7 +239,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
           </div>
           <button 
             onClick={() => onViewReport('acquisition')}
-            className="text-[12px] font-semibold text-[#635BFF] flex items-center gap-1.5 hover:text-[#5B42F3] transition-colors group"
+            className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:text-primary transition-colors group"
           >
             Ver reporte completo
             <Icon.ArrowRight />

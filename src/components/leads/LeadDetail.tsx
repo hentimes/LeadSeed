@@ -75,19 +75,19 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
               {!!detail.journey && (
                 <div className="bg-slate-50 rounded-[8px] p-3 border border-slate-200 mb-3">
                   {!!detail.journey.resumen && (
-                    <div className="bg-[#F2EEFF] rounded-[6px] p-3 border border-[#E0D4FF] mb-2">
-                      <div className="flex items-center gap-1.5 mb-1 text-[#6C4CF6]">
+                    <div className="bg-primary-soft rounded-[6px] p-3 border border-primary-soft-strong mb-2">
+                      <div className="flex items-center gap-1.5 mb-1 text-primary">
                         {Icon.CheckCircle()}
                         <span className="font-bold text-[11px] uppercase tracking-wide">Resumen</span>
                       </div>
-                      <p className="text-[12px] text-[#5b3ce0] font-medium leading-relaxed">
+                      <p className="text-[12px] text-primary-hover font-medium leading-relaxed">
                         {`${detail.journey.resumen || ''}`}
                       </p>
                     </div>
                   )}
 
                   <details className="group">
-                    <summary className="text-[11px] font-bold text-[#6C4CF6] cursor-pointer hover:underline list-none flex items-center gap-1">
+                    <summary className="text-[11px] font-bold text-primary cursor-pointer hover:underline list-none flex items-center gap-1">
                       <span className="group-open:rotate-90 transition-transform">{Icon.ChevronRight()}</span> Ver
                       respuestas originales
                     </summary>
@@ -142,7 +142,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
           <details className="group bg-slate-50 border border-slate-200 rounded-[8px] overflow-hidden" open>
             <summary className="text-[11px] font-bold text-slate-600 uppercase tracking-widest cursor-pointer hover:bg-slate-100 p-3 list-none flex items-center justify-between select-none transition-colors">
               <div className="flex items-center gap-2">
-                <span className="group-open:rotate-90 transition-transform text-[#6C4CF6]">{Icon.ChevronRight()}</span>
+                <span className="group-open:rotate-90 transition-transform text-primary">{Icon.ChevronRight()}</span>
                 Detalles y Perfil
               </div>
               <span className="text-[11px] font-semibold text-slate-400 tracking-normal normal-case">
@@ -206,7 +206,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                 {!!(detail.planesproDetails.numeroCargas && detail.planesproDetails.numeroCargas !== '0') && (
                   <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm col-span-2 flex justify-between items-center">
                     <div>
-                      <p className="text-[10px] text-[#6C4CF6] font-bold uppercase tracking-wide">Cargas Familiares</p>
+                      <p className="text-[10px] text-primary font-bold uppercase tracking-wide">Cargas Familiares</p>
                       <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.numeroCargas} carga(s)</p>
                     </div>
                     {!!(detail.planesproDetails.edadesCargas && detail.planesproDetails.edadesCargas.length > 0) && (
@@ -225,8 +225,8 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
 
           {/* Mensaje / Comentario del cliente */}
           {!!detail.planesproDetails.comentario && (
-            <div className="mt-2 bg-[#F2EEFF] p-3 rounded-[6px] border border-[#E0D4FF]">
-              <p className="text-[10px] text-[#6C4CF6] font-bold uppercase tracking-wide mb-1 flex items-center gap-1">
+            <div className="mt-2 bg-primary-soft p-3 rounded-[6px] border border-primary-soft-strong">
+              <p className="text-[10px] text-primary font-bold uppercase tracking-wide mb-1 flex items-center gap-1">
                 {Icon.Messages()} Comentario del cliente
               </p>
               <p className="text-[12px] text-slate-800 font-medium whitespace-pre-wrap">
@@ -239,7 +239,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
           {!!(detail.planesproMetadata.pdf_path || detail.pdfLoading || detail.pdfError) && (
             <div className="mt-2 bg-slate-50 p-3 rounded-[6px] border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-700">
-                <span className="text-[#6C4CF6]">{Icon.Layers()}</span>
+                <span className="text-primary">{Icon.Layers()}</span>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wide">Documento PDF</p>
                   <p className="text-[10px] text-slate-500">{detail.pdfFileName}</p>
@@ -292,7 +292,7 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                     {detail.visibleMeetLink && (
                       <button
                         onClick={() => openMeetLink(detail.visibleMeetLink as string)}
-                        className="px-3 py-1.5 bg-[#F2EEFF] border border-[#E0D4FF] rounded-[4px] text-[11px] font-bold text-[#6C4CF6] shadow-sm hover:bg-[#E0D4FF] transition-colors"
+                        className="px-3 py-1.5 bg-primary-soft border border-primary-soft-strong rounded-[4px] text-[11px] font-bold text-primary shadow-sm hover:bg-primary-soft-strong transition-colors"
                       >
                         Abrir Meet
                       </button>
@@ -329,13 +329,13 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                     type="date"
                     value={detail.appointmentDate}
                     onChange={(e) => detail.setAppointmentDate(e.target.value)}
-                    className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-[#6C4CF6]"
+                    className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-primary"
                   />
                   <input
                     type="time"
                     value={detail.appointmentTime}
                     onChange={(e) => detail.setAppointmentTime(e.target.value)}
-                    className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-[#6C4CF6]"
+                    className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -344,14 +344,14 @@ export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }:
                     value={detail.appointmentNote}
                     onChange={(e) => detail.setAppointmentNote(e.target.value)}
                     placeholder="Nota (opcional)"
-                    className="flex-1 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] text-slate-700 focus:outline-none focus:border-[#6C4CF6]"
+                    className="flex-1 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] text-slate-700 focus:outline-none focus:border-primary"
                   />
                   <button
                     onClick={() => {
                       void detail.handleCreateAppointment();
                     }}
                     disabled={detail.appointmentLoading}
-                    className="px-3 py-1.5 bg-[#161A24] hover:bg-black text-white text-[11px] font-bold rounded-[4px] transition-colors disabled:opacity-60"
+                    className="px-3 py-1.5 bg-ink hover:bg-black text-white text-[11px] font-bold rounded-[4px] transition-colors disabled:opacity-60"
                   >
                     {detail.appointmentLoading ? '...' : 'Agendar'}
                   </button>

@@ -141,7 +141,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
       <div className="modal-container w-full max-w-5xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-heading-2">Importar Leads</h2>
+            <h2 className="text-section-title font-semibold text-ink tracking-tight">Importar Leads</h2>
             <button
               onClick={() => setShowColInfo(!showColInfo)}
               className="text-gray-400 hover:text-blue-600 text-lg leading-none"

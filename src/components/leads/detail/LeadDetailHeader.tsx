@@ -12,7 +12,7 @@ export default function LeadDetailHeader({ lead, documentId, onEdit, onClose }: 
   return (
     <div className="flex items-start justify-between p-4 pb-3 border-b border-slate-100 shrink-0 min-w-0">
       <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-        <div className="w-10 h-10 rounded-[6px] bg-gradient-to-br from-[#F2EEFF] to-[#E0D4FF] text-[#6C4CF6] flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
+        <div className="w-10 h-10 rounded-[6px] bg-gradient-to-br from-primary-soft to-primary-soft-strong text-primary flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
           {lead.name.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
@@ -27,7 +27,7 @@ export default function LeadDetailHeader({ lead, documentId, onEdit, onClose }: 
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onEdit}
-          className="p-1.5 text-slate-400 hover:text-[#6C4CF6] hover:bg-[#F2EEFF] rounded-[6px] transition-colors"
+          className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary-soft rounded-[6px] transition-colors"
           title="Editar"
         >
           {Icon.Edit()}

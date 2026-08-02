@@ -54,15 +54,15 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
         </button>
         <div className="flex items-center gap-2">
           {pageTitle ? (
-            <span className="text-heading-2 ml-2">
+            <span className="text-section-title font-semibold text-ink tracking-tight ml-2">
               {pageTitle}
             </span>
           ) : (
             <>
-              <div className="text-[#635BFF] w-6 h-6 flex items-center justify-center">
+              <div className="text-primary w-6 h-6 flex items-center justify-center">
                 {Icon.Leads()}
               </div>
-              <span className="font-bold text-[#161A24] dark:text-white text-lg tracking-tight">LeadSeed</span>
+              <span className="font-bold text-ink dark:text-white text-lg tracking-tight">LeadSeed</span>
             </>
           )}
         </div>

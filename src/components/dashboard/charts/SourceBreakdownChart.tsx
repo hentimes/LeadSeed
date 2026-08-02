@@ -22,7 +22,7 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
       name: 'Web',
       count: Math.round(totalLeads * 0.388),
       percentage: 38.8,
-      color: 'bg-[#635BFF]',
+      color: 'bg-primary',
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -36,7 +36,7 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
       name: 'WhatsApp',
       count: Math.round(totalLeads * 0.298),
       percentage: 29.8,
-      color: 'bg-[#8F85FF]',
+      color: 'bg-primary-light',
       icon: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
@@ -78,7 +78,7 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
 
   return (
     <div className="w-full flex flex-col pt-1">
-      <div className="flex text-[10px] font-medium text-[#5B6475] mb-2 px-1">
+      <div className="flex text-[10px] font-medium text-ink-secondary mb-2 px-1">
         <div className="flex-1">Fuente</div>
         <div className="w-[40px] text-right">Leads</div>
         <div className="w-[60px] text-right">%</div>
@@ -86,10 +86,10 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
       
       <div className="flex flex-col gap-1">
         {sources.map((source) => (
-          <div key={source.id} className="flex items-center text-[11px] font-medium text-[#161A24] px-1 hover:bg-[#F8F9FC] rounded-[4px] transition-colors py-1 cursor-pointer">
+          <div key={source.id} className="flex items-center text-[11px] font-medium text-ink px-1 hover:bg-surface-muted rounded-[4px] transition-colors py-1 cursor-pointer">
             {/* Icon + Name */}
             <div className="w-[80px] flex items-center gap-1.5 shrink-0">
-              <div className="text-[#635BFF] flex items-center justify-center">
+              <div className="text-primary flex items-center justify-center">
                 {source.icon}
               </div>
               <span>{source.name}</span>
@@ -107,13 +107,13 @@ export default function SourceBreakdownChart({ totalLeads }: SourceBreakdownChar
             
             {/* Stats */}
             <div className="w-[40px] text-right font-bold">{source.count}</div>
-            <div className="w-[60px] text-right text-[#161A24]">{source.percentage}%</div>
+            <div className="w-[60px] text-right text-ink">{source.percentage}%</div>
           </div>
         ))}
       </div>
       
-      <div className="flex text-[11px] font-bold text-[#161A24] mt-2 pt-2 border-t border-[#E6EAF0] px-1">
-        <div className="flex-1 text-[#5B6475] font-normal">Total</div>
+      <div className="flex text-[11px] font-bold text-ink mt-2 pt-2 border-t border-line px-1">
+        <div className="flex-1 text-ink-secondary font-normal">Total</div>
         <div className="w-[40px] text-right">{totalLeads}</div>
         <div className="w-[60px] text-right">100%</div>
       </div>

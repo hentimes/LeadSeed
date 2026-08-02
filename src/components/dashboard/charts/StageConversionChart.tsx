@@ -54,9 +54,9 @@ export default function StageConversionChart({ stages, total }: StageConversionC
         {data.map((stage, idx) => (
           <React.Fragment key={stage.id}>
             <div className="flex flex-col items-center">
-              <span className="text-[11px] font-medium text-[#5B6475] mb-1">{stage.name}</span>
-              <span className="text-[20px] font-bold text-[#161A24] leading-none mb-1">{stage.count}</span>
-              <span className="text-[11px] font-medium text-[#8C95A6]">{stage.percentage}%</span>
+              <span className="text-[11px] font-medium text-ink-secondary mb-1">{stage.name}</span>
+              <span className="text-[20px] font-bold text-ink leading-none mb-1">{stage.count}</span>
+              <span className="text-[11px] font-medium text-ink-muted">{stage.percentage}%</span>
             </div>
             {idx < data.length - 1 && (
               <div className="text-[#C2C9D6] flex items-center justify-center">

@@ -47,15 +47,15 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       <div className="card-standard">
         <div className="card-header">
           <h2 className="card-title">Progreso de metas (hoy)</h2>
-          <div className="text-[11px] font-medium text-[#5B6475] bg-[#F7F8FB] px-3 py-1 rounded-[6px]">
+          <div className="text-[11px] font-medium text-ink-secondary bg-[#F7F8FB] px-3 py-1 rounded-[6px]">
             {compareLabel}
           </div>
         </div>
 
-        <div className="flex justify-between items-center divide-x divide-[#E6EAF0]">
+        <div className="flex justify-between items-center divide-x divide-line">
           <GoalRingCard
             icon={<Icon.WhatsAppOutline />}
-            iconColor="text-[#8F85FF]"
+            iconColor="text-primary-light"
             title="WhatsApp"
             current={waToday}
             target={settings.dailyGoalWhatsApp}
@@ -66,7 +66,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           />
           <GoalRingCard
             icon={<Icon.EmailOutline />}
-            iconColor="text-[#635BFF]"
+            iconColor="text-primary"
             title="Email"
             current={emailToday}
             target={settings.dailyGoalEmail}
@@ -103,10 +103,10 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           <h2 className="card-title">Rendimiento hoy</h2>
         </div>
         
-        <div className="flex justify-between items-center divide-x divide-[#E6EAF0]">
+        <div className="flex justify-between items-center divide-x divide-line">
           <MetricCard
             icon={<Icon.CheckOutline />}
-            iconColor="text-[#161A24]"
+            iconColor="text-ink"
             title="Tareas hechas"
             value={taskSummary.completedToday}
             trend={tasksTrend}
@@ -114,7 +114,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           />
           <MetricCard
             icon={<Icon.SendOutline />}
-            iconColor="text-[#161A24]"
+            iconColor="text-ink"
             title="Total envíos"
             value={sendSummary.today.total}
             trend={sendTrend}
@@ -122,7 +122,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           />
           <MetricCard
             icon={<Icon.MessagesOutline />}
-            iconColor="text-[#161A24]"
+            iconColor="text-ink"
             title="Respuestas"
             value={0}
             trend={repliesTrend}
@@ -151,112 +151,112 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       {/* Panel inferior: 3 Columnas */}
       <div className="grid grid-cols-3 gap-4 mt-2">
         {/* Fuentes principales */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-2 flex flex-col justify-between">
+        <div className="bg-white border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
-            <h3 className="text-[10px] font-bold text-[#161A24] mb-2 whitespace-nowrap">Fuentes principales</h3>
+            <h3 className="text-[10px] font-bold text-ink mb-2 whitespace-nowrap">Fuentes principales</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
               <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[#5B6475] w-14">Web</span>
+                <span className="text-ink-secondary w-14">Web</span>
                 <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#635BFF] rounded-full" style={{ width: '100%' }}></div>
+                  <div className="h-full bg-primary rounded-full" style={{ width: '100%' }}></div>
                 </div>
-                <span className="text-[#161A24] w-7 text-right">100%</span>
+                <span className="text-ink w-7 text-right">100%</span>
               </div>
               <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[#5B6475] w-14">WhatsApp</span>
+                <span className="text-ink-secondary w-14">WhatsApp</span>
                 <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#8F85FF] rounded-full" style={{ width: '0%' }}></div>
+                  <div className="h-full bg-primary-light rounded-full" style={{ width: '0%' }}></div>
                 </div>
-                <span className="text-[#161A24] w-7 text-right">0%</span>
+                <span className="text-ink w-7 text-right">0%</span>
               </div>
               <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[#5B6475] w-14">LinkedIn</span>
+                <span className="text-ink-secondary w-14">LinkedIn</span>
                 <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
                   <div className="h-full bg-[#CFC7FF] rounded-full" style={{ width: '0%' }}></div>
                 </div>
-                <span className="text-[#161A24] w-7 text-right">0%</span>
+                <span className="text-ink w-7 text-right">0%</span>
               </div>
               <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[#5B6475] w-14">Formulario</span>
+                <span className="text-ink-secondary w-14">Formulario</span>
                 <div className="flex-1 h-1 bg-[#F7F8FB] rounded-full overflow-hidden">
                   <div className="h-full bg-[#E8E5FF] rounded-full" style={{ width: '0%' }}></div>
                 </div>
-                <span className="text-[#161A24] w-7 text-right">0%</span>
+                <span className="text-ink w-7 text-right">0%</span>
               </div>
             </div>
           </div>
-          <button className="text-[10px] font-semibold text-[#635BFF] flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-[#5B42F3] transition-colors leading-none">
+          <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
             Ver todas
             <Icon.ArrowRight />
           </button>
         </div>
 
         {/* Conversión por etapa */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-2 flex flex-col justify-between">
+        <div className="bg-white border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
-            <h3 className="text-[10px] font-bold text-[#161A24] mb-2 leading-none">Conversión por etapa</h3>
+            <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Conversión por etapa</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
               <div className="flex justify-between items-center">
-                <span className="text-[#5B6475]">Nuevo</span>
+                <span className="text-ink-secondary">Nuevo</span>
                 <div className="flex gap-1">
-                  <span className="text-[#161A24]">592</span>
-                  <span className="text-[#8C95A6] w-7 text-right">(99%)</span>
+                  <span className="text-ink">592</span>
+                  <span className="text-ink-muted w-7 text-right">(99%)</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#5B6475]">Contactado</span>
+                <span className="text-ink-secondary">Contactado</span>
                 <div className="flex gap-1">
-                  <span className="text-[#161A24]">2</span>
-                  <span className="text-[#8C95A6] w-7 text-right">(0%)</span>
+                  <span className="text-ink">2</span>
+                  <span className="text-ink-muted w-7 text-right">(0%)</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#5B6475]">Interesado</span>
+                <span className="text-ink-secondary">Interesado</span>
                 <div className="flex gap-1">
-                  <span className="text-[#161A24]">2</span>
-                  <span className="text-[#8C95A6] w-7 text-right">(0%)</span>
+                  <span className="text-ink">2</span>
+                  <span className="text-ink-muted w-7 text-right">(0%)</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#5B6475]">Convertido</span>
+                <span className="text-ink-secondary">Convertido</span>
                 <div className="flex gap-1">
-                  <span className="text-[#161A24]">0</span>
-                  <span className="text-[#8C95A6] w-7 text-right">(0%)</span>
+                  <span className="text-ink">0</span>
+                  <span className="text-ink-muted w-7 text-right">(0%)</span>
                 </div>
               </div>
             </div>
             
-            <div className="border-t border-[#E6EAF0] mt-2 pt-2 flex justify-between items-center leading-none">
-              <span className="text-[10px] font-medium text-[#5B6475] w-[60%]">Tasa global</span>
-              <span className="text-[12px] font-bold text-[#161A24]">0%</span>
+            <div className="border-t border-line mt-2 pt-2 flex justify-between items-center leading-none">
+              <span className="text-[10px] font-medium text-ink-secondary w-[60%]">Tasa global</span>
+              <span className="text-[12px] font-bold text-ink">0%</span>
             </div>
           </div>
-          <button className="text-[10px] font-semibold text-[#635BFF] flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-[#5B42F3] transition-colors leading-none">
+          <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
             Ver detalle
             <Icon.ArrowRight />
           </button>
         </div>
 
         {/* Hallazgos */}
-        <div className="bg-white border border-[#E6EAF0] rounded-[6px] p-2 flex flex-col justify-between">
+        <div className="bg-white border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
-            <h3 className="text-[10px] font-bold text-[#161A24] mb-2 leading-none">Hallazgos</h3>
-            <ul className="flex flex-col gap-1.5 text-[10px] text-[#5B6475] leading-none">
-              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-[#635BFF] before:rounded-full">
-                <strong className="text-[#161A24] font-medium">Mejor fuente: </strong>
+            <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Hallazgos</h3>
+            <ul className="flex flex-col gap-1.5 text-[10px] text-ink-secondary leading-none">
+              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
+                <strong className="text-ink font-medium">Mejor fuente: </strong>
                 Web (100%).
               </li>
-              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-[#635BFF] before:rounded-full">
-                <strong className="text-[#161A24] font-medium">Mejor mes: </strong>
+              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
+                <strong className="text-ink font-medium">Mejor mes: </strong>
                 Julio (596).
               </li>
-              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-[#635BFF] before:rounded-full">
-                <strong className="text-[#161A24] font-medium">Tip: </strong>
+              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
+                <strong className="text-ink font-medium">Tip: </strong>
                 Optimiza Web.
               </li>
             </ul>
           </div>
-          <button className="text-[10px] font-semibold text-[#635BFF] flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-[#5B42F3] transition-colors leading-none">
+          <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
             Ver todos
             <Icon.ArrowRight />
           </button>

@@ -124,21 +124,21 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         </button>
       </div>
 
-      <div className="flex gap-1 mb-3 border-b border-[#E6EAF0]">
+      <div className="flex gap-1 mb-3 border-b border-line">
         {STATUS_TABS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setFilter(key)}
             className={`px-3 py-1.5 text-xs font-medium border-b-[2px] transition-all -mb-[1px] ${
-              filter === key ? `border-[#635BFF] text-[#161A24]` : 'border-transparent text-[#5B6475] hover:text-[#161A24]'
+              filter === key ? `border-primary text-ink` : 'border-transparent text-ink-secondary hover:text-ink'
             }`}
           >
             {label}
             {key === 'pendiente' && stats.pending.length > 0 && (
-              <span className="ml-1 text-[10px] text-[#5B6475]">({stats.pending.length})</span>
+              <span className="ml-1 text-[10px] text-ink-secondary">({stats.pending.length})</span>
             )}
             {key === 'completada' && stats.completed.length > 0 && (
-              <span className="ml-1 text-[10px] text-[#5B6475]">({stats.completed.length})</span>
+              <span className="ml-1 text-[10px] text-ink-secondary">({stats.completed.length})</span>
             )}
           </button>
         ))}
@@ -173,13 +173,13 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
               <TaskSection title="Pendientes" color="gray" tasks={stats.later} leads={leads} lists={lists} tomorrow={tomorrow} onToggleComplete={handleToggleComplete} onEdit={openEdit} onDelete={handleDelete} />
             )}
             {stats.pending.length === 0 && (
-              <p className="text-center text-[#5B6475] py-8">No hay tareas pendientes.</p>
+              <p className="text-center text-ink-secondary py-8">No hay tareas pendientes.</p>
             )}
           </>
         )}
         {filter === 'completada' && (
           stats.completed.length === 0 ? (
-            <p className="text-center text-[#5B6475] py-8">No hay tareas completadas.</p>
+            <p className="text-center text-ink-secondary py-8">No hay tareas completadas.</p>
           ) : (
             stats.completed.map((task) => (
               <TaskCard key={task.id} task={task} isOverdue={false} isToday={false} tomorrow={tomorrow} leads={leads} lists={lists} onToggleComplete={handleToggleComplete} onEdit={openEdit} onDelete={handleDelete} />
@@ -188,7 +188,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         )}
         {filter === 'todas' && (
           filtered.length === 0 ? (
-            <p className="text-center text-[#5B6475] py-8">No hay tareas.</p>
+            <p className="text-center text-ink-secondary py-8">No hay tareas.</p>
           ) : (
             filtered.map((task) => {
               const isOverdue = !!(task.status === 'pendiente' && task.fechaVencimiento && task.fechaVencimiento.slice(0, 10) < today);

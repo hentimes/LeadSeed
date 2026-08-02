@@ -39,14 +39,14 @@ export default function LeadDetailContact({ phone, email, onCopy }: Props) {
           </div>
           <button
             onClick={() => openWhatsApp(phone, '')}
-            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] hover:border-[#E0D4FF] transition-colors border border-slate-200"
+            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-slate-200"
             title="WhatsApp"
           >
             <WhatsAppGlyph />
           </button>
           <a
             href={`tel:${phone.replace(/[^+\d]/g, '')}`}
-            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] hover:border-[#E0D4FF] transition-colors border border-slate-200"
+            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-slate-200"
             title="Llamar"
           >
             {Icon.Phone()}
@@ -66,7 +66,7 @@ export default function LeadDetailContact({ phone, email, onCopy }: Props) {
           </div>
           <a
             href={`mailto:${email}`}
-            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-[#F2EEFF] hover:text-[#6C4CF6] hover:border-[#E0D4FF] transition-colors border border-slate-200"
+            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-slate-200"
             title="Enviar correo"
           >
             {Icon.Email()}

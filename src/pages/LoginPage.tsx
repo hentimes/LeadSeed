@@ -63,13 +63,13 @@ export default function LoginPage() {
       <svg viewBox="0 0 24 24" className="absolute top-[20%] left-[15%] w-3 h-3 text-[#EAE4FF] pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
-      <svg viewBox="0 0 24 24" className="absolute top-[15%] right-[20%] w-4 h-4 text-[#F2EEFF] pointer-events-none" fill="currentColor">
+      <svg viewBox="0 0 24 24" className="absolute top-[15%] right-[20%] w-4 h-4 text-primary-soft pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
       <svg viewBox="0 0 24 24" className="absolute bottom-[40%] right-[10%] w-3 h-3 text-[#EAE4FF] pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
-      <svg viewBox="0 0 24 24" className="absolute bottom-[20%] left-[10%] w-4 h-4 text-[#F2EEFF] pointer-events-none" fill="currentColor">
+      <svg viewBox="0 0 24 24" className="absolute bottom-[20%] left-[10%] w-4 h-4 text-primary-soft pointer-events-none" fill="currentColor">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
       </svg>
       <svg viewBox="0 0 24 24" className="absolute top-[30%] left-[8%] w-2 h-2 text-[#EAE4FF] pointer-events-none" fill="currentColor">
@@ -84,13 +84,13 @@ export default function LoginPage() {
           {/* Logo Illustration */}
           <div className="mb-6 relative flex justify-center items-center w-24 h-24">
             <img src="/icons/icon128.png" alt="Logo" className="w-20 h-20 drop-shadow-sm object-contain" />
-            <div className="absolute -bottom-2 w-10 h-2 bg-[#6C4CF6]/10 rounded-[100%] blur-sm"></div>
+            <div className="absolute -bottom-2 w-10 h-2 bg-primary/10 rounded-[100%] blur-sm"></div>
           </div>
 
-          <h1 className="text-[28px] tracking-tight font-bold text-[#111827] mb-2">
+          <h1 className="text-[28px] tracking-tight font-bold text-ink mb-2">
             Iniciar sesión
           </h1>
-          <p className="text-[14px] text-center text-[#667085] mb-10 max-w-[240px] leading-relaxed">
+          <p className="text-[14px] text-center text-ink-secondary mb-10 max-w-[240px] leading-relaxed">
             Accede a tu cuenta para gestionar tus leads y campañas.
           </p>
 
@@ -106,15 +106,15 @@ export default function LoginPage() {
 
             {/* Separador */}
             <div className="flex items-center gap-3 w-full py-2">
-              <div className="flex-1 h-px bg-[#E6E8F0]"></div>
-              <span className="text-[13px] text-[#667085]">o continúa con</span>
-              <div className="flex-1 h-px bg-[#E6E8F0]"></div>
+              <div className="flex-1 h-px bg-line"></div>
+              <span className="text-[13px] text-ink-secondary">o continúa con</span>
+              <div className="flex-1 h-px bg-line"></div>
             </div>
 
             {/* Botón Google */}
             <button
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2.5 px-4 py-[12px] border border-[#E6E8F0] rounded-[12px] text-[#344054] bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#F2EEFF] transition-all shadow-[inset_0_1px_0_white,inset_0_-2px_0_rgba(230,232,240,0.5),0_2px_5px_rgba(0,0,0,0.02)] font-semibold text-[15px]"
+              className="w-full flex items-center justify-center gap-2.5 px-4 py-[12px] border border-line rounded-[12px] text-[#344054] bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all shadow-[inset_0_1px_0_white,inset_0_-2px_0_rgba(230,232,240,0.5),0_2px_5px_rgba(0,0,0,0.02)] font-semibold text-[15px]"
             >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-[20px] h-[20px]" />
               Continuar con Google
@@ -122,8 +122,8 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <p className="mt-8 text-center text-[13px] text-[#667085]">
-            ¿Aún no tienes cuenta? <a href="#" className="text-[#6C4CF6] font-semibold hover:underline">Regístrate</a>
+          <p className="mt-8 text-center text-[13px] text-ink-secondary">
+            ¿Aún no tienes cuenta? <a href="#" className="text-primary font-semibold hover:underline">Regístrate</a>
           </p>
         </div>
       </div>

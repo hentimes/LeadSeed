@@ -83,7 +83,7 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
     if (active && payload && payload.length) {
       if (type === 'stacked') {
         return (
-          <div className="bg-[#111936] rounded-[6px] p-2 shadow-lg min-w-[110px]">
+          <div className="bg-ink rounded-[6px] p-2 shadow-lg min-w-[110px]">
             <p className="text-[10px] font-bold text-white mb-1.5 border-b border-[#2A3449] pb-1">{label}</p>
             <div className="flex flex-col gap-1">
               {[...payload].reverse().map((entry: any, index: number) => (
@@ -104,8 +104,8 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
       const title = type === 'cumulative' ? 'Acumulado' : 'Leads';
       return (
         <div className="bg-white border border-[#E2E6F0] rounded-[8px] p-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
-          <p className="text-[12px] font-bold text-[#111936]">{label}</p>
-          <p className="text-[13px] text-[#5B42F3] font-bold mt-1">{val} <span className="font-normal text-[#66718F] text-[11px]">{title}</span></p>
+          <p className="text-[12px] font-bold text-ink">{label}</p>
+          <p className="text-[13px] text-primary font-bold mt-1">{val} <span className="font-normal text-[#66718F] text-[11px]">{title}</span></p>
         </div>
       );
     }

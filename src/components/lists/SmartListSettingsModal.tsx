@@ -33,19 +33,19 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-card w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
-        <div className="px-4 py-2.5 border-b border-[#E6EAF0] flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
-          <h2 className="text-sm font-semibold text-[#161A24] dark:text-slate-200">Configuración de Listas Inteligentes</h2>
-          <button onClick={onClose} className="text-[#5B6475] hover:text-[#161A24]">✕</button>
+        <div className="px-4 py-2.5 border-b border-line flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+          <h2 className="text-sm font-semibold text-ink dark:text-slate-200">Configuración de Listas Inteligentes</h2>
+          <button onClick={onClose} className="text-ink-secondary hover:text-ink">✕</button>
         </div>
         
         <div className="p-3 overflow-y-auto space-y-3 flex-1">
-          <p className="text-[11px] text-[#5B6475] mb-2 leading-tight">
+          <p className="text-[11px] text-ink-secondary mb-2 leading-tight">
             Selecciona qué listas inteligentes quieres ver en tu panel. Estas se actualizan automáticamente.
           </p>
           
           {Object.entries(byCategory).map(([cat, lists]) => (
             <div key={cat} className="space-y-1">
-              <h3 className="font-medium text-xs text-[#5B6475] dark:text-slate-400 border-b border-[#E6EAF0] pb-0.5">{cat}</h3>
+              <h3 className="font-medium text-xs text-ink-secondary dark:text-slate-400 border-b border-line pb-0.5">{cat}</h3>
               <div className="grid grid-cols-2 gap-1">
                 {lists.map(l => (
                   <label key={l.id} className="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700/50">
@@ -53,10 +53,10 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
                       type="checkbox" 
                       checked={selected.has(l.id)} 
                       onChange={() => toggle(l.id)}
-                      className="rounded border-[#E6EAF0] text-[#6C4CF6] focus:ring-[#6C4CF6] w-3 h-3"
+                      className="rounded border-line text-primary focus:ring-primary w-3 h-3"
                     />
                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color }}></span>
-                    <span className="text-[11px] font-medium text-[#161A24] dark:text-slate-300">{l.name}</span>
+                    <span className="text-[11px] font-medium text-ink dark:text-slate-300">{l.name}</span>
                   </label>
                 ))}
               </div>
@@ -64,7 +64,7 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
           ))}
         </div>
         
-        <div className="px-3 py-2 border-t border-[#E6EAF0] bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-2">
+        <div className="px-3 py-2 border-t border-line bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-2">
           <button onClick={onClose} className="btn btn-secondary btn-sm">Cancelar</button>
           <button onClick={handleSave} className="btn btn-primary btn-sm">Guardar Configuración</button>
         </div>
