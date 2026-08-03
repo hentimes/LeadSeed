@@ -1,3 +1,6 @@
+// El limite de links (null = sin limite, ej. admin) no vive aca a proposito:
+// es un dato del USUARIO, no de cada link, y con cero links no habria de
+// donde leerlo. Usar getMyCaptureLinksLimit() de captureLinksService.
 export interface CaptureLink {
   id: number;
   refCode: string;
@@ -9,7 +12,6 @@ export interface CaptureLink {
   totalLeads: number;
   closedLeads: number;
   closeRatePct: number;
-  captureLinksLimit: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -4,6 +4,7 @@ import {
   createMyCaptureLink,
   deactivateMyCaptureLink,
   getMyCaptureLinkStats,
+  getMyCaptureLinksLimit,
   listMyCaptureLinks,
   updateMyCaptureLink,
 } from '../../services/captureLinksService';
@@ -31,6 +32,8 @@ function topStats(stats: CaptureLinkStats[]): CaptureLinkStats[] {
 export default function CaptureLinksSettings() {
   const [links, setLinks] = useState<CaptureLink[]>([]);
   const [stats, setStats] = useState<CaptureLinkStats[]>([]);
+  /** null significa sin limite (admin). Sigue siendo null antes de cargar. */
+  const [limit, setLimit] = useState<number | null>(null);
   const [form, setForm] = useState<LinkFormState>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -44,19 +47,21 @@ export default function CaptureLinksSettings() {
     [links, selectedId]
   );
 
-  const canCreate = links.length < (links[0]?.captureLinksLimit || 1);
-  const slotsText = `${links.length}/${links[0]?.captureLinksLimit || 1}`;
+  const canCreate = limit === null || links.length < limit;
+  const slotsText = limit === null ? `${links.length}` : `${links.length}/${limit}`;
 
   const loadData = async () => {
     setError('');
     setLoading(true);
     try {
-      const [nextLinks, nextStats] = await Promise.all([
+      const [nextLinks, nextStats, nextLimit] = await Promise.all([
         listMyCaptureLinks(),
         getMyCaptureLinkStats(),
+        getMyCaptureLinksLimit(),
       ]);
       setLinks(nextLinks);
       setStats(nextStats);
+      setLimit(nextLimit);
       setSelectedId((current) => current ?? nextLinks[0]?.id ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudieron cargar los links');
@@ -176,7 +181,9 @@ export default function CaptureLinksSettings() {
           <div>
             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Links de publicacion</h3>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              Crea hasta {links[0]?.captureLinksLimit || 1} links, separa campanas y mide cierre por origen.
+              {limit === null
+                ? 'Crea los links que necesites, separa campanas y mide cierre por origen.'
+                : `Crea hasta ${limit} links, separa campanas y mide cierre por origen.`}
             </p>
           </div>
           <span className="text-[11px] font-semibold px-2 py-1 rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">

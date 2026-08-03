@@ -2,6 +2,7 @@ import {
   createMyCaptureLinkRow,
   deactivateMyCaptureLinkRow,
   fetchMyCaptureLinkRows,
+  fetchMyCaptureLinksLimit,
   fetchMyCaptureLinkStatsRows,
   updateMyCaptureLinkRow,
   type CaptureLinkRow,
@@ -35,7 +36,6 @@ function mapCaptureLinkRow(row: CaptureLinkRow): CaptureLink {
     totalLeads: toNumber(row.total_leads),
     closedLeads: toNumber(row.closed_leads),
     closeRatePct: toNumber(row.close_rate_pct),
-    captureLinksLimit: Math.max(1, Math.min(toNumber(row.capture_links_limit) || 1, 6)),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -66,6 +66,11 @@ export function buildCaptureLinkUrl(refCode: string): string {
 export async function listMyCaptureLinks(): Promise<CaptureLink[]> {
   const rows = await fetchMyCaptureLinkRows();
   return rows.map(mapCaptureLinkRow);
+}
+
+/** null significa sin limite (admin). */
+export async function getMyCaptureLinksLimit(): Promise<number | null> {
+  return fetchMyCaptureLinksLimit();
 }
 
 export async function createMyCaptureLink(input: CaptureLinkInput): Promise<CaptureLink> {

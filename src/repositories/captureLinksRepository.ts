@@ -57,6 +57,19 @@ export async function fetchMyCaptureLinkRows(): Promise<CaptureLinkRow[]> {
   return (data ?? []) as CaptureLinkRow[];
 }
 
+/**
+ * Limite de links del usuario actual. null significa sin limite (admin).
+ *
+ * list_my_capture_links() repite el limite en cada fila, asi que con cero
+ * links todavia no hay de donde leerlo -exactamente el caso de un admin
+ * recien creado-. Este RPC devuelve algo siempre, tenga o no links.
+ */
+export async function fetchMyCaptureLinksLimit(): Promise<number | null> {
+  const { data, error } = await supabase.rpc('get_my_capture_links_limit');
+  if (error) throw error;
+  return data as number | null;
+}
+
 export async function createMyCaptureLinkRow(args: CreateCaptureLinkArgs): Promise<CaptureLinkRow> {
   const { data, error } = await supabase.rpc('create_my_capture_link', args);
   if (error) throw error;
