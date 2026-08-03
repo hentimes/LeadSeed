@@ -60,22 +60,22 @@ function mapCaptureLinkStatsRow(row: CaptureLinkStatsRow): CaptureLinkStats {
 }
 
 /**
- * URL publica de un link de captura.
+ * URL publica de un link de captura, formato short link: /pb/<ref>.
  *
- * El ref va como query string, NO como segmento de ruta. Es el formato que
- * documenta planespro-form-integration-contract.md
- * ("https://planespro.cl/pb/?ref=abc123") y el unico que sobrevive:
- * planespro.cl responde 301 a /pb/<ref> y redirige a /pb/ pelado,
- * descartando el codigo. Verificado contra el sitio en vivo:
+ * Es el formato pedido explicitamente (short links, no query string largo).
+ * Hoy planespro.cl (repo landing-gerow, rama fix/agenda-url-bug) responde
+ * 301 en /pb/<ref> -> /pb/, borrando el ref: el fix ya existe ahi
+ * (functions/pb/[[slug]].js + _routes.json) pero esta sin desplegar, sin
+ * commitear todavia junto a otro trabajo en curso (el formulario /form).
  *
- *   /pb/58a2k6      -> 301 -> /pb/        (ref perdido)
- *   /pb/?ref=58a2k6 -> 200                (ref intacto)
- *
- * Con el ref perdido el formulario caia al valor cacheado en su
- * localStorage, y todos los leads quedaban atribuidos al link anterior.
+ * Hasta que ese deploy salga, un link generado con esta URL NO atribuye
+ * bien (cae al ultimo ref que haya quedado en el localStorage del
+ * formulario). Se prioriza igual el formato correcto por decision del
+ * usuario: revertir esto por ?ref= vuelve a atribuir bien mientras tanto,
+ * pero no es lo que se pidio.
  */
 export function buildCaptureLinkUrl(refCode: string): string {
-  return `${PUBLIC_LINK_BASE}?ref=${encodeURIComponent(refCode)}`;
+  return `${PUBLIC_LINK_BASE}${encodeURIComponent(refCode)}`;
 }
 
 export async function listMyCaptureLinks(): Promise<CaptureLink[]> {
