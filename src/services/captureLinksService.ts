@@ -59,8 +59,23 @@ function mapCaptureLinkStatsRow(row: CaptureLinkStatsRow): CaptureLinkStats {
   };
 }
 
+/**
+ * URL publica de un link de captura.
+ *
+ * El ref va como query string, NO como segmento de ruta. Es el formato que
+ * documenta planespro-form-integration-contract.md
+ * ("https://planespro.cl/pb/?ref=abc123") y el unico que sobrevive:
+ * planespro.cl responde 301 a /pb/<ref> y redirige a /pb/ pelado,
+ * descartando el codigo. Verificado contra el sitio en vivo:
+ *
+ *   /pb/58a2k6      -> 301 -> /pb/        (ref perdido)
+ *   /pb/?ref=58a2k6 -> 200                (ref intacto)
+ *
+ * Con el ref perdido el formulario caia al valor cacheado en su
+ * localStorage, y todos los leads quedaban atribuidos al link anterior.
+ */
 export function buildCaptureLinkUrl(refCode: string): string {
-  return `${PUBLIC_LINK_BASE}${encodeURIComponent(refCode)}`;
+  return `${PUBLIC_LINK_BASE}?ref=${encodeURIComponent(refCode)}`;
 }
 
 export async function listMyCaptureLinks(): Promise<CaptureLink[]> {
