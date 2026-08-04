@@ -15,5 +15,6 @@ export { Card, Panel } from './Surface';
 export { Button, IconButton } from './Button';
 export { Badge } from './Badge';
 export { PageShell, SectionHeader, EmptyState } from './PageShell';
+export { Field, Input, Textarea, Select, Checkbox } from './Field';
 export { PageTitle, SectionTitle, CardTitle, GroupLabel, Body, Hint } from './Text';
 export { Modal } from './Modal';

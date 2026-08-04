@@ -4,6 +4,10 @@ import { getAssignedLeads } from '../../hooks/useTemplates';
 import { Icon } from '../../utils/icons';
 import { getCurrentSession } from '../../services/authService';
 import { logCallSend } from '../../services/sendService';
+import { Field, Panel, Select } from '../../design';
+import { SendStep } from './SendStep';
+import { TemplatePicker } from './TemplatePicker';
+import { SendAction } from './RecipientPicker';
 
 interface Props {
   leads: Lead[];
@@ -13,22 +17,18 @@ interface Props {
 }
 
 export default function CallSender({ leads, templates, templateLists }: Props) {
-  const [selectedListId, setSelectedListId] = useState<number | 'all'>('all');
+  const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [assignedLeadIds, setAssignedLeadIds] = useState<string[]>([]);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | ''>('');
+  const [selectedLeadId, setSelectedLeadId] = useState<string>('');
   const [logging, setLogging] = useState(false);
   const [message, setMessage] = useState('');
 
-  const filteredTemplates = useMemo(() => {
-    if (selectedListId === 'all') return templates;
-    return templates.filter((template) => (template.templateListIds || []).includes(selectedListId));
-  }, [templates, selectedListId]);
+  const findTemplateById = (value: string) =>
+    templates.find((template) => String(template.id ?? '') === value) || null;
 
-  const findTemplateById = (value: string) => templates.find((template) => String(template.id ?? '') === value) || null;
-
-  const handleTemplateChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value;
+  const handleTemplateSelect = async (template: CallTemplate | null) => {
+    const value = String(template?.id ?? '');
     setSelectedTemplateId(value);
     if (!value) {
       setAssignedLeadIds([]);
@@ -36,12 +36,11 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
       return;
     }
 
-    const template = findTemplateById(value);
     if (template) {
       const session = await getCurrentSession();
       const userId = session?.user?.id;
       if (!userId) return;
-      
+
       const { allIds } = await getAssignedLeads(template, userId);
       setAssignedLeadIds(allIds);
       if (!allIds.includes(String(selectedLeadId))) {
@@ -81,92 +80,76 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">1. Categoria de Llamada</label>
-        <select
-          value={selectedListId}
-          onChange={(event) => {
-            setSelectedListId(event.target.value === 'all' ? 'all' : Number(event.target.value));
+    <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
+      <SendStep step={1} title="Guion">
+        <TemplatePicker
+          templates={templates}
+          templateLists={templateLists}
+          categoryId={selectedListId}
+          onCategoryChange={(id) => {
+            setSelectedListId(id);
             setSelectedTemplateId('');
             setAssignedLeadIds([]);
             setSelectedLeadId('');
           }}
-          className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
-        >
-          <option value="all">Todas las categorias</option>
-          {templateLists.map((list) => (
-            <option key={list.id} value={list.id}>
-              {list.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          selectedId={selectedTemplateId}
+          onSelect={handleTemplateSelect}
+          itemLabel="guion"
+        />
+      </SendStep>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">2. Guion / Script</label>
-        <select
-          value={selectedTemplateId}
-          onChange={handleTemplateChange}
-          className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500"
-        >
-          <option value="">-- Seleccionar Guion --</option>
-          {filteredTemplates.map((template) => (
-            <option key={template.id} value={template.id}>
-              {template.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">3. Lead a llamar</label>
-        <select
-          value={selectedLeadId}
-          onChange={(event) => setSelectedLeadId(event.target.value || '')}
-          disabled={!selectedTemplateId}
-          className="w-full border border-slate-300 dark:border-slate-600/50 rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-slate-100 dark:bg-slate-800"
-        >
-          <option value="">-- Seleccionar Lead --</option>
-          {validLeads.map((lead) => (
-            <option key={lead.id} value={lead.id}>
-              {lead.name} ({lead.phone || 'Sin numero'})
-            </option>
-          ))}
-        </select>
-        {selectedTemplateId && validLeads.length === 0 && (
-          <p className="text-xs text-red-500 mt-1">Este guion no tiene leads asignados.</p>
+      <SendStep step={2} title="Script" disabled={!selectedTemplate}>
+        {selectedTemplate ? (
+          <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-surface-muted p-2.5 text-body text-ink">
+            {selectedTemplate.contenido}
+          </p>
+        ) : (
+          <p className="text-micro text-ink-muted">Elegí un guion para ver el script.</p>
         )}
-      </div>
+      </SendStep>
 
-      {selectedTemplate && (
-        <div className="mb-4 border-b border-gray-100 pb-4">
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">1. Seleccionar Guion</h3>
-          <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{selectedTemplate.contenido}</p>
-        </div>
-      )}
-
-      <button
-        onClick={handleLogCall}
-        disabled={!selectedTemplateId || !selectedLeadId || logging}
-        className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        {logging ? 'Registrando...' : (
-          <>
-            <Icon.Phone /> Registrar Llamada Completada
-          </>
-        )}
-      </button>
-
-      {message && (
-        <div
-          className={`mt-3 p-2 rounded text-sm text-center font-medium flex items-center justify-center gap-1.5 ${
-            message.includes('exito') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-          }`}
+      <SendStep step={3} title="Lead a llamar" disabled={!selectedTemplateId}>
+        <Field
+          label="Lead"
+          hint={
+            selectedTemplateId && validLeads.length === 0
+              ? 'Este guion no tiene leads asignados.'
+              : undefined
+          }
         >
-          {message.includes('exito') ? <Icon.Check /> : <Icon.Warning />} {message}
+          <Select
+            value={selectedLeadId}
+            onChange={(event) => setSelectedLeadId(event.target.value)}
+            disabled={!selectedTemplateId}
+          >
+            <option value="">Elegir lead...</option>
+            {validLeads.map((lead) => (
+              <option key={lead.id} value={lead.id}>
+                {lead.name} ({lead.phone || 'Sin número'})
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </SendStep>
+
+      <SendStep step={4} title="Registrar">
+        <div className="flex flex-col gap-2.5">
+          <SendAction
+            label={logging ? 'Registrando...' : 'Registrar llamada completada'}
+            disabled={!selectedTemplateId || !selectedLeadId || logging}
+            onClick={handleLogCall}
+          />
+
+          {message && (
+            <Panel tone={message.includes('exito') ? 'success' : 'danger'}>
+              <div className="flex items-center gap-2 text-body font-medium">
+                {message.includes('exito') ? <Icon.Check /> : <Icon.Warning />}
+                {message}
+              </div>
+            </Panel>
+          )}
         </div>
-      )}
+      </SendStep>
     </div>
   );
 }

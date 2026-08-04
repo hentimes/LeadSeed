@@ -1,5 +1,7 @@
 import type { EmailTemplate, Lead } from '../../types';
 import { Icon } from '../../utils/icons';
+import { Checkbox, Field, Input, Panel } from '../../design';
+import { SendAction } from './RecipientPicker';
 
 interface Props {
   schedule: boolean;
@@ -15,49 +17,79 @@ interface Props {
   result: { total: number; sent: number; errors: string[] } | null;
 }
 
+/**
+ * Envio inmediato o programado del correo.
+ *
+ * La fecha y la hora estaban en la misma fila que la casilla, empujadas a
+ * la derecha: en un panel de 320px los dos campos no entraban. Ahora la
+ * casilla manda sola y los campos aparecen debajo en dos columnas.
+ */
 export default function EmailScheduler({
-  schedule, setSchedule, scheduledDate, setScheduledDate, scheduledTime, setScheduledTime,
-  preConfirmSend, sending, selectedTemplate, recipients, result
+  schedule,
+  setSchedule,
+  scheduledDate,
+  setScheduledDate,
+  scheduledTime,
+  setScheduledTime,
+  preConfirmSend,
+  sending,
+  selectedTemplate,
+  recipients,
+  result,
 }: Props) {
-  return (
-    <div className="pt-2">
-      <div className="flex justify-between items-center mb-3">
-        <label className="flex items-center gap-2 text-xs cursor-pointer text-slate-500 dark:text-slate-400">
-          <input type="checkbox" checked={schedule} onChange={(e) => setSchedule(e.target.checked)} className="rounded" />
-          Programar envío automático
-        </label>
-        
-        {schedule && (
-          <div className="flex gap-2">
-            <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)}
-              className="border rounded px-2 py-1 text-xs outline-none focus:border-blue-500" />
-            <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)}
-              className="border rounded px-2 py-1 text-xs outline-none focus:border-blue-500" />
-          </div>
-        )}
-      </div>
+  const missingSchedule = schedule && (!scheduledDate || !scheduledTime);
+  const count = recipients.length;
+  const plural = count === 1 ? '' : 's';
 
-      <button onClick={preConfirmSend} disabled={!selectedTemplate || recipients.length === 0 || sending || (schedule && (!scheduledDate || !scheduledTime))}
-        className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all active:scale-[0.98]">
-        {sending ? 'Enviando mensajes...' : schedule ? `Programar envío a ${recipients.length} lead(s)` : `Enviar Ahora a ${recipients.length} lead(s)`}
-      </button>
+  let label = `Enviar ahora a ${count} lead${plural}`;
+  if (sending) label = 'Enviando mensajes...';
+  else if (schedule) label = `Programar envío a ${count} lead${plural}`;
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <Checkbox
+        checked={schedule}
+        onChange={(e) => setSchedule(e.target.checked)}
+        label="Programar envío automático"
+      />
+
+      {schedule && (
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Fecha">
+            <Input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
+          </Field>
+          <Field label="Hora">
+            <Input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+          </Field>
+        </div>
+      )}
+
+      <SendAction
+        label={label}
+        disabled={!selectedTemplate || count === 0 || sending || missingSchedule}
+        onClick={preConfirmSend}
+      />
 
       {result && (
-        <div className={`mt-3 p-2.5 rounded-lg text-sm flex items-start gap-2 ${result.errors.length ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
-          <span className="text-lg">{result.errors.length ? <Icon.Warning /> : <Icon.Check />}</span>
-          <div>
-            <div className={`font-semibold ${result.errors.length ? 'text-yellow-800' : 'text-green-800'}`}>
-              {result.sent} de {result.total} enviados con éxito
+        <Panel tone={result.errors.length ? 'warning' : 'success'}>
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 shrink-0">
+              {result.errors.length ? <Icon.Warning /> : <Icon.Check />}
+            </span>
+            <div className="min-w-0">
+              <p className="text-body font-semibold">
+                {result.sent} de {result.total} enviados con éxito
+              </p>
+              {result.errors.length > 0 && (
+                <ul className="mt-1 flex flex-col gap-0.5 text-micro">
+                  {result.errors.map((err, i) => (
+                    <li key={i}>• {err}</li>
+                  ))}
+                </ul>
+              )}
             </div>
-            {result.errors.length > 0 && (
-              <div className="mt-1 space-y-1 text-xs text-red-600">
-                {result.errors.map((err, i) => (
-                  <div key={i}>• {err}</div>
-                ))}
-              </div>
-            )}
           </div>
-        </div>
+        </Panel>
       )}
     </div>
   );
