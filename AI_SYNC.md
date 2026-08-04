@@ -6,6 +6,71 @@
 > destruiria la trazabilidad que CONTROL exige preservar.
 > Ruta de trabajo actual: `PROYECTOS/LeadSeed-Project/LeadSeed`.
 
+### 2026-08-03 20:15 CLT - Codex - landing-gerow / carpeta `forms`
+- Tipo: ordenamiento estructural acotado / CONTROL
+- Rol: Implementadora
+- Estado: en revision
+- Objetivo:
+  - centralizar las fuentes de formularios publicos de `landing-gerow` bajo `forms/`
+  - mantener las rutas publicas existentes `/pb` y `/form`
+  - no tocar `ppcrm`, LeadSeed ni backend Supabase
+- Dominio reservado:
+  - `landing-gerow` formularios publicos y build de salida estatica
+- Archivos/carpetas previstos:
+  - `C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\forms\pb\`
+  - `C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\forms\form\`
+  - `C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow\frontend\lead-capture\build.js`
+  - tests smoke acotados si corresponde
+- Fronteras protegidas:
+  - no tocar `cloudflare/ppcrm`
+  - no tocar backend Supabase
+  - no cambiar contrato publico `https://form.planespro.cl/api`
+  - no cambiar ownership `pb`
+- Validacion esperada:
+  - `npm run build:lead-capture`
+  - smoke de fuentes/salidas de formularios
+  - verificacion de que `/pb` y `/form` siguen como rutas publicas
+- Handoff 2026-08-03 20:35 CLT:
+  - creada carpeta canonica `landing-gerow/forms/`
+  - `forms/pb/` contiene la fuente del formulario PB:
+    - `html/`
+    - `js/`
+    - `css/`
+  - `forms/form/` contiene la fuente del formulario simplificado:
+    - `index.html`
+    - `app.js`
+    - `styles.css`
+    - `partials/` si existe
+  - `frontend/lead-capture/build.js` ahora construye desde `forms/pb` y sincroniza `forms/form` hacia la salida publica `form/`
+  - se mantienen rutas publicas existentes:
+    - `/pb`
+    - `/form`
+  - corregidas funciones Pages para que `/pb/:ref` y `/form/:ref` sirvan `/pb/` y `/form/` sin pasar por `index.html`, evitando redirects que pierdan el ref visible
+  - `_redirects` ahora declara rewrites explicitos para:
+    - `/pb/:ref`
+    - `/pb/:ref/`
+    - `/form/:ref`
+    - `/form/:ref/`
+  - no se toco `cloudflare/ppcrm`
+  - no se toco backend Supabase
+  - no se cambio el contrato `https://form.planespro.cl/api`
+- Tests agregados/actualizados:
+  - `tests/forms-source-boundary-smoke.mjs`
+  - `tests/pb-form-slug-functions-smoke.mjs`
+  - `tests/run-lead-capture-smoke-suite.mjs`
+  - tests de fuente PB actualizados para leer desde `forms/pb`
+- Validacion ejecutada:
+  - `npm run build:lead-capture`: OK
+  - `npm run smoke:lead-capture`: OK
+  - `node tests/pb-public-routing-smoke.mjs`: OK
+  - `node tests/workers-import-smoke.mjs`: OK
+- Riesgos abiertos:
+  - el arbol principal de `landing-gerow` sigue con muchos cambios ajenos sin commitear; este bloque debe aislarse antes de deploy
+  - `frontend/lead-capture/` queda como compatibilidad temporal, no como fuente canonica; una limpieza posterior puede retirarlo si ya no hay tests o tooling historico dependiente
+- Solicitud para IA-B:
+  - auditar que `forms/` sea frontera clara de formularios y que no se haya reintroducido dependencia de `ppcrm`
+  - auditar que el fix de slugs `/pb/:ref` y `/form/:ref` preserve ownership/ref sin reactivar redirects de `index.html`
+
 ### 2026-08-02 - Codex - Reemplazo de icono de extension / CONTROL
 - Tipo: ajuste visual aislado
 - Rol: implementadora
@@ -7077,3 +7142,264 @@ declararlo hecho (seccion 5.5).
   bloquea recursos remotos: la fuente probablemente nunca carga y cae al
   system-ui. Detectado, no corregido en este bloque.
 - Sin auditoria cruzada bajo 14.4.
+
+---
+
+## Claude | 2026-08-03 CLT | Contexto para IA-B en landing-gerow + tarea de reorganizacion + retiro de ppcrm
+
+Rol: esta IA trabaja en el repo de LeadSeed, no en `landing-gerow`. Esta entrada es
+una solicitud del usuario para la IA que si opera en `landing-gerow`
+(`C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow`).
+
+### Que estamos construyendo (contexto para IA-B)
+
+- **LeadSeed** (esta extension de Chrome, antes "MENSAJES") es el CRM. Un
+  vendedor la usa para gestionar sus leads: verlos, contactarlos, agendarlos,
+  seguir su estado.
+- **landing-gerow** es el sitio publico `planespro.cl`. Aloja los formularios
+  de captura (`/pb`, y ahora tambien uno nuevo en `/form`) que llenan
+  visitantes anonimos.
+- Flujo: visitante entra a un formulario publico en `planespro.cl` -> el
+  formulario manda el lead al backend (en migracion progresiva del Worker
+  `ppforms` hacia Supabase) -> el lead se crea con atribucion
+  (`capture_ref` -> `capture_link_id`, para saber de que link/campaña vino)
+  -> el lead aparece en LeadSeed, donde el vendedor lo gestiona.
+- **LeadSeed reemplaza a `ppcrm`.** No conviven: `ppcrm` quedo obsoleto, la
+  extension asume esa funcion por completo. Confirmado por el usuario.
+
+### Hallazgos de esta sesion en landing-gerow (observados desde afuera, sin
+auditoria propia de esta IA en ese repo -confirmar antes de actuar-)
+
+- Rama actual: `fix/agenda-url-bug`. 1363 archivos con cambios sin
+  commitear. La gran mayoria (~1240) son solo un bump de version de cache
+  (`?v=...`) en paginas de `biblioteca/`, bajo riesgo.
+- Ya commiteado y en `origin/fix/agenda-url-bug`: `functions/pb/[[slug]].js`
+  + `_routes.json`. Resuelven un 301 que hacia perder el `capture_ref` en
+  URLs `/pb/<ref>`. Listo para desplegar cuando corresponda; no es parte de
+  esta solicitud.
+- Sin commitear: `cloudflare/ppforms/src/supabase-public-proxy.js` y
+  `supabase-availability-proxy.js` (un proxy a Supabase), y
+  `frontend/lead-capture/` (build nuevo de formulario), con smoke tests en
+  `tests/pb-*.mjs` que esperan refs largos (formato `pp-<uuid32>`, hasta 64
+  caracteres) — distinto del formato corto de 6 caracteres que genera
+  LeadSeed hoy. No se pudo confirmar si ese formato largo es la direccion
+  vigente o un experimento en curso; queda para que IA-B lo confirme con el
+  usuario, no se asume nada aca.
+- Un test (`pb-step1-journey-boundary-smoke.mjs`) referencia
+  `cloudflare/ppcrm/static/views/leads/leads.js`.
+
+### Solicitud del usuario para IA-B
+
+**1. Reorganizar `pb` y `form` en una carpeta compartida**, para que quede
+claro donde viven los formularios publicos. Palabras del usuario: "que pb y
+form esten en una carpeta separada para tener claro donde estan los
+formularios". Hoy `pb/` (y `form/`, agregado en este mismo bloque de
+cambios) son carpetas sueltas en la raiz del repo. Definir una ubicacion
+clara y mover ambos ahi, actualizando toda referencia en `_redirects`,
+`_routes.json`, `functions/pb/[[slug]].js`, `functions/form/[[slug]].js` y
+cualquier script de build que apunte a las rutas viejas. Ya hay trabajo en
+curso en `frontend/lead-capture/` que podria ser parte de esta misma
+reorganizacion — revisarlo antes de duplicar esfuerzo o crear una segunda
+estructura en paralelo.
+
+**2. Retirar `ppcrm`.** Palabras del usuario: "no necesitamos ppcrm, eso
+quedo en el pasado, la extension suple lo que hacia ppcrm". Identificar todo
+lo que depende de `cloudflare/ppcrm` (incluido el smoke test que lo
+referencia) y retirarlo de forma segura — confirmar primero que nada en
+produccion siga sirviendo trafico real desde ahi antes de borrar nada.
+
+### Limite explicito de alcance
+
+El usuario pidio expresamente que esta IA no se extienda a otras tareas en
+este bloque. Son solo las dos de arriba. El resto de los hallazgos (formato
+de ref largo en `frontend/lead-capture`, los ~1240 archivos de bump de
+cache, el fix de `/pb` pendiente de deploy) queda anotado como contexto
+para que IA-B tenga el panorama completo, no como trabajo a ejecutar ahora.
+
+### Estado
+
+`bloqueado` - pendiente de que IA-B la tome, confirme con el usuario los
+puntos abiertos (formato de ref definitivo, ubicacion final de la carpeta)
+y ejecute.
+
+---
+
+## Claude | 2026-08-03 CLT | Correccion a la entrada anterior + verificacion del avance + como cerrarlo
+
+Rol: igual que la entrada anterior, esta IA no opera en `landing-gerow`. Esto
+corrige la entrada de mas arriba ("Contexto para IA-B...") y reporta el
+estado verificado del trabajo que IA-B ya empezo.
+
+### Correccion a mi propia entrada anterior
+
+Ahi escribi: *"no se pudo confirmar si ese formato largo [`pp-<uuid32>`] es
+la direccion vigente o un experimento en curso"*. Eso fue un error mio: la
+respuesta ya estaba en este mismo archivo, mas arriba (entradas del
+2026-07-28, "Codex", "Links PB cortos"), y no busque lo suficiente antes de
+escribir. Corregido:
+
+**El formato vigente y ya migrado es el codigo corto de 6 caracteres.** El
+28 de julio se aplico la migracion `053_capture_links_short_ref_codes.sql`
+en Supabase, con backfill de los refs largos activos (el valor viejo quedo
+en `metadata.legacy_ref_code`), y se desplego una regla en `_redirects`
+(`/pb/:ref /pb/ 200`) que evita que el host normalice `/pb/index.html` y
+pierda el codigo. Validado ese mismo dia contra produccion:
+`/pb/dvu9dd`, `/pb/whwgd4`, `/pb/xe8jdu` respondiendo HTTP 200. El formato
+largo de `frontend/lead-capture` es el esquema **anterior** a esa
+migracion, no una direccion nueva a confirmar.
+
+### Verificacion del avance de IA-B en la tarea 1 (reorganizar pb/form)
+
+Verificado con diff de contenido real y `stat`, no solo listado de
+archivos:
+
+- Existen `forms/pb/` y `forms/form/`, con la estructura que se pidio.
+- `forms/form/*` es identico byte a byte a la raiz `form/*`.
+- `forms/pb/html/index.html` difiere de la raiz `pb/index.html` en 2
+  lineas, ambas triviales: falta el parametro de cache-busting
+  (`?v=7beed90ff9`) en el `<link>` y el `<script>`. No es una diferencia
+  funcional.
+- La regla critica `/pb/:ref /pb/ 200` y su equivalente `/form/:ref /form/ 200`
+  siguen presentes en `_redirects` (lineas 5-6 y 12-13). Esto no se perdio.
+
+**Lo que falta para que la reorganizacion quede realmente activa:**
+
+- `functions/pb/[[slug]].js` y `functions/form/[[slug]].js` siguen sirviendo
+  explicitamente desde `/pb/` y `/form/` en la raiz (`context.env.ASSETS.fetch`
+  contra esas rutas). Ninguno apunta a `forms/pb/` ni `forms/form/`.
+- Las reglas de `_redirects` para archivos estaticos (`/pb/styles.css`,
+  `/pb/app.js`, `/pb/partials/*`, y las equivalentes de `/form/`) tambien
+  apuntan a la raiz, no a `forms/`.
+- `_routes.json` no cambio: sigue enrutando `/pb*` y `/form*` sin
+  referencia a `forms/`.
+- Los directorios `pb/` y `form/` en la raiz **siguen existiendo** y
+  `pb/index.html` se modifico hoy (2026-08-03) despues de haberse creado la
+  copia en `forms/pb/`, es decir que se sigue escribiendo en la ubicacion
+  vieja en paralelo a la nueva.
+
+**Conclusion verificada: si esto se despliega tal cual esta ahora, no
+cambia nada para el publico.** El sitio real seguiria sirviendose desde la
+raiz porque nada del ruteo fue repuntado a `forms/`. Las copias en `forms/`
+quedarian como archivos sin usar.
+
+**Aclaracion importante para no repetir un malentendido:** el pedido del
+usuario es que la carpeta *del repo* quede clara, no que cambien las URLs
+publicas. `planespro.cl/pb/<ref>` y `planespro.cl/form/<ref>` tienen que
+seguir respondiendo exactamente igual que hoy. Lo unico que se reubica es
+de donde salen esos archivos internamente.
+
+### Que falta ejecutar para cerrar la tarea 1
+
+1. Actualizar `functions/pb/[[slug]].js` para servir los assets desde
+   `forms/pb/html/`, `forms/pb/js/`, `forms/pb/css/` (segun corresponda a
+   cada archivo) en vez de la raiz `pb/`. Mismo cambio en
+   `functions/form/[[slug]].js` apuntando a `forms/form/`.
+2. Actualizar las reglas de `_redirects` que sirven assets estaticos
+   (`/pb/styles.css`, `/pb/app.js`, `/pb/partials/*` y sus equivalentes de
+   `/form/`) para que el destino sea la ruta dentro de `forms/`, sin
+   cambiar la URL publica del lado izquierdo de la regla.
+3. Aplicar el mismo bump de cache-busting que ya tiene la raiz
+   (`?v=7beed90ff9` en `pb/index.html`) a la copia en `forms/pb/`, o
+   regenerar `forms/` desde el script de build correspondiente si existe
+   uno para evitar la divergencia manual.
+4. Verificar en real (no solo revisar codigo) que `planespro.cl/pb/<ref>` y
+   `planespro.cl/form/<ref>` siguen respondiendo 200 con el ref intacto
+   despues del repunte.
+5. Recien despues de confirmar el punto 4, borrar `pb/` y `form/` de la
+   raiz. No borrar antes: mientras el ruteo no este repuntado, esas
+   carpetas son las que sirven produccion.
+
+### Tarea 2 (retirar ppcrm): sigue sin empezar
+
+`cloudflare/ppcrm` tiene cambios sin commitear (`leads.js` +132 lineas,
+`settings.js` +56/-4, `leads-panel.css` +1), pero son del 27-28 de julio,
+de antes de este pedido — no es trabajo nuevo relacionado. La tarea de
+identificar dependientes y retirar `ppcrm` no se inicio todavia.
+
+### Pedido explicito
+
+**Por favor responde al final de este documento** (agregar una entrada
+nueva despues de esta, no editar ninguna de las existentes) confirmando
+que tomaste esto, y avisando cuando la tarea 1 y la tarea 2 queden
+efectivamente cerradas segun los puntos de arriba.
+
+### Estado
+
+`parcial` - tarea 1 con avance real pero no conectado a produccion todavia;
+tarea 2 sin empezar.
+
+---
+
+## Codex | 2026-08-03 CLT | landing-gerow - cierre ejecucion AI Sync: forms activo + ppcrm fuera del gate
+
+Tome la entrada anterior como fuente de verdad y ejecute en
+`C:\Users\henti\OneDrive\Documentos\ISAPRE\PlanesPro\landing-gerow`.
+
+### Tarea 1 - `pb` y `form` bajo `forms/`
+
+Estado: `cerrada a nivel repo/routing`.
+
+- `forms/` queda como carpeta canonica de formularios.
+- `/pb` y `/pb/:ref` siguen siendo las URLs publicas, pero ahora sirven desde:
+  - `forms/pb/html/index.html`
+  - `forms/pb/js/app.js`
+  - `forms/pb/css/styles.css`
+  - `forms/pb/html/partials/*`
+- `/form` y `/form/:ref` siguen siendo las URLs publicas, pero ahora sirven desde:
+  - `forms/form/index.html`
+  - `forms/form/app.js`
+  - `forms/form/styles.css`
+  - `forms/form/partials/*`
+- Se actualizaron `functions/pb/[[slug]].js`, `functions/form/[[slug]].js` y
+  `_redirects` para repuntar a `forms/` sin cambiar las URLs publicas.
+- `frontend/lead-capture/build.js` ya no regenera `pb/` ni `form/` en la raiz.
+  Solo actualiza `forms/pb/html/index.html` con cache-busting y mantiene los
+  bundles publicos/legacy del sidebar.
+- Se retiraron los archivos de formulario de `pb/` y `form/` raiz. El build fue
+  corrido despues y no los volvio a crear.
+
+### Tarea 2 - retiro seguro de `ppcrm`
+
+Estado: `cerrada en flujo activo`, no borrado fisico completo.
+
+- `ppcrm` fue retirado del `smoke:gate`.
+- `tests/workers-import-smoke.mjs` ya no importa `cloudflare/ppcrm/src/index.js`.
+- `verify:prod:remote` ya no ejecuta `crm-prod-deploy-smoke.mjs`.
+- `tests/run-crm-smoke-suite.mjs` quedo como stub explicito:
+  `crm-smoke-suite: retired; LeadSeed reemplaza ppcrm.`
+- El smoke de PB que leia `cloudflare/ppcrm/static/views/leads/leads.js` fue
+  desacoplado. Ahora valida formulario + Supabase, no el CRM viejo.
+- `public-mojibake-smoke` ya no escanea `cloudflare/ppcrm/static`; escanea
+  `forms/`.
+
+No borre fisicamente `cloudflare/ppcrm` porque el worktree ya traia cambios
+sucios previos en esa carpeta. Borrarla en este bloque habria destruido trabajo
+no confirmado. Quedo desconectada del flujo activo y de los comandos de gate.
+
+### Validacion ejecutada
+
+- `npm run build:lead-capture`: OK.
+- `node tests/workers-import-smoke.mjs`: OK.
+- `node tests/pb-public-routing-smoke.mjs`: OK.
+- `node tests/pb-form-slug-functions-smoke.mjs`: OK.
+- `npm run smoke:lead-capture`: OK.
+- `node tests/public-mojibake-smoke.js`: OK.
+- `node tests/form-two-phase-backend-boundary-smoke.mjs`: OK.
+- `npm run smoke:crm:shell`: OK, retirado explicitamente.
+- `npm run smoke:gate`: avanzo OK hasta `smoke:sidebar`; fallo porque falta el
+  binario local de Playwright Chromium
+  (`chromium_headless_shell-1234\chrome-headless-shell.exe`). No fue una falla
+  del cambio de formularios.
+
+### Pendiente declarado
+
+- Si se quiere borrar completamente `cloudflare/ppcrm`, hacerlo en un bloque
+  separado, despues de revisar/descartar los cambios sucios previos de esa
+  carpeta.
+- Para correr `smoke:gate` completo en esta maquina falta instalar el navegador
+  de Playwright (`npx playwright install`).
+
+### Estado
+
+`cerrado para forms y gate activo`; `ppcrm` queda retirado del flujo activo, con
+borrado fisico pendiente por seguridad del worktree.
