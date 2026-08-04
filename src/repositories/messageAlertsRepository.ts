@@ -63,6 +63,33 @@ export function subscribeToChatReplies(onReply: (row: ChatMessageRow) => void): 
   };
 }
 
+/**
+ * Mensajes de sala que mencionan al usuario. La mencion viaja dentro del texto
+ * como @[etiqueta](user:UUID), asi que Realtime no puede filtrarla server-side
+ * y se resuelve buscando el propio identificador en el contenido.
+ */
+export function subscribeToChatMentions(
+  userId: string,
+  onMention: (row: ChatMessageRow) => void,
+): () => void {
+  const channel = supabase
+    .channel(`chat_mentions_${userId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+      (payload) => {
+        const row = payload.new as ChatMessageRow;
+        if (row.user_id === userId) return;
+        if (row.content?.includes(`(user:${userId})`)) onMention(row);
+      },
+    )
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
+
 export async function isMyChatMessage(messageId: string, userId: string): Promise<boolean> {
   const { data, error } = await supabase
     .from('chat_messages')

@@ -71,3 +71,34 @@ export async function insertChatMessage(
 export function removeChatChannel(channel: RealtimeChannel): void {
   void supabase.removeChannel(channel);
 }
+
+export async function fetchHasUnreadChatMessages(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('has_unread_chat_messages');
+  if (error) return false;
+  return data === true;
+}
+
+export async function upsertChatRoomRead(roomId: string, userId: string): Promise<void> {
+  await supabase
+    .from('chat_room_reads')
+    .upsert(
+      { room_id: roomId, user_id: userId, last_read_at: new Date().toISOString() },
+      { onConflict: 'user_id,room_id' }
+    );
+}
+
+/** Escucha mensajes nuevos de cualquier sala, para el indicador del menu. */
+export function subscribeToAnyChatMessageInsert(
+  onInsert: (message: ChatMessage) => void
+): RealtimeChannel {
+  return supabase
+    .channel('chat-unread-watch')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+      (payload) => {
+        onInsert(payload.new as ChatMessage);
+      }
+    )
+    .subscribe();
+}

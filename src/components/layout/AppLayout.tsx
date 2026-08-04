@@ -12,11 +12,19 @@ interface Props {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   taskCount?: number;
+  hasUnreadChat?: boolean;
   isAdmin?: boolean;
   children: ReactNode;
 }
 
-export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin, children }: Props) {
+export default function AppLayout({
+  currentPage,
+  onNavigate,
+  taskCount,
+  hasUnreadChat,
+  isAdmin,
+  children,
+}: Props) {
   // Inicializar rastreo de telemetría y presencia global en la app
   useTelemetry(currentPage);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -38,6 +46,7 @@ export default function AppLayout({ currentPage, onNavigate, taskCount, isAdmin,
         currentPage={currentPage}
         onNavigate={onNavigate}
         taskCount={taskCount}
+        hasUnreadChat={hasUnreadChat}
       />
       
       <UserMenu 

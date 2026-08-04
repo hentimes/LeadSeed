@@ -24,7 +24,7 @@ export const secondaryRoutes: RouteDef[] = [
   { page: 'history', label: 'Historial', icon: Icon.History, shortcut: '4', requiredFeature: 'module:history' },
   { page: 'templates', label: 'Mensajes', icon: Icon.Messages, requiredFeature: 'module:templates' },
   { page: 'lists', label: 'Listas', icon: Icon.Lists, requiredFeature: 'module:lists' },
-  { page: 'chat', label: 'Chat', icon: Icon.Messages },
+  { page: 'chat', label: 'Chat', icon: Icon.Messages, badge: true },
   { page: 'community', label: 'Comunidad', icon: Icon.Users, requiredFeature: 'module:community' },
   { page: 'settings', label: 'Ajustes', icon: Icon.Settings, shortcut: '5' },
 ];

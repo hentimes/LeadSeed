@@ -16,12 +16,19 @@ export interface LeadAlertEvent {
  * Tipos de alerta del sistema. Agregar uno aca obliga a definir su
  * preferencia por defecto y su tono de badge, asi no queda a medias.
  */
-export type AlertType = 'new_lead' | 'support_message' | 'chat_reply' | 'upcoming_appointment' | 'overdue_task';
+export type AlertType =
+  | 'new_lead'
+  | 'support_message'
+  | 'chat_reply'
+  | 'chat_mention'
+  | 'upcoming_appointment'
+  | 'overdue_task';
 
 export const ALERT_TYPES: AlertType[] = [
   'new_lead',
   'support_message',
   'chat_reply',
+  'chat_mention',
   'upcoming_appointment',
   'overdue_task',
 ];
@@ -53,6 +60,10 @@ export const ALERT_TYPE_LABELS: Record<AlertType, { title: string; description: 
     title: 'Respuesta en el chat',
     description: 'Cuando responden a un mensaje tuyo en una sala.',
   },
+  chat_mention: {
+    title: 'Te mencionaron',
+    description: 'Cuando alguien te nombra con @ en una sala.',
+  },
   upcoming_appointment: {
     title: 'Cita proxima',
     description: 'Antes de que empiece una cita agendada.',
@@ -68,6 +79,9 @@ export const DEFAULT_ALERT_PREFERENCES: AlertPreferences = {
     new_lead: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
     support_message: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
     chat_reply: { enabled: true, sound: false, desktop: true, onlyWhenClosed: true },
+    // Una mencion directa avisa siempre, tambien con la extension abierta:
+    // es el caso en que alguien espera una respuesta tuya.
+    chat_mention: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
     upcoming_appointment: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
     overdue_task: { enabled: true, sound: false, desktop: true, onlyWhenClosed: false },
   },

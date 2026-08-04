@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 export type PresenceStateUser = {
   id: string;
   email: string;
+  full_name?: string;
+  avatar_url?: string;
   online_at: string;
 };
 
@@ -25,10 +27,16 @@ export async function createPresenceChannel(userId: string): Promise<RealtimeCha
   });
 }
 
-export async function trackPresence(channel: RealtimeChannel, user: User): Promise<void> {
+export async function trackPresence(
+  channel: RealtimeChannel,
+  user: User,
+  profile?: { full_name?: string; avatar_url?: string }
+): Promise<void> {
   await channel.track({
     id: user.id,
     email: user.email,
+    full_name: profile?.full_name,
+    avatar_url: profile?.avatar_url,
     online_at: new Date().toISOString(),
   });
 }

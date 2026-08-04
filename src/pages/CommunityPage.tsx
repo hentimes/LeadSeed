@@ -1,142 +1,158 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { usePresence } from '../hooks/usePresence';
-import {
-  fetchCommunityMessages,
-  sendCommunityMessage,
-  subscribeToCommunityMessages,
-  type CommunityMessage,
-} from '../services/communityService';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { useMemo, useState } from 'react';
+import { useCommunityForum } from '../hooks/useCommunityForum';
+import { useOnlineDirectory, displayName, avatarFor } from '../hooks/useOnlineDirectory';
+import { Button, EmptyState } from '../design';
 import { Icon } from '../utils/icons';
+import LoadingOverlay from '../components/LoadingOverlay';
+import CategoryFilterBar from '../components/community/CategoryFilterBar';
+import PostCard from '../components/community/PostCard';
+import PostComposer from '../components/community/PostComposer';
+import PostDetail from '../components/community/PostDetail';
 
-export default function CommunityPage() {
-  const { user } = useAuth();
-  const { onlineUsers: activeUsers } = usePresence();
-  const [messages, setMessages] = useState<CommunityMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+/** Cuantas publicaciones del tope se marcan como tendencia. */
+const TRENDING_HIGHLIGHT_COUNT = 3;
 
-  useEffect(() => {
-    if (!user) return;
-    void loadMessages();
+interface CommunityPageProps {
+  /** Publicacion a abrir al entrar, por ejemplo desde una mencion del chat. */
+  initialPostId?: string | null;
+  onInitialPostConsumed?: () => void;
+}
 
-    return subscribeToCommunityMessages((message) => {
-      setMessages((prev) => [...prev, message]);
-    });
-  }, [user]);
+export default function CommunityPage({
+  initialPostId,
+  onInitialPostConsumed,
+}: CommunityPageProps) {
+  const {
+    categories,
+    posts,
+    likedPostIds,
+    sort,
+    categoryId,
+    loading,
+    setSort,
+    setCategoryId,
+    toggleLike,
+    publish,
+  } = useCommunityForum();
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [openPostId, setOpenPostId] = useState<string | null>(initialPostId ?? null);
+  const { users: onlineUsers, count: onlineCount } = useOnlineDirectory();
 
-  const loadMessages = async () => {
-    setMessages(await fetchCommunityMessages());
-    setLoading(false);
+  const categoriesById = useMemo(
+    () => new Map(categories.map((category) => [category.id, category])),
+    [categories]
+  );
+
+  const trendingIds = useMemo(() => {
+    const ranked = [...posts]
+      .filter((post) => post.likes_count + post.comments_count > 0)
+      .sort(
+        (a, b) =>
+          (b.trending_score ?? b.likes_count * 2 + b.comments_count * 3) -
+          (a.trending_score ?? a.likes_count * 2 + a.comments_count * 3)
+      )
+      .slice(0, TRENDING_HIGHLIGHT_COUNT);
+
+    return new Set(ranked.map((post) => post.id));
+  }, [posts]);
+
+  const closeDetail = () => {
+    setOpenPostId(null);
+    onInitialPostConsumed?.();
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !user) return;
-    const text = newMessage.trim();
-    setNewMessage('');
-    await sendCommunityMessage(user.id, text);
-  };
+  if (loading) return <LoadingOverlay message="Cargando comunidad..." />;
 
-  if (loading) return <LoadingOverlay message="Cargando sala..." />;
+  const openPost = openPostId ? posts.find((post) => post.id === openPostId) : undefined;
 
   return (
     <div className="flex h-full gap-4">
-      {/* Sala de Chat (Centro) */}
-      <div className="flex-1 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm flex flex-col overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
-          <h2 className="font-bold text-lg flex items-center gap-2"><Icon.Leads /> Sala Global de Comunidad</h2>
-          <p className="text-sm text-blue-100 opacity-90">Conversa con otros usuarios, comparte tips y cierra negocios.</p>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-              <Icon.Messages />
-              <p>Aún no hay mensajes. ¡Sé el primero en saludar!</p>
-            </div>
-          ) : (
-            messages.map(msg => {
-              const isMe = msg.sender_id === user?.id;
-              const profile = msg.sender_profile;
-              const name = profile?.full_name || 'Desconocido';
-              const avatar = profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-              
-              return (
-                <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`relative flex-shrink-0 ${profile?.show_premium_frame ? 'p-[2px] bg-gradient-to-tr from-yellow-400 to-amber-600 rounded-full' : ''}`}>
-                    <img src={avatar} alt={name} className="w-8 h-8 rounded-full border-2 border-white object-cover" />
-                  </div>
-                  <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
-                    <span className="text-xs text-slate-400 dark:text-slate-500 mb-1">{isMe ? 'Tú' : name}</span>
-                    <div className={`px-4 py-2 rounded-2xl text-sm shadow-sm ${
-                      isMe 
-                        ? 'bg-blue-600 text-white rounded-tr-none' 
-                        : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 rounded-tl-none'
-                    }`}>
-                      {msg.message}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <form onSubmit={handleSend} className="p-4 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border-t border-slate-200 dark:border-slate-700/50 flex gap-2">
-          <input 
-            type="text" 
-            value={newMessage}
-            onChange={e => setNewMessage(e.target.value)}
-            placeholder="Escribe un mensaje a la comunidad..."
-            className="flex-1 border border-slate-300 dark:border-slate-600/50 rounded-full px-5 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+      <section className="flex-1 min-w-0 flex flex-col gap-3">
+        {openPostId ? (
+          <PostDetail
+            postId={openPostId}
+            category={openPost ? categoriesById.get(openPost.category_id) : undefined}
+            liked={likedPostIds.has(openPostId)}
+            onToggleLike={() => void toggleLike(openPostId)}
+            onBack={closeDetail}
           />
-          <button 
-            type="submit" 
-            disabled={!newMessage.trim()}
-            className="bg-blue-600 text-white w-10 h-10 rounded-full flex justify-center items-center disabled:opacity-50 hover:bg-blue-700 transition-colors"
-          >
-            <Icon.Send />
-          </button>
-        </form>
-      </div>
-
-      {/* Directorio en Vivo (Derecha) */}
-      <div className="w-72 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm flex flex-col hidden md:flex">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 rounded-t-2xl">
-          <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
-            En Línea
-            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full animate-pulse">
-              {Object.keys(activeUsers).length}
-            </span>
-          </h3>
+        ) : (
+          <>
+        <div className="flex items-start justify-between gap-3">
+          <CategoryFilterBar
+            categories={categories}
+            activeCategoryId={categoryId}
+            onCategoryChange={setCategoryId}
+            sort={sort}
+            onSortChange={setSort}
+          />
+          <Button variant="primary" onClick={() => setIsComposerOpen(true)} icon={<Icon.Plus />}>
+            Publicar
+          </Button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2">
-          {Object.values(activeUsers).map((u: any) => (
-            <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-900 rounded-xl cursor-pointer transition-colors">
-              <div className="relative">
-                <img 
-                  src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'Usuario')}&background=random`} 
-                  className={`w-10 h-10 rounded-full object-cover ${u.show_premium_frame ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}
-                  alt=""
-                />
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
+          {posts.length === 0 ? (
+            <EmptyState
+              icon={<Icon.Messages />}
+              title="Todavía no hay publicaciones"
+              description="Sé la primera persona en abrir una conversación."
+              action={
+                <Button variant="primary" onClick={() => setIsComposerOpen(true)}>
+                  Crear publicación
+                </Button>
+              }
+            />
+          ) : (
+            posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                category={categoriesById.get(post.category_id)}
+                liked={likedPostIds.has(post.id)}
+                isTrending={trendingIds.has(post.id)}
+                onToggleLike={() => void toggleLike(post.id)}
+                onOpen={() => setOpenPostId(post.id)}
+              />
+            ))
+          )}
+        </div>
+          </>
+        )}
+      </section>
+
+      <aside className="w-64 flex-shrink-0 rounded-2xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 hidden md:flex flex-col overflow-hidden">
+        <div className="p-4 border-b border-line dark:border-gray-700 flex items-center justify-between">
+          <h3 className="font-semibold text-ink dark:text-gray-100">En línea</h3>
+          <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 text-xs font-bold px-2 py-0.5 rounded-full">
+            {onlineCount}
+          </span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {onlineUsers.map((user) => (
+            <div key={user.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted dark:hover:bg-gray-900 transition-colors">
+              <div className="relative flex-shrink-0">
+                <img src={avatarFor(user)} alt="" className="w-9 h-9 rounded-full object-cover" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-gray-800 rounded-full" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">{u.full_name || 'Usuario'}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{u.bio || 'Conectado ahora'}</p>
-              </div>
+              <p className="text-sm font-medium text-ink dark:text-gray-100 truncate">
+                {displayName(user)}
+              </p>
             </div>
           ))}
         </div>
-      </div>
+      </aside>
+
+      {isComposerOpen && (
+        <PostComposer
+          categories={categories}
+          defaultCategoryId={categoryId}
+          onClose={() => setIsComposerOpen(false)}
+          onPublish={publish}
+        />
+      )}
     </div>
   );
 }

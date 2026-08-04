@@ -10,9 +10,17 @@ interface Props {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   taskCount?: number;
+  hasUnreadChat?: boolean;
 }
 
-export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavigate, taskCount }: Props) {
+export default function NavigationDrawer({
+  isOpen,
+  onClose,
+  currentPage,
+  onNavigate,
+  taskCount,
+  hasUnreadChat,
+}: Props) {
   const { hasFeature } = useAuth();
   
   // Estado para submenús
@@ -52,7 +60,15 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
     onClose();
   };
 
-  const renderNavButton = (page: Page, label: string, icon: any, badge?: number, isSubItem = false, hash?: string) => {
+  const renderNavButton = (
+    page: Page,
+    label: string,
+    icon: any,
+    badge?: number,
+    isSubItem = false,
+    hash?: string,
+    dot = false
+  ) => {
     const isActive = currentPage === page && (!hash || window.location.hash === hash);
     return (
       <button
@@ -81,9 +97,29 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
             {badge > 99 ? '99+' : badge}
           </span>
         )}
+        {dot && (!badge || badge <= 0) && (
+          <span
+            className="ml-auto w-2 h-2 rounded-full bg-red-500"
+            aria-label="Mensajes sin leer"
+          />
+        )}
       </button>
     );
   };
+
+  /** Cada seccion decide su indicador: numero para tareas, punto para chat. */
+  const renderRoutes = (routes: RouteDef[]) =>
+    routes.map(({ page, label, icon, badge }) =>
+      renderNavButton(
+        page,
+        label,
+        icon,
+        badge && page === 'tasks' ? taskCount : 0,
+        false,
+        undefined,
+        page === 'chat' && !!hasUnreadChat
+      )
+    );
 
   const renderSubmenu = (id: string, label: string, icon: any, items: {page: Page, label: string, hash?: string}[]) => {
     const isOpen = openSubmenus[id];
@@ -136,9 +172,7 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
                 <nav className="space-y-0.5">
                   {category === 'Principal' && (
                     <>
-                      {visibleRoutes.map(({ page, label, icon, badge }) => 
-                        renderNavButton(page, label, icon, badge && page === 'tasks' ? taskCount : 0)
-                      )}
+                      {renderRoutes(visibleRoutes)}
                       {renderSubmenu('messages', 'Mensajes', Icon.Messages, [
                         { page: 'send', label: 'Enviar' },
                         { page: 'templates', label: 'Plantillas' }
@@ -146,21 +180,9 @@ export default function NavigationDrawer({ isOpen, onClose, currentPage, onNavig
                     </>
                   )}
 
-                  {category === 'Colaboración' && (
-                    <>
-                      {visibleRoutes.map(({ page, label, icon, badge }) => 
-                        renderNavButton(page, label, icon, badge && page === 'tasks' ? taskCount : 0)
-                      )}
-                    </>
-                  )}
+                  {category === 'Colaboración' && renderRoutes(visibleRoutes)}
 
-                  {category === 'Analítica' && (
-                    <>
-                      {visibleRoutes.map(({ page, label, icon, badge }) => 
-                        renderNavButton(page, label, icon, badge && page === 'tasks' ? taskCount : 0)
-                      )}
-                    </>
-                  )}
+                  {category === 'Analítica' && renderRoutes(visibleRoutes)}
 
                   {category === 'Sistema' && (
                     <>

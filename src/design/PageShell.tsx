@@ -23,6 +23,15 @@ export function PageShell({
    * (max-w-4xl, max-w-6xl, sin limite), y por eso no coincidian entre si.
    */
   maxWidth = 'full',
+  /**
+   * Por defecto el shell mide lo que ocupa su contenido (altura "auto"),
+   * que es lo que quiere la mayoria de paginas (listas largas, formularios).
+   * El chat y la comunidad necesitan lo opuesto: una altura fija igual a la
+   * disponible, para que solo el panel de mensajes haga scroll interno en
+   * vez de que crezca la pagina entera. `fillHeight` activa ese modo sin
+   * afectar a las demas paginas.
+   */
+  fillHeight = false,
 }: {
   /** Opcional: la barra superior ya muestra el nombre de la seccion. */
   title?: ReactNode;
@@ -31,6 +40,7 @@ export function PageShell({
   toolbar?: ReactNode;
   children: ReactNode;
   maxWidth?: 'full' | 'md' | 'lg';
+  fillHeight?: boolean;
 }) {
   const widths = {
     full: 'w-full',
@@ -41,7 +51,11 @@ export function PageShell({
   const hasHeader = !!title || !!actions || !!description;
 
   return (
-    <div className={`flex min-w-0 flex-col gap-3 animate-fade-in ${widths[maxWidth]}`}>
+    <div
+      className={`flex min-w-0 flex-col gap-3 animate-fade-in ${widths[maxWidth]} ${
+        fillHeight ? 'h-full min-h-0' : ''
+      }`}
+    >
       {hasHeader && (
         <div className="flex items-start justify-between gap-3 min-w-0">
           <div className="min-w-0">
@@ -54,7 +68,7 @@ export function PageShell({
 
       {toolbar && <div className="flex flex-wrap items-center gap-2 min-w-0">{toolbar}</div>}
 
-      {children}
+      {fillHeight ? <div className="flex-1 min-h-0">{children}</div> : children}
     </div>
   );
 }

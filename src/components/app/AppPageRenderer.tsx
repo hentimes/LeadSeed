@@ -42,6 +42,16 @@ const PAGE_WIDTH: Partial<Record<Page, 'full' | 'md' | 'lg'>> = {
   community: 'lg',
 };
 
+/**
+ * El chat y la comunidad necesitan una altura fija (ver PageShell.fillHeight)
+ * para que solo su panel de mensajes/lista scrollee, en vez de crecer con el
+ * contenido como el resto de las paginas.
+ */
+const PAGE_FILL_HEIGHT: Partial<Record<Page, boolean>> = {
+  chat: true,
+  community: true,
+};
+
 interface HighlightTemplate {
   type: 'whatsapp' | 'email' | 'call';
   id: number;
@@ -62,6 +72,10 @@ interface AppPageRendererProps {
   onColsChange: (cols: ColumnDef[]) => void;
   onClearHighlightTemplate: () => void;
   onHighlightTemplate: (template: HighlightTemplate) => void;
+  /** Publicacion a abrir al entrar a Comunidad, por una mencion del chat. */
+  pendingCommunityPostId?: string | null;
+  onOpenCommunityPost: (postId: string) => void;
+  onCommunityPostOpened: () => void;
 }
 
 const lockIcon = (
@@ -103,6 +117,9 @@ export default function AppPageRenderer({
   onColsChange,
   onClearHighlightTemplate,
   onHighlightTemplate,
+  pendingCommunityPostId,
+  onOpenCommunityPost,
+  onCommunityPostOpened,
 }: AppPageRendererProps) {
   const routeDef = [...primaryRoutes, ...secondaryRoutes].find((route) => route.page === page);
 
@@ -181,10 +198,21 @@ export default function AppPageRenderer({
       );
       break;
     case 'community':
-      pageContent = <CommunityPage />;
+      pageContent = (
+        <CommunityPage
+          initialPostId={pendingCommunityPostId}
+          onInitialPostConsumed={onCommunityPostOpened}
+        />
+      );
       break;
     case 'chat':
-      pageContent = <ChatPage />;
+      pageContent = (
+        <ChatPage
+          onMentionClick={(mention) => {
+            if (mention.kind === 'post') onOpenCommunityPost(mention.id);
+          }}
+        />
+      );
       break;
     case 'admin':
       pageContent = <AdminLayout />;
@@ -195,7 +223,9 @@ export default function AppPageRenderer({
 
   return (
     <PageSuspense>
-      <PageShell maxWidth={PAGE_WIDTH[page] || 'lg'}>{pageContent}</PageShell>
+      <PageShell maxWidth={PAGE_WIDTH[page] || 'lg'} fillHeight={PAGE_FILL_HEIGHT[page]}>
+        {pageContent}
+      </PageShell>
     </PageSuspense>
   );
 }

@@ -1,12 +1,14 @@
 import {
   fetchSenderName,
   isMyChatMessage,
+  subscribeToChatMentions,
   subscribeToChatReplies,
   subscribeToIncomingSupportMessages,
 } from '../repositories/messageAlertsRepository';
 import { getCurrentSession } from './authService';
 import { dispatchAlert } from './alertNotifier';
 import { incrementBadgeCount } from './extensionBadgeTheme';
+import { toPlainText } from '../utils/mentionParser';
 
 function truncate(text: string, max = 90): string {
   const clean = text.replace(/\s+/g, ' ').trim();
@@ -15,6 +17,7 @@ function truncate(text: string, max = 90): string {
 
 let unsubscribeSupport: (() => void) | null = null;
 let unsubscribeChat: (() => void) | null = null;
+let unsubscribeMentions: (() => void) | null = null;
 let startPromise: Promise<void> | null = null;
 
 async function startOnce(): Promise<void> {
@@ -60,6 +63,18 @@ async function startOnce(): Promise<void> {
       if (result.delivered) await incrementBadgeCount('messages');
     })();
   });
+
+  unsubscribeMentions = subscribeToChatMentions(userId, (row) => {
+    void (async () => {
+      const senderName = await fetchSenderName(row.user_id);
+      const result = await dispatchAlert('chat_mention', {
+        id: `chat-mention-${row.id}`,
+        title: `${senderName} te mencionó`,
+        message: truncate(toPlainText(row.content || '')),
+      });
+      if (result.delivered) await incrementBadgeCount('messages');
+    })();
+  });
 }
 
 export function startMessageAlertsRuntime(): Promise<void> {
@@ -83,4 +98,6 @@ export function stopMessageAlertsRuntime(): void {
   unsubscribeSupport = null;
   unsubscribeChat?.();
   unsubscribeChat = null;
+  unsubscribeMentions?.();
+  unsubscribeMentions = null;
 }

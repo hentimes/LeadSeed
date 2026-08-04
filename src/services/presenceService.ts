@@ -22,7 +22,11 @@ function mapPresenceStateToUsersMap(state: Record<string, PresenceStateUser[]>):
   return users;
 }
 
-export function connectPresence(user: User, onSync: (users: OnlineUsersMap) => void): () => void {
+export function connectPresence(
+  user: User,
+  onSync: (users: OnlineUsersMap) => void,
+  profile?: { full_name?: string; avatar_url?: string }
+): () => void {
   let disposed = false;
   let channel: Awaited<ReturnType<typeof createPresenceChannel>> | null = null;
 
@@ -42,7 +46,7 @@ export function connectPresence(user: User, onSync: (users: OnlineUsersMap) => v
         if (status === 'SUBSCRIBED') {
           try {
             const timestamp = new Date().toISOString();
-            await trackPresence(nextChannel, user);
+            await trackPresence(nextChannel, user, profile);
             await touchProfileLastSeen(user.id, timestamp);
           } catch (error) {
             console.error('Error tracking presence:', error);

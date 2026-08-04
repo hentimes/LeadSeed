@@ -5,6 +5,8 @@ import { connectPresence } from '../services/presenceService';
 export interface OnlineUser {
   id: string;
   email: string;
+  full_name?: string;
+  avatar_url?: string;
   online_at: string;
 }
 
@@ -15,8 +17,11 @@ interface PresenceContextType {
 const PresenceContext = createContext<PresenceContextType>({ onlineUsers: {} });
 
 export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<Record<string, OnlineUser>>({});
+
+  const fullName = profile?.full_name;
+  const avatarUrl = profile?.avatar_url;
 
   useEffect(() => {
     if (!user) {
@@ -24,11 +29,14 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
-    return connectPresence(user, (users) => {
-      console.log('Presence Sync:', users);
-      setOnlineUsers(users);
-    });
-  }, [user]);
+    return connectPresence(
+      user,
+      (users) => {
+        setOnlineUsers(users);
+      },
+      { full_name: fullName, avatar_url: avatarUrl }
+    );
+  }, [user, fullName, avatarUrl]);
 
   return <PresenceContext.Provider value={{ onlineUsers }}>{children}</PresenceContext.Provider>;
 };
