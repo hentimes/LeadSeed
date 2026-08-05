@@ -103,13 +103,23 @@ export function subscribeToConversation(
  * Cualquier DM entrante, sin importar quien lo manda. Alimenta la franja de
  * sesiones de DM (avatares en la barra superior del chat): asi se puede saber
  * que alguien escribio sin tener su conversacion abierta.
+ *
+ * Dos consumidores distintos llaman a esta funcion para el mismo usuario al
+ * mismo tiempo (el contador de no leidos en App.tsx y la lista de sesiones
+ * en ChatRoom.tsx). El nombre del canal es solo un identificador del lado
+ * del cliente, asi que si ambos usan "dm-inbox:<userId>" el segundo intenta
+ * agregar un listener sobre un canal que el primero ya suscribio, y
+ * Supabase lo rechaza con "cannot add postgres_changes callbacks ... after
+ * subscribe()". Cada llamada arma su propio nombre unico para que las dos
+ * suscripciones convivan sin pisarse; el filtro server-side
+ * (receiver_id=eq.<userId>) sigue siendo el mismo para ambas.
  */
 export function subscribeToAnyIncomingDirectMessage(
   userId: string,
   onMessage: (message: DirectMessage) => void
 ): () => void {
   const channel = supabase
-    .channel(`dm-inbox:${userId}`)
+    .channel(`dm-inbox:${userId}:${crypto.randomUUID()}`)
     .on(
       'postgres_changes',
       {
