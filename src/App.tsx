@@ -9,6 +9,7 @@ import AppPageRenderer from './components/app/AppPageRenderer';
 import LeadAlertToast from './components/leads/LeadAlertToast';
 import { useLeadAlerts } from './hooks/useLeadAlerts';
 import { useChatUnread } from './hooks/useChatUnread';
+import { useChatBanStatus } from './hooks/useChatBanStatus';
 import LoginPage from './pages/LoginPage';
 import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
 import { loadAppPreferences, syncSettingsToChromeStorage, updateStoredSettings } from './services/appSettings';
@@ -26,7 +27,8 @@ export default function App() {
   const [visibleCols, setVisibleCols] = useState<ColumnDef[]>(DEFAULT_LEAD_COLUMNS);
   const [highlightTemplate, setHighlightTemplate] = useState<{ type: 'whatsapp' | 'email' | 'call'; id: number } | null>(null);
   const { alerts: leadAlerts, dismissAlert: dismissLeadAlert } = useLeadAlerts();
-  const hasUnreadChat = useChatUnread(page);
+  const unreadChatCount = useChatUnread(page);
+  const { ban: chatBan } = useChatBanStatus();
   const [pendingCommunityPostId, setPendingCommunityPostId] = useState<string | null>(null);
 
   // El service worker arranca las alertas al instalarse/iniciar Chrome, pero
@@ -142,7 +144,8 @@ export default function App() {
       currentPage={page}
       onNavigate={setPage}
       taskCount={taskCount}
-      hasUnreadChat={hasUnreadChat}
+      unreadChatCount={unreadChatCount}
+      isChatBanned={!!chatBan}
       isAdmin={isAdmin}
     >
       <AppPageRenderer

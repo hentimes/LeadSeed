@@ -12,7 +12,8 @@ interface Props {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   taskCount?: number;
-  hasUnreadChat?: boolean;
+  unreadChatCount?: number;
+  isChatBanned?: boolean;
   isAdmin?: boolean;
   children: ReactNode;
 }
@@ -21,7 +22,8 @@ export default function AppLayout({
   currentPage,
   onNavigate,
   taskCount,
-  hasUnreadChat,
+  unreadChatCount,
+  isChatBanned,
   isAdmin,
   children,
 }: Props) {
@@ -46,7 +48,8 @@ export default function AppLayout({
         currentPage={currentPage}
         onNavigate={onNavigate}
         taskCount={taskCount}
-        hasUnreadChat={hasUnreadChat}
+        unreadChatCount={unreadChatCount}
+        isChatBanned={isChatBanned}
       />
       
       <UserMenu 

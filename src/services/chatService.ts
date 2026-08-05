@@ -1,16 +1,37 @@
 import {
+  cleanChatRoomMessages as cleanChatRoomMessagesRepo,
   fetchChatProfileById,
   fetchChatRoomById,
   fetchDefaultChatRoom,
-  fetchHasUnreadChatMessages,
+  fetchPendingAnnouncements,
+  fetchPinnedMessages,
   fetchReplyMessageById,
+  fetchRoomMessages,
+  fetchSavedMessageIds,
+  fetchSavedMessages,
+  fetchUnreadChatCount,
+  freezeChatRoom as freezeChatRoomRepo,
   insertChatMessage,
+  pinChatMessage,
+  purgeChatRoomMessages as purgeChatRoomMessagesRepo,
   removeChatChannel,
+  saveChatMessage,
   subscribeToAnyChatMessageInsert,
   subscribeToChatRoomMessageInserts,
+  subscribeToChatRoomUpdates as subscribeToChatRoomUpdatesRepo,
+  subscribeToPinnedMessageChanges,
+  subscribeToRoomAttachmentInserts as subscribeToRoomAttachmentInsertsRepo,
+  subscribeToRoomMessageDeletes as subscribeToRoomMessageDeletesRepo,
+  unfreezeChatRoom as unfreezeChatRoomRepo,
+  unpinChatMessage,
+  unsaveChatMessage,
   upsertChatRoomRead,
 } from '../repositories/chatRepository';
-import type { ChatMessage, ChatRoom } from '../types';
+import type { ChatMessage, ChatPinnedMessage, ChatRoom } from '../types';
+import type { ChatAttachment } from './chatAttachmentsService';
+
+/** Cuanto dura fijado un mensaje por defecto. Elegible en el futuro por UI. */
+export const DEFAULT_PIN_DURATION_HOURS = 24;
 
 /**
  * Lo que el usuario puede escribir. Se cuenta sobre el texto visible, con las
@@ -42,6 +63,29 @@ export async function resolveChatRoom(roomId?: string): Promise<ChatRoom | null>
   return roomId ? fetchChatRoomById(roomId) : fetchDefaultChatRoom();
 }
 
+export { updateChatRoomInfo } from '../repositories/chatRepository';
+
+/**
+ * Historial de la sala. Sin esto el chat solo mostraba lo que llegaba estando
+ * la seccion abierta, y todo lo escrito mientras el usuario estaba en otro
+ * lado quedaba invisible aunque estuviera guardado.
+ */
+export async function loadRoomHistory(roomId: string): Promise<ChatMessage[]> {
+  const messages = await fetchRoomMessages(roomId);
+
+  // El perfil ya viene embebido; solo faltan las citas de las respuestas.
+  const quoted = await Promise.all(
+    messages.map((message) =>
+      message.reply_to_id ? fetchReplyMessageById(message.reply_to_id) : Promise.resolve(null)
+    )
+  );
+
+  return messages.map((message, index) => ({
+    ...message,
+    reply_to_message: quoted[index] ?? undefined,
+  }));
+}
+
 export function subscribeToRoomMessages(
   roomId: string,
   onMessage: (message: ChatMessage) => void
@@ -56,21 +100,112 @@ export function subscribeToRoomMessages(
   };
 }
 
+/** Anuncios que llegaron mientras el usuario no estaba conectado. */
+export function loadPendingAnnouncements(): Promise<ChatMessage[]> {
+  return fetchPendingAnnouncements();
+}
+
+/**
+ * Adjuntos nuevos de la sala. El mensaje se crea antes que el adjunto (subir
+ * el archivo tarda), asi que esto es lo que completa el mensaje ya visible
+ * -- tanto para quien lo envio como para el resto -- sin esperar un refetch.
+ */
+export function subscribeToRoomAttachmentInserts(
+  roomId: string,
+  onInsert: (attachment: ChatAttachment) => void
+): () => void {
+  const channel = subscribeToRoomAttachmentInsertsRepo(roomId, onInsert);
+  return () => {
+    removeChatChannel(channel);
+  };
+}
+
+// --- @silenciar: pausar la sala ---------------------------------------------
+
+function formatFreezeUntil(iso: string): string {
+  return new Date(iso).toLocaleString([], {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * Pausa la sala y deja un anuncio en el chat avisando hasta cuando. El
+ * anuncio reutiliza is_announcement (misma via que @todos), asi que tambien
+ * dispara la alerta de "anuncio del equipo" para quien no esta conectado.
+ */
+export async function freezeChatRoom(
+  roomId: string,
+  frozenBy: string,
+  hours: number
+): Promise<void> {
+  const frozenUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  await freezeChatRoomRepo(roomId, frozenBy, frozenUntil);
+  await insertChatMessage(
+    roomId,
+    frozenBy,
+    `El chat quedó pausado hasta ${formatFreezeUntil(frozenUntil)}.`,
+    undefined,
+    true
+  );
+}
+
+export async function unfreezeChatRoom(roomId: string, unfrozenBy: string): Promise<void> {
+  await unfreezeChatRoomRepo(roomId);
+  await insertChatMessage(roomId, unfrozenBy, 'El chat volvió a estar disponible.', undefined, true);
+}
+
+export function subscribeToChatRoomUpdates(
+  roomId: string,
+  onUpdate: (room: ChatRoom) => void
+): () => void {
+  const channel = subscribeToChatRoomUpdatesRepo(roomId, onUpdate);
+  return () => {
+    removeChatChannel(channel);
+  };
+}
+
+// --- @limpiar / @purgar -----------------------------------------------------
+
+/** Borra todo lo que no este fijado, destacado o guardado. Devuelve cuantos. */
+export function cleanChatRoomMessages(roomId: string): Promise<number> {
+  return cleanChatRoomMessagesRepo(roomId);
+}
+
+/** Borra absolutamente todo, sin excepciones. Devuelve cuantos. */
+export function purgeChatRoomMessages(roomId: string): Promise<number> {
+  return purgeChatRoomMessagesRepo(roomId);
+}
+
+export function subscribeToRoomMessageDeletes(
+  roomId: string,
+  onDelete: (messageId: string) => void
+): () => void {
+  const channel = subscribeToRoomMessageDeletesRepo(roomId, onDelete);
+  return () => {
+    removeChatChannel(channel);
+  };
+}
+
+/** Devuelve el id del mensaje creado, para poder asociarle un adjunto despues. */
 export async function sendRoomMessage(
   roomId: string,
   userId: string,
   content: string,
-  replyToId?: string
-): Promise<void> {
+  replyToId?: string,
+  isAnnouncement = false
+): Promise<string> {
   if (content.length > MAX_CHAT_MESSAGE_LENGTH) {
     throw new Error(`Mensaje excede los ${MAX_CHAT_MESSAGE_LENGTH} caracteres`);
   }
 
-  await insertChatMessage(roomId, userId, content, replyToId);
+  return insertChatMessage(roomId, userId, content, replyToId, isAnnouncement);
 }
 
-export function hasUnreadChatMessages(): Promise<boolean> {
-  return fetchHasUnreadChatMessages();
+export function countUnreadChatMessages(): Promise<number> {
+  return fetchUnreadChatCount();
 }
 
 export function markChatRoomRead(roomId: string, userId: string): Promise<void> {
@@ -94,4 +229,43 @@ export function subscribeToIncomingChatMessages(
   return () => {
     removeChatChannel(channel);
   };
+}
+
+// --- Mensajes guardados ---------------------------------------------------
+
+export function loadSavedMessages(userId: string): Promise<ChatMessage[]> {
+  return fetchSavedMessages(userId);
+}
+
+export function loadSavedMessageIds(userId: string): Promise<Set<string>> {
+  return fetchSavedMessageIds(userId).then((ids) => new Set(ids));
+}
+
+export function setMessageSaved(userId: string, messageId: string, saved: boolean): Promise<void> {
+  return saved ? saveChatMessage(userId, messageId) : unsaveChatMessage(userId, messageId);
+}
+
+// --- Mensajes fijados ------------------------------------------------------
+
+export function loadPinnedMessages(roomId: string): Promise<ChatPinnedMessage[]> {
+  return fetchPinnedMessages(roomId);
+}
+
+export function pinRoomMessage(
+  messageId: string,
+  roomId: string,
+  pinnedBy: string,
+  hours = DEFAULT_PIN_DURATION_HOURS
+): Promise<void> {
+  const pinnedUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+  return pinChatMessage(messageId, roomId, pinnedBy, pinnedUntil);
+}
+
+export function unpinRoomMessage(messageId: string): Promise<void> {
+  return unpinChatMessage(messageId);
+}
+
+export function subscribeToPinnedMessages(roomId: string, onChange: () => void): () => void {
+  const channel = subscribeToPinnedMessageChanges(roomId, onChange);
+  return () => removeChatChannel(channel);
 }

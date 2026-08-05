@@ -1,6 +1,8 @@
 import {
+  fetchPendingAnnouncementsForAlerts,
   fetchSenderName,
   isMyChatMessage,
+  subscribeToChatAnnouncements,
   subscribeToChatMentions,
   subscribeToChatReplies,
   subscribeToIncomingSupportMessages,
@@ -18,6 +20,7 @@ function truncate(text: string, max = 90): string {
 let unsubscribeSupport: (() => void) | null = null;
 let unsubscribeChat: (() => void) | null = null;
 let unsubscribeMentions: (() => void) | null = null;
+let unsubscribeAnnouncements: (() => void) | null = null;
 let startPromise: Promise<void> | null = null;
 
 async function startOnce(): Promise<void> {
@@ -75,6 +78,37 @@ async function startOnce(): Promise<void> {
       if (result.delivered) await incrementBadgeCount('messages');
     })();
   });
+
+  unsubscribeAnnouncements = subscribeToChatAnnouncements((row) => {
+    void (async () => {
+      if (row.user_id === userId) return;
+
+      const senderName = await fetchSenderName(row.user_id);
+      const result = await dispatchAlert('chat_announcement', {
+        id: `chat-announcement-${row.id}`,
+        title: `Anuncio de ${senderName}`,
+        message: truncate(toPlainText(row.content || '')),
+      });
+      if (result.delivered) await incrementBadgeCount('messages');
+    })();
+  });
+
+  // Anuncios que llegaron mientras la extension estaba cerrada: se avisan al
+  // reconectar, con el mismo id que usaria el realtime (dispatchAlert/las
+  // notificaciones de Chrome son idempotentes por id, asi que no duplican si
+  // ya se habian mostrado).
+  const pending = await fetchPendingAnnouncementsForAlerts();
+  for (const row of pending) {
+    if (row.user_id === userId) continue;
+
+    const senderName = await fetchSenderName(row.user_id);
+    const result = await dispatchAlert('chat_announcement', {
+      id: `chat-announcement-${row.id}`,
+      title: `Anuncio de ${senderName}`,
+      message: truncate(toPlainText(row.content || '')),
+    });
+    if (result.delivered) await incrementBadgeCount('messages');
+  }
 }
 
 export function startMessageAlertsRuntime(): Promise<void> {
@@ -100,4 +134,6 @@ export function stopMessageAlertsRuntime(): void {
   unsubscribeChat = null;
   unsubscribeMentions?.();
   unsubscribeMentions = null;
+  unsubscribeAnnouncements?.();
+  unsubscribeAnnouncements = null;
 }

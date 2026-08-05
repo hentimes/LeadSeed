@@ -10,12 +10,16 @@ interface DirectMessageWindowProps {
   userId: string;
   userName: string;
   onClose: () => void;
+  onMinimize?: () => void;
+  cascadeIndex?: number;
 }
 
 export default function DirectMessageWindow({
   userId,
   userName,
   onClose,
+  onMinimize,
+  cascadeIndex,
 }: DirectMessageWindowProps) {
   const { messages, loading, send, currentUserId } = useDirectMessages(userId);
   const guard = useMessageGuard();
@@ -23,6 +27,7 @@ export default function DirectMessageWindow({
   const [showEmojis, setShowEmojis] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [sendError, setSendError] = useState('');
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,13 +43,19 @@ export default function DirectMessageWindow({
       await send(content);
       guard.confirmSent(content);
       setText('');
+      setSendError('');
     } catch (error) {
       console.error('Error enviando mensaje directo', error);
+      setSendError(
+        error instanceof Error && error.message.includes('podés enviarle')
+          ? error.message
+          : 'No se pudo enviar el mensaje.'
+      );
     }
   };
 
   return (
-    <FloatingWindow title={userName} onClose={onClose}>
+    <FloatingWindow title={userName} onClose={onClose} onMinimize={onMinimize} cascadeIndex={cascadeIndex}>
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-surface-muted dark:bg-gray-950">
         {loading && <p className="text-center text-xs text-ink-muted">Cargando conversación...</p>}
 
@@ -60,7 +71,7 @@ export default function DirectMessageWindow({
           return (
             <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[85%] px-3 py-2 text-[13px] break-words shadow-sm ${
+                className={`min-w-0 max-w-[85%] px-3 py-2 text-[13px] break-words break-all shadow-sm ${
                   isOwn
                     ? 'bg-primary text-white rounded-2xl rounded-tr-sm'
                     : 'bg-white dark:bg-gray-800 text-ink dark:text-gray-100 border border-line dark:border-gray-700 rounded-2xl rounded-tl-sm'
@@ -87,9 +98,9 @@ export default function DirectMessageWindow({
         onSubmit={handleSend}
         className="relative p-2 border-t border-line dark:border-gray-700 bg-white dark:bg-gray-900"
       >
-        {guard.blockedReason && (
+        {(guard.blockedReason || sendError) && (
           <p className="mb-1.5 px-1 text-[11px] font-medium text-state-danger">
-            {guard.blockedReason}
+            {guard.blockedReason || sendError}
           </p>
         )}
 
@@ -112,6 +123,7 @@ export default function DirectMessageWindow({
             onChange={(event) => {
               setText(event.target.value);
               guard.clearBlock();
+              setSendError('');
             }}
             maxLength={MAX_LENGTH}
             placeholder="Escribí un mensaje..."

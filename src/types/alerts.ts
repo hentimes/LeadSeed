@@ -21,6 +21,7 @@ export type AlertType =
   | 'support_message'
   | 'chat_reply'
   | 'chat_mention'
+  | 'chat_announcement'
   | 'upcoming_appointment'
   | 'overdue_task';
 
@@ -29,6 +30,7 @@ export const ALERT_TYPES: AlertType[] = [
   'support_message',
   'chat_reply',
   'chat_mention',
+  'chat_announcement',
   'upcoming_appointment',
   'overdue_task',
 ];
@@ -64,6 +66,10 @@ export const ALERT_TYPE_LABELS: Record<AlertType, { title: string; description: 
     title: 'Te mencionaron',
     description: 'Cuando alguien te nombra con @ en una sala.',
   },
+  chat_announcement: {
+    title: 'Anuncio del equipo',
+    description: 'Cuando un admin o helper envía un mensaje para todos.',
+  },
   upcoming_appointment: {
     title: 'Cita proxima',
     description: 'Antes de que empiece una cita agendada.',
@@ -82,6 +88,7 @@ export const DEFAULT_ALERT_PREFERENCES: AlertPreferences = {
     // Una mencion directa avisa siempre, tambien con la extension abierta:
     // es el caso en que alguien espera una respuesta tuya.
     chat_mention: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
+    chat_announcement: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
     upcoming_appointment: { enabled: true, sound: true, desktop: true, onlyWhenClosed: false },
     overdue_task: { enabled: true, sound: false, desktop: true, onlyWhenClosed: false },
   },

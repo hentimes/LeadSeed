@@ -1,39 +1,59 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { hasUnreadChatMessages, subscribeToIncomingChatMessages } from '../services/chatService';
+import { countUnreadChatMessages, subscribeToIncomingChatMessages } from '../services/chatService';
+import {
+  fetchUnreadDirectMessageCount,
+  subscribeToAnyIncomingDirectMessage,
+} from '../repositories/directMessagesRepository';
 import type { Page } from '../types';
 
 /**
- * Indicador de mensajes de chat sin leer para el menu de navegacion.
- * Vive fuera de la pagina de chat porque justamente debe avisar cuando el
- * usuario no la esta mirando.
+ * Cantidad de mensajes de chat sin leer (sala + directos), para el badge del
+ * menu. Vive fuera de la pagina de chat porque justamente debe contar lo que
+ * llega mientras el usuario esta en otra seccion.
  */
-export function useChatUnread(currentPage: Page): boolean {
+export function useChatUnread(currentPage: Page): number {
   const { user } = useAuth();
-  const [hasUnread, setHasUnread] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const isViewingChat = currentPage === 'chat';
 
-  const refresh = useCallback(async () => {
-    setHasUnread(await hasUnreadChatMessages());
+  const refresh = useCallback(async (userId: string) => {
+    const [roomCount, dmCount] = await Promise.all([
+      countUnreadChatMessages(),
+      fetchUnreadDirectMessageCount(userId),
+    ]);
+    setUnreadCount(roomCount + dmCount);
   }, []);
 
   useEffect(() => {
     if (!user) {
-      setHasUnread(false);
+      setUnreadCount(0);
       return;
     }
 
-    // Al entrar al chat, ChatRoom marca la sala como leida; al salir volvemos a
-    // consultar para reflejar lo que haya llegado mientras tanto.
+    // Dentro del chat, la sala y los DM abiertos ya se marcan leidos solos:
+    // el badge del menu no tiene sentido mientras estas mirando la seccion.
     if (isViewingChat) {
-      setHasUnread(false);
+      setUnreadCount(0);
       return;
     }
 
-    void refresh();
+    // Al volver de otra seccion se recuenta contra la base: asi el numero es
+    // correcto aunque los mensajes hayan llegado con la extension cerrada.
+    void refresh(user.id);
 
-    return subscribeToIncomingChatMessages(user.id, () => setHasUnread(true));
+    const unsubscribeRoom = subscribeToIncomingChatMessages(user.id, () => {
+      setUnreadCount((prev) => prev + 1);
+    });
+    const unsubscribeDm = subscribeToAnyIncomingDirectMessage(user.id, () => {
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    return () => {
+      unsubscribeRoom();
+      unsubscribeDm();
+    };
   }, [user, isViewingChat, refresh]);
 
-  return hasUnread;
+  return unreadCount;
 }

@@ -5,12 +5,20 @@ import { Icon } from '../../utils/icons';
 interface FloatingWindowProps {
   title: ReactNode;
   onClose: () => void;
+  /** Si se pasa, aparece un boton de minimizar ademas del de cerrar. */
+  onMinimize?: () => void;
   children: ReactNode;
   width?: number;
   height?: number;
+  /**
+   * Cuando hay varias ventanas abiertas a la vez, cada una se abre con un
+   * indice distinto para que no queden exactamente superpuestas.
+   */
+  cascadeIndex?: number;
 }
 
 const MARGIN = 8;
+const CASCADE_STEP = 28;
 
 /**
  * Ventana flotante arrastrable dentro del panel de la extension.
@@ -23,14 +31,19 @@ const MARGIN = 8;
 export default function FloatingWindow({
   title,
   onClose,
+  onMinimize,
   children,
   width = 300,
   height = 380,
+  cascadeIndex = 0,
 }: FloatingWindowProps) {
-  const [position, setPosition] = useState(() => ({
-    x: Math.max(MARGIN, window.innerWidth - width - MARGIN * 2),
-    y: Math.max(MARGIN, window.innerHeight - height - MARGIN * 2),
-  }));
+  const [position, setPosition] = useState(() => {
+    const offset = cascadeIndex * CASCADE_STEP;
+    return {
+      x: Math.max(MARGIN, window.innerWidth - width - MARGIN * 2 - offset),
+      y: Math.max(MARGIN, window.innerHeight - height - MARGIN * 2 - offset),
+    };
+  });
 
   const dragOffset = useRef<{ x: number; y: number } | null>(null);
 
@@ -84,6 +97,19 @@ export default function FloatingWindow({
         <span className="flex-1 min-w-0 truncate text-sm font-semibold text-ink dark:text-gray-100">
           {title}
         </span>
+        {onMinimize && (
+          <button
+            type="button"
+            onClick={onMinimize}
+            onPointerDown={(event) => event.stopPropagation()}
+            className="p-1 rounded-full text-ink-muted hover:bg-white dark:hover:bg-gray-700 hover:text-ink transition-colors"
+            title="Minimizar"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+            </svg>
+          </button>
+        )}
         <button
           type="button"
           onClick={onClose}

@@ -6,15 +6,30 @@ interface PublicProfileModalProps {
   userId: string;
   /** Nombre ya conocido, para no mostrar el panel vacio mientras carga. */
   fallbackName?: string;
+  /** Foto ya conocida (por ejemplo, la del mensaje desde donde se abrio) para
+   * no mostrar el circulo con iniciales mientras se confirma contra la base. */
+  fallbackAvatarUrl?: string;
   onClose: () => void;
   onSendMessage?: () => void;
+  isBlocked?: boolean;
+  onToggleBlock?: (blocked: boolean) => void;
+  isMuted?: boolean;
+  onToggleMute?: (muted: boolean) => void;
+  /** Solo staff: abre el dialogo de baneo para este usuario. */
+  onBan?: () => void;
 }
 
 export default function PublicProfileModal({
   userId,
   fallbackName,
+  fallbackAvatarUrl,
   onClose,
   onSendMessage,
+  isBlocked,
+  onToggleBlock,
+  isMuted,
+  onToggleMute,
+  onBan,
 }: PublicProfileModalProps) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,8 +49,12 @@ export default function PublicProfileModal({
   }, [userId]);
 
   const name = profile?.full_name || fallbackName || 'Usuario';
+  // Si ya tenemos la foto de antes (del mensaje/lista desde donde se abrio),
+  // se usa desde el primer render -- sin esto se veia el flash de iniciales
+  // mientras profile todavia era null.
   const avatar =
     profile?.avatar_url ||
+    fallbackAvatarUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
 
   return (
@@ -74,7 +93,7 @@ export default function PublicProfileModal({
           </div>
         )}
 
-        <div className="flex gap-2 mt-1">
+        <div className="flex flex-wrap justify-center gap-2 mt-1">
           {onSendMessage && (
             <Button
               variant="primary"
@@ -90,6 +109,34 @@ export default function PublicProfileModal({
             Cerrar
           </Button>
         </div>
+
+        {(onToggleMute || onToggleBlock || onBan) && (
+          <div className="flex flex-wrap justify-center gap-2 pt-2 mt-1 border-t border-line w-full">
+            {onToggleMute && (
+              <Button
+                variant={isMuted ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => onToggleMute(!isMuted)}
+              >
+                {isMuted ? 'Quitar silencio' : 'Silenciar'}
+              </Button>
+            )}
+            {onToggleBlock && (
+              <Button
+                variant={isBlocked ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => onToggleBlock(!isBlocked)}
+              >
+                {isBlocked ? 'Desbloquear' : 'Bloquear'}
+              </Button>
+            )}
+            {onBan && (
+              <Button variant="danger" size="sm" onClick={onBan}>
+                Banear
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   );

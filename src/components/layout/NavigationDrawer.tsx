@@ -10,7 +10,8 @@ interface Props {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   taskCount?: number;
-  hasUnreadChat?: boolean;
+  unreadChatCount?: number;
+  isChatBanned?: boolean;
 }
 
 export default function NavigationDrawer({
@@ -19,7 +20,8 @@ export default function NavigationDrawer({
   currentPage,
   onNavigate,
   taskCount,
-  hasUnreadChat,
+  unreadChatCount,
+  isChatBanned,
 }: Props) {
   const { hasFeature } = useAuth();
   
@@ -67,7 +69,7 @@ export default function NavigationDrawer({
     badge?: number,
     isSubItem = false,
     hash?: string,
-    dot = false
+    banned = false
   ) => {
     const isActive = currentPage === page && (!hash || window.location.hash === hash);
     return (
@@ -92,32 +94,43 @@ export default function NavigationDrawer({
           <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mr-1"></span>
         )}
         {label}
-        {badge !== undefined && badge > 0 && (
-          <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-            {badge > 99 ? '99+' : badge}
-          </span>
-        )}
-        {dot && (!badge || badge <= 0) && (
+        {banned ? (
           <span
-            className="ml-auto w-2 h-2 rounded-full bg-red-500"
-            aria-label="Mensajes sin leer"
-          />
+            className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white"
+            title="Baneado del chat"
+          >
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0M12 3v9" />
+            </svg>
+          </span>
+        ) : (
+          badge !== undefined && badge > 0 && (
+            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+              {badge > 99 ? '99+' : badge}
+            </span>
+          )
         )}
       </button>
     );
   };
 
-  /** Cada seccion decide su indicador: numero para tareas, punto para chat. */
+  /** Cada ruta con badge resuelve su propio contador. */
+  const badgeFor = (page: Page): number => {
+    if (page === 'tasks') return taskCount ?? 0;
+    if (page === 'chat') return unreadChatCount ?? 0;
+    return 0;
+  };
+
   const renderRoutes = (routes: RouteDef[]) =>
     routes.map(({ page, label, icon, badge }) =>
       renderNavButton(
         page,
         label,
         icon,
-        badge && page === 'tasks' ? taskCount : 0,
+        badge ? badgeFor(page) : 0,
         false,
         undefined,
-        page === 'chat' && !!hasUnreadChat
+        page === 'chat' && !!isChatBanned
       )
     );
 

@@ -101,6 +101,29 @@ export async function isMyChatMessage(messageId: string, userId: string): Promis
   return data.user_id === userId;
 }
 
+/** Anuncios nuevos (@todos), lleguen o no filtrados por sala. */
+export function subscribeToChatAnnouncements(onAnnouncement: (row: ChatMessageRow) => void): () => void {
+  const channel = supabase
+    .channel('chat_announcements')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'is_announcement=eq.true' },
+      (payload) => onAnnouncement(payload.new as ChatMessageRow),
+    )
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
+
+/** Anuncios que llegaron mientras el usuario no estaba conectado. */
+export async function fetchPendingAnnouncementsForAlerts(): Promise<ChatMessageRow[]> {
+  const { data, error } = await supabase.rpc('pending_chat_announcements');
+  if (error || !data) return [];
+  return data as ChatMessageRow[];
+}
+
 export async function fetchSenderName(userId: string): Promise<string> {
   const { data } = await supabase.from('profiles_public').select('full_name').eq('id', userId).maybeSingle();
   return data?.full_name || 'Alguien';

@@ -1,12 +1,18 @@
 import { useOnlineDirectory, displayName, avatarFor } from '../../hooks/useOnlineDirectory';
 
+export interface ChatMemberTarget {
+  id: string;
+  label: string;
+  avatarUrl?: string;
+}
+
 interface ChatMembersPanelProps {
   currentUserId?: string;
   search: string;
   onSearchChange: (value: string) => void;
-  onMention?: (user: { id: string; label: string }) => void;
-  onOpenProfile?: (user: { id: string; label: string }) => void;
-  onOpenDirectMessage?: (user: { id: string; label: string }) => void;
+  onMention?: (user: ChatMemberTarget) => void;
+  onOpenProfile?: (user: ChatMemberTarget) => void;
+  onOpenDirectMessage?: (user: ChatMemberTarget) => void;
 }
 
 export default function ChatMembersPanel({
@@ -41,35 +47,38 @@ export default function ChatMembersPanel({
         {users.map((user) => {
           const isMe = user.id === currentUserId;
           const name = displayName(user);
+          const target: ChatMemberTarget = { id: user.id, label: name, avatarUrl: avatarFor(user) };
 
           return (
             <div
               key={user.id}
               onDoubleClick={() => {
-                if (!isMe) onOpenDirectMessage?.({ id: user.id, label: name });
+                if (!isMe) onOpenDirectMessage?.(target);
               }}
               title={isMe ? undefined : `Doble click para escribirle a ${name}`}
-              className="flex items-center gap-3 p-2 rounded-xl hover:bg-white dark:hover:bg-gray-800 transition-colors"
+              className={`flex items-center gap-2.5 p-1.5 rounded-xl transition-colors ${
+                isMe ? '' : 'cursor-pointer hover:bg-slate-100/70 dark:hover:bg-white/5'
+              }`}
             >
               <button
                 type="button"
-                onClick={() => onOpenProfile?.({ id: user.id, label: name })}
+                onClick={() => onOpenProfile?.(target)}
                 className="relative flex-shrink-0 rounded-full transition-transform hover:scale-105"
                 title={`Ver perfil de ${name}`}
               >
                 <img
                   src={avatarFor(user)}
                   alt={name}
-                  className="w-9 h-9 rounded-full object-cover border border-white dark:border-gray-700"
+                  className="w-7 h-7 rounded-full object-cover border border-white dark:border-gray-700"
                 />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-gray-900 rounded-full" />
+                <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 border-2 border-white dark:border-gray-900 rounded-full" />
               </button>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-ink dark:text-gray-100 truncate">
+                <p className="text-xs font-semibold text-ink dark:text-gray-100 truncate">
                   {name} {isMe && <span className="text-ink-muted font-normal">(tú)</span>}
                 </p>
-                <p className="text-[11px] text-ink-muted truncate">
+                <p className="text-[10px] text-ink-muted truncate">
                   {isMe ? 'Conectado ahora' : 'Doble click para escribirle'}
                 </p>
               </div>
@@ -77,7 +86,7 @@ export default function ChatMembersPanel({
               {!isMe && onMention && (
                 <button
                   type="button"
-                  onClick={() => onMention({ id: user.id, label: name })}
+                  onClick={() => onMention(target)}
                   className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-primary bg-primary-soft dark:bg-primary/20 hover:bg-primary hover:text-white transition-colors flex-shrink-0"
                   title={`Mencionar a ${name}`}
                 >
