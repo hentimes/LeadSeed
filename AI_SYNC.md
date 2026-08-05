@@ -6,6 +6,49 @@
 > destruiria la trazabilidad que CONTROL exige preservar.
 > Ruta de trabajo actual: `PROYECTOS/LeadSeed-Project/LeadSeed`.
 
+### 2026-08-05 19:58 CLT - Claude (Sonnet) - Rediseño de Enviar + planificación de Secuencias / CONTROL
+- Tipo: rediseño visual + planificación de feature nueva
+- Rol: Implementadora
+- Estado: rediseño de `Enviar` hecho y commiteado; `Secuencias de mensajes` en diseño, sin código todavía
+- Objetivo:
+  - adaptar la sección `send` (Enviar) al sistema de diseño de `src/design/`, que la sección no usaba (colores literales por canal, tabs tipo pastilla, modales fuera del patrón `Modal`)
+  - dejar sentado con el usuario el diseño de una funcionalidad nueva, "Secuencias de mensajes", antes de escribir código
+- Dominio tocado:
+  - `src/components/send/`
+  - `src/pages/SendPage.tsx`
+  - `src/design/Field.tsx` (primitiva nueva: `Field`, `Input`, `Textarea`, `Select`, `Checkbox`)
+- Dominio reservado a futuro (Secuencias, sin crear aún):
+  - tablas nuevas `sequences`, `sequence_steps`, `enrollments`
+  - probable nueva página `sequences` en `src/config/routes.ts` y `src/components/layout/NavigationDrawer.tsx`
+- Archivos tocados (commit `c59432d`, 15 archivos, sin arrastrar nada de otras sesiones):
+  - `src/design/Field.tsx`, `src/design/index.ts`
+  - `src/pages/SendPage.tsx`
+  - `src/components/send/{WhatsAppSender,EmailSender,CallSender,EmailEditor,EmailScheduler}.tsx`
+  - `src/components/send/{SendTabs,SendStep,TemplatePicker,RecipientPicker,SendConfirmModal,SendHistoryDisclosure,channels}.{tsx,ts}` (nuevos)
+- Cambios aplicados:
+  - unifica el acento visual de las 3 pestañas de envío (WhatsApp/Email/Llamadas) al morado de marca `--ls-primary`; antes cada canal pintaba su propio color en botones, bordes y foco
+  - reemplaza las tabs tipo pastilla (`bg-gray-100`) por el patrón de subrayado que ya usa el Dashboard
+  - los 3 modales de confirmación pasan a la primitiva `Modal` (portal a `document.body`); antes usaban `fixed inset-0` dentro de `<main>`, que puede recortarlos en el side panel
+  - elimina duplicación literal del selector de plantilla y del selector de destinatarios entre WhatsApp y Email
+  - corrige numeración de pasos (antes el paso "2" desaparecía si no había plantilla elegida, y se veía "1" seguido de "3")
+  - corrige encoding roto en `EmailEditor`/`EmailScheduler` y una clase Tailwind inválida (`dark:bg-slate-800/80 dark:backdrop-blur-md/50`)
+- Validación ejecutada:
+  - `npx tsc --noEmit`: OK
+  - `npm run build`: OK
+  - pendiente: verificación visual real en Chrome a 320/340/360/380px (no se cargó la extensión desempaquetada)
+- Riesgos abiertos:
+  - sin verificación visual; los cambios de layout más fuertes (chips de listas de destinatarios, ancho de la lista de leads) conviene mirarlos antes de dar el rediseño por cerrado
+- Estado de "Secuencias de mensajes" (decidido con el usuario, sin código aún):
+  - ubicación acordada: página hermana dentro del submenú "Mensajes" (`send`, `sequences`, `templates`)
+  - motor acordado: automático solo para email vía `scheduleEmailSend`; WhatsApp y llamada quedan como pendientes manuales porque no se pueden automatizar (WhatsApp Web requiere confirmación humana para abrir el envío)
+  - esquema propuesto, no creado: `sequences(id, user_id, name, is_active)`, `sequence_steps(id, sequence_id, position, template_id -> templates.id, delay_days)`, `enrollments(id, sequence_id, lead_id, current_step, status, last_sent_at, next_due_at)`
+  - decisión pendiente: si un paso de secuencia ignora `lead_ids`/`lead_list_ids` propios de `templates` (recomendado, para que la audiencia la defina la inscripción) o los combina
+  - decisión pendiente: qué hace `deleteTemplateRow` si la plantilla es paso de una secuencia con leads inscritos (recomendado: `ON DELETE RESTRICT` + aviso en Plantillas)
+  - la migración SQL de esta feature no se escribió todavía; el número correcto se decide recién al crearla, mirando el estado real de `sql/migrations/` y `supabase/migrations/` en ese momento (ambas carpetas vienen avanzando rápido con trabajo de chat/capture-links de otra sesión)
+- Solicitud para otra sesión:
+  - si alguien más toca `src/config/routes.ts` o `src/components/layout/NavigationDrawer.tsx` para agregar rutas, avisar acá antes: `Secuencias` va a necesitar registrarse ahí y esos dos archivos vienen cambiando seguido por el trabajo de chat en paralelo
+  - no hay overlap de dominio con `src/components/send/` ni `src/design/Field.tsx` hasta ahora
+
 ### 2026-08-03 20:15 CLT - Codex - landing-gerow / carpeta `forms`
 - Tipo: ordenamiento estructural acotado / CONTROL
 - Rol: Implementadora
