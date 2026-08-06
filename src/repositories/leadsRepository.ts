@@ -56,6 +56,8 @@ export interface LeadPageQuery {
   origin?: LeadOrigin | null;
   /** Solo tiene efecto combinado con origin: 'web_form'. */
   captureLinkId?: number | null;
+  /** 'pb' | 'general' | 'retiro'. Independiente de origin: filtra por metadata.source_channel. */
+  sourceChannel?: string | null;
 }
 
 export interface LeadPageRowResult {
@@ -169,6 +171,10 @@ function applyLeadPageFilters(
     if (params.origin === 'web_form' && params.captureLinkId != null) {
       nextQuery = nextQuery.eq('metadata->>capture_link_id', String(params.captureLinkId));
     }
+  }
+
+  if (params.sourceChannel) {
+    nextQuery = nextQuery.eq('metadata->>source_channel', params.sourceChannel);
   }
 
   if (params.dateFilter) {

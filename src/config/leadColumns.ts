@@ -52,6 +52,7 @@ export const LEAD_COLUMN_CATALOG: LeadColumnDef[] = [
   { key: 'comuna', label: 'Comuna', defaultVisible: false, width: 110, sortField: 'comuna' },
   { key: 'score', label: 'Score', defaultVisible: false, width: 70, sortField: 'score' },
   { key: 'origin', label: 'Origen', defaultVisible: false, width: 150 },
+  { key: 'sourceChannel', label: 'Canal', defaultVisible: false, width: 90 },
 ];
 
 const ORIGIN_LABELS: Record<string, string> = {

@@ -5,12 +5,16 @@ export interface CaptureLinkRow {
   ref_code: string;
   label: string | null;
   campaign_name: string | null;
+  link_type: string | null;
   is_default: boolean | null;
   is_active: boolean | null;
   stats_config: Record<string, unknown> | null;
   total_leads: number | null;
   closed_leads: number | null;
   close_rate_pct: number | null;
+  visits: number | null;
+  step1_completions: number | null;
+  step2_completions: number | null;
   capture_links_limit: number | null;
   created_at: string;
   updated_at: string;
@@ -39,6 +43,7 @@ interface CreateCaptureLinkArgs {
   p_stats_config?: Record<string, unknown>;
   p_metadata?: Record<string, unknown>;
   p_is_default?: boolean;
+  p_link_type?: string;
 }
 
 interface UpdateCaptureLinkArgs {
@@ -51,8 +56,8 @@ interface UpdateCaptureLinkArgs {
   p_is_default?: boolean | null;
 }
 
-export async function fetchMyCaptureLinkRows(): Promise<CaptureLinkRow[]> {
-  const { data, error } = await supabase.rpc('list_my_capture_links');
+export async function fetchMyCaptureLinkRows(linkType?: string): Promise<CaptureLinkRow[]> {
+  const { data, error } = await supabase.rpc('list_my_capture_links', { p_link_type: linkType ?? null });
   if (error) throw error;
   return (data ?? []) as CaptureLinkRow[];
 }
@@ -88,6 +93,13 @@ export async function deactivateMyCaptureLinkRow(linkId: number): Promise<Captur
   });
   if (error) throw error;
   return data as CaptureLinkRow;
+}
+
+/** Borra visitas/paso1/paso2 de un link propio (no toca leads ya capturados). Devuelve cuantos eventos borro. */
+export async function resetMyCaptureLinkProgressRow(linkId: number): Promise<number> {
+  const { data, error } = await supabase.rpc('reset_my_capture_link_progress', { p_link_id: linkId });
+  if (error) throw error;
+  return (data ?? 0) as number;
 }
 
 export async function fetchMyCaptureLinkStatsRows(linkId?: number): Promise<CaptureLinkStatsRow[]> {

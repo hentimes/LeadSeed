@@ -4,13 +4,15 @@ import {
   fetchMyCaptureLinkRows,
   fetchMyCaptureLinksLimit,
   fetchMyCaptureLinkStatsRows,
+  resetMyCaptureLinkProgressRow,
   updateMyCaptureLinkRow,
   type CaptureLinkRow,
   type CaptureLinkStatsRow,
 } from '../repositories/captureLinksRepository';
-import type { CaptureLink, CaptureLinkInput, CaptureLinkStats } from '../types';
+import type { CaptureLink, CaptureLinkInput, CaptureLinkStats, CaptureLinkType } from '../types';
 
 const PUBLIC_LINK_BASE = 'https://planespro.cl/pb/';
+const RETIRO_LINK_BASE = 'https://planespro.cl/retiro-tecnico-extranjero/';
 const SHORT_REF_ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz';
 
 function generateLocalShortRefCode(length = 6): string {
@@ -30,12 +32,16 @@ function mapCaptureLinkRow(row: CaptureLinkRow): CaptureLink {
     refCode: row.ref_code,
     label: row.label || 'Link principal',
     campaignName: row.campaign_name || '',
+    linkType: row.link_type === 'retiro' ? 'retiro' : 'pb',
     isDefault: Boolean(row.is_default),
     isActive: Boolean(row.is_active),
     statsConfig: row.stats_config || {},
     totalLeads: toNumber(row.total_leads),
     closedLeads: toNumber(row.closed_leads),
     closeRatePct: toNumber(row.close_rate_pct),
+    visits: toNumber(row.visits),
+    step1Completions: toNumber(row.step1_completions),
+    step2Completions: toNumber(row.step2_completions),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -78,9 +84,19 @@ export function buildCaptureLinkUrl(refCode: string): string {
   return `${PUBLIC_LINK_BASE}${encodeURIComponent(refCode)}`;
 }
 
-export async function listMyCaptureLinks(): Promise<CaptureLink[]> {
-  const rows = await fetchMyCaptureLinkRows();
+/** URL publica de un link de campana de retiro: /retiro-tecnico-extranjero/<ref>/. */
+export function buildRetiroLinkUrl(refCode: string): string {
+  return `${RETIRO_LINK_BASE}${encodeURIComponent(refCode)}/`;
+}
+
+export async function listMyCaptureLinks(linkType?: CaptureLinkType): Promise<CaptureLink[]> {
+  const rows = await fetchMyCaptureLinkRows(linkType);
   return rows.map(mapCaptureLinkRow);
+}
+
+/** Links de campana de retiro-tecnico-extranjero. Solo admin puede tener/crear estos. */
+export async function listRetiroCaptureLinks(): Promise<CaptureLink[]> {
+  return listMyCaptureLinks('retiro');
 }
 
 /** null significa sin limite (admin). */
@@ -96,8 +112,23 @@ export async function createMyCaptureLink(input: CaptureLinkInput): Promise<Capt
     p_stats_config: input.statsConfig || {},
     p_metadata: {},
     p_is_default: input.isDefault || false,
+    p_link_type: input.linkType || 'pb',
   });
   return mapCaptureLinkRow(row);
+}
+
+/** Crea un link de campana de retiro-tecnico-extranjero. El RPC exige rol admin para link_type='retiro'. */
+export async function createRetiroCaptureLink(input: { label: string; campaignName?: string }): Promise<CaptureLink> {
+  return createMyCaptureLink({
+    label: input.label,
+    campaignName: input.campaignName,
+    linkType: 'retiro',
+  });
+}
+
+/** Resetea a cero Visitas/Paso1/Paso2 de un link propio. No borra leads ya capturados. */
+export async function resetMyCaptureLinkProgress(id: number): Promise<number> {
+  return resetMyCaptureLinkProgressRow(id);
 }
 
 export async function updateMyCaptureLink(id: number, input: CaptureLinkInput): Promise<CaptureLink> {

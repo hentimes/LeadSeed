@@ -1,5 +1,5 @@
-import type { Lead, LeadList } from '../../types';
-import { STATUS_COLORS, STATUS_LABELS } from '../../types';
+import type { Lead, LeadList, LeadSourceChannel, PlanesproLeadMetadata } from '../../types';
+import { SOURCE_CHANNEL_COLORS, SOURCE_CHANNEL_LABELS, STATUS_COLORS, STATUS_LABELS } from '../../types';
 import { getLeadColumnValue, LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
 import CopyableValue from './CopyableValue';
 
@@ -89,6 +89,21 @@ function renderContent(columnKey: string, ctx: CellContext) {
           style={{ backgroundColor: `${STATUS_COLORS[status]}15`, color: STATUS_COLORS[status] }}
         >
           {STATUS_LABELS[status]}
+        </span>
+      );
+    }
+
+    case 'sourceChannel': {
+      const metadata = (lead.metadata || {}) as PlanesproLeadMetadata;
+      const channel = metadata.source_channel as LeadSourceChannel | undefined;
+      if (!channel || !SOURCE_CHANNEL_LABELS[channel]) return <span className="text-ink-secondary">-</span>;
+      return (
+        <span
+          className="px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium whitespace-nowrap"
+          style={{ backgroundColor: `${SOURCE_CHANNEL_COLORS[channel]}15`, color: SOURCE_CHANNEL_COLORS[channel] }}
+          title={metadata.capture_campaign ? `Campaña: ${metadata.capture_campaign}` : undefined}
+        >
+          {SOURCE_CHANNEL_LABELS[channel]}
         </span>
       );
     }

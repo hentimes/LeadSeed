@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
-import type { Lead, LeadList, LeadStatus } from '../../types';
+import type { Lead, LeadList, LeadSourceChannel, LeadStatus } from '../../types';
 import type { LeadOrigin, LeadSortConfig, LeadSortField } from '../../repositories/leadsRepository';
 import type { ColumnDef } from '../ColumnSelector';
 import { Icon } from '../../utils/icons';
@@ -34,6 +34,8 @@ interface Props {
   onFilterOriginChange: (origin: LeadOrigin | null) => void;
   filterCaptureLinkId: number | null;
   onFilterCaptureLinkIdChange: (id: number | null) => void;
+  filterSourceChannel: LeadSourceChannel | null;
+  onFilterSourceChannelChange: (channel: LeadSourceChannel | null) => void;
   search: string;
   onSearchChange: (search: string) => void;
   sort: LeadSortConfig;
@@ -84,7 +86,8 @@ function shortName(full: string): string {
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
   onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange,
-  filterOrigin, onFilterOriginChange, filterCaptureLinkId, onFilterCaptureLinkIdChange, search, onSearchChange,
+  filterOrigin, onFilterOriginChange, filterCaptureLinkId, onFilterCaptureLinkIdChange,
+  filterSourceChannel, onFilterSourceChannelChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
   compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
   onReorderCols, onReorderPinned,
@@ -224,6 +227,8 @@ export default function LeadsTable({
         onFilterOriginChange={onFilterOriginChange}
         filterCaptureLinkId={filterCaptureLinkId}
         onFilterCaptureLinkIdChange={onFilterCaptureLinkIdChange}
+        filterSourceChannel={filterSourceChannel}
+        onFilterSourceChannelChange={onFilterSourceChannelChange}
       />
 
       <div ref={containerRef} className="card-standard overflow-x-auto w-full min-w-0">

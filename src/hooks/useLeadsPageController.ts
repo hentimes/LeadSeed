@@ -69,6 +69,7 @@ export function useLeadsPageController() {
     filterDate, setFilterDate,
     filterOrigin, setFilterOrigin,
     filterCaptureLinkId, setFilterCaptureLinkId,
+    filterSourceChannel, setFilterSourceChannel,
     search, setSearch,
   } = useLeadFilters();
 
@@ -171,6 +172,7 @@ export function useLeadsPageController() {
       dateFilter: filterDate,
       origin: filterOrigin,
       captureLinkId: filterCaptureLinkId,
+      sourceChannel: filterSourceChannel,
       sortField: sort.field,
       sortDirection: sort.dir,
       deleted: showTrash,
@@ -261,6 +263,7 @@ export function useLeadsPageController() {
     filterListId,
     filterMode,
     filterOrigin,
+    filterSourceChannel,
     filterStatus,
     getAll,
     getById,
@@ -289,7 +292,7 @@ export function useLeadsPageController() {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedIds(new Set());
-  }, [filterCaptureLinkId, filterDate, filterListId, filterMode, filterOrigin, filterStatus, search, showTrash, sort.field, sort.dir]);
+  }, [filterCaptureLinkId, filterDate, filterListId, filterMode, filterOrigin, filterSourceChannel, filterStatus, search, showTrash, sort.field, sort.dir]);
 
   const onSort = useCallback((field: LeadSortField) => {
     setSort((prev) => ({
@@ -543,6 +546,8 @@ export function useLeadsPageController() {
     setFilterOrigin,
     filterCaptureLinkId,
     setFilterCaptureLinkId,
+    filterSourceChannel,
+    setFilterSourceChannel,
     search,
     setSearch,
 

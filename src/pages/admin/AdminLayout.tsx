@@ -5,9 +5,10 @@ import AdminUsersPage from './AdminUsersPage';
 import AdminRolesPage from './AdminRolesPage';
 import AdminFeaturesPage from './AdminFeaturesPage';
 import AdminRequirementsPage from './AdminRequirementsPage';
+import AdminRetiroLinksPanel from '../../components/admin/AdminRetiroLinksPanel';
 import { loadOpenRequirementsCount, subscribeOpenRequirementsCount } from '../../services/adminService';
 
-type AdminTab = 'users' | 'roles' | 'features' | 'support';
+type AdminTab = 'users' | 'roles' | 'features' | 'support' | 'retiro';
 
 export default function AdminLayout() {
   const { profile, isAdmin } = useAuth();
@@ -46,6 +47,7 @@ export default function AdminLayout() {
     { id: 'users', label: 'Usuarios y Mensajes', icon: Icon.Leads, show: isAdmin || isHelper },
     { id: 'roles', label: 'Perfiles y Planes', icon: Icon.Settings, show: isAdmin },
     { id: 'features', label: 'Funcionalidades', icon: Icon.Dashboard, show: isAdmin },
+    { id: 'retiro', label: 'Links Retiro', icon: Icon.Leads, show: isAdmin },
     { id: 'support', label: 'Soporte', icon: Icon.Inbox, show: isAdmin || isHelper },
   ].filter(t => t.show) as { id: AdminTab; label: string; icon: any }[];
 
@@ -80,6 +82,7 @@ export default function AdminLayout() {
         {activeTab === 'users' && <AdminUsersPage />}
         {activeTab === 'roles' && isAdmin && <AdminRolesPage />}
         {activeTab === 'features' && isAdmin && <AdminFeaturesPage />}
+        {activeTab === 'retiro' && isAdmin && <AdminRetiroLinksPanel />}
         {activeTab === 'support' && (isAdmin || isHelper) && <AdminRequirementsPage />}
       </div>
     </div>

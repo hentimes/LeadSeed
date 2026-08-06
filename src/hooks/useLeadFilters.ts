@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Lead, LeadStatus } from '../types';
+import type { Lead, LeadSourceChannel, LeadStatus } from '../types';
 import type { LeadOrigin } from '../repositories/leadsRepository';
 
 export function applyLeadFilters(
@@ -52,6 +52,8 @@ export function useLeadFilters() {
   const [filterOrigin, setFilterOrigin] = useState<LeadOrigin | null>(null);
   // Solo aplica cuando filterOrigin es 'web_form': que link de captura especifico.
   const [filterCaptureLinkId, setFilterCaptureLinkId] = useState<number | null>(null);
+  // Independiente de filterOrigin: 'pb' | 'general' | 'retiro'.
+  const [filterSourceChannel, setFilterSourceChannel] = useState<LeadSourceChannel | null>(null);
   const [search, setSearch] = useState('');
 
   const setFilterOriginAndReset = (origin: LeadOrigin | null) => {
@@ -72,6 +74,8 @@ export function useLeadFilters() {
     setFilterOrigin: setFilterOriginAndReset,
     filterCaptureLinkId,
     setFilterCaptureLinkId,
+    filterSourceChannel,
+    setFilterSourceChannel,
     search,
     setSearch,
   };

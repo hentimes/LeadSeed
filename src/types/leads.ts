@@ -28,6 +28,21 @@ export const STATUS_COLORS: Record<LeadStatus, string> = {
   descartado: '#ef4444',
 };
 
+/** Canal de captura del lead. 'general' incluye tambien el formulario /form. */
+export type LeadSourceChannel = 'pb' | 'general' | 'retiro';
+
+export const SOURCE_CHANNEL_LABELS: Record<LeadSourceChannel, string> = {
+  pb: 'PB',
+  general: 'General',
+  retiro: 'Retiro',
+};
+
+export const SOURCE_CHANNEL_COLORS: Record<LeadSourceChannel, string> = {
+  pb: '#3b82f6',
+  general: '#6b7280',
+  retiro: '#a855f7',
+};
+
 export interface PlanesproLeadRawPayload {
   paso1_motivo?: string;
   paso1_necesidad?: string;
@@ -63,7 +78,7 @@ export interface PlanesproLeadMetadata {
   /** manual | imported | web_form. Migracion 069. */
   origin?: 'manual' | 'imported' | 'web_form';
   source_system?: string;
-  source_channel?: string;
+  source_channel?: LeadSourceChannel | string;
   source_form_variant?: string;
   source_hostname?: string;
   source_path?: string;

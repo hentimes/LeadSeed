@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { LeadStatus, LeadList } from '../../types';
-import { STATUS_LABELS } from '../../types';
+import type { LeadSourceChannel, LeadStatus, LeadList } from '../../types';
+import { SOURCE_CHANNEL_LABELS, STATUS_LABELS } from '../../types';
 import type { LeadOrigin } from '../../repositories/leadsRepository';
 import { listMyCaptureLinks } from '../../services/captureLinksService';
 import type { CaptureLink } from '../../types/captureLinks';
@@ -35,6 +35,8 @@ interface Props {
   onFilterOriginChange: (origin: LeadOrigin | null) => void;
   filterCaptureLinkId: number | null;
   onFilterCaptureLinkIdChange: (id: number | null) => void;
+  filterSourceChannel: LeadSourceChannel | null;
+  onFilterSourceChannelChange: (channel: LeadSourceChannel | null) => void;
 }
 
 export default function LeadsTableControls({
@@ -43,11 +45,12 @@ export default function LeadsTableControls({
   lists, filterListId, onFilterChange, filterStatus, onFilterStatusChange,
   filterDate, onFilterDateChange, filterOrigin, onFilterOriginChange,
   filterCaptureLinkId, onFilterCaptureLinkIdChange,
+  filterSourceChannel, onFilterSourceChannelChange,
 }: Props) {
   const [showFilters, setShowFilters] = useState(false);
-  const [filterType, setFilterType] = useState<'listas' | 'estados' | 'fechas' | 'origen'>('listas');
+  const [filterType, setFilterType] = useState<'listas' | 'estados' | 'fechas' | 'origen' | 'canal'>('listas');
   const [captureLinks, setCaptureLinks] = useState<CaptureLink[]>([]);
-  const activeFiltersCount = (filterListId ? 1 : 0) + (filterStatus ? 1 : 0) + (filterDate ? 1 : 0) + (filterOrigin ? 1 : 0);
+  const activeFiltersCount = (filterListId ? 1 : 0) + (filterStatus ? 1 : 0) + (filterDate ? 1 : 0) + (filterOrigin ? 1 : 0) + (filterSourceChannel ? 1 : 0);
 
   // Los links de captura solo hacen falta para el sub-filtro de origen; se
   // cargan una vez que el usuario abre esa pestaña, no en cada render.
@@ -69,6 +72,7 @@ export default function LeadsTableControls({
     onFilterStatusChange(null);
     onFilterDateChange('');
     onFilterOriginChange(null);
+    onFilterSourceChannelChange(null);
   };
 
   return (
@@ -121,6 +125,7 @@ export default function LeadsTableControls({
               <option value="estados">Estados</option>
               <option value="fechas">Fechas</option>
               <option value="origen">Origen</option>
+              <option value="canal">Canal</option>
             </select>
 
             {filterType === 'listas' && (
@@ -169,6 +174,15 @@ export default function LeadsTableControls({
                   </select>
                 )}
               </>
+            )}
+            {filterType === 'canal' && (
+              <select value={filterSourceChannel ?? ''} onChange={(e) => onFilterSourceChannelChange(e.target.value ? e.target.value as LeadSourceChannel : null)}
+                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                <option value="">Todos</option>
+                {(Object.keys(SOURCE_CHANNEL_LABELS) as LeadSourceChannel[]).map((c) => (
+                  <option key={c} value={c}>{SOURCE_CHANNEL_LABELS[c]}</option>
+                ))}
+              </select>
             )}
 
             {activeFiltersCount > 0 && (

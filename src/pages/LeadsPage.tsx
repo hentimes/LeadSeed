@@ -139,6 +139,8 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
         onFilterOriginChange={p.setFilterOrigin}
         filterCaptureLinkId={p.filterCaptureLinkId}
         onFilterCaptureLinkIdChange={p.setFilterCaptureLinkId}
+        filterSourceChannel={p.filterSourceChannel}
+        onFilterSourceChannelChange={p.setFilterSourceChannel}
         search={p.search}
         onSearchChange={p.setSearch}
         sort={p.sort}
