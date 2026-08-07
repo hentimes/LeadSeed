@@ -1,18 +1,20 @@
 import {
+  createFormTypeRow,
   createMyCaptureLinkRow,
   deactivateMyCaptureLinkRow,
+  fetchFormTypeRows,
   fetchMyCaptureLinkRows,
   fetchMyCaptureLinksLimit,
   fetchMyCaptureLinkStatsRows,
   resetMyCaptureLinkProgressRow,
+  updateFormTypeRow,
   updateMyCaptureLinkRow,
   type CaptureLinkRow,
   type CaptureLinkStatsRow,
+  type FormTypeRow,
 } from '../repositories/captureLinksRepository';
-import type { CaptureLink, CaptureLinkInput, CaptureLinkStats, CaptureLinkType } from '../types';
+import type { CaptureLink, CaptureLinkInput, CaptureLinkStats, CaptureLinkType, FormType } from '../types';
 
-const PUBLIC_LINK_BASE = 'https://planespro.cl/pb/';
-const RETIRO_LINK_BASE = 'https://planespro.cl/retiro-tecnico-extranjero/';
 const SHORT_REF_ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz';
 
 function generateLocalShortRefCode(length = 6): string {
@@ -26,13 +28,23 @@ function toNumber(value: number | null | undefined): number {
   return Number(value ?? 0);
 }
 
+function mapFormTypeRow(row: FormTypeRow): FormType {
+  return {
+    slug: row.slug,
+    displayName: row.display_name,
+    urlTemplate: row.url_template,
+    linksAdminOnly: Boolean(row.links_admin_only),
+    isActive: Boolean(row.is_active),
+  };
+}
+
 function mapCaptureLinkRow(row: CaptureLinkRow): CaptureLink {
   return {
     id: row.id,
     refCode: row.ref_code,
     label: row.label || 'Link principal',
     campaignName: row.campaign_name || '',
-    linkType: row.link_type === 'retiro' ? 'retiro' : 'pb',
+    linkType: row.link_type || 'pb',
     isDefault: Boolean(row.is_default),
     isActive: Boolean(row.is_active),
     statsConfig: row.stats_config || {},
@@ -66,27 +78,14 @@ function mapCaptureLinkStatsRow(row: CaptureLinkStatsRow): CaptureLinkStats {
 }
 
 /**
- * URL publica de un link de captura, formato short link: /pb/<ref>.
- *
- * Es el formato pedido explicitamente (short links, no query string largo).
- * Hoy planespro.cl (repo landing-gerow, rama fix/agenda-url-bug) responde
- * 301 en /pb/<ref> -> /pb/, borrando el ref: el fix ya existe ahi
- * (functions/pb/[[slug]].js + _routes.json) pero esta sin desplegar, sin
- * commitear todavia junto a otro trabajo en curso (el formulario /form).
- *
- * Hasta que ese deploy salga, un link generado con esta URL NO atribuye
- * bien (cae al ultimo ref que haya quedado en el localStorage del
- * formulario). Se prioriza igual el formato correcto por decision del
- * usuario: revertir esto por ?ref= vuelve a atribuir bien mientras tanto,
- * pero no es lo que se pidio.
+ * URL publica de un link de captura, construida desde el url_template del
+ * FormType (ej. 'https://planespro.cl/pb/{ref}'). El segmento de URL no
+ * siempre coincide con el slug interno (retiro -> /retiro-tecnico-extranjero/)
+ * ni el trailing slash es uniforme entre tipos, por eso el patron completo
+ * vive en form_types en vez de derivarse del slug.
  */
-export function buildCaptureLinkUrl(refCode: string): string {
-  return `${PUBLIC_LINK_BASE}${encodeURIComponent(refCode)}`;
-}
-
-/** URL publica de un link de campana de retiro: /retiro-tecnico-extranjero/<ref>/. */
-export function buildRetiroLinkUrl(refCode: string): string {
-  return `${RETIRO_LINK_BASE}${encodeURIComponent(refCode)}/`;
+export function buildLinkUrl(formType: FormType, refCode: string): string {
+  return formType.urlTemplate.replace('{ref}', encodeURIComponent(refCode));
 }
 
 export async function listMyCaptureLinks(linkType?: CaptureLinkType): Promise<CaptureLink[]> {
@@ -94,9 +93,41 @@ export async function listMyCaptureLinks(linkType?: CaptureLinkType): Promise<Ca
   return rows.map(mapCaptureLinkRow);
 }
 
-/** Links de campana de retiro-tecnico-extranjero. Solo admin puede tener/crear estos. */
-export async function listRetiroCaptureLinks(): Promise<CaptureLink[]> {
-  return listMyCaptureLinks('retiro');
+/** Tipos de formulario activos (pb/retiro/etc); el admin ve tambien los inactivos. */
+export async function listFormTypes(): Promise<FormType[]> {
+  const rows = await fetchFormTypeRows();
+  return rows.map(mapFormTypeRow);
+}
+
+/** Registra un tipo de formulario nuevo. El RPC exige rol admin. */
+export async function createFormType(input: {
+  slug: string;
+  displayName: string;
+  urlTemplate: string;
+  linksAdminOnly?: boolean;
+}): Promise<FormType> {
+  const row = await createFormTypeRow({
+    p_slug: input.slug,
+    p_display_name: input.displayName,
+    p_url_template: input.urlTemplate,
+    p_links_admin_only: input.linksAdminOnly ?? true,
+  });
+  return mapFormTypeRow(row);
+}
+
+/** Actualiza un tipo de formulario existente. El RPC exige rol admin. */
+export async function updateFormType(
+  slug: string,
+  input: Partial<{ displayName: string; urlTemplate: string; linksAdminOnly: boolean; isActive: boolean }>
+): Promise<FormType> {
+  const row = await updateFormTypeRow({
+    p_slug: slug,
+    p_display_name: input.displayName ?? null,
+    p_url_template: input.urlTemplate ?? null,
+    p_links_admin_only: input.linksAdminOnly ?? null,
+    p_is_active: input.isActive ?? null,
+  });
+  return mapFormTypeRow(row);
 }
 
 /** null significa sin limite (admin). */
@@ -115,15 +146,6 @@ export async function createMyCaptureLink(input: CaptureLinkInput): Promise<Capt
     p_link_type: input.linkType || 'pb',
   });
   return mapCaptureLinkRow(row);
-}
-
-/** Crea un link de campana de retiro-tecnico-extranjero. El RPC exige rol admin para link_type='retiro'. */
-export async function createRetiroCaptureLink(input: { label: string; campaignName?: string }): Promise<CaptureLink> {
-  return createMyCaptureLink({
-    label: input.label,
-    campaignName: input.campaignName,
-    linkType: 'retiro',
-  });
 }
 
 /** Resetea a cero Visitas/Paso1/Paso2 de un link propio. No borra leads ya capturados. */

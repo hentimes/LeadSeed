@@ -36,6 +36,31 @@ export interface CaptureLinkStatsRow {
   leads_count: number | null;
 }
 
+export interface FormTypeRow {
+  slug: string;
+  display_name: string;
+  url_template: string;
+  links_admin_only: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CreateFormTypeArgs {
+  p_slug: string;
+  p_display_name: string;
+  p_url_template: string;
+  p_links_admin_only?: boolean;
+}
+
+interface UpdateFormTypeArgs {
+  p_slug: string;
+  p_display_name?: string | null;
+  p_url_template?: string | null;
+  p_links_admin_only?: boolean | null;
+  p_is_active?: boolean | null;
+}
+
 interface CreateCaptureLinkArgs {
   p_label: string;
   p_campaign_name?: string | null;
@@ -108,4 +133,25 @@ export async function fetchMyCaptureLinkStatsRows(linkId?: number): Promise<Capt
   });
   if (error) throw error;
   return (data ?? []) as CaptureLinkStatsRow[];
+}
+
+/** Tipos de formulario activos; el admin ve tambien los inactivos. */
+export async function fetchFormTypeRows(): Promise<FormTypeRow[]> {
+  const { data, error } = await supabase.rpc('list_form_types');
+  if (error) throw error;
+  return (data ?? []) as FormTypeRow[];
+}
+
+/** Registra un tipo de formulario nuevo. Admin-only (lo valida el RPC). */
+export async function createFormTypeRow(args: CreateFormTypeArgs): Promise<FormTypeRow> {
+  const { data, error } = await supabase.rpc('create_form_type', args);
+  if (error) throw error;
+  return data as FormTypeRow;
+}
+
+/** Actualiza un tipo de formulario existente. Admin-only (lo valida el RPC). */
+export async function updateFormTypeRow(args: UpdateFormTypeArgs): Promise<FormTypeRow> {
+  const { data, error } = await supabase.rpc('update_form_type', args);
+  if (error) throw error;
+  return data as FormTypeRow;
 }

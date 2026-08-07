@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  buildCaptureLinkUrl,
+  buildLinkUrl,
   createMyCaptureLink,
   deactivateMyCaptureLink,
   getMyCaptureLinkStats,
@@ -9,7 +9,7 @@ import {
   resetMyCaptureLinkProgress,
   updateMyCaptureLink,
 } from '../../services/captureLinksService';
-import type { CaptureLink, CaptureLinkStats } from '../../types';
+import type { CaptureLink, CaptureLinkStats, FormType } from '../../types';
 import { Icon } from '../../utils/icons';
 
 interface LinkFormState {
@@ -30,10 +30,24 @@ function topStats(stats: CaptureLinkStats[]): CaptureLinkStats[] {
   return stats.filter((item) => item.leadsCount > 0).slice(0, 4);
 }
 
-export default function CaptureLinksSettings() {
+interface Props {
+  formType: FormType;
+}
+
+/**
+ * Seccion de links para UN tipo de formulario (pb, retiro, o cualquier tipo
+ * registrado despues). Reemplaza lo que antes eran dos componentes
+ * separados (CaptureLinksSettings solo para pb, AdminRetiroLinksPanel solo
+ * para retiro) parametrizando por FormType en vez de hardcodear el tipo.
+ *
+ * El concepto de "link principal"/limite de cupos solo aplica a tipos
+ * abiertos a todos los usuarios (formType.linksAdminOnly === false, hoy
+ * solo 'pb'): un tipo admin-only no tiene default ni limite (el admin ya es
+ * ilimitado), asi que esa UI se omite para no confundir.
+ */
+export default function FormTypeLinksSection({ formType }: Props) {
   const [links, setLinks] = useState<CaptureLink[]>([]);
   const [stats, setStats] = useState<CaptureLinkStats[]>([]);
-  /** null significa sin limite (admin). Sigue siendo null antes de cargar. */
   const [limit, setLimit] = useState<number | null>(null);
   const [form, setForm] = useState<LinkFormState>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -43,12 +57,14 @@ export default function CaptureLinksSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const showDefaultConcept = !formType.linksAdminOnly;
+
   const selectedLink = useMemo(
     () => links.find((link) => link.id === selectedId) || links[0],
     [links, selectedId]
   );
 
-  const canCreate = limit === null || links.length < limit;
+  const canCreate = !showDefaultConcept || limit === null || links.length < limit;
   const slotsText = limit === null ? `${links.length}` : `${links.length}/${limit}`;
 
   const loadData = async () => {
@@ -56,7 +72,7 @@ export default function CaptureLinksSettings() {
     setLoading(true);
     try {
       const [nextLinks, nextStats, nextLimit] = await Promise.all([
-        listMyCaptureLinks('pb'),
+        listMyCaptureLinks(formType.slug),
         getMyCaptureLinkStats(),
         getMyCaptureLinksLimit(),
       ]);
@@ -73,7 +89,8 @@ export default function CaptureLinksSettings() {
 
   useEffect(() => {
     void loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formType.slug]);
 
   const selectedStats = useMemo(
     () => topStats(stats.filter((item) => item.captureLinkId === selectedLink?.id)),
@@ -111,6 +128,7 @@ export default function CaptureLinksSettings() {
         await createMyCaptureLink({
           label,
           campaignName: form.campaignName.trim(),
+          linkType: formType.slug,
         });
         setMessage('Link creado');
       }
@@ -140,6 +158,25 @@ export default function CaptureLinksSettings() {
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo desactivar el link');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReactivate = async (link: CaptureLink) => {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      await updateMyCaptureLink(link.id, {
+        label: link.label,
+        campaignName: link.campaignName,
+        isActive: true,
+      });
+      setMessage('Link reactivado');
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo reactivar el link');
     } finally {
       setSaving(false);
     }
@@ -183,13 +220,13 @@ export default function CaptureLinksSettings() {
   };
 
   const handleCopy = async (link: CaptureLink) => {
-    const url = buildCaptureLinkUrl(link.refCode);
+    const url = buildLinkUrl(formType, link.refCode);
     await navigator.clipboard.writeText(url);
     setMessage('URL copiada');
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-400 py-6">Cargando links de publicacion...</p>;
+    return <p className="text-sm text-slate-400 py-6">Cargando links de {formType.displayName}...</p>;
   }
 
   return (
@@ -197,16 +234,20 @@ export default function CaptureLinksSettings() {
       <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Links de publicacion</h3>
+            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">{formType.displayName}</h3>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              {limit === null
-                ? 'Crea los links que necesites, separa campanas y mide cierre por origen.'
-                : `Crea hasta ${limit} links, separa campanas y mide cierre por origen.`}
+              {showDefaultConcept
+                ? limit === null
+                  ? 'Crea los links que necesites, separa campanas y mide cierre por origen.'
+                  : `Crea hasta ${limit} links, separa campanas y mide cierre por origen.`
+                : 'Crea un link por campana, mide visitas, pasos completados y leads.'}
             </p>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-1 rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">
-            {slotsText}
-          </span>
+          {showDefaultConcept && (
+            <span className="text-[11px] font-semibold px-2 py-1 rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">
+              {slotsText}
+            </span>
+          )}
         </div>
       </div>
 
@@ -254,8 +295,11 @@ export default function CaptureLinksSettings() {
       </div>
 
       <div className="flex flex-col gap-2">
+        {links.length === 0 && (
+          <p className="text-xs text-slate-400">Todavia no creaste ningun link de {formType.displayName}.</p>
+        )}
         {links.map((link) => {
-          const url = buildCaptureLinkUrl(link.refCode);
+          const url = buildLinkUrl(formType, link.refCode);
           const isSelected = selectedLink?.id === link.id;
 
           return (
@@ -267,7 +311,14 @@ export default function CaptureLinksSettings() {
                 <button onClick={() => setSelectedId(link.id)} className="text-left min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{link.label}</span>
-                    {link.isDefault && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">Principal</span>}
+                    {showDefaultConcept && link.isDefault && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">Principal</span>
+                    )}
+                    {!showDefaultConcept && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        {link.campaignName || 'Sin campana'}
+                      </span>
+                    )}
                     {!link.isActive && <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-500">Inactivo</span>}
                   </div>
                   <p className="text-[11px] text-slate-400 truncate mt-1">{url}</p>
@@ -315,14 +366,25 @@ export default function CaptureLinksSettings() {
                 <button onClick={() => startEdit(link)} className="text-xs text-slate-500 dark:text-slate-300 font-semibold flex items-center gap-1">
                   <Icon.Edit /> Editar
                 </button>
-                {!link.isDefault && (
-                  <button onClick={() => void handleMakeDefault(link)} className="text-xs text-slate-500 dark:text-slate-300 font-semibold">
-                    Hacer principal
-                  </button>
-                )}
-                {!link.isDefault && link.isActive && (
-                  <button onClick={() => void handleDeactivate(link)} className="text-xs text-red-600 font-semibold">
-                    Desactivar
+                {showDefaultConcept ? (
+                  <>
+                    {!link.isDefault && (
+                      <button onClick={() => void handleMakeDefault(link)} className="text-xs text-slate-500 dark:text-slate-300 font-semibold">
+                        Hacer principal
+                      </button>
+                    )}
+                    {!link.isDefault && link.isActive && (
+                      <button onClick={() => void handleDeactivate(link)} className="text-xs text-red-600 font-semibold">
+                        Desactivar
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    onClick={() => void (link.isActive ? handleDeactivate(link) : handleReactivate(link))}
+                    className={`text-xs font-semibold ${link.isActive ? 'text-red-600' : 'text-slate-500 dark:text-slate-300'}`}
+                  >
+                    {link.isActive ? 'Desactivar' : 'Reactivar'}
                   </button>
                 )}
               </div>
@@ -331,7 +393,7 @@ export default function CaptureLinksSettings() {
         })}
       </div>
 
-      {selectedLink && (
+      {showDefaultConcept && selectedLink && (
         <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">

@@ -169,6 +169,7 @@ export default function LeadsTableControls({
                     {captureLinks.map((link) => (
                       <option key={link.id} value={link.id}>
                         {link.label}{link.campaignName ? ` · ${link.campaignName}` : ''}
+                        {' '}({link.linkType === 'pb' ? 'PB' : link.linkType.charAt(0).toUpperCase() + link.linkType.slice(1)})
                       </option>
                     ))}
                   </select>

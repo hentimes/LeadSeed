@@ -7,7 +7,7 @@ import DataManagement from '../components/settings/DataManagement';
 import EmailSettings from '../components/settings/EmailSettings';
 import GoalsSettings from '../components/settings/GoalsSettings';
 import SupportTicketsSettings from '../components/settings/SupportTicketsSettings';
-import CaptureLinksSettings from '../components/settings/CaptureLinksSettings';
+import LinksSettings from '../components/settings/LinksSettings';
 import AgendaSettings from '../components/settings/AgendaSettings';
 import AlertsManager from '../components/settings/AlertsManager';
 import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
@@ -81,7 +81,7 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         )}
 
         {tab === 'links' && (
-          <CaptureLinksSettings />
+          <LinksSettings />
         )}
 
         {tab === 'agenda' && (

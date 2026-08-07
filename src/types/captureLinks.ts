@@ -1,7 +1,22 @@
 // El limite de links (null = sin limite, ej. admin) no vive aca a proposito:
 // es un dato del USUARIO, no de cada link, y con cero links no habria de
 // donde leerlo. Usar getMyCaptureLinksLimit() de captureLinksService.
-export type CaptureLinkType = 'pb' | 'retiro';
+//
+// Antes era 'pb' | 'retiro' (union fija). Ahora es cualquier FormType.slug
+// registrado en la tabla form_types -- un admin puede agregar tipos nuevos
+// sin tocar codigo, asi que ya no hay un conjunto cerrado de valores.
+export type CaptureLinkType = string;
+
+/** Tipo de formulario registrado (pb/retiro/etc.), fuente de verdad de link_type. */
+export interface FormType {
+  slug: string;
+  displayName: string;
+  /** Patron de URL publica con el placeholder {ref}, ej. 'https://planespro.cl/pb/{ref}'. */
+  urlTemplate: string;
+  /** Si es true, solo un admin puede crear links de este tipo. */
+  linksAdminOnly: boolean;
+  isActive: boolean;
+}
 
 export interface CaptureLink {
   id: number;
