@@ -58,23 +58,6 @@ function sanitizeCaptureRef(value: string) {
   return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)
 }
 
-function resolveCaptureRefFromCandidates(...candidates: string[]) {
-  const normalized = candidates.map((value) => sanitizeCaptureRef(value)).filter(Boolean)
-  if (!normalized.length) return ''
-
-  let best = normalized[0]
-  for (const candidate of normalized.slice(1)) {
-    if (candidate.startsWith(best) && candidate.length > best.length) {
-      best = candidate
-      continue
-    }
-    if (!best.startsWith(candidate) && candidate.length > best.length) {
-      best = candidate
-    }
-  }
-  return best
-}
-
 function normalizeDate(value: string | null) {
   const raw = String(value || '').trim()
   return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : ''
@@ -111,10 +94,11 @@ function resolveRequestContext(request: Request) {
     refererUrl = null
   }
 
-  const captureRef = resolveCaptureRefFromCandidates(
-    url.searchParams.get('ref') || '',
-    refererUrl?.searchParams.get('ref') || '',
-  )
+  // Solo el ref explícito de la query string decide el calendario a mostrar.
+  // No se usa el Referer como fallback: eso permitía que un visitante que
+  // llegó primero al link de un asesor viera el calendario de ese asesor
+  // "pegado" al navegar luego al link de otro (bug de disponibilidad cruzada).
+  const captureRef = sanitizeCaptureRef(url.searchParams.get('ref') || '')
   const sourceChannel = normalizeSourceChannel(
     url.searchParams.get('source_channel') || url.searchParams.get('form_channel'),
     captureRef,
