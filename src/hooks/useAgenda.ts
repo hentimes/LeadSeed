@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals -- DEUDA 13.6: confirm() nativo, no existe en
+   React Native. Se cierra con el puerto Dialogs. */
 import { useEffect, useRef, useState } from 'react';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant } from '../types';
 import {

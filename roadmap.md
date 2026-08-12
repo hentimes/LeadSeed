@@ -1039,18 +1039,43 @@ retraso.
 
 ### Capitulo 13.3 - Red de seguridad (bloque 2, prerrequisito)
 
-- [PENDIENTE ESTRUCTURAL] Instalar Vitest. Hoy hay cero tests en 305 archivos TypeScript.
-  Prioridad: `utils/rutNormalizer.ts`, `utils/importParser.ts`, `utils/smartLists.ts`,
-  `utils/mentionParser.ts`, `services/leadsService.ts` y
-  `repositories/leadsRepository.ts::tokenizeSearch` (defensa contra inyeccion en el `or()` de
-  PostgREST, hoy sin un solo test).
-- [PENDIENTE ESTRUCTURAL] Instalar ESLint con `eslint-plugin-react-hooks` y reglas de frontera que
-  hagan cumplir automaticamente la disciplina que hoy se sostiene a mano.
+Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan en verde.
+
+- [PARCIAL] Vitest instalado con 57 tests en verde sobre `tokenizeSearch`, `rutNormalizer` y
+  `mentionParser`. Quedan pendientes `utils/importParser.ts`, `utils/smartLists.ts` y el mapeo de
+  `services/leadsService.ts`.
+- [HECHO] ESLint instalado con reglas de frontera. Politica de severidad deliberada: **`error` queda
+  reservado exclusivamente para violaciones de frontera arquitectonica**; toda la deuda de calidad
+  entra como `warning`. El motivo es que un CI que falla por 106 problemas heterogeneos no se lee, se
+  desactiva. Con esta separacion un CI rojo significa siempre lo mismo y es grave: alguien cruzo una
+  capa.
+  - Frontera 1: el cliente Supabase solo en `repositories/`.
+  - Frontera 2: la capa de dominio no importa de `components/` ni `pages/`.
+  - Frontera 3 (la que mas importa para movil): `confirm`, `alert` y `prompt` prohibidos en
+    `services`, `repositories`, `hooks`, `utils` y `config`. Estas reglas son el contrato de
+    portabilidad a Expo escrito en forma verificable.
+  - Estado: `0 errores, 214 warnings`.
+- [HECHO] Ratchet de deuda de frontera preexistente. Las violaciones que ya existian quedan marcadas
+  con `eslint-disable` y el comentario `DEUDA 13.x` que apunta al capitulo donde se corrigen, en vez
+  de corregirse en el mismo paso: tocar `useRealtimeRefresh` arrastra `useLeads`, `useLists` y
+  `useTemplates`, y la restriccion 13.1.c tiene precedencia. Resultado: CI verde, deuda contable con
+  `grep -rn "DEUDA 13" src` (hoy 5 marcas), y ningun codigo nuevo puede agregar una violacion mas.
+  - `useLeadsPageController.ts`: nueve `confirm()`/`alert()` (13.6)
+  - `useAgenda.ts`: un `confirm()` (13.6)
+  - `useRealtimeRefresh.ts`: importa el cliente Supabase (13.4)
+  - `appSettings.ts` y `leadColumns.ts`: inversion de dependencia hacia `components/` (13.4)
+- [HECHO] `xlsx` pinneado a `0.20.3`. Apuntaba a `xlsx-latest.tgz`, sin version: el build no era
+  reproducible y un `npm ci` en CI podia traer otra version. Verificado que el hash del chunk
+  resultante no cambia, asi que el bundle es identico.
+- [HECHO] CI en `.github/workflows/ci.yml` con lint, typecheck, tests y build, sobre `master`,
+  `develop` y `design`, con cancelacion de corridas superadas.
+- [HECHO] Scripts `lint`, `lint:fix`, `test`, `test:watch`, `test:coverage` y `typecheck`. Campo
+  `engines` fijado en Node 20 o superior.
 - [PENDIENTE] Endurecer `tsconfig.json`: `noUnusedLocals`, `noUnusedParameters`,
-  `noUncheckedIndexedAccess`, `paths` para el alias `@`, y un `tsconfig.node.json`.
-- [PENDIENTE] Pinnear `xlsx`, hoy apuntando a `xlsx-latest.tgz` sin version: el build no es
-  reproducible y `npm audit` no lo cubre.
-- [PENDIENTE] Anadir CI con build, lint y tests.
+  `noUncheckedIndexedAccess`, `paths` para el alias `@`, y un `tsconfig.node.json`. Se deja para
+  despues de bajar el volumen de warnings, porque hoy anadiria ruido sobre ruido.
+- [PENDIENTE] Reducir los 214 warnings por bloques. No son un objetivo en si: bajan solos al ejecutar
+  13.4, 13.6 y 13.7.
 
 ### Capitulo 13.4 - Correcciones funcionales (bloque 3)
 

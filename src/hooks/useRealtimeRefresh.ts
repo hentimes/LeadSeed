@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+// DEUDA 13.4: este hook es el unico que se salta la capa de repositorios, y de el
+// cuelgan useLeads, useLists y useTemplates. Mover el canal a un repositorio se hace
+// con tests de por medio.
+// eslint-disable-next-line no-restricted-imports
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 

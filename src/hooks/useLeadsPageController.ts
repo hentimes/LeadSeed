@@ -1,3 +1,8 @@
+/* eslint-disable no-restricted-globals -- DEUDA 13.6: nueve confirm()/alert() nativos.
+   Es el bloqueador principal del port a movil: no existen en React Native. Se cierran
+   inyectando un puerto Dialogs, junto con la division de este hook (13.7). No se
+   corrigen aca porque tocan el flujo de papelera y acciones masivas de la bandeja, y
+   la restriccion de no regresion (13.1.c) tiene precedencia. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLeads } from './useLeads';
 import { useLists } from './useLists';
