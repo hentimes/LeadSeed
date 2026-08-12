@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { LeadAlertEvent } from '../types';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webMessageBus } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 const TOAST_DURATION_MS = 8000;
 
@@ -14,13 +13,13 @@ export function useLeadAlerts(onLeadsChanged?: () => void) {
   const [alerts, setAlerts] = useState<LeadAlertEvent[]>([]);
 
   useEffect(() => {
-    if (!webMessageBus.isAvailable()) return;
+    if (!getPlatform().messageBus.isAvailable()) return;
 
     // El puerto absorbe el caso del service worker dormido, que en MV3 es un
     // estado normal: el badge se corrige cuando despierta.
-    void webMessageBus.send({ type: 'LEAD_ALERTS_MARK_SEEN' });
+    void getPlatform().messageBus.send({ type: 'LEAD_ALERTS_MARK_SEEN' });
 
-    return webMessageBus.subscribe((message) => {
+    return getPlatform().messageBus.subscribe((message) => {
       if (message.type !== 'LEAD_ALERTS_INCOMING') return;
 
       const events = message.events as LeadAlertEvent[] | undefined;
@@ -30,7 +29,7 @@ export function useLeadAlerts(onLeadsChanged?: () => void) {
       onLeadsChanged?.();
 
       // Con la extension abierta el usuario ya esta viendo la alerta.
-      void webMessageBus.send({ type: 'LEAD_ALERTS_MARK_SEEN' });
+      void getPlatform().messageBus.send({ type: 'LEAD_ALERTS_MARK_SEEN' });
     });
   }, [onLeadsChanged]);
 

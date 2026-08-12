@@ -1,7 +1,6 @@
 import type { Lead } from '../types';
 import { getSettings } from '../services/appSettingsService';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webDeeplink, webMessageBus } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 /**
  *   - < 9 dígitos → rechazar
@@ -63,12 +62,12 @@ export async function openWhatsApp(phone: string, message: string = ''): Promise
   // Con preferencia `web` y un proceso de fondo disponible, se delega en el:
   // reutiliza una pestaña de WhatsApp Web ya abierta en vez de abrir una nueva
   // por cada lead, que es lo que pasaria con `openExternal`.
-  if (pref === 'web' && webMessageBus.isAvailable()) {
-    await webMessageBus.send({ type: 'OPEN_WHATSAPP_WEB', payload: { phone, message } });
+  if (pref === 'web' && getPlatform().messageBus.isAvailable()) {
+    await getPlatform().messageBus.send({ type: 'OPEN_WHATSAPP_WEB', payload: { phone, message } });
     return;
   }
 
-  webDeeplink.openExternal(buildWhatsAppUrl(phone, message, pref));
+  getPlatform().deeplink.openExternal(buildWhatsAppUrl(phone, message, pref));
 }
 
 export function openWhatsAppForLeads(

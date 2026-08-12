@@ -1467,6 +1467,37 @@ declarados como exentos.
 Frontera de portabilidad estimada: reutilizable tal cual `src/types/**`, `src/repositories/**`, la
 mayoria de `src/services/**` y `src/utils/**`.
 
+### Capitulo 13.6.b - Inyeccion real de la plataforma
+
+Ejecutado el `2026-08-12`, tras la segunda auditoria. **Cierra la "ultima milla" del bloque 5**, que
+era el hallazgo de fondo: los puertos existian como interfaces pero no como frontera.
+
+El diagnostico de la auditoria fue exacto: los diez consumidores hacian
+`import { webDialogs } from '../platform/web'`, lo que arrastra `chrome.*` al grafo de modulos igual
+que llamar a `chrome` directamente. Se habia cambiado acoplamiento textual por acoplamiento de
+import, y ESLint solo sabia ver el primero. El indicador estaba optimizado, no la propiedad.
+
+- [HECHO] `src/platform/registry.ts` con `setPlatform` / `getPlatform`. La capa de dominio pide la
+  implementacion en tiempo de ejecucion; el contrato (`platform/types`) son solo tipos y desaparece
+  al compilar.
+- [HECHO] `main.tsx` registra `webPlatform` antes de montar nada. **Es el unico modulo de la
+  aplicacion que menciona la implementacion concreta**, verificado con grep.
+- [HECHO] Migrados los diez consumidores. Las marcas de deuda bajan de 29 a 19: las 10 de import
+  desaparecen y quedan las 19 de DOM.
+- [HECHO] La regla que prohibe importar `platform/web` fuera del entry point ya no tiene exentos y
+  bloquea activamente. Verificado con archivo de prueba, no leyendo la config.
+- [HECHO] 5 tests sobre el registro, incluido el que fija el criterio de exito del bloque: sustituir
+  la plataforma por una falsa sin tocar un solo archivo de dominio.
+
+Decision de diseño: **un registro y no un contexto de React**. Tres de los diez consumidores
+(`appSettings`, `appMaintenance`, `waHelper`) no son componentes ni hooks, asi que un contexto no les
+sirve; tener contexto para React y registro para el resto serian dos mecanismos para el mismo
+problema. `getPlatform()` lanza si nadie registro la plataforma, en vez de caer a la implementacion
+web: un fallback silencioso reintroduciria exactamente el acoplamiento que este modulo cierra.
+
+Que falta para que el bloque 5 este cerrado del todo: las 19 marcas de DOM. Con ellas resueltas, el
+entry de Expo llamaria `setPlatform(nativePlatform)` y ningun archivo de dominio cambiaria.
+
 ### Capitulo 13.7 - Division de archivos grandes (bloque 6)
 
 Por orden de riesgo: `ChatRoom.tsx` (1097), `useLeadsPageController.ts` (578, devuelve un objeto de 70

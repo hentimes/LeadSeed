@@ -11,8 +11,7 @@ import { exportToJSON, exportToExcel } from '../../utils/exportData';
 import { useLeads } from '../../hooks/useLeads';
 import type { ParsedRow } from '../../utils/importParser';
 import { useAuth } from '../../contexts/AuthContext';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webStorage } from '../../platform/web';
+import { getPlatform } from '../../platform/registry';
 
 interface Props {
   exportFormat: ExportFormat;
@@ -59,7 +58,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
   const handleExportFormatChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const fmt = e.target.value as ExportFormat;
     onExportFormatChange(fmt);
-    void webStorage.sync.set({ exportFormat: fmt });
+    void getPlatform().storage.sync.set({ exportFormat: fmt });
     const current = await getSettings();
     await saveSettings({ ...current, exportFormat: fmt });
   };

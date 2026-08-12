@@ -22,8 +22,7 @@ import { TemplatePicker } from './TemplatePicker';
 import { RecipientPicker, RecipientCount } from './RecipientPicker';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webStorage } from '../../platform/web';
+import { getPlatform } from '../../platform/registry';
 
 interface Props {
   leads: Lead[];
@@ -187,7 +186,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     if (schedule && scheduledDate && scheduledTime) {
       const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
       setSentLog(await scheduleEmailSend(userId, selectedTemplate.id!, recipients, scheduledFor));
-      void webStorage.local.set({ hasScheduledEmails: true });
+      void getPlatform().storage.local.set({ hasScheduledEmails: true });
       setSchedule(false);
       setScheduledDate('');
       setScheduledTime('');

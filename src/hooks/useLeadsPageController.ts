@@ -10,8 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 import { isActiveAppointment } from '../utils/appointmentStatus';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webDialogs, webNavigation } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 const PAGE_SIZE = 50;
 
@@ -76,12 +75,12 @@ export function useLeadsPageController() {
   } = useLeadFilters();
 
   useEffect(() => {
-    const route = webNavigation.current();
+    const route = getPlatform().navigation.current();
     setFilterMode(route?.name === 'leads' && route.filter === 'olvidados' ? 'olvidados' : null);
     if (route?.name === 'leads' && route.action === 'new') {
       setEditing(null);
       setShowForm(true);
-      webNavigation.replace({ name: 'leads' });
+      getPlatform().navigation.replace({ name: 'leads' });
     }
   }, []);
 
@@ -142,7 +141,7 @@ export function useLeadsPageController() {
 
   const confirmDeleteLeadWithAgenda = (leadName: string, isPermanent: boolean): Promise<boolean> => {
     const actionLabel = isPermanent ? 'eliminar definitivamente' : 'eliminar';
-    return webDialogs.confirm(
+    return getPlatform().dialogs.confirm(
       `Este lead tiene una hora agendada. Si confirmas, el sistema va a ${actionLabel} este lead y se va a eliminar tambien la hora agendada. Estas seguro?`,
     );
   };
@@ -213,18 +212,18 @@ export function useLeadsPageController() {
       return;
     }
 
-    const currentRoute = webNavigation.current();
+    const currentRoute = getPlatform().navigation.current();
     const leadIdFromHash = currentRoute?.name === 'leads' ? (currentRoute.leadId ?? '') : '';
     if (leadIdFromHash) {
       const leadFromHash = data.find((lead) => lead.id === leadIdFromHash);
       if (leadFromHash) {
         setViewing(leadFromHash);
-        webNavigation.replace({ name: 'leads' });
+        getPlatform().navigation.replace({ name: 'leads' });
       } else {
         const fetchedLead = await getById(leadIdFromHash);
         if (fetchedLead) {
           setViewing(fetchedLead);
-          webNavigation.replace({ name: 'leads' });
+          getPlatform().navigation.replace({ name: 'leads' });
         }
       }
     }
@@ -347,7 +346,7 @@ export function useLeadsPageController() {
       const messages: string[] = [];
       if (dupRut && !isSelfRut) messages.push(`RUT ${lead.rut} ya existe`);
       if (dupPhone && !isSelfPhone) messages.push(`Telefono ${lead.phone} ya existe`);
-      if (!(await webDialogs.confirm(`${messages.join(' y ')}. Guardar de todas formas?`))) return;
+      if (!(await getPlatform().dialogs.confirm(`${messages.join(' y ')}. Guardar de todas formas?`))) return;
     }
 
     await save(lead);
@@ -386,7 +385,7 @@ export function useLeadsPageController() {
       if (hasActiveAppointment) {
         if (!(await confirmDeleteLeadWithAgenda(lead?.name || 'este lead', true))) return;
         if (lead) await cancelLeadAppointmentBeforeDelete(lead, appointmentId);
-      } else if (!(await webDialogs.confirm('Eliminar definitivamente?'))) {
+      } else if (!(await getPlatform().dialogs.confirm('Eliminar definitivamente?'))) {
         return;
       }
       await permanentDelete(id);
@@ -431,22 +430,22 @@ export function useLeadsPageController() {
 
     if (showTrash) {
       if (leadsWithAppointments.length > 0) {
-        const aceptado = await webDialogs.confirm(
+        const aceptado = await getPlatform().dialogs.confirm(
           `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar definitivamente esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
         );
         if (!aceptado) return;
-      } else if (!(await webDialogs.confirm(`Eliminar definitivamente ${selectedIds.size} leads?`))) {
+      } else if (!(await getPlatform().dialogs.confirm(`Eliminar definitivamente ${selectedIds.size} leads?`))) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
       for (const id of selectedIds) await permanentDelete(id);
     } else {
       if (leadsWithAppointments.length > 0) {
-        const aceptado = await webDialogs.confirm(
+        const aceptado = await getPlatform().dialogs.confirm(
           `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
         );
         if (!aceptado) return;
-      } else if (!(await webDialogs.confirm(`Mover ${selectedIds.size} leads a la papelera?`))) {
+      } else if (!(await getPlatform().dialogs.confirm(`Mover ${selectedIds.size} leads a la papelera?`))) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
@@ -477,7 +476,7 @@ export function useLeadsPageController() {
 
   const handleImport = async (rows: ParsedRow[]) => {
     if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
-      await webDialogs.alert('Has superado el limite de 100 prospectos del plan Free. Actualiza tu plan para poder importar mas leads.');
+      await getPlatform().dialogs.alert('Has superado el limite de 100 prospectos del plan Free. Actualiza tu plan para poder importar mas leads.');
       return;
     }
 
@@ -492,7 +491,7 @@ export function useLeadsPageController() {
 
   const handleNewLeadClick = async () => {
     if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
-      await webDialogs.alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
+      await getPlatform().dialogs.alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
       return;
     }
     setEditing(null);

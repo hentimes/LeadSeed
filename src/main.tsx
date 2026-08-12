@@ -5,6 +5,14 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { PresenceProvider } from './hooks/usePresence';
 import AppErrorBoundary from './components/app/AppErrorBoundary';
+import { setPlatform } from './platform/registry';
+import { webPlatform } from './platform/web';
+
+// Antes de montar nada: la capa de dominio pide los puertos por registro, y
+// este es el unico modulo de la app que menciona la implementacion concreta.
+// El dia del port a Expo, su entry hara `setPlatform(nativePlatform)` y ningun
+// archivo de dominio cambia.
+setPlatform(webPlatform);
 
 const rootEl = document.getElementById('root');
 

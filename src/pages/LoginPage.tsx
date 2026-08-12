@@ -1,17 +1,16 @@
 import React from 'react';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import { chartColors } from '../design/palette';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webOAuth } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
-      const oauthUrl = await beginGoogleLogin(webOAuth.redirectUrl(), webOAuth.canCompleteInApp());
+      const oauthUrl = await beginGoogleLogin(getPlatform().oauth.redirectUrl(), getPlatform().oauth.canCompleteInApp());
       if (!oauthUrl) return;
 
       try {
-        const callbackUrl = await webOAuth.launch(oauthUrl);
+        const callbackUrl = await getPlatform().oauth.launch(oauthUrl);
 
         // Sin callback la plataforma navego fuera: el proveedor traera de
         // vuelta al usuario y no hay nada mas que hacer en este ciclo.

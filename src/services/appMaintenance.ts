@@ -11,8 +11,7 @@ import {
 } from '../repositories/appMaintenanceRepository';
 import { sendEmailToLeads } from '../utils/emailSender';
 import type { Lead, LeadStatus } from '../types';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webStorage } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 function mapLeadRowToDomain(row: ScheduledEmailLeadRow): Lead {
   return {
@@ -50,7 +49,7 @@ export async function processScheduledEmails(): Promise<void> {
   const now = new Date().toISOString();
   const dueLogs = await fetchDueScheduledEmailLogs(now);
   if (dueLogs.length === 0) {
-    void webStorage.local.set({ hasScheduledEmails: false });
+    void getPlatform().storage.local.set({ hasScheduledEmails: false });
     return;
   }
 
@@ -86,5 +85,5 @@ export async function processScheduledEmails(): Promise<void> {
     await markLeadsAsContacted(leadRows.map((lead) => lead.id));
   }
 
-  void webStorage.local.set({ hasScheduledEmails: false });
+  void getPlatform().storage.local.set({ hasScheduledEmails: false });
 }

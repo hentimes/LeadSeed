@@ -14,8 +14,7 @@ import {
   unsubscribeFromMyAgendaChanges,
 } from '../services/agendaService';
 import { getAppointmentSuccessMessage } from '../utils/appointmentStatusCopy';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webDialogs, webNavigation } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 export interface ParticipantFormState {
   name: string;
@@ -30,7 +29,7 @@ export interface RescheduleFormState {
 export const CLOSED_STATUSES = new Set(['cancelada', 'rechazada']);
 
 function readAppointmentIdFromHash(): string {
-  const route = webNavigation.current();
+  const route = getPlatform().navigation.current();
   return route?.name === 'agenda' ? (route.appointmentId ?? '') : '';
 }
 
@@ -136,7 +135,7 @@ export function useAgenda() {
     };
 
     syncFocusedAppointmentFromHash();
-    return webNavigation.subscribe(syncFocusedAppointmentFromHash);
+    return getPlatform().navigation.subscribe(syncFocusedAppointmentFromHash);
   }, []);
 
   useEffect(() => {
@@ -184,7 +183,7 @@ export function useAgenda() {
 
   const openFocusedAppointment = (appointmentId?: string) => {
     if (!appointmentId) return;
-    webNavigation.replace({ name: 'agenda', appointmentId });
+    getPlatform().navigation.replace({ name: 'agenda', appointmentId });
     setFocusedAppointmentId(appointmentId);
   };
 
@@ -218,7 +217,7 @@ export function useAgenda() {
   };
 
   const handleCancelAppointment = async (appointment: AgendaAppointment) => {
-    if (!(await webDialogs.confirm('Cancelar esta cita? El horario quedara disponible.'))) return;
+    if (!(await getPlatform().dialogs.confirm('Cancelar esta cita? El horario quedara disponible.'))) return;
 
     setAppointmentActionId(appointment.id);
     setMessage('');

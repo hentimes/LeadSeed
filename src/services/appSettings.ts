@@ -1,8 +1,7 @@
 import { getSettings, saveSettings } from './appSettingsService';
 import type { ColumnDef } from '../types';
 import type { AppSettings } from '../types';
-// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
-import { webStorage } from '../platform/web';
+import { getPlatform } from '../platform/registry';
 
 export interface AppPreferences {
   compactMode: boolean;
@@ -42,7 +41,7 @@ function mergeVisibleColumns(defaultColumns: ColumnDef[], storedColumns: AppSett
 export async function loadAppPreferences(defaultColumns: ColumnDef[]): Promise<AppPreferences> {
   const settings = await getSettings();
 
-  const synced = await webStorage.sync.get(['compactMode', 'visibleCols', 'exportFormat']);
+  const synced = await getPlatform().storage.sync.get(['compactMode', 'visibleCols', 'exportFormat']);
 
   if (synced.compactMode !== undefined) {
     settings.compactMode = synced.compactMode as boolean;
@@ -65,7 +64,7 @@ export async function loadAppPreferences(defaultColumns: ColumnDef[]): Promise<A
 }
 
 export function syncSettingsToChromeStorage(updates: Record<string, unknown>): void {
-  void webStorage.sync.set(updates);
+  void getPlatform().storage.sync.set(updates);
 }
 
 export async function updateStoredSettings(
