@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { uniqueChannelName } from '../utils/realtimeChannel';
 
 export interface SupportMessageRow {
   id: string;
@@ -47,7 +48,7 @@ export function subscribeToIncomingSupportMessages(
  */
 export function subscribeToChatReplies(onReply: (row: ChatMessageRow) => void): () => void {
   const channel = supabase
-    .channel('chat_replies')
+    .channel(uniqueChannelName('chat_replies'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'chat_messages' },
@@ -104,7 +105,7 @@ export async function isMyChatMessage(messageId: string, userId: string): Promis
 /** Anuncios nuevos (@todos), lleguen o no filtrados por sala. */
 export function subscribeToChatAnnouncements(onAnnouncement: (row: ChatMessageRow) => void): () => void {
   const channel = supabase
-    .channel('chat_announcements')
+    .channel(uniqueChannelName('chat_announcements'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'is_announcement=eq.true' },

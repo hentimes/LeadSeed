@@ -1,6 +1,7 @@
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import type { Requirement } from '../types';
+import { uniqueChannelName } from '../utils/realtimeChannel';
 
 export interface InternalMessageRow {
   id: string;
@@ -61,7 +62,7 @@ export async function insertInternalMessage(payload: Record<string, unknown>): P
 
 export function subscribeReceiverMessages(userId: string, onInsert: (payload: InternalMessagePayload) => void): RealtimeChannel {
   return supabase
-    .channel('public:internal_messages_user')
+    .channel(uniqueChannelName('public:internal_messages_user', userId))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'internal_messages', filter: `receiver_id=eq.${userId}` }, onInsert)
     .subscribe();
 }
@@ -72,7 +73,7 @@ export function subscribeSenderMessages(
   onUpdate: (payload: InternalMessagePayload) => void
 ): RealtimeChannel {
   return supabase
-    .channel('public:internal_messages_me')
+    .channel(uniqueChannelName('public:internal_messages_me', userId))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'internal_messages', filter: `sender_id=eq.${userId}` }, onInsert)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'internal_messages', filter: `sender_id=eq.${userId}` }, onUpdate)
     .subscribe();

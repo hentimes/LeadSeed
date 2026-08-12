@@ -2,6 +2,7 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/
 import { supabase } from '../lib/supabaseClient';
 import type { Profile, Requirement } from '../types';
 import type { LeadRow } from './leadsRepository';
+import { uniqueChannelName } from '../utils/realtimeChannel';
 
 export interface AdminUnreadMessageRow {
   sender_id: string;
@@ -85,21 +86,21 @@ export async function fetchUnreadAdminMessageRows(receiverId: string): Promise<A
 
 export function subscribeToProfilesChanges(onChange: (payload: ProfileChangesPayload) => void): RealtimeChannel {
   return supabase
-    .channel('admin_profiles_changes')
+    .channel(uniqueChannelName('admin_profiles_changes'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, onChange)
     .subscribe();
 }
 
 export function subscribeToInternalMessageChanges(onChange: () => void): RealtimeChannel {
   return supabase
-    .channel('admin_unread_msgs')
+    .channel(uniqueChannelName('admin_unread_msgs'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'internal_messages' }, onChange)
     .subscribe();
 }
 
 export function subscribeToLeadChanges(adminUserId: string, onChange: (payload: AdminLeadEventChangesPayload) => void): RealtimeChannel {
   return supabase
-    .channel('admin_lead_alerts')
+    .channel(uniqueChannelName('admin_lead_alerts', adminUserId))
     .on(
       'postgres_changes',
       {

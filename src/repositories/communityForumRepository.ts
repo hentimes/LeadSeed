@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { uniqueChannelName } from '../utils/realtimeChannel';
 import type {
   CommunityCategory,
   CommunityComment,
@@ -156,7 +157,7 @@ export async function removeLike(postId: string, userId: string): Promise<void> 
 
 export function subscribeToPostInserts(onInsert: (postId: string) => void): () => void {
   const channel = supabase
-    .channel('community-posts')
+    .channel(uniqueChannelName('community-posts'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'community_posts' },

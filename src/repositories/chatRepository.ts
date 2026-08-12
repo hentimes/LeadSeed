@@ -2,6 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import type { ChatMessage, ChatPinnedMessage, ChatRoom, Profile } from '../types';
 import type { ChatAttachment } from './chatAttachmentsRepository';
+import { uniqueChannelName } from '../utils/realtimeChannel';
 
 export async function fetchDefaultChatRoom(): Promise<ChatRoom | null> {
   const { data, error } = await supabase.from('chat_rooms').select('*').eq('name', 'General').single();
@@ -260,7 +261,7 @@ export function subscribeToAnyChatMessageInsert(
   onInsert: (message: ChatMessage) => void
 ): RealtimeChannel {
   return supabase
-    .channel('chat-unread-watch')
+    .channel(uniqueChannelName('chat-unread-watch'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'chat_messages' },
