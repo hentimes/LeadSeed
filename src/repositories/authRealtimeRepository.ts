@@ -1,3 +1,15 @@
+/**
+ * Suscripciones realtime del contexto de autenticacion: cambios de perfil,
+ * de overrides de funcionalidades y del plan del usuario.
+ *
+ * Estaba en `services/realtimeService.ts` importando el cliente de Supabase
+ * directamente, que era la ultima fuga de la frontera "el cliente vive solo en
+ * repositorios". Ver roadmap 13.4.
+ *
+ * Los nombres de canal ya incluyen el `userId`, asi que no colisionan entre
+ * usuarios. No llevan sufijo de instancia porque `AuthContext` es unico en la
+ * aplicacion: hay exactamente una suscripcion viva de cada tipo.
+ */
 import { supabase } from '../lib/supabaseClient';
 import type { Profile } from '../types';
 

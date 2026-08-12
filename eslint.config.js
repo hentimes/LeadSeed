@@ -91,8 +91,21 @@ export default tseslint.config(
 
   // Frontera 1: el cliente Supabase vive solo en repositories.
   // Regla arquitectonica ya declarada en roadmap 3.2 y hasta hoy sin verificar.
+  //
+  // La lista incluye `services` y `contexts` desde el 2026-08-12: al cerrar la
+  // ultima marca de deuda se descubrio que la regla no los cubria, y
+  // `services/realtimeService.ts` importaba el cliente sin que nada protestara.
+  // Una frontera con un hueco no es una frontera.
   {
-    files: ['src/components/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}', 'src/hooks/**/*.{ts,tsx}'],
+    files: [
+      'src/components/**/*.{ts,tsx}',
+      'src/pages/**/*.{ts,tsx}',
+      'src/hooks/**/*.{ts,tsx}',
+      'src/services/**/*.{ts,tsx}',
+      'src/contexts/**/*.{ts,tsx}',
+      'src/utils/**/*.{ts,tsx}',
+      'src/config/**/*.{ts,tsx}',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

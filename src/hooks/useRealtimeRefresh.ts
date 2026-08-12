@@ -1,18 +1,22 @@
 import { useCallback, useEffect, useId, useState } from 'react';
+import { subscribeToTableChanges } from '../repositories/realtimeRepository';
 import { buildRealtimeChannelName } from '../utils/realtimeChannel';
-// DEUDA 13.4: este hook es el unico que se salta la capa de repositorios, y de el
-// cuelgan useLeads, useLists y useTemplates. Mover el canal a un repositorio se hace
-// con tests de por medio.
-// eslint-disable-next-line no-restricted-imports
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
 export interface RealtimeSubscriptionConfig {
+  /** Nombre logico, legible al depurar. Se le agrega ambito e instancia. */
   channel: string;
   table: string;
   filter?: string;
 }
 
+/**
+ * Devuelve un contador que se incrementa cuando cambia alguna de las tablas
+ * observadas, para que el llamador vuelva a pedir sus datos.
+ *
+ * De este hook cuelgan `useLeads`, `useLists` y `useTemplates`, asi que
+ * cualquier cambio aca alcanza a las tres superficies principales.
+ */
 export function useRealtimeRefresh(subscriptions: RealtimeSubscriptionConfig[]) {
   const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useAuth();
@@ -30,27 +34,14 @@ export function useRealtimeRefresh(subscriptions: RealtimeSubscriptionConfig[]) 
       return;
     }
 
-    const channels = subscriptions.map((subscription) =>
-      supabase
-        .channel(buildRealtimeChannelName(subscription.channel, user.id, instanceId))
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: subscription.table,
-            ...(subscription.filter ? { filter: subscription.filter } : {}),
-          },
-          triggerRefresh
-        )
-        .subscribe()
+    return subscribeToTableChanges(
+      subscriptions.map((subscription) => ({
+        channelName: buildRealtimeChannelName(subscription.channel, user.id, instanceId),
+        table: subscription.table,
+        filter: subscription.filter,
+      })),
+      triggerRefresh,
     );
-
-    return () => {
-      channels.forEach((channel) => {
-        supabase.removeChannel(channel);
-      });
-    };
   }, [subscriptions, triggerRefresh, user, instanceId]);
 
   return {

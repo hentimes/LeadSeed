@@ -1200,8 +1200,14 @@ Descubierto el `2026-08-12` al preparar el deploy anterior, no estaba en la audi
   Con las once declaraciones en `config.toml`, el estado correcto pasa a ser el que el repo describe
   en vez de depender de que quien despliegue recuerde un flag. `form-progress` no se declara aca
   porque su source todavia vive en `landing-gerow`.
-- [PENDIENTE] Sacar el cliente Supabase de `hooks/useRealtimeRefresh.ts` y `services/realtimeService.ts`
-  hacia repositorios.
+- [HECHO] El cliente Supabase quedo confinado a `repositories/`. Se cerraron las dos fugas:
+  `useRealtimeRefresh` pasa por el nuevo `repositories/realtimeRepository.ts`, y
+  `services/realtimeService.ts` se movio a `repositories/authRealtimeRepository.ts`.
+
+  Al cerrarlas aparecio un hueco en la propia regla de ESLint: solo cubria `components`, `pages` y
+  `hooks`, asi que `services/` podia importar el cliente sin que nada protestara, que es exactamente
+  como habia sobrevivido `realtimeService`. La regla ahora cubre tambien `services`, `contexts`,
+  `utils` y `config`. Una frontera con un hueco no es una frontera.
 - [PENDIENTE] Corregir el CORS de `supabase/functions/form-lead-file/index.ts`, que refleja cualquier
   origin a diferencia del resto de funciones.
 - [PENDIENTE] Reenviar el header `Origin` desde el proxy al upstream. Hoy la allowlist CORS de las Edge

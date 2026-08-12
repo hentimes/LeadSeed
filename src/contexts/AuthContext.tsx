@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types';
 import { getCurrentSession, logoutCurrentUser, mapSessionToUser, onAuthSessionChange, persistGoogleCalendarConnectionFromSession } from '../services/authService';
 import { loadActiveFeatures, loadUserProfile } from '../services/profileService';
-import { subscribeToUserUpdates, subscribeToPlanUpdates } from '../services/realtimeService';
+import { subscribeToUserUpdates, subscribeToPlanUpdates } from '../repositories/authRealtimeRepository';
 
 interface AuthContextType {
   session: Session | null;
