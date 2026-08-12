@@ -1347,6 +1347,32 @@ Nota para la migracion: el estado correcto de `_redirects`, `_routes.json` y las
 exactamente lo que hay que llevarse al proyecto nuevo. Arreglar esto no es un desvio, es preparar el
 bloque 4.
 
+### Capitulo 13.4.e - Configurar ALLOWED_EXTENSION_IDS
+
+- [PENDIENTE] Configurar el secreto `ALLOWED_EXTENSION_IDS` con el id de la extension
+  (`blphejkibijeolonnebffpclhlghofnn`, derivado del `manifest.key` y por tanto estable) y redesplegar
+  `form-lead-file`.
+
+  ```
+  npx supabase secrets set ALLOWED_EXTENSION_IDS=blphejkibijeolonnebffpclhlghofnn
+  npx supabase functions deploy form-lead-file --no-verify-jwt
+  ```
+
+  **Motivo real: consistencia del estandar, no seguridad.** Conviene registrarlo asi para que nadie
+  le de una urgencia que no tiene. Sin el secreto, la funcion acepta cualquier origen
+  `chrome-extension://`, pero eso aporta poca proteccion efectiva por tres razones verificadas:
+
+  1. el unico flujo que usa este endpoint abre el PDF con un `<form>` que navega a una ventana nueva,
+     y eso es navegacion, no `fetch`: **no pasa por CORS en absoluto**
+  2. la autorizacion real es el Bearer token mas la comprobacion de que el lead pertenece al usuario
+  3. una extension maliciosa con permisos de host puede llamar a la API sin que CORS la frene, asi
+     que si ya tiene el token, el allowlist no la detiene
+
+  La auditoria de seguridad del `2026-08-12` lo clasifico MEDIO precisamente por consistencia: era la
+  unica funcion del proyecto que se salia de la allowlist estandar. Decision del usuario del
+  `2026-08-12`: se mantiene como pendiente para que todo quede dentro del estandar, con prioridad
+  baja. Si alguna superficie futura pasa a usar `fetch` contra este endpoint, sube de prioridad.
+
 ### Capitulo 13.5 - Consolidacion de formularios en LeadSeed (bloque 4)
 
 Principio: la extension y los formularios publicos no comparten runtime. La consolidacion es de codigo
