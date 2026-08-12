@@ -62,7 +62,6 @@ export default function ListsPage() {
   const [leadSearch, setLeadSearch] = useState('');
   
   const [showSmartSettings, setShowSmartSettings] = useState(false);
-  const [creatingGroupFor, setCreatingGroupFor] = useState<string | number | null>(null);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState('#6C4CF6');

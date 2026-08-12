@@ -1,4 +1,4 @@
-import type { CallTemplate, EmailTemplate, Lead, WhatsAppTemplate } from '../types';
+import type { CallTemplate, EmailTemplate, WhatsAppTemplate } from '../types';
 import {
   createTemplate,
   deleteTemplateRow,

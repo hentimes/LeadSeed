@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import type { DashboardSnapshot } from '../../../services/dashboardService';
-import { Icon } from '../../../utils/icons';
 
 interface AdvancedFunnelChartProps {
   snapshot: DashboardSnapshot;

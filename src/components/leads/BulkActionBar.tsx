@@ -24,8 +24,7 @@ export default function BulkActionBar({
   onDelete,
   onStatusChange,
   onAddToList,
-  onClearSelection,
-}: BulkActionBarProps) {
+  }: BulkActionBarProps) {
   if (selectedIds.size === 0) return null;
 
   return (

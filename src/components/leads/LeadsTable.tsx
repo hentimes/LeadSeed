@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import type { Lead, LeadList, LeadSourceChannel, LeadStatus } from '../../types';
 import type { LeadOrigin, LeadSortConfig, LeadSortField } from '../../repositories/leadsRepository';
-import type { ColumnDef } from '../ColumnSelector';
+import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import LeadsTableControls from './LeadsTableControls';
@@ -88,8 +88,7 @@ export default function LeadsTable({
   onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange,
   filterOrigin, onFilterOriginChange, filterCaptureLinkId, onFilterCaptureLinkIdChange,
   filterSourceChannel, onFilterSourceChannelChange, search, onSearchChange,
-  sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, onColsChange,
-  compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
+  sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
   onReorderCols, onReorderPinned,
 }: Props) {
   const sendCounts = useSendCounts();

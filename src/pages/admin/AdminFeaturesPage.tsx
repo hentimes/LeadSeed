@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSaaS } from '../../hooks/useSaaS';
 import type { Feature } from '../../types';
-import { Icon } from '../../utils/icons';
 
 export default function AdminFeaturesPage() {
   const { getFeatures, saveFeature } = useSaaS();

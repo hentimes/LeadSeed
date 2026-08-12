@@ -1,4 +1,3 @@
-import React from 'react';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import { chartColors } from '../design/palette';
 import { getPlatform } from '../platform/registry';

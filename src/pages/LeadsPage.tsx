@@ -5,7 +5,7 @@ import LeadDetail from '../components/leads/LeadDetail';
 import ImportModal from '../components/leads/ImportModal';
 import BulkActionBar from '../components/leads/BulkActionBar';
 import LeadsPageToasts from '../components/leads/LeadsPageToasts';
-import type { ColumnDef } from '../components/ColumnSelector';
+import type { ColumnDef } from '../types';
 import { Icon } from '../utils/icons';
 import { useLeadsPageController } from '../hooks/useLeadsPageController';
 import { Modal } from '../design/Modal';

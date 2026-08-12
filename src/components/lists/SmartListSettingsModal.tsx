@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SMART_LIST_DEFS } from '../../utils/smartLists';
 
 interface Props {

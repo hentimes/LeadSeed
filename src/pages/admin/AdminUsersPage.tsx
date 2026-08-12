@@ -32,7 +32,7 @@ export default function AdminUsersPage() {
   const [userOverrides, setUserOverrides] = useState<UserFeatureOverride[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const { session, profile: currentUserProfile, isAdmin } = useAuth();
+  const { session, profile: isAdmin } = useAuth();
   
   const [activeTab, setActiveTab] = useState<AdminTab>(isAdmin ? 'licencias' : 'soporte');
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});

@@ -26,7 +26,7 @@ interface Props {
   onClearHighlight?: () => void;
 }
 
-export default function TemplatesPage({ highlightTemplate, onClearHighlight }: Props = {}) {
+export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const { hasFeature } = useAuth();
   const [tab, setTab] = useState<Tab>(highlightTemplate?.type || 'whatsapp');
   const waT = useWhatsAppTemplates(); const waL = useWhatsAppTemplateLists();
@@ -130,14 +130,6 @@ export default function TemplatesPage({ highlightTemplate, onClearHighlight }: P
     });
   };
 
-  const toggleCat = async (tpl: any, listId: number) => {
-    const ids = tpl.templateListIds || [];
-    const u = { ...tpl, templateListIds: ids.includes(listId) ? ids.filter((id: number) => id !== listId) : [...ids, listId] };
-    if (tab === 'whatsapp') await waT.save(u); 
-    else if (tab === 'email') await emT.save(u);
-    else await caT.save(u);
-    load();
-  };
 
   const handleShowLog = async (templateId: number) => {
     if (showLog === templateId) { setShowLog(null); return; }

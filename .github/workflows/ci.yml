@@ -38,8 +38,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Tests
-        run: npm test
+      - name: Tests y umbral de cobertura
+        # `test:coverage` y no `test`: el umbral de trinquete de
+        # vitest.config.ts solo se evalua al medir cobertura. Corriendo `test`
+        # a secas, el umbral existiria en la config y no se comprobaria nunca,
+        # que es como tenerlo desactivado sin saberlo.
+        run: npm run test:coverage
 
       - name: Build
         # `build` ya corre tsc antes de vite, pero se deja explicito para que un

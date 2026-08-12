@@ -32,7 +32,7 @@ function openMeetLink(meetLink: string): void {
   window.open(meetLink, '_blank', 'noopener,noreferrer');
 }
 
-export default function LeadDetail({ lead, lists, onClose, onEdit, onNavigate }: Props) {
+export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props) {
   const detail = useLeadDetail(lead);
 
   const documentId =

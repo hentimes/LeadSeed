@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { primaryRoutes, secondaryRoutes } from '../../config/routes';
-import type { ColumnDef } from '../ColumnSelector';
+import type { ColumnDef } from '../../types';
 import type { Page } from '../../types';
 import AppStatusScreen from './AppStatusScreen';
 import { PageShell } from '../../design';

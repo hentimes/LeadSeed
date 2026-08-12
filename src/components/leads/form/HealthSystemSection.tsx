@@ -1,4 +1,3 @@
-import React from 'react';
 // import { CargasAgeModal } from './CargasAgeModal'; // TODO: Temporarily hidden. Do not delete. Will be used in future phases for detailed dependent tracking.
 
 interface Props {

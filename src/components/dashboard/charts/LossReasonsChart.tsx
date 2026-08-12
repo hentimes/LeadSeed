@@ -1,5 +1,4 @@
-import React from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function LossReasonsChart() {
   const data = [
@@ -42,7 +41,7 @@ export default function LossReasonsChart() {
               animationBegin={600}
               animationDuration={800}
             >
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

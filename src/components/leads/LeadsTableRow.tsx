@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import type { Lead, LeadList } from '../../types';
-import type { ColumnDef } from '../ColumnSelector';
+import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import LeadCell from './LeadCell';
 

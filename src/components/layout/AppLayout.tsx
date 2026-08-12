@@ -4,7 +4,6 @@ import NavigationDrawer from './NavigationDrawer';
 import UserMenu from './UserMenu';
 import ProfileModal from '../profile/ProfileModal';
 import type { Page } from '../../types';
-import { usePresence } from '../../hooks/usePresence';
 import { useTelemetry } from '../../hooks/useTelemetry';
 import SupportFloatingChat from '../support/SupportFloatingChat';
 
@@ -24,7 +23,6 @@ export default function AppLayout({
   taskCount,
   unreadChatCount,
   isChatBanned,
-  isAdmin,
   children,
 }: Props) {
   // Inicializar rastreo de telemetría y presencia global en la app

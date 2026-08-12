@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ColumnDef } from '../components/ColumnSelector';
+import type { ColumnDef } from '../types';
 import type { ExportFormat } from '../types';
 import { getSettings } from '../services/appSettingsService';
 import DisplaySettings from '../components/settings/DisplaySettings';
@@ -11,7 +11,6 @@ import LinksSettings from '../components/settings/LinksSettings';
 import AgendaSettings from '../components/settings/AgendaSettings';
 import AlertsManager from '../components/settings/AlertsManager';
 import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
-import { Icon } from '../utils/icons';
 
 interface Props {
   compactMode: boolean;

@@ -1,13 +1,12 @@
 import {
   faUsers, faPaperPlane, faClipboardCheck, faChartBar, faDiagramProject,
-  faList, faMessage, faClockRotateLeft, faGear, faEllipsis,
+  faList, faClockRotateLeft, faGear, faEllipsis,
   faEye, faPencil, faTrash, faDownload, faUpload, faFileImport,
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
-  faRotateLeft, faChevronDown, faChevronRight, faArrowsUpDown,
-  faCaretUp, faCaretDown, faEnvelope, faGripVertical,
+  faRotateLeft, faChevronDown, faChevronRight, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
   faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
-  faCrown, faUser, faBell, faChartLine, faCommentDots, faArrowRight, faFilter,
+  faCrown, faUser, faBell, faCommentDots, faArrowRight, faFilter,
   faLightbulb, faLayerGroup, faCalendarDays, faShareNodes
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

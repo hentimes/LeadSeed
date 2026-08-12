@@ -1,6 +1,4 @@
 import { useState, useMemo, useRef } from 'react';
-import { Icon } from '../../utils/icons';
-import type { Lead, LeadList, LeadStatus } from '../../types';
 import {
   parseJSONFile,
   parseExcelFile,
@@ -19,7 +17,7 @@ interface Props {
 }
 
 export default function ImportModal({ existingRuts, existingPhones, onImport, onClose }: Props) {
-  const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
+  const [, setRawRows] = useState<Record<string, string>[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [preview, setPreview] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState('');

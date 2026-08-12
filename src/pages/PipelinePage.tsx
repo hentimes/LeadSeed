@@ -10,7 +10,6 @@ import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
 import { createFollowUpTaskForLead } from '../services/tasksService';
 
-const STATUS_ORDER: LeadStatus[] = ['nuevo', 'contactado', 'interesado', 'convertido', 'descartado'];
 
 export default function PipelinePage() {
   const { user } = useAuth();

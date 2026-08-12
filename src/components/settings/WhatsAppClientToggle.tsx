@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../../services/appSettingsService';
-import type { AppSettings } from '../../types';
 import { Icon } from '../../utils/icons';
 
 export default function WhatsAppClientToggle() {

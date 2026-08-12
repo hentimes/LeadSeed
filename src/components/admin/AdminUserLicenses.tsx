@@ -1,4 +1,3 @@
-import React from 'react';
 import { Icon } from '../../utils/icons';
 import type { Feature, Plan, PlanFeature, Profile, UserFeatureOverride } from '../../types';
 

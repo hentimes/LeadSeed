@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
 import type { Page } from '../../types';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import FunnelRow from '../../components/dashboard/FunnelRow';
 import MonthlyChart from '../../components/dashboard/MonthlyChart';
-import SectionHeader from '../../components/dashboard/SectionHeader';
 import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
 
@@ -103,27 +101,6 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
   const monthlyGrowth = calculateMonthlyGrowth();
   const isGrowthPositive = monthlyGrowth >= 0;
 
-  const renderTrend = (value: number, type: string, periodLabel: string = 'ayer') => {
-    let color = 'text-[#8F9BB3]';
-    let icon = '';
-    if (value > 0) {
-      color = 'text-state-success';
-      icon = '↑ ';
-    } else if (value < 0) {
-      color = 'text-state-danger';
-      icon = '↓ ';
-    } else {
-      icon = '- ';
-    }
-
-    return (
-      <div className="mt-1">
-        <span className={`text-[10px] font-bold ${color}`}>
-          {icon}{Math.abs(value)}{type} <span className="font-medium text-ink-secondary">vs {periodLabel}</span>
-        </span>
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col gap-4 animate-ios-slide-up pb-2">

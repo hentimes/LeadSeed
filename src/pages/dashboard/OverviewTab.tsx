@@ -1,4 +1,3 @@
-import React from 'react';
 import type { AppSettings, Page } from '../../types';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import GoalRingCard from '../../components/dashboard/GoalRingCard';

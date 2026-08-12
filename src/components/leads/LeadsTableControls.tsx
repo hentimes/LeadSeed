@@ -40,9 +40,7 @@ interface Props {
 }
 
 export default function LeadsTableControls({
-  leftActions, bulkActions, search, onSearchChange, totalCount, visibleCount, selectedCount,
-  currentPage, pageCount, pageSize, isLoadingPage, onPageChange,
-  lists, filterListId, onFilterChange, filterStatus, onFilterStatusChange,
+  leftActions, bulkActions, search, onSearchChange, lists, filterListId, onFilterChange, filterStatus, onFilterStatusChange,
   filterDate, onFilterDateChange, filterOrigin, onFilterOriginChange,
   filterCaptureLinkId, onFilterCaptureLinkIdChange,
   filterSourceChannel, onFilterSourceChannelChange,

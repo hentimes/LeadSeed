@@ -195,7 +195,7 @@ async function abrirWhatsAppWeb(numero: string, mensaje: string) {
   };
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.type === "LEAD_ALERTS_MARK_SEEN") {
     // Este mensaje lo manda la UI al abrirse. Ademas de los leads hay que
     // apagar mensajes y criticos: ahora tambien suman al badge, y si no se

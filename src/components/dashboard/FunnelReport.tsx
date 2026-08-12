@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import { Icon } from '../../utils/icons';
 

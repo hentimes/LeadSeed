@@ -1,4 +1,3 @@
-import React from 'react';
 import { Icon } from '../../utils/icons';
 
 interface FunnelRowProps {
@@ -18,9 +17,6 @@ interface FunnelRowProps {
 export default function FunnelRow({
   label,
   count,
-  color,
-  iconBg,
-  iconColor,
   percentTotal,
   prevConv,
   prevLabel,

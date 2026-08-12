@@ -28,8 +28,8 @@ export async function exportBackup(): Promise<void> {
   });
 }
 
-export async function importBackup(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
+export async function importBackup(_file: File): Promise<string> {
+  return new Promise((_resolve, reject) => {
     reject(new Error('La importación de respaldos ya no es soportada en la versión Cloud. Usa la funcionalidad de "Importar Leads".'));
   });
 }

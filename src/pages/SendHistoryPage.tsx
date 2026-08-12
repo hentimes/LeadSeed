@@ -18,7 +18,7 @@ interface Props {
 
 const PAGE_SIZE = 8;
 
-export default function SendHistoryPage({ onNavigate, onViewTemplate }: Props) {
+export default function SendHistoryPage({ onViewTemplate }: Props) {
   const [logs, setLogs] = useState<EnrichedLog[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [expandedId, setExpandedId] = useState<string | number | null>(null);

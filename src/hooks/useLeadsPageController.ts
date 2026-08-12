@@ -137,7 +137,7 @@ export function useLeadsPageController() {
     return appointment?.id || '';
   }, []);
 
-  const confirmDeleteLeadWithAgenda = (leadName: string, isPermanent: boolean): Promise<boolean> => {
+  const confirmDeleteLeadWithAgenda = (_leadName: string, isPermanent: boolean): Promise<boolean> => {
     const actionLabel = isPermanent ? 'eliminar definitivamente' : 'eliminar';
     return getPlatform().dialogs.confirm(
       `Este lead tiene una hora agendada. Si confirmas, el sistema va a ${actionLabel} este lead y se va a eliminar tambien la hora agendada. Estas seguro?`,

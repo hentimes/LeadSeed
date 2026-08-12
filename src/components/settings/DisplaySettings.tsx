@@ -1,5 +1,4 @@
-import React from 'react';
-import type { ColumnDef } from '../../components/ColumnSelector';
+import type { ColumnDef } from '../../types';
 
 interface Props {
   compactMode: boolean;

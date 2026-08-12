@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import { Icon } from '../../utils/icons';
-import SectionHeader from './SectionHeader';
 import SourceBreakdownChart from './charts/SourceBreakdownChart';
 import StageConversionChart from './charts/StageConversionChart';
 import DynamicAcquisitionChart, { ChartVisualType } from './charts/DynamicAcquisitionChart';

@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Page } from '../../types';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 

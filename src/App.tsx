@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import OnboardingPlanSelect from './components/onboarding/OnboardingPlanSelect';
-import type { ColumnDef } from './components/ColumnSelector';
+import type { ColumnDef } from './types';
 import { useAuth } from './contexts/AuthContext';
 import type { Page } from './types';
 import AppLayout from './components/layout/AppLayout';

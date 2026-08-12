@@ -1116,9 +1116,19 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   `develop` y `design`, con cancelacion de corridas superadas.
 - [HECHO] Scripts `lint`, `lint:fix`, `test`, `test:watch`, `test:coverage` y `typecheck`. Campo
   `engines` fijado en Node 20 o superior.
-- [PENDIENTE] Endurecer `tsconfig.json`: `noUnusedLocals`, `noUnusedParameters`,
-  `noUncheckedIndexedAccess`, `paths` para el alias `@`, y un `tsconfig.node.json`. Se deja para
-  despues de bajar el volumen de warnings, porque hoy anadiria ruido sobre ruido.
+- [HECHO] `tsconfig.json` endurecido el `2026-08-12`: `noUnusedLocals` y `noUnusedParameters`
+  activadas, `paths` para el alias `@` que existia en Vite pero TypeScript no resolvia, y
+  `tsconfig.node.json` para que `vite.config`, `vitest.config` y `eslint.config` tambien se
+  typecheveen.
+
+  Afloraron 73 errores, todos codigo muerto: 37 imports huerfanos, 34 props y parametros que los
+  componentes recibian sin usar, y 5 declaraciones enteras sin consumidor.
+
+- [PENDIENTE] `noUncheckedIndexedAccess` (124 errores) y `exactOptionalPropertyTypes` (68).
+  **Deliberadamente no activadas.** Cada arreglo exige decidir que ocurre cuando falta el indice, y
+  resolverlo en masa seria inventar fallbacks: un `!` o un `?? valorPorDefecto` puestos a ciegas
+  convierten un fallo ruidoso en uno silencioso, que es peor. Es un frente propio, no un ajuste de
+  configuracion.
 - [PENDIENTE] Reducir los ~212 warnings por bloques. No son un objetivo en si: bajan solos al ejecutar
   13.4, 13.6 y 13.7.
 

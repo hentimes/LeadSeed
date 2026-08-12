@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from '../../utils/icons';
 import type { Profile } from '../../types';
 import { loadAdminUserHeatmap } from '../../services/adminService';
