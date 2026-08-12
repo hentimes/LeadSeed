@@ -1320,8 +1320,15 @@ archivos) sino el DOM dentro de hooks de dominio.
     portan a movil, se reescriben con el equivalente nativo. Envolverlos en un puerto solo agregaria
     indireccion sin quitar acoplamiento.
 
-  Cerrados despues `Deeplink` y `MessageBus`. Queda solo `OAuthLauncher` (`oauthTab.ts` mas
-  `useEmailChannels.ts`).
+  Cerrados despues `Deeplink`, `MessageBus` y `OAuthLauncher`. **Los cinco puertos que bloqueaban
+  dominio reutilizable estan hechos.**
+
+  `OAuthLauncher` elimino ademas una duplicacion real: `LoginPage` y `useEmailChannels` calculaban
+  por su cuenta, con codigo identico, si corrian dentro de la extension y de ahi derivaban la URL de
+  retorno. Ahora ambos preguntan al puerto. El contrato distingue los dos flujos posibles, que no son
+  cosmeticamente distintos: `launch` devuelve la URL de callback cuando la app sigue viva, y `null`
+  cuando la plataforma navego fuera y el proveedor traera de vuelta al usuario despues. `oauthTab.ts`
+  se movio de `utils/` a `platform/`, que es donde le corresponde.
 
   Al migrar `waHelper` se separo lo que estaba mezclado: construir la URL de WhatsApp segun la
   preferencia del usuario es logica de dominio y se quedo, extraida a `buildWhatsAppUrl` y ahora con
@@ -1341,8 +1348,19 @@ archivos) sino el DOM dentro de hooks de dominio.
   Resultado: fuera de `src/platform/` y de esa lista, los unicos `chrome.*` que quedan viven en
   `App.tsx` y `LoginPage.tsx`, que son la shell de la extension y su uso ahi es legitimo.
 
-- [PENDIENTE] Mover los modulos de la lista de exentos a `src/platform/`. Mientras sigan en
-  `services/` y `utils/` conviven con dominio portable, que es la mezcla que este bloque deshace.
+**Estado final del bloque al `2026-08-12`: no queda ni un archivo de dominio acoplado a Chrome.**
+Los `chrome.*` que sobreviven estan en `src/platform/`, en los dos puntos de entrada de la extension
+(`background.ts`, `offscreen.ts`), en `App.tsx` (la shell) y en los cinco servicios de plataforma
+declarados como exentos.
+
+- [PENDIENTE] Mover a `src/platform/` los cinco servicios que siguen en `services/`
+  (`alertNotifier`, `offscreenAudio`, `extensionBadgeTheme` y los dos de background) mas
+  `lib/chromeStorageAdapter.ts`. Es reubicacion, no refactor: su codigo ya es correcto, pero
+  conviviendo en `services/` con dominio portable confunden sobre que se porta y que se reescribe.
+- [PENDIENTE] Los cuatro puertos que la auditoria listaba y que **no se van a construir**:
+  `Notifier`, `BadgeCounter`, `BackgroundScheduler` y el audio. Envolverlos no quitaria acoplamiento,
+  solo agregaria indireccion: no se portan a movil, se reescriben con el equivalente nativo. Queda
+  declarado para que nadie los reabra como deuda pendiente.
 
 - [HECHO] Efecto colateral util del puerto: el `try/catch` vacio alrededor de `chrome.storage`, que
   estaba repetido en cada llamador para tolerar el desarrollo web sin extension, ahora vive una sola

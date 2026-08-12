@@ -127,6 +127,27 @@ export interface MessageBusPort {
   subscribe(listener: (message: AppMessage) => void): () => void;
 }
 
+/**
+ * Flujo de OAuth con un proveedor externo.
+ *
+ * Existen dos formas de resolverlo y la diferencia no es cosmetica:
+ *
+ * - la app puede quedarse viva y recibir la URL de callback (extension de
+ *   Chrome con `chrome.identity`, o `expo-auth-session` en movil)
+ * - la app navega fuera y el proveedor devuelve al usuario despues (web plano)
+ *
+ * `launch` devuelve la URL de callback en el primer caso y `null` en el
+ * segundo, donde no hay retorno inmediato porque la pagina ya se fue.
+ */
+export interface OAuthLauncherPort {
+  /** URL de retorno que se declara al proveedor. */
+  redirectUrl(): string;
+  /** true si el flujo puede completarse sin abandonar la aplicacion. */
+  canCompleteInApp(): boolean;
+  /** Ejecuta el flujo. Devuelve la URL de callback, o null si navego fuera. */
+  launch(oauthUrl: string): Promise<string | null>;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
@@ -134,4 +155,5 @@ export interface Platform {
   storage: StoragePort;
   deeplink: DeeplinkPort;
   messageBus: MessageBusPort;
+  oauth: OAuthLauncherPort;
 }

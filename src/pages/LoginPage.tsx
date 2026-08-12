@@ -1,29 +1,27 @@
 import React from 'react';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import { chartColors } from '../design/palette';
-import { launchOAuthInTab } from '../utils/oauthTab';
+import { webOAuth } from '../platform/web';
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
-      const isExtension = window.location.protocol === 'chrome-extension:';
-      const redirectUrl =
-        isExtension && chrome.identity
-          ? chrome.identity.getRedirectURL()
-          : `${window.location.origin}${window.location.pathname}`;
+      const oauthUrl = await beginGoogleLogin(webOAuth.redirectUrl(), webOAuth.canCompleteInApp());
+      if (!oauthUrl) return;
 
-      const oauthUrl = await beginGoogleLogin(redirectUrl, isExtension);
+      try {
+        const callbackUrl = await webOAuth.launch(oauthUrl);
 
-      if (isExtension && oauthUrl && chrome.identity) {
-        try {
-          const callbackUrl = await launchOAuthInTab(oauthUrl, redirectUrl);
-          await completeGoogleExtensionLogin(callbackUrl);
-          window.location.reload();
-        } catch (callbackError) {
-          const message =
-            callbackError instanceof Error ? callbackError.message : 'No se pudo completar el login.';
-          alert(message);
-        }
+        // Sin callback la plataforma navego fuera: el proveedor traera de
+        // vuelta al usuario y no hay nada mas que hacer en este ciclo.
+        if (!callbackUrl) return;
+
+        await completeGoogleExtensionLogin(callbackUrl);
+        window.location.reload();
+      } catch (callbackError) {
+        const message =
+          callbackError instanceof Error ? callbackError.message : 'No se pudo completar el login.';
+        alert(message);
       }
     } catch (error) {
       console.error('Error al iniciar sesion con Google:', error);

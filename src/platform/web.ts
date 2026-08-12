@@ -3,6 +3,7 @@
    APIs de `chrome` estan permitidos, y existe precisamente para que no
    aparezcan en ningun otro lado. Ver src/platform/types.ts. */
 
+import { launchOAuthInTab } from './oauthTab';
 import type {
   AppMessage,
   AppRoute,
@@ -11,6 +12,7 @@ import type {
   KeyValueStorePort,
   MessageBusPort,
   NavigationPort,
+  OAuthLauncherPort,
   Platform,
   StoragePort,
 } from './types';
@@ -169,12 +171,46 @@ export const webMessageBus: MessageBusPort = {
   },
 };
 
+/**
+ * OAuth en la extension de Chrome.
+ *
+ * Concentra la deteccion de entorno que antes estaba duplicada, identica, en
+ * `LoginPage` y en `useEmailChannels`: ambos calculaban por su cuenta si
+ * corrian dentro de la extension y de ahi derivaban la URL de retorno.
+ */
+export const webOAuth: OAuthLauncherPort = {
+  canCompleteInApp() {
+    return window.location.protocol === 'chrome-extension:' && Boolean(chrome?.identity);
+  },
+
+  redirectUrl() {
+    // `chrome.identity.getRedirectURL()` devuelve un dominio reservado
+    // (<id>.chromiumapp.org) que no resuelve a ningun sitio real; solo sirve
+    // como marca de fin de flujo. Ver el comentario de oauthTab.ts.
+    return this.canCompleteInApp()
+      ? chrome.identity.getRedirectURL()
+      : `${window.location.origin}${window.location.pathname}`;
+  },
+
+  async launch(oauthUrl: string) {
+    if (this.canCompleteInApp()) {
+      return launchOAuthInTab(oauthUrl, this.redirectUrl());
+    }
+
+    // Web plano: se abandona la pagina y el proveedor traera de vuelta al
+    // usuario. No hay callback que devolver.
+    window.location.assign(oauthUrl);
+    return null;
+  },
+};
+
 export const webPlatform: Platform = {
   dialogs: webDialogs,
   navigation: webNavigation,
   storage: webStorage,
   deeplink: webDeeplink,
   messageBus: webMessageBus,
+  oauth: webOAuth,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */

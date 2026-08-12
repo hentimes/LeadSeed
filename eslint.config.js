@@ -202,6 +202,8 @@ export default tseslint.config(
       'src/background.ts',
       'src/offscreen.ts',
       'src/lib/chromeStorageAdapter.ts',
+      // Flujo OAuth por pestaña, especifico de chrome.identity.
+      'src/platform/oauthTab.ts',
       // Notificaciones, badge y audio: superficie nativa de Chrome.
       'src/services/alertNotifier.ts',
       'src/services/offscreenAudio.ts',
@@ -209,9 +211,7 @@ export default tseslint.config(
       // Servicios que corren dentro del service worker MV3.
       'src/services/backgroundLeadAlertsService.ts',
       'src/services/backgroundAgendaAlertsService.ts',
-      // OAuth por pestaña: pendiente de convertirse en el puerto OAuthLauncher.
-      'src/utils/oauthTab.ts',
-      'src/hooks/useEmailChannels.ts',
+
     ],
     rules: {
       'no-restricted-globals': 'off',

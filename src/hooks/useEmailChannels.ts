@@ -3,7 +3,7 @@ import { getSettings, saveSettings } from '../services/appSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 import { getMyCalendarConnectionStatus } from '../services/agendaService';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
-import { launchOAuthInTab } from '../utils/oauthTab';
+import { webOAuth } from '../platform/web';
 import {
   createChannel,
   listChannels,
@@ -324,25 +324,21 @@ export function useEmailChannels() {
       setErrorMessage('');
       setChannelMessage('');
 
-      const isExtension = window.location.protocol === 'chrome-extension:';
-      const redirectUrl =
-        isExtension && chrome.identity
-          ? chrome.identity.getRedirectURL()
-          : `${window.location.origin}${window.location.pathname}`;
-
-      const oauthUrl = await beginGoogleLogin(redirectUrl, isExtension, {
+      const oauthUrl = await beginGoogleLogin(webOAuth.redirectUrl(), webOAuth.canCompleteInApp(), {
         scopes: GOOGLE_EMAIL_SCOPES,
       });
 
-      if (isExtension && oauthUrl && chrome.identity) {
-        const callbackUrl = await launchOAuthInTab(oauthUrl, redirectUrl);
-        await completeGoogleExtensionLogin(callbackUrl);
-      } else if (oauthUrl) {
-        window.location.assign(oauthUrl);
-        return;
-      } else {
+      if (!oauthUrl) {
         throw new Error('No se pudo iniciar la conexion con Google.');
       }
+
+      const callbackUrl = await webOAuth.launch(oauthUrl);
+
+      // Sin callback la plataforma navego fuera: el proveedor traera de vuelta
+      // al usuario y no hay nada mas que hacer en este ciclo.
+      if (!callbackUrl) return;
+
+      await completeGoogleExtensionLogin(callbackUrl);
 
       const nextStatus = await reloadGoogleStatus();
       setChannelMessage(
