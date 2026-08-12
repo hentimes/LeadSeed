@@ -14,6 +14,7 @@ function plataformaFalsa(): Platform {
     messageBus: { isAvailable: vi.fn(() => false), send: vi.fn(async () => {}), subscribe: vi.fn(() => () => {}) },
     oauth: { redirectUrl: vi.fn(() => ''), canCompleteInApp: vi.fn(() => false), launch: vi.fn(async () => null) },
     fileSaver: { save: vi.fn(async () => {}) },
+    scrollLock: { lock: vi.fn(), unlock: vi.fn() },
   };
 }
 
@@ -53,7 +54,8 @@ describe('registro de plataforma', () => {
     const p = getPlatform();
 
     expect(Object.keys(p).sort()).toEqual([
-      'deeplink', 'dialogs', 'fileSaver', 'messageBus', 'navigation', 'oauth', 'storage',
+      'deeplink', 'dialogs', 'fileSaver', 'messageBus', 'navigation', 'oauth', 'scrollLock',
+      'storage',
     ]);
   });
 

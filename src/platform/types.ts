@@ -163,6 +163,25 @@ export interface FileSaverPort {
   save(file: { content: Blob | string; filename: string; mimeType: string }): Promise<void>;
 }
 
+/**
+ * Impide que el fondo se desplace mientras hay una superficie modal abierta.
+ *
+ * Se modela como puerto y no se deja como DOM suelto porque la **intencion** si
+ * es comun a las plataformas: mientras el usuario esta en un formulario o una
+ * ficha, lo de detras no debe moverse. Lo que cambia es el mecanismo: en web
+ * hay que tocar el `overflow` del body a mano; en React Native el componente
+ * `Modal` ya lo resuelve, asi que la implementacion nativa sera vacia.
+ *
+ * Deuda de fondo, distinta de esta: bloquear el scroll es responsabilidad del
+ * componente que abre el modal, no del hook que gestiona los datos. Que esto
+ * viva en `useLeadsPageController` y `useLeadDetail` es un sintoma de que esos
+ * hooks hacen demasiado. Se corrige al dividirlos, en el bloque 6.
+ */
+export interface ScrollLockPort {
+  lock(): void;
+  unlock(): void;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
@@ -172,4 +191,5 @@ export interface Platform {
   messageBus: MessageBusPort;
   oauth: OAuthLauncherPort;
   fileSaver: FileSaverPort;
+  scrollLock: ScrollLockPort;
 }

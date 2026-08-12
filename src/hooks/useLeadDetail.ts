@@ -27,6 +27,7 @@ import {
 import { markLeadAsRead } from '../services/leadsService';
 import { isActiveAppointment } from '../utils/appointmentStatus';
 import { getErrorMessage } from '../utils/errorMessage';
+import { getPlatform } from '../platform/registry';
 
 const TECHNICAL_METADATA_KEYS = new Set([
   'raw_payload',
@@ -283,12 +284,10 @@ export function useLeadDetail(lead: Lead) {
   }, [leadId]);
 
   useEffect(() => {
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    document.body.style.overflow = 'hidden';
-    return () => {
-      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-      document.body.style.overflow = 'auto';
-    };
+    const { scrollLock } = getPlatform();
+
+    scrollLock.lock();
+    return () => scrollLock.unlock();
   }, []);
 
   const submitPdfRequest = async (download: boolean) => {

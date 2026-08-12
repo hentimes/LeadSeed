@@ -89,17 +89,15 @@ export function useLeadsPageController() {
   }, []);
 
   useEffect(() => {
+    const { scrollLock } = getPlatform();
+
     if (showForm) {
-      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-      document.body.style.overflow = 'hidden';
+      scrollLock.lock();
     } else {
-      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-      document.body.style.overflow = 'auto';
+      scrollLock.unlock();
     }
-    return () => {
-      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-      document.body.style.overflow = 'auto';
-    };
+
+    return () => scrollLock.unlock();
   }, [showForm]);
 
   const existingRuts = useMemo(() => {

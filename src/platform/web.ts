@@ -21,6 +21,7 @@ import type {
   NavigationPort,
   OAuthLauncherPort,
   Platform,
+  ScrollLockPort,
   StoragePort,
 } from './types';
 
@@ -240,6 +241,15 @@ export const webFileSaver: FileSaverPort = {
   },
 };
 
+export const webScrollLock: ScrollLockPort = {
+  lock() {
+    document.body.style.overflow = 'hidden';
+  },
+  unlock() {
+    document.body.style.overflow = 'auto';
+  },
+};
+
 export const webPlatform: Platform = {
   dialogs: webDialogs,
   navigation: webNavigation,
@@ -248,6 +258,7 @@ export const webPlatform: Platform = {
   messageBus: webMessageBus,
   oauth: webOAuth,
   fileSaver: webFileSaver,
+  scrollLock: webScrollLock,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */
