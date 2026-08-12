@@ -1,5 +1,6 @@
 import type { Lead } from '../types';
 import { getSettings } from '../services/appSettingsService';
+import { webDeeplink, webMessageBus } from '../platform/web';
 
 /**
  *   - < 9 dígitos → rechazar
@@ -32,27 +33,41 @@ export function replaceVariables(text: string, lead: Lead): string {
     .replace(/\{notes\}/gi, lead.notes);
 }
 
+/**
+ * Construye la URL de WhatsApp segun la preferencia del usuario.
+ *
+ * Es logica de dominio y se queda aca: que URL corresponde a cada preferencia
+ * no depende de la plataforma. Lo unico que se delega al puerto es el acto de
+ * abrirla.
+ */
+export function buildWhatsAppUrl(
+  phone: string,
+  message: string,
+  preference: 'web' | 'app',
+): string {
+  const clean = phone.replace(/\D/g, '');
+  const encoded = encodeURIComponent(message);
+
+  // `api.whatsapp.com` es el protocolo universal: lanza la app si esta
+  // instalada. `web.whatsapp.com` fuerza el cliente web.
+  const host = preference === 'app' ? 'api.whatsapp.com' : 'web.whatsapp.com';
+
+  return `https://${host}/send?phone=${clean}&text=${encoded}`;
+}
+
 export async function openWhatsApp(phone: string, message: string = ''): Promise<void> {
   const settings = await getSettings();
   const pref = settings.whatsappClientPreference || 'web';
 
-  if (pref === 'web' && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-    chrome.runtime.sendMessage({
-      type: 'OPEN_WHATSAPP_WEB',
-      payload: { phone, message }
-    }).catch(console.error);
-  } else {
-    const clean = phone.replace(/\D/g, '');
-    const encoded = encodeURIComponent(message);
-    
-    if (pref === 'app') {
-      // Abre usando el protocolo universal de WhatsApp (Lanza la app si está instalada)
-      window.open(`https://api.whatsapp.com/send?phone=${clean}&text=${encoded}`, '_blank');
-    } else {
-      // Fallback a web.whatsapp.com en una nueva pestaña
-      window.open(`https://web.whatsapp.com/send?phone=${clean}&text=${encoded}`, '_blank');
-    }
+  // Con preferencia `web` y un proceso de fondo disponible, se delega en el:
+  // reutiliza una pestaña de WhatsApp Web ya abierta en vez de abrir una nueva
+  // por cada lead, que es lo que pasaria con `openExternal`.
+  if (pref === 'web' && webMessageBus.isAvailable()) {
+    await webMessageBus.send({ type: 'OPEN_WHATSAPP_WEB', payload: { phone, message } });
+    return;
   }
+
+  webDeeplink.openExternal(buildWhatsAppUrl(phone, message, pref));
 }
 
 export function openWhatsAppForLeads(

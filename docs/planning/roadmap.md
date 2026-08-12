@@ -1320,9 +1320,18 @@ archivos) sino el DOM dentro de hooks de dominio.
     portan a movil, se reescriben con el equivalente nativo. Envolverlos en un puerto solo agregaria
     indireccion sin quitar acoplamiento.
 
-  Quedan pendientes de verdad tres puertos, los que si bloquean dominio reutilizable:
-  `OAuthLauncher` (`oauthTab.ts` mas `useEmailChannels.ts`), `AppMessageBus` (`useLeadAlerts.ts`) y
-  `Deeplink` (`waHelper.ts`).
+  Cerrados despues `Deeplink` y `MessageBus`. Queda solo `OAuthLauncher` (`oauthTab.ts` mas
+  `useEmailChannels.ts`).
+
+  Al migrar `waHelper` se separo lo que estaba mezclado: construir la URL de WhatsApp segun la
+  preferencia del usuario es logica de dominio y se quedo, extraida a `buildWhatsAppUrl` y ahora con
+  tests; lo unico que salio al puerto es el acto de abrirla. El puerto **no conoce WhatsApp**, y no
+  debe conocerlo. Se conserva la via por proceso de fondo cuando esta disponible, porque reutiliza
+  una pestaña de WhatsApp Web ya abierta en vez de abrir una nueva por cada lead.
+
+  `MessageBus` absorbe el `.catch()` vacio que cada llamador repetia para tolerar el service worker
+  dormido. En MV3 eso es un estado normal, no un error, y no tenia por que estar en la capa de
+  dominio.
 
 - [HECHO] Regla de frontera extendida: `chrome` prohibido en `services`, `repositories`, `hooks`,
   `utils` y `config`. Los modulos de plataforma quedan exentos por una **lista explicita en

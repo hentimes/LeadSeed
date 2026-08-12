@@ -4,9 +4,12 @@
    aparezcan en ningun otro lado. Ver src/platform/types.ts. */
 
 import type {
+  AppMessage,
   AppRoute,
+  DeeplinkPort,
   DialogsPort,
   KeyValueStorePort,
+  MessageBusPort,
   NavigationPort,
   Platform,
   StoragePort,
@@ -124,10 +127,54 @@ export const webStorage: StoragePort = {
   local: chromeArea('local'),
 };
 
+export const webDeeplink: DeeplinkPort = {
+  openExternal(url: string) {
+    window.open(url, '_blank');
+  },
+};
+
+/**
+ * Canal de mensajes sobre `chrome.runtime`.
+ *
+ * `isAvailable` comprueba `chrome.runtime.id` y no solo la existencia de
+ * `chrome`: en una pagina web servida fuera de la extension el objeto puede
+ * existir parcialmente sin que haya un service worker detras.
+ */
+export const webMessageBus: MessageBusPort = {
+  isAvailable() {
+    return typeof chrome !== 'undefined' && Boolean(chrome.runtime?.id);
+  },
+
+  async send(message: AppMessage) {
+    if (!this.isAvailable()) return;
+    try {
+      await chrome.runtime.sendMessage(message);
+    } catch {
+      // En MV3 el service worker puede estar dormido. Es un estado normal:
+      // el receptor reconcilia su estado al despertar.
+    }
+  },
+
+  subscribe(listener: (message: AppMessage) => void) {
+    if (!this.isAvailable()) return () => {};
+
+    const handler = (message: unknown) => {
+      if (message && typeof message === 'object' && 'type' in message) {
+        listener(message as AppMessage);
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handler);
+    return () => chrome.runtime.onMessage.removeListener(handler);
+  },
+};
+
 export const webPlatform: Platform = {
   dialogs: webDialogs,
   navigation: webNavigation,
   storage: webStorage,
+  deeplink: webDeeplink,
+  messageBus: webMessageBus,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */

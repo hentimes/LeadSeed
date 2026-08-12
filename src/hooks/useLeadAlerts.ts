@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { LeadAlertEvent } from '../types';
+import { webMessageBus } from '../platform/web';
 
 const TOAST_DURATION_MS = 8000;
 
@@ -12,24 +13,24 @@ export function useLeadAlerts(onLeadsChanged?: () => void) {
   const [alerts, setAlerts] = useState<LeadAlertEvent[]>([]);
 
   useEffect(() => {
-    if (!chrome?.runtime?.id) return;
+    if (!webMessageBus.isAvailable()) return;
 
-    chrome.runtime.sendMessage({ type: 'LEAD_ALERTS_MARK_SEEN' }).catch(() => {
-      // El service worker puede estar dormido; el badge se corrige al despertar.
-    });
+    // El puerto absorbe el caso del service worker dormido, que en MV3 es un
+    // estado normal: el badge se corrige cuando despierta.
+    void webMessageBus.send({ type: 'LEAD_ALERTS_MARK_SEEN' });
 
-    const listener = (message: { type?: string; events?: LeadAlertEvent[] }) => {
-      if (message?.type !== 'LEAD_ALERTS_INCOMING' || !message.events?.length) return;
+    return webMessageBus.subscribe((message) => {
+      if (message.type !== 'LEAD_ALERTS_INCOMING') return;
 
-      setAlerts((current) => [...message.events!, ...current].slice(0, 5));
+      const events = message.events as LeadAlertEvent[] | undefined;
+      if (!events?.length) return;
+
+      setAlerts((current) => [...events, ...current].slice(0, 5));
       onLeadsChanged?.();
 
       // Con la extension abierta el usuario ya esta viendo la alerta.
-      chrome.runtime.sendMessage({ type: 'LEAD_ALERTS_MARK_SEEN' }).catch(() => {});
-    };
-
-    chrome.runtime.onMessage.addListener(listener);
-    return () => chrome.runtime.onMessage.removeListener(listener);
+      void webMessageBus.send({ type: 'LEAD_ALERTS_MARK_SEEN' });
+    });
   }, [onLeadsChanged]);
 
   useEffect(() => {

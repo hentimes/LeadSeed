@@ -91,9 +91,47 @@ export interface StoragePort {
   local: KeyValueStorePort;
 }
 
+/**
+ * Apertura de enlaces fuera de la aplicacion.
+ *
+ * En la extension es `window.open`; en movil, `Linking.openURL`. El puerto
+ * expone solo la intencion, no el mecanismo, y deliberadamente **no** conoce
+ * WhatsApp ni ningun destino concreto: que URL construir es una decision de
+ * dominio y vive en `utils/waHelper.ts`, no aqui.
+ */
+export interface DeeplinkPort {
+  openExternal(url: string): void;
+}
+
+/** Mensaje entre la interfaz y el proceso de fondo. */
+export interface AppMessage {
+  type: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Canal de mensajes con el proceso de fondo.
+ *
+ * En la extension es `chrome.runtime`; en movil serian notificaciones push o un
+ * emisor de eventos en proceso.
+ *
+ * `send` no rechaza si no hay nadie escuchando. En MV3 el service worker puede
+ * estar dormido, y eso es un estado normal, no un error: cada llamador estaba
+ * repitiendo un `.catch()` vacio para tolerarlo. El puerto lo absorbe.
+ */
+export interface MessageBusPort {
+  /** Indica si hay un proceso de fondo con el que hablar. */
+  isAvailable(): boolean;
+  send(message: AppMessage): Promise<void>;
+  /** Escucha mensajes entrantes. Devuelve la funcion para cancelar. */
+  subscribe(listener: (message: AppMessage) => void): () => void;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
   navigation: NavigationPort;
   storage: StoragePort;
+  deeplink: DeeplinkPort;
+  messageBus: MessageBusPort;
 }

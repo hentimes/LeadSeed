@@ -209,12 +209,8 @@ export default tseslint.config(
       // Servicios que corren dentro del service worker MV3.
       'src/services/backgroundLeadAlertsService.ts',
       'src/services/backgroundAgendaAlertsService.ts',
-      // OAuth por pestaña y puente con WhatsApp: pendientes de convertirse en
-      // los puertos OAuthLauncher y Deeplink.
+      // OAuth por pestaña: pendiente de convertirse en el puerto OAuthLauncher.
       'src/utils/oauthTab.ts',
-      'src/utils/waHelper.ts',
-      // Consumen el bus de mensajes de la extension. Pendiente AppMessageBus.
-      'src/hooks/useLeadAlerts.ts',
       'src/hooks/useEmailChannels.ts',
     ],
     rules: {
