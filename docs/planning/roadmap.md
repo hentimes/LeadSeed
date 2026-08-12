@@ -1524,6 +1524,46 @@ web: un fallback silencioso reintroduciria exactamente el acoplamiento que este 
 Que falta para que el bloque 5 este cerrado del todo: las 19 marcas de DOM. Con ellas resueltas, el
 entry de Expo llamaria `setPlatform(nativePlatform)` y ningun archivo de dominio cambiaria.
 
+### Capitulo 13.6.c - Retiro del DOM de la capa de dominio
+
+Ejecutado el `2026-08-12`. **La deuda del bloque 5 baja de 29 marcas a 2.**
+
+Cuatro puertos nuevos, cada uno porque la intencion si cruza de plataforma aunque el mecanismo no:
+
+- `FileSaver`: entregar un archivo generado. En web es un `<a download>` sintetico; en movil,
+  `expo-file-system` mas la hoja de compartir. El puerto recibe el contenido y no una URL de objeto,
+  porque crear y revocar esa URL es un detalle del navegador.
+- `ScrollLock`: impedir que el fondo se desplace con un modal abierto. En movil el componente `Modal`
+  ya lo resuelve, asi que la implementacion nativa sera vacia.
+- `ProtectedFile`: abrir un archivo que el servidor solo entrega si recibe credenciales en el cuerpo.
+  Sustituye el truco de abrir ventana mas enviar un `<form>` oculto por POST. Devuelve un resultado
+  en vez de lanzar, porque el fallo mas comun no es un error de programa sino que el navegador
+  bloqueo la ventana emergente, y el dominio necesita distinguirlo para mostrar el mensaje correcto.
+- (mas `Deeplink`, `MessageBus`, `KeyValueStore`, `Dialogs`, `Navigation` y `OAuthLauncher` de las
+  fases previas: **nueve puertos en total**.)
+
+Dos correcciones de fallos reales encontradas al migrar, no buscadas:
+
+- `exportData` y `backup` solo revocaban la URL de objeto si el `click()` tenia exito. Ahora va en un
+  `finally`: una URL sin revocar retiene el blob completo en memoria hasta recargar la pagina.
+- El formulario oculto del PDF solo se retiraba del DOM en el camino feliz. Tambien pasa a `finally`.
+
+Cuatro modulos se declaran **mecanica de interfaz web y no dominio**, con motivo escrito en
+`eslint.config.js`: `useAppKeyboardShortcuts` (un atajo de teclado no existe en un telefono),
+`useFlipOnOverflow` y `useResponsiveColumns` (medir el viewport lo resuelve el layout nativo), e
+`imageCompression` (en movil es `expo-image-manipulator`, sustitucion y no adaptacion). No son deuda:
+son decision.
+
+**Segunda ampliacion de la regla en el mismo dia.** Al volver a medir aparecieron mas globals del DOM
+que la regla no veia: `ResizeObserver`, `FileReader` e `Image`, que se usaban sin prefijo y por eso
+pasaban limpios. Es la misma clase de error que la auditoria senalo: la regla cubria menos de lo que
+yo creia. Ahora estan incluidos.
+
+- [PENDIENTE] Las 2 marcas restantes, ambas de `FileReader` en `importParser.ts`. No se resuelven con
+  un puerto: esa funcion ya es web-only por otra razon independiente, depende de `xlsx`, que tampoco
+  cruza a React Native. Portar la importacion de archivos es un frente propio del bloque movil, no
+  una frontera pendiente.
+
 ### Capitulo 13.7 - Division de archivos grandes (bloque 6)
 
 Por orden de riesgo: `ChatRoom.tsx` (1097), `useLeadsPageController.ts` (578, devuelve un objeto de 70

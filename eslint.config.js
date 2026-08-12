@@ -259,6 +259,23 @@ export default tseslint.config(
           message:
             'localStorage no existe en React Native. Usa el puerto KeyValueStore. Ver roadmap 13.6.',
         },
+        // Segunda pasada del 2026-08-12: al medir de nuevo aparecieron mas
+        // globals del DOM que la regla no veia. `window` y `document` no son
+        // los unicos: estos existen solo en el navegador y se accedian sin
+        // prefijo, asi que pasaban limpios.
+        {
+          name: 'ResizeObserver',
+          message: 'No existe en React Native. Ver roadmap 13.6.',
+        },
+        {
+          name: 'FileReader',
+          message:
+            'No existe en React Native; alli se leen archivos con expo-file-system. Ver roadmap 13.6.',
+        },
+        {
+          name: 'Image',
+          message: 'El constructor Image del DOM no existe en React Native. Ver roadmap 13.6.',
+        },
       ],
     },
   },
@@ -294,6 +311,22 @@ export default tseslint.config(
       'src/lib/chromeStorageAdapter.ts',
       // Flujo OAuth por pestaña, especifico de chrome.identity.
       'src/platform/oauthTab.ts',
+      // Mecanica de interfaz web, no dominio. No se portan a movil: se
+      // reemplazan por el equivalente nativo o dejan de tener sentido.
+      // Un atajo de teclado no existe en un telefono, y medir el viewport para
+      // decidir hacia donde se abre un menu lo resuelve el propio componente
+      // nativo. Envolverlos en un puerto seria inventar una abstraccion para
+      // algo que no cruza.
+      'src/hooks/useAppKeyboardShortcuts.ts',
+      'src/hooks/useFlipOnOverflow.ts',
+      // Mide el ancho real del panel con ResizeObserver para decidir cuantas
+      // columnas caben. En movil el layout responsivo se resuelve con
+      // Dimensions y flex, no midiendo un nodo.
+      'src/hooks/useResponsiveColumns.ts',
+      // Compresion de imagen con canvas. En movil se resuelve con una libreria
+      // nativa (expo-image-manipulator), no con este algoritmo: es sustitucion,
+      // no adaptacion.
+      'src/utils/imageCompression.ts',
       // Notificaciones, badge y audio: superficie nativa de Chrome.
       'src/services/alertNotifier.ts',
       'src/services/offscreenAudio.ts',

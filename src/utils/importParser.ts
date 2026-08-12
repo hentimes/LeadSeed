@@ -20,6 +20,10 @@ export interface DetectedColumn {
 
 export function parseJSONFile(file: File): Promise<{ rows: Record<string, string>[]; columns: string[] }> {
   return new Promise((resolve, reject) => {
+    // DEUDA BLOQUE 5: FileReader no existe en React Native. Esta funcion ya es
+    // web-only por otro motivo: depende de `xlsx`, que tampoco cruza. Portar la
+    // importacion de archivos es un frente propio, no un puerto. Ver roadmap 13.6.
+    // eslint-disable-next-line no-restricted-globals
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -38,6 +42,10 @@ export function parseJSONFile(file: File): Promise<{ rows: Record<string, string
 
 export function parseExcelFile(file: File): Promise<{ rows: Record<string, string>[]; columns: string[] }> {
   return new Promise((resolve, reject) => {
+    // DEUDA BLOQUE 5: FileReader no existe en React Native. Esta funcion ya es
+    // web-only por otro motivo: depende de `xlsx`, que tampoco cruza. Portar la
+    // importacion de archivos es un frente propio, no un puerto. Ver roadmap 13.6.
+    // eslint-disable-next-line no-restricted-globals
     const reader = new FileReader();
     reader.onload = (e) => {
       try {

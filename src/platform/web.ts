@@ -21,6 +21,7 @@ import type {
   NavigationPort,
   OAuthLauncherPort,
   Platform,
+  ProtectedFilePort,
   ScrollLockPort,
   StoragePort,
 } from './types';
@@ -250,6 +251,42 @@ export const webScrollLock: ScrollLockPort = {
   },
 };
 
+export const webProtectedFile: ProtectedFilePort = {
+  async open({ url, fields, key }) {
+    // Se abre la ventana ANTES de construir nada: si se hace despues, el
+    // navegador ya no la asocia al gesto del usuario y la bloquea.
+    const target = window.open('', key);
+    if (!target) {
+      return { ok: false, reason: 'El navegador bloqueo la ventana del archivo.' };
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = key;
+    form.style.display = 'none';
+
+    for (const [name, value] of Object.entries(fields)) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    try {
+      form.submit();
+    } finally {
+      // En un finally para no dejar el formulario colgando del DOM si submit
+      // lanza. Antes se retiraba solo en el camino feliz.
+      document.body.removeChild(form);
+    }
+
+    return { ok: true };
+  },
+};
+
 export const webPlatform: Platform = {
   dialogs: webDialogs,
   navigation: webNavigation,
@@ -259,6 +296,7 @@ export const webPlatform: Platform = {
   oauth: webOAuth,
   fileSaver: webFileSaver,
   scrollLock: webScrollLock,
+  protectedFile: webProtectedFile,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */

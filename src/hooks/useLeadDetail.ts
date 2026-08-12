@@ -308,40 +308,21 @@ export function useLeadDetail(lead: Lead) {
       return;
     }
 
-    const targetName = `planespro-pdf-${leadId || 'lead'}-${download ? 'download' : 'view'}`;
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    const openedWindow = window.open('', targetName);
-    if (!openedWindow) {
-      setPdfLoading(false);
-      setPdfError('El navegador bloqueo la ventana del PDF.');
-      return;
+    const result = await getPlatform().protectedFile.open({
+      url: PLANESPRO_FILE_PROXY_URL,
+      fields: {
+        access_token: accessToken,
+        path: pdfPath,
+        download: download ? '1' : '0',
+      },
+      mode: download ? 'download' : 'view',
+      key: `planespro-pdf-${leadId || 'lead'}-${download ? 'download' : 'view'}`,
+    });
+
+    if (!result.ok) {
+      setPdfError(result.reason);
     }
 
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = PLANESPRO_FILE_PROXY_URL;
-    form.target = targetName;
-    form.style.display = 'none';
-
-    const appendField = (name: string, value: string) => {
-      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-
-    appendField('access_token', accessToken);
-    appendField('path', pdfPath);
-    appendField('download', download ? '1' : '0');
-
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    document.body.appendChild(form);
-    form.submit();
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    document.body.removeChild(form);
     setPdfLoading(false);
   };
 

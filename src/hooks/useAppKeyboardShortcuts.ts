@@ -12,7 +12,6 @@ export function useAppKeyboardShortcuts({ onNavigate }: UseAppKeyboardShortcutsO
         event.preventDefault();
         onNavigate('leads');
         setTimeout(() => {
-          // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
           const input = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement | null;
           input?.focus();
         }, 100);
@@ -49,9 +48,7 @@ export function useAppKeyboardShortcuts({ onNavigate }: UseAppKeyboardShortcutsO
       }
     };
 
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     window.addEventListener('keydown', handler);
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     return () => window.removeEventListener('keydown', handler);
   }, [onNavigate]);
 }

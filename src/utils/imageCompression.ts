@@ -44,7 +44,6 @@ export async function compressImageToWebp(file: File): Promise<CompressedImage> 
   const img = await loadImage(file);
   const { width, height } = scaledSize(img.naturalWidth, img.naturalHeight);
 
-  // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;

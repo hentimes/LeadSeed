@@ -182,6 +182,35 @@ export interface ScrollLockPort {
   unlock(): void;
 }
 
+/**
+ * Abre o descarga un archivo que el servidor solo entrega si recibe
+ * credenciales en el cuerpo de la peticion.
+ *
+ * El puerto expresa la intencion y no el mecanismo, porque los mecanismos no se
+ * parecen en nada:
+ *
+ * - en la extension hay que abrir una ventana y enviarle un `<form>` oculto por
+ *   POST, porque una navegacion no puede llevar cabecera `Authorization` y el
+ *   token viaja en el cuerpo
+ * - en movil seria descargar con `fetch`, guardar con `expo-file-system` y
+ *   abrir con el visor del sistema
+ *
+ * Devuelve un resultado en vez de lanzar porque el fallo mas comun no es un
+ * error de programa sino una condicion del entorno que el usuario puede
+ * resolver: el navegador bloqueo la ventana emergente. La capa de dominio
+ * necesita ese caso para mostrar el mensaje adecuado.
+ */
+export interface ProtectedFilePort {
+  open(request: {
+    url: string;
+    /** Campos del cuerpo, incluidas las credenciales. */
+    fields: Record<string, string>;
+    mode: 'view' | 'download';
+    /** Identificador estable para reutilizar la misma superficie por archivo. */
+    key: string;
+  }): Promise<{ ok: true } | { ok: false; reason: string }>;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
@@ -192,4 +221,5 @@ export interface Platform {
   oauth: OAuthLauncherPort;
   fileSaver: FileSaverPort;
   scrollLock: ScrollLockPort;
+  protectedFile: ProtectedFilePort;
 }
