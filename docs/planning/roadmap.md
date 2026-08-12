@@ -1214,15 +1214,54 @@ proyecto. Debe inventariarse antes de dar por cerrado el retiro de Cloudflare.
 | **Rulesets de zona** | **DENEGADO** |
 | Page rules legacy | DENEGADO |
 
-Consecuencia directa: **el corte por reglas de zona, que es la opcion mas limpia, no se puede
-ejecutar con el token actual.** Requiere anadirle el permiso `Zone / Transform Rules / Edit` sobre
-`planespro.cl`.
+Consecuencia corregida el `2026-08-12`: **el permiso no era el problema, el mecanismo estaba mal
+elegido.** Una URL Rewrite de Transform Rules reescribe path y query pero **no cambia el origen**, asi
+que no puede hacer que una ruta la atienda otro proyecto Pages. El mecanismo correcto es un Worker
+montado en Workers Routes. Permisos reales que hara falta si se automatiza: `Cloudflare Pages / Edit`
+y `Workers Scripts / Edit` de cuenta, mas `Workers Routes / Edit` y `Zone / Read` de zona. Para la
+primera migracion no hace falta ningun token: se puede hacer entero desde el panel.
 
 Alternativa que si cabe en los permisos actuales: un Worker montado en las rutas
 `planespro.cl/pb/*`, `/form/*` y `/retiro-tecnico-extranjero/*` que sirva desde el Pages project de
 LeadSeed. Funciona, pero agrega un salto de computo donde una regla de configuracion no lo necesita,
 y va en direccion contraria al objetivo de reducir piezas en Cloudflare. Se prefiere pedir el
 permiso.
+
+### Capitulo 13.4.d - INCIDENTE ABIERTO: los short links de asesor pierden el ref
+
+Detectado el `2026-08-12` verificando produccion antes de planear la migracion. **No es deuda
+tecnica, es una perdida de atribucion comercial ocurriendo ahora.**
+
+Evidencia, probada contra `planespro.cl` con tres refs distintos:
+
+| URL | Respuesta |
+|---|---|
+| `/pb/whwgd4` | `301` a `/pb/` |
+| `/pb/58a2k6` | `301` a `/pb/` |
+| `/pb/pp-e6efca41f40449c0adde9f65b3219f02` | `301` a `/pb/` |
+| `/form/58a2k6` | `308` a `/form/` |
+| `/retiro-tecnico-extranjero/58a2k6` | `200`, funciona |
+
+Un visitante nuevo que abre el link de un asesor aterriza en `/pb/` sin ningun `ref` en la URL.
+
+Causa raiz: `origin/master` de `landing-gerow` no contiene las reglas `/pb/:ref -> /pb/ 200` de
+`_redirects`. Existen en el `master` local y en la rama
+`fix/reconcile-ppforms-retirement-with-tracking`, que nunca se mergeo. El propio `AI_SYNC.md` advirtio
+por escrito que esto pasaria si alguien seguia trabajando sobre `origin/master` sin mergear esa rama.
+
+Lo que **no** esta confirmado: que el lead termine atribuido al owner equivocado. La URL pierde el
+ref, pero la app podria recuperarlo de `localStorage` en una visita repetida. Para un visitante nuevo
+no hay nada que recuperar, y LeadSeed ya retiro el fallback por `Referer` en `a351b59`. Verificacion
+pendiente y barata: abrir un link `/pb/<code>` en ventana privada, enviar un lead de prueba y
+comprobar a que owner cae.
+
+- [BLOQUEADO] Mergear `fix/reconcile-ppforms-retirement-with-tracking` a `master` en `landing-gerow`.
+  Requiere autorizacion del usuario: es otro repo y tiene 1368 archivos sin commitear.
+- [PENDIENTE] Confirmar el impacto real con un lead de prueba.
+
+Nota para la migracion: el estado correcto de `_redirects`, `_routes.json` y las Pages Functions es
+exactamente lo que hay que llevarse al proyecto nuevo. Arreglar esto no es un desvio, es preparar el
+bloque 4.
 
 ### Capitulo 13.5 - Consolidacion de formularios en LeadSeed (bloque 4)
 
