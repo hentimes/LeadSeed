@@ -15,20 +15,11 @@ import {
   submitSupportClaim,
   subscribeUserSupportMessages,
   subscribeUserSupportRequirements,
+  reconcileIncomingSupportMessage,
+  applySupportMessageUpdate,
+  closeTypingControlChannel,
+  type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
-
-interface PrivateMessage {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  message: string;
-  created_at: string;
-  is_read?: boolean;
-  context_req_id?: string;
-  context_ticket_code?: string;
-  context_ticket_type?: string;
-  isSystem?: boolean;
-}
 
 function formatMessageDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -97,17 +88,10 @@ export default function SupportFloatingChat() {
         if (!isOpen) setHasUnread(true);
       },
       (message) => {
-        setMessages((prev) => {
-          const optimistic = prev.find((item) => item.message === message.message && item.id.startsWith('temp-'));
-          if (optimistic) {
-            return prev.map((item) => (item.id === optimistic.id ? (message as PrivateMessage) : item));
-          }
-          if (prev.some((item) => item.id === message.id)) return prev;
-          return [...prev, message as PrivateMessage];
-        });
+        setMessages((prev) => reconcileIncomingSupportMessage(prev, message));
       },
       (message) => {
-        setMessages((prev) => prev.map((item) => (item.id === message.id ? (message as PrivateMessage) : item)));
+        setMessages((prev) => applySupportMessageUpdate(prev, message));
       }
     );
 
@@ -129,7 +113,7 @@ export default function SupportFloatingChat() {
     return () => {
       unsubscribeMessages();
       unsubscribeRequirements();
-      if (controlChannelRef.current) void controlChannelRef.current.unsubscribe();
+      if (controlChannelRef.current) closeTypingControlChannel(controlChannelRef.current);
     };
   }, [isOpen, user]);
 

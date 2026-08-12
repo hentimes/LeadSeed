@@ -1106,8 +1106,29 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   helper canonico. Se dejan para una pasada propia: cambian texto visible por el usuario (para mejor,
   porque hoy muestran el generico donde deberian mostrar la causa), y conviene revisarlas por
   superficie en vez de en un barrido.
-- [PENDIENTE] Unificar `AdminSupportChat` y `SupportFloatingChat` en un `useSupportThread(peerId)`, y
-  usar `removeChannel()` en vez de `unsubscribe()`.
+- [PARCIAL] Deduplicacion de los dos chats de soporte. Se cerro la duplicacion real y la fuga de
+  canales; la unificacion en un hook unico queda abierta. 11 tests.
+
+  Hecho:
+  - el tipo `PrivateMessage`, declarado identico en ambos componentes, se retira en favor de
+    `SupportMessage`, que ya existia en `supportService`. Habia tres definiciones del mismo registro.
+  - la reconciliacion optimista, implementada por duplicado y casi igual en ambos, pasa a
+    `reconcileIncomingSupportMessage` y `applySupportMessageUpdate` en `supportService`. Son
+    funciones puras, y por eso testeables: cubren la sustitucion del mensaje temporal en su
+    posicion, la reentrega del mismo evento por realtime, y el caso de dos mensajes con identico
+    texto donde el existente no es optimista y no debe sustituirse.
+  - `channel.unsubscribe()` pasa a `closeTypingControlChannel`, que usa `removeChannel`. El anterior
+    cortaba la suscripcion pero dejaba el canal registrado en el cliente, acumulando canales muertos
+    al navegar entre conversaciones. Se dejo intacto el `unsubscribe()` de `AuthContext.tsx:115`:
+    no es un canal realtime sino la suscripcion a cambios de sesion.
+
+  No hecho, y por que: la auditoria proponia fusionar ambos en un `useSupportThread(peerId)`. Al
+  leerlos no son la misma pantalla con distinta piel. `AdminSupportChat` filtra por pertenencia al
+  hilo contra un usuario seleccionado y arma su canal a mano; `SupportFloatingChat` consume el
+  servicio, ademas gestiona requerimientos y responde a broadcasts distintos (`CLOSE_CHAT` frente a
+  `USER_CLOSED_CHAT`). Forzarlos a un hook comun es reescribir dos chats que funcionan, sin tests de
+  integracion que respalden el resultado, y eso choca con la restriccion 13.1.c. Queda pendiente
+  hasta tener pruebas de integracion sobre esas dos superficies.
 - [HECHO] Nombres de canal realtime unicos por suscripcion. Ya no queda ningun `.channel()` con
   nombre literal en `src/`. 12 tests.
 

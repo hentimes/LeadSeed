@@ -30,6 +30,48 @@ export type SupportMessage = {
   context_ticket_type?: string;
 };
 
+/**
+ * Integra un mensaje llegado por realtime en la lista actual del chat.
+ *
+ * Resuelve tres casos que estaban implementados por duplicado y casi igual en
+ * `AdminSupportChat` y `SupportFloatingChat`:
+ *
+ * - el mensaje confirma uno optimista que ya se pinto al enviar, y hay que
+ *   sustituirlo en su sitio en vez de agregar un duplicado visual
+ * - el mensaje ya esta en la lista (realtime puede reentregar), y se ignora
+ * - el mensaje es nuevo y se agrega al final
+ *
+ * El pareo del optimista se hace por texto, que es lo que ambos componentes ya
+ * hacian: el id definitivo lo asigna el backend, asi que no hay otra clave
+ * comun entre la fila optimista y la real.
+ */
+export function reconcileIncomingSupportMessage(
+  current: SupportMessage[],
+  incoming: SupportMessage,
+): SupportMessage[] {
+  const optimistic = current.find(
+    (item) => item.id.startsWith('temp-') && item.message === incoming.message,
+  );
+
+  if (optimistic) {
+    return current.map((item) => (item.id === optimistic.id ? incoming : item));
+  }
+
+  if (current.some((item) => item.id === incoming.id)) {
+    return current;
+  }
+
+  return [...current, incoming];
+}
+
+/** Reemplaza un mensaje ya presente, por id. Usado en los eventos UPDATE. */
+export function applySupportMessageUpdate(
+  current: SupportMessage[],
+  updated: SupportMessage,
+): SupportMessage[] {
+  return current.map((item) => (item.id === updated.id ? updated : item));
+}
+
 function randomTicketCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -107,6 +149,18 @@ export function subscribeUserSupportMessages(
 
 export function createTypingControlChannel(channelName: string): RealtimeChannel {
   return createSupportControlChannel(channelName);
+}
+
+/**
+ * Cierra un canal de control.
+ *
+ * Los componentes llamaban a `channel.unsubscribe()`, que corta la suscripcion
+ * pero deja el canal registrado en el cliente de Supabase. Con navegacion
+ * repetida entre conversaciones se acumulaban canales muertos. `removeChannel`
+ * es lo que usa el resto del repositorio.
+ */
+export function closeTypingControlChannel(channel: RealtimeChannel): void {
+  void removeSupportChannel(channel);
 }
 
 export async function rateSupportRequirement(requirementId: string, rating: 'up' | 'down'): Promise<void> {

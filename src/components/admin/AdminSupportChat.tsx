@@ -10,20 +10,11 @@ import {
   loadAdminSupportMessages,
   markConversationRead,
   markSupportMessageAsRead,
+  reconcileIncomingSupportMessage,
+  applySupportMessageUpdate,
+  closeTypingControlChannel,
+  type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
-
-interface PrivateMessage {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  message: string;
-  created_at: string;
-  is_read?: boolean;
-  isSystem?: boolean;
-  context_req_id?: string;
-  context_ticket_code?: string;
-  context_ticket_type?: string;
-}
 
 function formatMessageDate(dateStr: string) {
   if (!dateStr) return '';
@@ -95,18 +86,11 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
             await markSupportMessageAsRead(message.id);
           }
 
-          setMessages((prev) => {
-            const optimistic = prev.find((item) => item.message === message.message && item.id.startsWith('temp-'));
-            if (optimistic) {
-              return prev.map((item) => (item.id === optimistic.id ? message : item));
-            }
-            if (prev.some((item) => item.id === message.id)) return prev;
-            return [...prev, message];
-          });
+          setMessages((prev) => reconcileIncomingSupportMessage(prev, message));
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'internal_messages' }, (payload) => {
           const message = payload.new as PrivateMessage;
-          setMessages((prev) => prev.map((item) => (item.id === message.id ? message : item)));
+          setMessages((prev) => applySupportMessageUpdate(prev, message));
         })
         .subscribe();
 
@@ -139,8 +123,8 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
     void setupChat();
     return () => {
       isMounted = false;
-      if (messageChannelRef.current) void messageChannelRef.current.unsubscribe();
-      if (controlChannelRef.current) void controlChannelRef.current.unsubscribe();
+      if (messageChannelRef.current) closeTypingControlChannel(messageChannelRef.current);
+      if (controlChannelRef.current) closeTypingControlChannel(controlChannelRef.current);
     };
   }, [activeRequirement, currentUserProfile?.email, currentUserProfile?.full_name, selectedUser.email, selectedUser.full_name, selectedUser.id]);
 
