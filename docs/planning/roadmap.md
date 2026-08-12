@@ -1141,7 +1141,7 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   para los nueve canales de repositorio, que no pueden usar hooks. El peor de esos nueve era
   `subscribeReceiverMessages`, con nombre fijo pese a filtrar por usuario.
 
-- [PENDIENTE DE DEPLOY] CORS de `supabase/functions/form-lead-file` alineado a la allowlist estandar
+- [HECHO] CORS de `supabase/functions/form-lead-file` alineado a la allowlist estandar
   del proyecto. Era la unica funcion que reflejaba cualquier `Origin` recibido.
 
   Riesgo evaluado y descartado: se temia romper la descarga de PDFs, porque el consumidor es la
@@ -1153,9 +1153,31 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   origenes `chrome-extension://`, configurable por el secreto `ALLOWED_EXTENSION_IDS`, por si alguna
   superficie futura pasa a usar `fetch`.
 
-  No se puede validar con el pipeline local: es codigo Deno fuera del alcance de Vitest y solo toma
-  efecto al desplegar. Queda `pendiente de validacion real` hasta comprobar en produccion que la
-  apertura y la descarga de PDF siguen funcionando.
+  Desplegado y verificado en produccion el `2026-08-12`: `form-lead-file` v10 -> v11, `ACTIVE`,
+  `verify_jwt` sigue en `false`. Comprobado con `curl` contra el endpoint real que un origen de la
+  allowlist se refleja, que un origen de extension se acepta, que un origen desconocido ya **no** se
+  refleja y recibe el valor por defecto, y que la funcion sigue devolviendo `401` sin token.
+
+### Capitulo 13.4.b - Fallo latente en la configuracion de Edge Functions
+
+Descubierto el `2026-08-12` al preparar el deploy anterior, no estaba en la auditoria original.
+
+- [HECHO] Declarar `verify_jwt` por funcion en `supabase/config.toml`.
+
+  En produccion diez de las doce funciones corren con `verify_jwt = false`, pero ese estado no estaba
+  declarado en ningun archivo del repo. El valor por defecto del CLI es `true`, asi que **cualquier
+  `supabase functions deploy` hecho sin `--no-verify-jwt` las habria dejado exigiendo cabecera
+  `Authorization`, rompiendolas en el acto**. Los formularios publicos de `planespro.cl` habrian
+  dejado de capturar leads.
+
+  El caso mas sutil es `form-lead-file`: el CRM abre el PDF con un submit de formulario hacia una
+  ventana nueva, y una navegacion no puede llevar cabecera `Authorization`. El token viaja en el
+  cuerpo y la funcion lo valida por su cuenta. Con `verify_jwt = true` el gateway rechazaria la
+  peticion antes de que la funcion llegara a leerlo.
+
+  Con las once declaraciones en `config.toml`, el estado correcto pasa a ser el que el repo describe
+  en vez de depender de que quien despliegue recuerde un flag. `form-progress` no se declara aca
+  porque su source todavia vive en `landing-gerow`.
 - [PENDIENTE] Sacar el cliente Supabase de `hooks/useRealtimeRefresh.ts` y `services/realtimeService.ts`
   hacia repositorios.
 - [PENDIENTE] Corregir el CORS de `supabase/functions/form-lead-file/index.ts`, que refleja cualquier

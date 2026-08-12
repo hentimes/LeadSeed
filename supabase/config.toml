@@ -412,3 +412,64 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# --- Edge Functions: verificacion de JWT ------------------------------------
+#
+# Estas declaraciones existen para evitar un fallo latente descubierto el
+# 2026-08-12: en produccion diez de las doce funciones corren con
+# `verify_jwt = false`, pero ese estado no estaba declarado en ningun lado. Como
+# el valor por defecto del CLI es `true`, cualquier `supabase functions deploy`
+# hecho sin el flag `--no-verify-jwt` las habria dejado exigiendo cabecera
+# `Authorization`, rompiendolas en el acto.
+#
+# Declararlo aca hace que el estado correcto sea el que el repo describe, en vez
+# de depender de que quien despliegue recuerde un flag.
+#
+# `verify_jwt = false` NO significa acceso libre: significa que la funcion
+# valida la identidad por su cuenta, porque el gateway de Supabase no puede
+# hacerlo en estos casos.
+
+# Formularios publicos: los llama gente anonima desde planespro.cl, no hay JWT
+# que verificar. La autorizacion es por `ref` de capture link y service role.
+[functions.form-leads]
+verify_jwt = false
+
+[functions.form-lead-abandoned]
+verify_jwt = false
+
+[functions.form-public-availability]
+verify_jwt = false
+
+# Adjuntos de lead. Caso especial: el CRM abre el PDF con un submit de
+# formulario hacia una ventana nueva, y una navegacion no puede llevar cabecera
+# `Authorization`. El token viaja en el cuerpo (`access_token`) y la funcion lo
+# valida con `auth.getUser`, ademas de comprobar la propiedad del lead contra
+# `leads.metadata->>pdf_path`. Con `verify_jwt = true` el gateway rechazaria la
+# peticion antes de que la funcion pudiera leer el token.
+[functions.form-lead-file]
+verify_jwt = false
+
+# Google Calendar: se invocan tanto desde el CRM con token de usuario como
+# servidor a servidor desde `form-leads` con la service role key. Cada una
+# resuelve la identidad internamente.
+[functions.google-calendar-connect]
+verify_jwt = false
+
+[functions.google-calendar-sync]
+verify_jwt = false
+
+[functions.google-calendar-create-event]
+verify_jwt = false
+
+[functions.google-calendar-sync-attendees]
+verify_jwt = false
+
+[functions.google-calendar-update-event]
+verify_jwt = false
+
+# Estas dos si exigen JWT: solo las llama la extension con sesion iniciada.
+[functions.send-email]
+verify_jwt = true
+
+[functions.email-channels]
+verify_jwt = true
