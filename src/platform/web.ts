@@ -1,9 +1,16 @@
 /* eslint-disable no-restricted-globals -- Este archivo ES la frontera con el
-   entorno web. Es el unico sitio del repositorio donde `confirm` y `alert`
-   estan permitidos, y existe precisamente para que no aparezcan en ningun otro
-   lado. Ver src/platform/types.ts. */
+   entorno. Es el unico sitio del repositorio donde `confirm`, `alert` y las
+   APIs de `chrome` estan permitidos, y existe precisamente para que no
+   aparezcan en ningun otro lado. Ver src/platform/types.ts. */
 
-import type { AppRoute, DialogsPort, NavigationPort, Platform } from './types';
+import type {
+  AppRoute,
+  DialogsPort,
+  KeyValueStorePort,
+  NavigationPort,
+  Platform,
+  StoragePort,
+} from './types';
 
 /**
  * Implementacion de los puertos para la extension de Chrome.
@@ -83,9 +90,44 @@ export const webNavigation: NavigationPort = {
   },
 };
 
+/**
+ * Almacenamiento sobre `chrome.storage`.
+ *
+ * Absorbe aqui el `try/catch` que antes estaba repetido en cada llamador: en
+ * desarrollo web puro `chrome` no existe, y hasta ahora cada servicio se
+ * defendia por su cuenta con un catch vacio. Centralizarlo elimina esa
+ * repeticion y deja un unico sitio donde entender el fallback.
+ */
+function chromeArea(area: 'sync' | 'local'): KeyValueStorePort {
+  return {
+    async get(keys: string[]) {
+      try {
+        return await chrome.storage[area].get(keys);
+      } catch {
+        // Sin `chrome` disponible se responde vacio: la capa de dominio ya
+        // trata la ausencia de valor como "sin preferencia guardada".
+        return {};
+      }
+    },
+    async set(values: Record<string, unknown>) {
+      try {
+        await chrome.storage[area].set(values);
+      } catch {
+        // Perder una preferencia no debe romper la operacion que la disparo.
+      }
+    },
+  };
+}
+
+export const webStorage: StoragePort = {
+  sync: chromeArea('sync'),
+  local: chromeArea('local'),
+};
+
 export const webPlatform: Platform = {
   dialogs: webDialogs,
   navigation: webNavigation,
+  storage: webStorage,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */

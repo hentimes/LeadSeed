@@ -11,6 +11,7 @@ import {
 } from '../repositories/appMaintenanceRepository';
 import { sendEmailToLeads } from '../utils/emailSender';
 import type { Lead, LeadStatus } from '../types';
+import { webStorage } from '../platform/web';
 
 function mapLeadRowToDomain(row: ScheduledEmailLeadRow): Lead {
   return {
@@ -48,11 +49,7 @@ export async function processScheduledEmails(): Promise<void> {
   const now = new Date().toISOString();
   const dueLogs = await fetchDueScheduledEmailLogs(now);
   if (dueLogs.length === 0) {
-    try {
-      chrome.storage.local.set({ hasScheduledEmails: false });
-    } catch {
-      // chrome.storage no disponible en desarrollo web.
-    }
+    void webStorage.local.set({ hasScheduledEmails: false });
     return;
   }
 
@@ -88,9 +85,5 @@ export async function processScheduledEmails(): Promise<void> {
     await markLeadsAsContacted(leadRows.map((lead) => lead.id));
   }
 
-  try {
-    chrome.storage.local.set({ hasScheduledEmails: false });
-  } catch {
-    // chrome.storage no disponible en desarrollo web.
-  }
+  void webStorage.local.set({ hasScheduledEmails: false });
 }

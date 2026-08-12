@@ -4,6 +4,7 @@ import { getSettings, saveSettings } from './appSettingsService';
 // eslint-disable-next-line no-restricted-imports
 import type { ColumnDef } from '../components/ColumnSelector';
 import type { AppSettings } from '../types';
+import { webStorage } from '../platform/web';
 
 export interface AppPreferences {
   compactMode: boolean;
@@ -43,22 +44,19 @@ function mergeVisibleColumns(defaultColumns: ColumnDef[], storedColumns: AppSett
 export async function loadAppPreferences(defaultColumns: ColumnDef[]): Promise<AppPreferences> {
   const settings = await getSettings();
 
-  try {
-    const synced = await chrome.storage.sync.get(['compactMode', 'visibleCols', 'exportFormat']);
+  const synced = await webStorage.sync.get(['compactMode', 'visibleCols', 'exportFormat']);
 
-    if (synced.compactMode !== undefined) {
-      settings.compactMode = synced.compactMode;
-    }
+  if (synced.compactMode !== undefined) {
+    settings.compactMode = synced.compactMode as boolean;
+  }
 
-    if (synced.visibleCols?.length) {
-      settings.visibleCols = synced.visibleCols;
-    }
+  const syncedCols = synced.visibleCols as AppSettings['visibleCols'] | undefined;
+  if (syncedCols?.length) {
+    settings.visibleCols = syncedCols;
+  }
 
-    if (synced.exportFormat) {
-      settings.exportFormat = synced.exportFormat;
-    }
-  } catch {
-    // chrome.storage no disponible en desarrollo web.
+  if (synced.exportFormat) {
+    settings.exportFormat = synced.exportFormat as AppSettings['exportFormat'];
   }
 
   return {
@@ -69,11 +67,7 @@ export async function loadAppPreferences(defaultColumns: ColumnDef[]): Promise<A
 }
 
 export function syncSettingsToChromeStorage(updates: Record<string, unknown>): void {
-  try {
-    chrome.storage.sync.set(updates);
-  } catch {
-    // chrome.storage no disponible en desarrollo web.
-  }
+  void webStorage.sync.set(updates);
 }
 
 export async function updateStoredSettings(

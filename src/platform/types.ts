@@ -61,8 +61,39 @@ export interface NavigationPort {
   subscribe(onChange: () => void): () => void;
 }
 
+/**
+ * Almacenamiento clave-valor persistente.
+ *
+ * Dos ambitos, porque la extension ya los distinguia y la distincion tiene
+ * sentido en cualquier plataforma:
+ *
+ * - `sync`: preferencias del usuario que deberian seguirlo entre dispositivos.
+ *   En Chrome es `chrome.storage.sync`; en movil seria almacenamiento remoto o
+ *   simplemente local si no hay sincronizacion.
+ * - `local`: estado operativo de este dispositivo, que no tiene sentido
+ *   propagar. En Chrome es `chrome.storage.local`; en movil, AsyncStorage.
+ *
+ * Todas las operaciones son asincronas aunque alguna implementacion pudiera
+ * resolverlas al momento: en Chrome y en React Native lo son.
+ *
+ * Las implementaciones **no deben lanzar** si el almacenamiento no esta
+ * disponible. La capa de dominio trata la ausencia de un valor como "sin
+ * preferencia guardada", no como un error que haya que manejar en cada
+ * llamada.
+ */
+export interface KeyValueStorePort {
+  get(keys: string[]): Promise<Record<string, unknown>>;
+  set(values: Record<string, unknown>): Promise<void>;
+}
+
+export interface StoragePort {
+  sync: KeyValueStorePort;
+  local: KeyValueStorePort;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
   navigation: NavigationPort;
+  storage: StoragePort;
 }

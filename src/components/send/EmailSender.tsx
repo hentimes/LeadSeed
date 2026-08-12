@@ -22,6 +22,7 @@ import { TemplatePicker } from './TemplatePicker';
 import { RecipientPicker, RecipientCount } from './RecipientPicker';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
+import { webStorage } from '../../platform/web';
 
 interface Props {
   leads: Lead[];
@@ -185,7 +186,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     if (schedule && scheduledDate && scheduledTime) {
       const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
       setSentLog(await scheduleEmailSend(userId, selectedTemplate.id!, recipients, scheduledFor));
-      try { chrome.storage.local.set({ hasScheduledEmails: true }); } catch { /* noop */ }
+      void webStorage.local.set({ hasScheduledEmails: true });
       setSchedule(false);
       setScheduledDate('');
       setScheduledTime('');

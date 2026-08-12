@@ -1304,10 +1304,41 @@ fuente y de deploy, no de bundle.
 Hallazgo clave: el acoplamiento que bloquea el port no es Chrome (93 usos bien contenidos en 18
 archivos) sino el DOM dentro de hooks de dominio.
 
-- [PARCIAL] `src/platform/` creado con los dos primeros puertos, `Dialogs` y `Navigation`, en
-  `types.ts`, mas su implementacion web en `web.ts`. Quedan por extraer los otros siete:
-  `KeyValueStore`, `Notifier`, `BadgeCounter`, `OAuthLauncher`, `BackgroundScheduler`,
-  `AppMessageBus` y `Deeplink`.
+- [PARCIAL] `src/platform/` con tres puertos: `Dialogs`, `Navigation` y `KeyValueStore`.
+
+  Sobre los cuatro que faltan, con una correccion al plan original. La auditoria listaba nueve
+  puertos como si todos tuvieran el mismo valor. No lo tienen. Al activar la regla que prohibe
+  `chrome` en la capa de dominio aparecieron 11 archivos, y al mirarlos uno por uno se dividen en dos
+  grupos que merecen trato distinto:
+
+  - **Dominio acoplado por descuido**, que si gana con un puerto: `appSettings.ts` y
+    `appMaintenance.ts` guardaban preferencias con `chrome.storage`. Migrados a `KeyValueStore`.
+    Tambien `DataManagement.tsx` y `EmailSender.tsx`, que escribian en `chrome.storage` **desde un
+    componente**, exactamente como marco la auditoria.
+  - **Plataforma por naturaleza**, que no gana nada: `alertNotifier`, `offscreenAudio`,
+    `extensionBadgeTheme` y los dos servicios de background son la superficie nativa de Chrome. No se
+    portan a movil, se reescriben con el equivalente nativo. Envolverlos en un puerto solo agregaria
+    indireccion sin quitar acoplamiento.
+
+  Quedan pendientes de verdad tres puertos, los que si bloquean dominio reutilizable:
+  `OAuthLauncher` (`oauthTab.ts` mas `useEmailChannels.ts`), `AppMessageBus` (`useLeadAlerts.ts`) y
+  `Deeplink` (`waHelper.ts`).
+
+- [HECHO] Regla de frontera extendida: `chrome` prohibido en `services`, `repositories`, `hooks`,
+  `utils` y `config`. Los modulos de plataforma quedan exentos por una **lista explicita en
+  `eslint.config.js`**, no por `eslint-disable` repartidos. La diferencia importa: una lista en un
+  solo archivo se audita de un vistazo y crece solo con una decision visible en el diff.
+
+  Resultado: fuera de `src/platform/` y de esa lista, los unicos `chrome.*` que quedan viven en
+  `App.tsx` y `LoginPage.tsx`, que son la shell de la extension y su uso ahi es legitimo.
+
+- [PENDIENTE] Mover los modulos de la lista de exentos a `src/platform/`. Mientras sigan en
+  `services/` y `utils/` conviven con dominio portable, que es la mezcla que este bloque deshace.
+
+- [HECHO] Efecto colateral util del puerto: el `try/catch` vacio alrededor de `chrome.storage`, que
+  estaba repetido en cada llamador para tolerar el desarrollo web sin extension, ahora vive una sola
+  vez dentro de la implementacion. La capa de dominio dejo de defenderse de un detalle de plataforma
+  que no le corresponde.
 - [HECHO] Eliminados `confirm()`, `alert()` y `window.location.hash` de la capa de dominio. **Este
   era el bloqueador real del port a movil**, por encima del acoplamiento a Chrome.
   - `useAgenda.ts`: un `confirm` y dos usos del hash.

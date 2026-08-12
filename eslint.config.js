@@ -164,6 +164,11 @@ export default tseslint.config(
           message:
             'prompt() no existe en React Native. Inyecta un puerto Dialogs. Ver roadmap 13.6.',
         },
+        {
+          name: 'chrome',
+          message:
+            'Las APIs de Chrome no existen en React Native. Usa un puerto de src/platform/. Ver roadmap 13.6.',
+        },
       ],
     },
   },
@@ -177,10 +182,41 @@ export default tseslint.config(
     },
   },
 
-  // El service worker y el offscreen son codigo de plataforma por definicion:
-  // no se portan, se reescriben. No tiene sentido aplicarles la frontera movil.
+  // Modulos de plataforma: son codigo especifico de la extension por
+  // definicion, no dominio acoplado por descuido. No se portan a movil, se
+  // reescriben con el equivalente nativo, asi que aplicarles la frontera no
+  // aportaria nada.
+  //
+  // La lista es explicita y vive en un solo sitio a proposito, en vez de
+  // repartir `eslint-disable` por los archivos: asi se puede auditar de un
+  // vistazo que NO esta creciendo. Si alguien agrega una entrada aqui, es una
+  // decision visible en el diff, no una linea perdida dentro de un archivo.
+  //
+  // Deuda declarada (roadmap 13.6): estos modulos deberian terminar dentro de
+  // `src/platform/`, que es donde vive lo especifico de plataforma. Mientras
+  // sigan en `services/` y `utils/` conviven con dominio portable, que es
+  // justo la mezcla que este bloque intenta deshacer.
   {
-    files: ['src/background.ts', 'src/offscreen.ts', 'src/lib/chromeStorageAdapter.ts'],
+    files: [
+      // Puntos de entrada de la extension. No portables por definicion.
+      'src/background.ts',
+      'src/offscreen.ts',
+      'src/lib/chromeStorageAdapter.ts',
+      // Notificaciones, badge y audio: superficie nativa de Chrome.
+      'src/services/alertNotifier.ts',
+      'src/services/offscreenAudio.ts',
+      'src/services/extensionBadgeTheme.ts',
+      // Servicios que corren dentro del service worker MV3.
+      'src/services/backgroundLeadAlertsService.ts',
+      'src/services/backgroundAgendaAlertsService.ts',
+      // OAuth por pestaña y puente con WhatsApp: pendientes de convertirse en
+      // los puertos OAuthLauncher y Deeplink.
+      'src/utils/oauthTab.ts',
+      'src/utils/waHelper.ts',
+      // Consumen el bus de mensajes de la extension. Pendiente AppMessageBus.
+      'src/hooks/useLeadAlerts.ts',
+      'src/hooks/useEmailChannels.ts',
+    ],
     rules: {
       'no-restricted-globals': 'off',
     },
