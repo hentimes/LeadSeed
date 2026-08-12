@@ -1030,12 +1030,20 @@ superficie, porque su resultado visual es identico o estrictamente mejor.
 Historial verificado como lineal: `master` es ancestro directo de `develop`. No hay divergencia, solo
 retraso.
 
-- [PENDIENTE] Pushear los 4 commits pendientes de `develop`.
-- [PENDIENTE] Avanzar `master` (66 commits atras) hasta `develop` por fast-forward.
-- [PENDIENTE] Decidir el destino de la rama `design`, hoy un alias rezagado de `develop`.
+- [HECHO] Pusheados los commits pendientes de `develop`.
+- [HECHO] `master` avanzada hasta `develop` por fast-forward.
+- [HECHO] `design` resuelta: se mantiene viva y sincronizada con `develop`, por decision del usuario
+  del `2026-08-12`. Las tres ramas quedaron en el mismo commit.
+
+  Nota de registro: estos tres items se ejecutaron el `2026-08-12` y quedaron sin marcar hasta el
+  `2026-08-12` por descuido de bookkeeping. Se deja constancia porque es la misma deriva documental
+  que la auditoria senalo como hallazgo estructural; el roadmap solo sirve si refleja el estado real.
+
 - [PENDIENTE] Coordinar el merge de `fix/reconcile-ppforms-retirement-with-tracking` a `master` en
-  `landing-gerow`. Sin ese merge, un deploy desde `master` pierde el formulario de retiro y el
-  tracking.
+  `landing-gerow`. **Sigue abierto y ya causo un incidente en produccion** (ver 13.4.d): la
+  regresion del ref se arreglo con un parche minimo de dos lineas, no mergeando esa rama, que ademas
+  contiene el formulario de retiro y el tracking. Mientras siga sin mergear, el mismo accidente
+  puede repetirse.
 
 ### Capitulo 13.3 - Red de seguridad (bloque 2, prerrequisito)
 
