@@ -440,6 +440,11 @@ verify_jwt = false
 [functions.form-public-availability]
 verify_jwt = false
 
+# Telemetria de los formularios publicos. Adoptada desde el codigo desplegado el
+# 2026-08-12; antes su source vivia en landing-gerow.
+[functions.form-progress]
+verify_jwt = false
+
 # Adjuntos de lead. Caso especial: el CRM abre el PDF con un submit de
 # formulario hacia una ventana nueva, y una navegacion no puede llevar cabecera
 # `Authorization`. El token viaja en el cuerpo (`access_token`) y la funcion lo

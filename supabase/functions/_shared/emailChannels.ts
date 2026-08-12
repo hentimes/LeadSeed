@@ -68,12 +68,6 @@ export function normalizeProvider(value: unknown) {
   return normalizeString(value).toLowerCase()
 }
 
-function getEmailDomain(value: string) {
-  const normalized = normalizeString(value).toLowerCase()
-  const atIndex = normalized.lastIndexOf('@')
-  return atIndex >= 0 ? normalized.slice(atIndex + 1) : ''
-}
-
 function bytesToBase64(bytes: Uint8Array) {
   let binary = ''
   for (const byte of bytes) binary += String.fromCharCode(byte)
@@ -173,18 +167,8 @@ export function buildCredentialsHint(credentials: EmailChannelCredentials) {
 export async function validateChannelCredentials(
   provider: string,
   credentials: EmailChannelCredentials,
-  options: { fromEmail?: string } = {},
 ): Promise<{ ok: boolean; status: string; message?: string }> {
   if (provider === 'resend' && credentials.provider === 'resend') {
-    const fromEmail = normalizeString(options.fromEmail)
-    if (!fromEmail || !isEmail(fromEmail)) {
-      return {
-        ok: false,
-        status: 'invalid_from_email',
-        message: 'Ingresa un correo remitente valido',
-      }
-    }
-
     try {
       const response = await fetch('https://api.resend.com/domains', {
         headers: {
@@ -194,43 +178,10 @@ export async function validateChannelCredentials(
 
       const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>
       if (!response.ok) {
-        const message = typeof payload.message === 'string' ? payload.message : 'Resend rechazo la credencial'
-        const normalizedMessage = normalizeString(message).toLowerCase()
-
-        if (normalizedMessage.includes('restricted to only send emails')) {
-          return {
-            ok: true,
-            status: 'sending_only',
-          }
-        }
-
         return {
           ok: false,
           status: 'invalid',
-          message,
-        }
-      }
-
-      const fromDomain = getEmailDomain(fromEmail)
-      if (fromDomain) {
-        const domains = Array.isArray(payload.data) ? payload.data as Array<Record<string, unknown>> : []
-        const matchingDomain = domains.find((domain) => normalizeString(domain.name).toLowerCase() === fromDomain)
-        const domainStatus = normalizeString(matchingDomain?.status).toLowerCase()
-
-        if (!matchingDomain) {
-          return {
-            ok: false,
-            status: 'invalid_from_email',
-            message: `El remitente debe usar un dominio verificado en Resend. Usa un correo tipo notificaciones@planespro.cl, no ${options.fromEmail}.`,
-          }
-        }
-
-        if (domainStatus && domainStatus !== 'verified') {
-          return {
-            ok: false,
-            status: 'domain_not_verified',
-            message: `El dominio ${fromDomain} existe en Resend pero aun no esta verificado.`,
-          }
+          message: typeof payload.message === 'string' ? payload.message : 'Resend rechazo la credencial',
         }
       }
 

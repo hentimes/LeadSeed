@@ -12,7 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "lint:fix": "eslint src --fix",
+    "check:functions": "node scripts/check-edge-function-ownership.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

@@ -56,20 +56,43 @@ entonces la unica fuente de verdad.
 | `google-calendar-sync-attendees` | este repo | |
 | `google-calendar-update-event` | este repo | |
 | `send-email` | este repo | |
-| `form-progress` | **pendiente de migrar** | sigue en `landing-gerow`, ver abajo |
+| `form-progress` | este repo | adoptada desde el codigo desplegado el 2026-08-12 |
 
-### form-progress: pendiente
+### form-progress
 
 Recibe eventos de visita, paso 1 y paso 2 de los formularios publicos y escribe en
 `public.form_progress_events` con la service role key.
 
-Todavia no se movio a este repo porque al 2026-08-12 su copia en `landing-gerow` tiene cambios sin
-commitear, y mover un archivo sucio crearia justamente el drift que esta regla busca evitar. Debe
-moverse en cuanto ese arbol este limpio.
+Se adopto el `2026-08-12` con `supabase functions download`, es decir, desde el codigo que estaba
+realmente corriendo, y no copiandolo de `landing-gerow`. La diferencia importaba:
 
-Deuda conocida de esta funcion: valida `form_slug` contra un allowlist hardcodeado
-(`KNOWN_FORM_SLUGS`) en vez de consultar `public.form_types`. Por eso agregar un tipo de formulario
-desde la extension no habilita su telemetria hasta redesplegar.
+| Fuente | Slugs aceptados |
+|---|---|
+| desplegado en produccion | `pb`, `form`, `retiro`, `retiro-v2` mas nueve tipos de evento |
+| `landing-gerow`, HEAD commiteado | `pb`, `form`, `retiro` mas tres tipos de evento |
+| `landing-gerow`, arbol sin commitear | igual que lo desplegado |
+
+Alguien desplego sin commitear. Copiar del HEAD habria tomado la version vieja y, al redesplegar,
+habria desactivado en silencio el tracking de `retiro-v2` y de seis tipos de evento.
+
+**Leccion operativa: ante cualquier duda sobre que version es la buena, la respuesta es
+`supabase functions download`, no el git de ninguno de los dos repos.**
+
+Deuda conocida (roadmap 13.4): `KNOWN_FORM_SLUGS` es un allowlist escrito a mano mientras LeadSeed ya
+tiene `public.form_types` como registro editable. Agregar un tipo de formulario desde la extension no
+habilita su telemetria hasta editar y redesplegar esta funcion.
+
+## Comprobacion de deriva
+
+```
+npm run check:functions
+```
+
+Consulta el proyecto real y falla si alguna funcion desplegada tiene su source fuera de este repo, o
+si su `verify_jwt` no coincide con `supabase/config.toml`. Correrlo antes de cualquier deploy.
+
+Si no hay CLI enlazado, se omite en vez de fallar: no tiene sentido romper una maquina que no puede
+comprobarlo.
 
 ## _shared/emailChannels.ts
 
