@@ -1227,7 +1227,7 @@ LeadSeed. Funciona, pero agrega un salto de computo donde una regla de configura
 y va en direccion contraria al objetivo de reducir piezas en Cloudflare. Se prefiere pedir el
 permiso.
 
-### Capitulo 13.4.d - INCIDENTE ABIERTO: los short links de asesor pierden el ref
+### Capitulo 13.4.d - INCIDENTE RESUELTO: los short links de asesor perdian el ref
 
 Detectado el `2026-08-12` verificando produccion antes de planear la migracion. **No es deuda
 tecnica, es una perdida de atribucion comercial ocurriendo ahora.**
@@ -1255,9 +1255,27 @@ no hay nada que recuperar, y LeadSeed ya retiro el fallback por `Referer` en `a3
 pendiente y barata: abrir un link `/pb/<code>` en ventana privada, enviar un lead de prueba y
 comprobar a que owner cae.
 
-- [BLOQUEADO] Mergear `fix/reconcile-ppforms-retirement-with-tracking` a `master` en `landing-gerow`.
-  Requiere autorizacion del usuario: es otro repo y tiene 1368 archivos sin commitear.
-- [PENDIENTE] Confirmar el impacto real con un lead de prueba.
+**Resuelto el `2026-08-12`.** Causa raiz confirmada por un experimento natural: de las tres Pages
+Functions, `retiro-tecnico-extranjero` ya pedia la carpeta base y es la unica que funcionaba; `pb` y
+`form` pedian `index.html` explicito, `ASSETS.fetch` volvia a pasar por `_redirects`, se disparaba la
+regla `/pb/index.html -> /pb/ 301` y la Function devolvia ese 301 tal cual.
+
+- [HECHO] Corregidas las Functions de `pb` y `form` para que pidan la carpeta base, igual que
+  `retiro`. Dos lineas, una por archivo. Commit `9e91f2a4` en `landing-gerow`.
+- [HECHO] Verificado primero en un deploy de preview aislado, y solo despues promovido a produccion
+  como fast-forward sobre el commit que ya estaba desplegado, sin ningun otro delta.
+- [HECHO] Verificado en produccion: las siete rutas de formulario devuelven `200` sin redirect, y
+  home, blog, biblioteca, farmacias, centros de salud y noticias siguen en `200`.
+
+Metodo, por si se repite: se trabajo en un `git worktree` aislado creado desde `origin/master`, sin
+tocar la copia de trabajo de `landing-gerow`, que tiene 1368 archivos sin commitear y tres worktrees
+activos. Es la forma de intervenir ese repo sin arriesgar trabajo ajeno.
+
+- [PENDIENTE] Sigue sin mergear `fix/reconcile-ppforms-retirement-with-tracking`, que ademas del fix
+  de routing contiene el formulario de retiro y el tracking. Se aplico solo la correccion minima, no
+  la rama entera. Esa rama sigue siendo deuda abierta.
+- [PENDIENTE] Cuantificar el impacto: cuantos leads entraron mal atribuidos mientras duro la
+  regresion. El commit desplegado roto era `c3315ed7`; su fecha acota la ventana.
 
 Nota para la migracion: el estado correcto de `_redirects`, `_routes.json` y las Pages Functions es
 exactamente lo que hay que llevarse al proyecto nuevo. Arreglar esto no es un desvio, es preparar el
