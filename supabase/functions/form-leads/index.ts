@@ -14,6 +14,8 @@ const allowedOrigins = new Set([
   'http://localhost:3000',
   'http://localhost:4173',
   'http://localhost:5173',
+  'http://localhost:8788',
+  'http://127.0.0.1:8788',
 ])
 
 type LeadPayload = Record<string, unknown>
@@ -46,6 +48,8 @@ type AppointmentNotificationContext = {
   ownerEmail: string
   ownerName: string
 }
+
+type LeadMetadata = Record<string, unknown>
 
 function corsHeaders(origin: string | null) {
   const allowOrigin = origin && allowedOrigins.has(origin) ? origin : 'https://planespro.cl'
@@ -154,6 +158,33 @@ function firstString(payload: LeadPayload, ...keys: string[]) {
   return ''
 }
 
+function getLeadMetadataObject(value: unknown): LeadMetadata {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as LeadMetadata
+    : {}
+}
+
+function buildStep1JourneyMetadata(payload: LeadPayload): LeadMetadata | null {
+  const motivo = firstString(payload, 'paso1_motivo')
+  const necesidad = firstString(payload, 'paso1_necesidad')
+  const objetivo = firstString(payload, 'paso1_objetivo')
+  const grupo = firstString(payload, 'paso1_grupo')
+  const resumen = firstString(payload, 'paso1_resumen')
+
+  if (!(motivo || necesidad || objetivo || grupo || resumen)) {
+    return null
+  }
+
+  return {
+    version: 'pb-step1-v1',
+    motivo,
+    necesidad,
+    objetivo,
+    grupo,
+    resumen,
+  }
+}
+
 function normalizeSourceChannel(value: string) {
   const normalized = value.trim().toLowerCase()
   if (normalized === 'pb' || normalized === 'general') return normalized
@@ -245,6 +276,43 @@ function extractAppointmentId(data: unknown) {
   if (!data || typeof data !== 'object') return ''
   const appointmentId = (data as Record<string, unknown>).appointment_id
   return typeof appointmentId === 'string' ? appointmentId.trim() : ''
+}
+
+function isFormActionUpdate(payload: LeadPayload) {
+  return firstString(payload, 'action_only') === '1'
+}
+
+function hasIdempotentFormCredentials(payload: LeadPayload) {
+  return Boolean(firstString(payload, 'submission_id') && firstString(payload, 'update_token'))
+}
+
+async function submitLeadPayload(payload: LeadPayload) {
+  if (isFormActionUpdate(payload)) {
+    const leadId = firstString(payload, 'lead_id', 'existing_lead_id')
+    const submissionId = firstString(payload, 'submission_id')
+    const updateToken = firstString(payload, 'update_token')
+
+    if (!(leadId && submissionId && updateToken)) {
+      throw new Error('Missing lead update credentials')
+    }
+
+    return supabase.rpc('update_planespro_public_lead_action', {
+      p_lead_id: leadId,
+      p_submission_id: submissionId,
+      p_update_token: updateToken,
+      p_payload: payload,
+    })
+  }
+
+  if (hasIdempotentFormCredentials(payload)) {
+    return supabase.rpc('submit_planespro_idempotent_public_lead', {
+      p_payload: payload,
+    })
+  }
+
+  return supabase.rpc('submit_planespro_public_lead', {
+    p_payload: payload,
+  })
 }
 
 async function resolveNotificationEmailConfig(userId: string): Promise<NotificationEmailConfig | null> {
@@ -471,10 +539,7 @@ async function finalizeAttachmentForLead(
 
   if (fetchError) throw fetchError
 
-  const currentMetadata =
-    leadRow?.metadata && typeof leadRow.metadata === 'object' && !Array.isArray(leadRow.metadata)
-      ? leadRow.metadata as Record<string, unknown>
-      : {}
+  const currentMetadata = getLeadMetadataObject(leadRow?.metadata)
 
   const mergedMetadata = {
     ...currentMetadata,
@@ -495,6 +560,34 @@ async function finalizeAttachmentForLead(
   if (updateError) throw updateError
 
   return { finalPath, fileName }
+}
+
+async function mergeLeadMetadataPatch(leadId: string, patch: LeadMetadata) {
+  if (!leadId || !Object.keys(patch).length) return
+
+  const { data: leadRow, error: fetchError } = await supabase
+    .from('leads')
+    .select('metadata')
+    .eq('id', leadId)
+    .maybeSingle()
+
+  if (fetchError) throw fetchError
+
+  const currentMetadata = getLeadMetadataObject(leadRow?.metadata)
+  const mergedMetadata = {
+    ...currentMetadata,
+    ...patch,
+  }
+
+  const { error: updateError } = await supabase
+    .from('leads')
+    .update({
+      metadata: mergedMetadata,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', leadId)
+
+  if (updateError) throw updateError
 }
 
 Deno.serve(async (request) => {
@@ -519,6 +612,7 @@ Deno.serve(async (request) => {
   try {
     const { payload, file } = await parsePayload(request)
     const normalizedPayload = typeof payload === 'object' && payload ? { ...(payload as Record<string, unknown>) } : {}
+    const step1JourneyMetadata = buildStep1JourneyMetadata(normalizedPayload)
     Object.assign(normalizedPayload, inferSourceContext(normalizedPayload, request))
 
     if (file) {
@@ -528,21 +622,33 @@ Deno.serve(async (request) => {
       normalizedPayload.pdf_size = uploadedAttachment.size
     }
 
-    const { data, error } = await supabase.rpc('submit_planespro_public_lead', {
-      p_payload: normalizedPayload,
-    })
+    const actionUpdate = isFormActionUpdate(normalizedPayload)
+    const { data, error } = await submitLeadPayload(normalizedPayload)
 
     if (error) {
-      console.error('submit_planespro_public_lead error', error)
+      console.error('form lead submit error', {
+        action: actionUpdate ? 'update' : 'create',
+        code: error.code,
+        message: error.message,
+      })
+      const isConflict = error.code === '23505' || /ya no esta disponible/i.test(error.message || '')
       return new Response(JSON.stringify({ error: error.message }), {
-        status: 400,
+        status: isConflict ? 409 : 400,
         headers: { ...headers, 'Content-Type': 'application/json' },
       })
     }
 
     createdLeadId = extractLeadId(data)
 
-    if (file && uploadedAttachment && createdLeadId) {
+    if (!actionUpdate && createdLeadId && step1JourneyMetadata) {
+      await mergeLeadMetadataPatch(createdLeadId, {
+        intake_journey: {
+          step1: step1JourneyMetadata,
+        },
+      })
+    }
+
+    if (!actionUpdate && file && uploadedAttachment && createdLeadId) {
       const finalizedAttachment = await finalizeAttachmentForLead(normalizedPayload, file, uploadedAttachment, createdLeadId)
       finalizedAttachmentPath = finalizedAttachment.finalPath
       if (data && typeof data === 'object') {
@@ -562,7 +668,7 @@ Deno.serve(async (request) => {
     }
 
     return new Response(JSON.stringify(data), {
-      status: 201,
+      status: actionUpdate ? 200 : 201,
       headers: { ...headers, 'Content-Type': 'application/json' },
     })
   } catch (error) {
