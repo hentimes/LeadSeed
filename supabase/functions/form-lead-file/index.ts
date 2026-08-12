@@ -4,15 +4,66 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const UPLOAD_BUCKET = 'planespro-form-uploads'
 
+const DEFAULT_ORIGIN = 'https://planespro.cl'
+
+/**
+ * Origenes web permitidos. Misma lista que el resto de funciones del proyecto.
+ *
+ * No incluye la extension: su origen es `chrome-extension://<id>` y el id
+ * cambia entre la version empaquetada y la cargada sin empaquetar en
+ * desarrollo, asi que no puede escribirse aca de forma fija.
+ */
+const allowedOrigins = new Set([
+  'https://planespro.cl',
+  'https://www.planespro.cl',
+  'https://form.planespro.cl',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  'http://localhost:5173',
+])
+
+/**
+ * Ids de extension autorizados, separados por coma, via secreto de Supabase.
+ *
+ * Si el secreto no esta configurado se acepta cualquier `chrome-extension://`.
+ * Es deliberado: este endpoint es el que usa el CRM para leer los adjuntos de
+ * un lead, y endurecerlo antes de configurar el secreto dejaria la descarga de
+ * PDFs rota. Configurar `ALLOWED_EXTENSION_IDS` cierra ese margen.
+ */
+const allowedExtensionIds = new Set(
+  (Deno.env.get('ALLOWED_EXTENSION_IDS') || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean),
+)
+
+function isAllowedExtensionOrigin(origin: string): boolean {
+  if (!origin.startsWith('chrome-extension://')) return false
+  if (allowedExtensionIds.size === 0) return true
+
+  return allowedExtensionIds.has(origin.slice('chrome-extension://'.length))
+}
+
+/**
+ * Antes se reflejaba cualquier `Origin` recibido. Se cambia a allowlist para
+ * alinear esta funcion con el resto del proyecto, que ya la usaba.
+ *
+ * El impacto real del reflejo era acotado, porque el endpoint exige
+ * `Authorization: Bearer` y valida la propiedad del lead, asi que un sitio
+ * cualquiera no podia obtener el token del usuario. Aun asi era la unica
+ * funcion que se salia del estandar.
+ */
 function corsHeaders(origin: string | null) {
-  const allowOrigin = origin && origin.startsWith('chrome-extension://')
-    ? origin
-    : (origin || 'http://localhost:5173')
+  const allowOrigin =
+    origin && (allowedOrigins.has(origin) || isAllowedExtensionOrigin(origin))
+      ? origin
+      : DEFAULT_ORIGIN
 
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    Vary: 'Origin',
   }
 }
 

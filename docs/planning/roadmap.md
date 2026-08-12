@@ -1108,8 +1108,33 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   superficie en vez de en un barrido.
 - [PENDIENTE] Unificar `AdminSupportChat` y `SupportFloatingChat` en un `useSupportThread(peerId)`, y
   usar `removeChannel()` en vez de `unsubscribe()`.
-- [PENDIENTE] Sufijar los nombres de canal realtime con `userId`. Los nombres estaticos globales son el
-  mismo fallo ya parcheado en el chat en `cd70955`, latente en leads, listas y plantillas.
+- [HECHO] Nombres de canal realtime unicos por suscripcion. Ya no queda ningun `.channel()` con
+  nombre literal en `src/`. 12 tests.
+
+  Precision sobre el diagnostico original: la auditoria proponia sufijar con `userId`, y **eso no
+  habria bastado**. La colision no necesita dos usuarios; basta que dos componentes de la misma
+  sesion monten el mismo hook a la vez, como un modal que use `useLists()` dentro de una pagina que
+  ya lo usa. El sufijo combina ambito e instancia. Dos helpers en `src/utils/realtimeChannel.ts`,
+  porque los contextos difieren: `buildRealtimeChannelName` usa `useId()` de React y se aplica dentro
+  de `useRealtimeRefresh` sin tocar a sus llamadores; `uniqueChannelName` usa un contador de modulo
+  para los nueve canales de repositorio, que no pueden usar hooks. El peor de esos nueve era
+  `subscribeReceiverMessages`, con nombre fijo pese a filtrar por usuario.
+
+- [PENDIENTE DE DEPLOY] CORS de `supabase/functions/form-lead-file` alineado a la allowlist estandar
+  del proyecto. Era la unica funcion que reflejaba cualquier `Origin` recibido.
+
+  Riesgo evaluado y descartado: se temia romper la descarga de PDFs, porque el consumidor es la
+  extension y su origen `chrome-extension://<id>` no puede estar en una allowlist fija (el id cambia
+  entre la version empaquetada y la de desarrollo). Al revisar el llamador real
+  (`useLeadDetail.ts:318-338`) resulta que abre el PDF con un submit de formulario oculto hacia una
+  ventana nueva. Eso es navegacion de nivel superior, no XHR: **CORS no interviene en ese flujo** y un
+  POST `x-www-form-urlencoded` tampoco dispara preflight. Aun asi se conserva la aceptacion de
+  origenes `chrome-extension://`, configurable por el secreto `ALLOWED_EXTENSION_IDS`, por si alguna
+  superficie futura pasa a usar `fetch`.
+
+  No se puede validar con el pipeline local: es codigo Deno fuera del alcance de Vitest y solo toma
+  efecto al desplegar. Queda `pendiente de validacion real` hasta comprobar en produccion que la
+  apertura y la descarga de PDF siguen funcionando.
 - [PENDIENTE] Sacar el cliente Supabase de `hooks/useRealtimeRefresh.ts` y `services/realtimeService.ts`
   hacia repositorios.
 - [PENDIENTE] Corregir el CORS de `supabase/functions/form-lead-file/index.ts`, que refleja cualquier
