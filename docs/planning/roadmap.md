@@ -934,11 +934,12 @@ entrypoint_path: .../landing-gerow/supabase/functions/form-leads/index.ts
   despliegan solo desde LeadSeed**. Documenta el incidente y su evidencia.
 - [HECHO] Renumerada `sql/migrations/090_chat_message_admin_delete.sql` a `095_...`, cerrando la
   colision de numero. Queda solo la colision historica `036`, anterior a esta pasada.
-- [PENDIENTE] Commitear el bloque completo, incluido el trabajo de borrado admin de chat que seguia
-  sin commitear.
-- [PENDIENTE] Migrar `form-progress` a este repo. No se movio porque al `2026-08-12` su copia en
-  `landing-gerow` tiene cambios sin commitear; mover un archivo sucio crearia el mismo drift que este
-  bloque busca cerrar.
+- [HECHO] Commiteado el bloque completo, incluido el borrado admin de chat (commit `8fd5f3e`).
+- [HECHO] `form-progress` adoptada. No se copio de `landing-gerow` sino que se obtuvo con
+  `supabase functions download`, es decir el codigo realmente desplegado. Fue la decision correcta:
+  el HEAD commiteado de ese repo tenia una version vieja que, al redesplegarse, habria desactivado en
+  silencio el tracking de `retiro-v2` y de seis tipos de evento. **Las doce Edge Functions viven ahora
+  en este repo.**
 - [BLOQUEADO] Eliminar `supabase/functions/` y `supabase/migrations/` de `landing-gerow`. Ese repo
   tiene al `2026-08-12` **1368 archivos sin commitear**, esta parado en la rama `fix/agenda-url-bug`
   (no `master`), y tiene tres worktrees activos. Borrar ahi en ese estado es inseguro. Requiere una
@@ -1312,7 +1313,8 @@ fuente y de deploy, no de bundle.
 Hallazgo clave: el acoplamiento que bloquea el port no es Chrome (93 usos bien contenidos en 18
 archivos) sino el DOM dentro de hooks de dominio.
 
-- [PARCIAL] `src/platform/` con tres puertos: `Dialogs`, `Navigation` y `KeyValueStore`.
+- [HECHO] `src/platform/` con seis puertos: `Dialogs`, `Navigation`, `KeyValueStore`, `Deeplink`,
+  `MessageBus` y `OAuthLauncher`.
 
   Sobre los cuatro que faltan, con una correccion al plan original. La auditoria listaba nueve
   puertos como si todos tuvieran el mismo valor. No lo tienen. Al activar la regla que prohibe
@@ -1365,10 +1367,10 @@ declarados como exentos.
   (`alertNotifier`, `offscreenAudio`, `extensionBadgeTheme` y los dos de background) mas
   `lib/chromeStorageAdapter.ts`. Es reubicacion, no refactor: su codigo ya es correcto, pero
   conviviendo en `services/` con dominio portable confunden sobre que se porta y que se reescribe.
-- [PENDIENTE] Los cuatro puertos que la auditoria listaba y que **no se van a construir**:
+- [HECHO] Decidido **no construir** cuatro de los nueve puertos que listaba la auditoria:
   `Notifier`, `BadgeCounter`, `BackgroundScheduler` y el audio. Envolverlos no quitaria acoplamiento,
-  solo agregaria indireccion: no se portan a movil, se reescriben con el equivalente nativo. Queda
-  declarado para que nadie los reabra como deuda pendiente.
+  solo agregaria indireccion: no se portan a movil, se reescriben con el equivalente nativo. Se marca
+  como decision cerrada, no como pendiente, para que nadie lo reabra.
 
 - [HECHO] Efecto colateral util del puerto: el `try/catch` vacio alrededor de `chrome.storage`, que
   estaba repetido en cada llamador para tolerar el desarrollo web sin extension, ahora vive una sola
@@ -1392,10 +1394,11 @@ declarados como exentos.
   No se toco el comportamiento: la implementacion web sigue llamando a los mismos `confirm`, `alert`
   y `window.location.hash` de antes. Lo que cambia es quien depende de quien.
 
-- [PENDIENTE] Los `window.location.hash` que quedan viven solo en `components/` y `pages/`, que es la
-  capa web y se reescribe para movil. No los cubre la regla de frontera de ESLint a proposito.
-- [PENDIENTE] Sacar `chrome.storage` de los componentes `DataManagement.tsx:60` y
-  `EmailSender.tsx:188`, y de `useEmailChannels.ts:329`.
+- [HECHO] Verificado que los `window.location.hash` restantes viven solo en `components/` y
+  `pages/`, que es la capa web y se reescribe para movil. La regla de frontera no los cubre a
+  proposito; no son deuda.
+- [HECHO] Retirado `chrome.storage` de `DataManagement.tsx` y `EmailSender.tsx`, y `chrome.identity`
+  de `useEmailChannels.ts`. Los tres pasan por puertos.
 - [PENDIENTE] Evaluar TanStack Query como capa unica de estado servidor. Hoy no hay cache: cada
   guardado cuesta del orden de 8 consultas por doble disparo entre refetch manual y evento realtime de
   la propia escritura, y no hay guard de "ultima respuesta gana" en la bandeja.
