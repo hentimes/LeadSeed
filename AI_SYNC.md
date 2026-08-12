@@ -6,49 +6,6 @@
 > destruiria la trazabilidad que CONTROL exige preservar.
 > Ruta de trabajo actual: `PROYECTOS/LeadSeed-Project/LeadSeed`.
 
-### 2026-08-05 19:58 CLT - Claude (Sonnet) - Rediseño de Enviar + planificación de Secuencias / CONTROL
-- Tipo: rediseño visual + planificación de feature nueva
-- Rol: Implementadora
-- Estado: rediseño de `Enviar` hecho y commiteado; `Secuencias de mensajes` en diseño, sin código todavía
-- Objetivo:
-  - adaptar la sección `send` (Enviar) al sistema de diseño de `src/design/`, que la sección no usaba (colores literales por canal, tabs tipo pastilla, modales fuera del patrón `Modal`)
-  - dejar sentado con el usuario el diseño de una funcionalidad nueva, "Secuencias de mensajes", antes de escribir código
-- Dominio tocado:
-  - `src/components/send/`
-  - `src/pages/SendPage.tsx`
-  - `src/design/Field.tsx` (primitiva nueva: `Field`, `Input`, `Textarea`, `Select`, `Checkbox`)
-- Dominio reservado a futuro (Secuencias, sin crear aún):
-  - tablas nuevas `sequences`, `sequence_steps`, `enrollments`
-  - probable nueva página `sequences` en `src/config/routes.ts` y `src/components/layout/NavigationDrawer.tsx`
-- Archivos tocados (commit `c59432d`, 15 archivos, sin arrastrar nada de otras sesiones):
-  - `src/design/Field.tsx`, `src/design/index.ts`
-  - `src/pages/SendPage.tsx`
-  - `src/components/send/{WhatsAppSender,EmailSender,CallSender,EmailEditor,EmailScheduler}.tsx`
-  - `src/components/send/{SendTabs,SendStep,TemplatePicker,RecipientPicker,SendConfirmModal,SendHistoryDisclosure,channels}.{tsx,ts}` (nuevos)
-- Cambios aplicados:
-  - unifica el acento visual de las 3 pestañas de envío (WhatsApp/Email/Llamadas) al morado de marca `--ls-primary`; antes cada canal pintaba su propio color en botones, bordes y foco
-  - reemplaza las tabs tipo pastilla (`bg-gray-100`) por el patrón de subrayado que ya usa el Dashboard
-  - los 3 modales de confirmación pasan a la primitiva `Modal` (portal a `document.body`); antes usaban `fixed inset-0` dentro de `<main>`, que puede recortarlos en el side panel
-  - elimina duplicación literal del selector de plantilla y del selector de destinatarios entre WhatsApp y Email
-  - corrige numeración de pasos (antes el paso "2" desaparecía si no había plantilla elegida, y se veía "1" seguido de "3")
-  - corrige encoding roto en `EmailEditor`/`EmailScheduler` y una clase Tailwind inválida (`dark:bg-slate-800/80 dark:backdrop-blur-md/50`)
-- Validación ejecutada:
-  - `npx tsc --noEmit`: OK
-  - `npm run build`: OK
-  - pendiente: verificación visual real en Chrome a 320/340/360/380px (no se cargó la extensión desempaquetada)
-- Riesgos abiertos:
-  - sin verificación visual; los cambios de layout más fuertes (chips de listas de destinatarios, ancho de la lista de leads) conviene mirarlos antes de dar el rediseño por cerrado
-- Estado de "Secuencias de mensajes" (decidido con el usuario, sin código aún):
-  - ubicación acordada: página hermana dentro del submenú "Mensajes" (`send`, `sequences`, `templates`)
-  - motor acordado: automático solo para email vía `scheduleEmailSend`; WhatsApp y llamada quedan como pendientes manuales porque no se pueden automatizar (WhatsApp Web requiere confirmación humana para abrir el envío)
-  - esquema propuesto, no creado: `sequences(id, user_id, name, is_active)`, `sequence_steps(id, sequence_id, position, template_id -> templates.id, delay_days)`, `enrollments(id, sequence_id, lead_id, current_step, status, last_sent_at, next_due_at)`
-  - decisión pendiente: si un paso de secuencia ignora `lead_ids`/`lead_list_ids` propios de `templates` (recomendado, para que la audiencia la defina la inscripción) o los combina
-  - decisión pendiente: qué hace `deleteTemplateRow` si la plantilla es paso de una secuencia con leads inscritos (recomendado: `ON DELETE RESTRICT` + aviso en Plantillas)
-  - la migración SQL de esta feature no se escribió todavía; el número correcto se decide recién al crearla, mirando el estado real de `sql/migrations/` y `supabase/migrations/` en ese momento (ambas carpetas vienen avanzando rápido con trabajo de chat/capture-links de otra sesión)
-- Solicitud para otra sesión:
-  - si alguien más toca `src/config/routes.ts` o `src/components/layout/NavigationDrawer.tsx` para agregar rutas, avisar acá antes: `Secuencias` va a necesitar registrarse ahí y esos dos archivos vienen cambiando seguido por el trabajo de chat en paralelo
-  - no hay overlap de dominio con `src/components/send/` ni `src/design/Field.tsx` hasta ahora
-
 ### 2026-08-03 20:15 CLT - Codex - landing-gerow / carpeta `forms`
 - Tipo: ordenamiento estructural acotado / CONTROL
 - Rol: Implementadora
@@ -7446,3 +7403,730 @@ no confirmado. Quedo desconectada del flujo activo y de los comandos de gate.
 
 `cerrado para forms y gate activo`; `ppcrm` queda retirado del flujo activo, con
 borrado fisico pendiente por seguridad del worktree.
+
+---
+
+## Claude (Sonnet) | 2026-08-05 19:58 CLT | Rediseño de Enviar + planificación de Secuencias / CONTROL
+
+> Nota de reubicacion (2026-08-06, Claude): esta entrada se escribio originalmente
+> pegada justo despues del encabezado del archivo (linea 9), rompiendo el orden
+> cronologico append-only que el resto del documento respeta. Se movio aca, a su
+> lugar cronologico real, sin cambiar una sola palabra del contenido. Hallazgo y
+> correccion registrados en la auditoria cruzada de mas abajo.
+
+- Tipo: rediseño visual + planificación de feature nueva
+- Rol: Implementadora
+- Estado: rediseño de `Enviar` hecho y commiteado; `Secuencias de mensajes` en diseño, sin código todavía
+- Objetivo:
+  - adaptar la sección `send` (Enviar) al sistema de diseño de `src/design/`, que la sección no usaba (colores literales por canal, tabs tipo pastilla, modales fuera del patrón `Modal`)
+  - dejar sentado con el usuario el diseño de una funcionalidad nueva, "Secuencias de mensajes", antes de escribir código
+- Dominio tocado:
+  - `src/components/send/`
+  - `src/pages/SendPage.tsx`
+  - `src/design/Field.tsx` (primitiva nueva: `Field`, `Input`, `Textarea`, `Select`, `Checkbox`)
+- Dominio reservado a futuro (Secuencias, sin crear aún):
+  - tablas nuevas `sequences`, `sequence_steps`, `enrollments`
+  - probable nueva página `sequences` en `src/config/routes.ts` y `src/components/layout/NavigationDrawer.tsx`
+- Archivos tocados (commit `c59432d`, 15 archivos, sin arrastrar nada de otras sesiones):
+  - `src/design/Field.tsx`, `src/design/index.ts`
+  - `src/pages/SendPage.tsx`
+  - `src/components/send/{WhatsAppSender,EmailSender,CallSender,EmailEditor,EmailScheduler}.tsx`
+  - `src/components/send/{SendTabs,SendStep,TemplatePicker,RecipientPicker,SendConfirmModal,SendHistoryDisclosure,channels}.{tsx,ts}` (nuevos)
+- Cambios aplicados:
+  - unifica el acento visual de las 3 pestañas de envío (WhatsApp/Email/Llamadas) al morado de marca `--ls-primary`; antes cada canal pintaba su propio color en botones, bordes y foco
+  - reemplaza las tabs tipo pastilla (`bg-gray-100`) por el patrón de subrayado que ya usa el Dashboard
+  - los 3 modales de confirmación pasan a la primitiva `Modal` (portal a `document.body`); antes usaban `fixed inset-0` dentro de `<main>`, que puede recortarlos en el side panel
+  - elimina duplicación literal del selector de plantilla y del selector de destinatarios entre WhatsApp y Email
+  - corrige numeración de pasos (antes el paso "2" desaparecía si no había plantilla elegida, y se veía "1" seguido de "3")
+  - corrige encoding roto en `EmailEditor`/`EmailScheduler` y una clase Tailwind inválida (`dark:bg-slate-800/80 dark:backdrop-blur-md/50`)
+- Validación ejecutada:
+  - `npx tsc --noEmit`: OK
+  - `npm run build`: OK
+  - pendiente: verificación visual real en Chrome a 320/340/360/380px (no se cargó la extensión desempaquetada)
+- Riesgos abiertos:
+  - sin verificación visual; los cambios de layout más fuertes (chips de listas de destinatarios, ancho de la lista de leads) conviene mirarlos antes de dar el rediseño por cerrado
+- Estado de "Secuencias de mensajes" (decidido con el usuario, sin código aún):
+  - ubicación acordada: página hermana dentro del submenú "Mensajes" (`send`, `sequences`, `templates`)
+  - motor acordado: automático solo para email vía `scheduleEmailSend`; WhatsApp y llamada quedan como pendientes manuales porque no se pueden automatizar (WhatsApp Web requiere confirmación humana para abrir el envío)
+  - esquema propuesto, no creado: `sequences(id, user_id, name, is_active)`, `sequence_steps(id, sequence_id, position, template_id -> templates.id, delay_days)`, `enrollments(id, sequence_id, lead_id, current_step, status, last_sent_at, next_due_at)`
+  - decisión pendiente: si un paso de secuencia ignora `lead_ids`/`lead_list_ids` propios de `templates` (recomendado, para que la audiencia la defina la inscripción) o los combina
+  - decisión pendiente: qué hace `deleteTemplateRow` si la plantilla es paso de una secuencia con leads inscritos (recomendado: `ON DELETE RESTRICT` + aviso en Plantillas)
+  - la migración SQL de esta feature no se escribió todavía; el número correcto se decide recién al crearla, mirando el estado real de `sql/migrations/` y `supabase/migrations/` en ese momento (ambas carpetas vienen avanzando rápido con trabajo de chat/capture-links de otra sesión)
+- Solicitud para otra sesión:
+  - si alguien más toca `src/config/routes.ts` o `src/components/layout/NavigationDrawer.tsx` para agregar rutas, avisar acá antes: `Secuencias` va a necesitar registrarse ahí y esos dos archivos vienen cambiando seguido por el trabajo de chat en paralelo
+  - no hay overlap de dominio con `src/components/send/` ni `src/design/Field.tsx` hasta ahora
+
+## Claude (LeadSeed) - 2026-08-05 - Auditoria cruzada obligatoria (CONTROL 14.4) de bloques cerrados hoy por otras sesiones
+
+Auditoria solicitada explicitamente por el usuario para cumplir CONTROL 14.4: quien
+NO cerro un bloque debe auditarlo. Cubre los 4 bloques cerrados hoy en LeadSeed que
+yo no cerre: `c59432d` (rediseno de Send), `22e1a3a` (chat con menciones/integrantes,
+comunidad como foro), `e4e3f5a` (moderacion de sala, DMs propios y adjuntos),
+`9e60aae` (canal retiro + funnel de visitas/paso1/paso2).
+
+### Resultado
+
+Sin hallazgos criticos. RLS verificada empiricamente en las 15 tablas nuevas y esta
+correctamente implementada en las 15. Sin escalamiento de privilegios, sin policies
+permisivas (`USING (true)`) en escritura, sin emojis en la UI nueva. Se encontraron
+3 incumplimientos de proceso CONTROL (no de codigo) que si requieren correccion.
+
+### Hallazgos
+
+**1. Cumplimiento AI_SYNC.md (proceso, no codigo) - INCUMPLIMIENTO CONFIRMADO**
+
+- De los 4 bloques cerrados hoy, solo `c59432d` (Send) tiene entrada en AI_SYNC.md.
+  `22e1a3a`, `e4e3f5a` y `9e60aae` no tienen ninguna entrada. Esto viola
+  directamente CONTROL secciones 18/19 (toda tarea cerrada debe documentarse aca).
+- La entrada de `c59432d` ademas quedo insertada cerca de la LINEA 9 del archivo
+  (justo despues del encabezado), rompiendo la convencion de append-only /
+  orden cronologico que el resto del archivo (7448+ lineas) respeta.
+
+**2. RLS/seguridad en las 15 tablas nuevas - VERIFICADO, SIN PROBLEMAS**
+
+Verificacion empirica via `pg_class.relrowsecurity` + `pg_policies` contra produccion
+(no supuestos, no lectura de migracion sin confirmar contra la base real):
+
+- 14 de 15 tablas: RLS habilitada con 2-4 policies cada una, todas con
+  `auth.uid() = <owner_column>` para filas propias o el mismo patron staff-check
+  (`role='admin' OR is_helper=true` contra `profiles`) para acceso de moderadores.
+  Revisadas linea por linea: `chat_direct_messages`, `chat_user_bans`,
+  `chat_user_blocks`, `chat_user_mutes`, `chat_message_reports`,
+  `chat_highlighted_messages`, `chat_message_attachments`, `chat_pinned_messages`,
+  `chat_room_reads`, `chat_saved_messages`, `community_categories`,
+  `community_comments`, `community_post_likes`, `community_posts`. Ninguna tiene
+  `USING (true)` en INSERT/UPDATE/DELETE. `chat_message_attachments.INSERT`
+  ademas valida que el `message_id` referenciado pertenezca al mismo uploader
+  (`EXISTS ... chat_messages m WHERE m.id = ... AND m.user_id = auth.uid()`), asi
+  que no se puede adjuntar un archivo a un mensaje ajeno.
+- `form_progress_events` (la 15va): RLS habilitada, 0 policies, `REVOKE ALL FROM
+  anon, authenticated`. Esto es INTENCIONAL y esta correctamente implementado, no
+  es una tabla rota. Verificado end-to-end, no solo leido el comentario de la
+  migracion:
+  - Escritura: Edge Function `form-progress` (activa en produccion, version 1,
+    confirmado via `supabase functions list`) usa `SUPABASE_SERVICE_ROLE_KEY`
+    (bypassa RLS), valida `form_slug`/`event_type` contra un allowlist fijo en
+    el propio Edge Function (no en la base) y valida `origin` contra un
+    allowlist de dominios. El source vive en el repo landing-gerow
+    (`supabase/functions/form-progress/index.ts`), no en LeadSeed - incidencia
+    de arquitectura, ver hallazgo 3.
+  - Lectura: `list_my_capture_links()` es `SECURITY DEFINER` + `SET search_path =
+    public`, agrega `form_progress_events` por `capture_ref` y la expone como
+    `visits`/`step1_completions`/`step2_completions`. Ningun cliente TS llama a
+    la tabla directamente (`grep -rn "form_progress_events" src/` = 0 resultados).
+  - Conclusion: cadena de acceso completa y correcta. No requiere cambios.
+
+**3. Arquitectura: Edge Functions del mismo proyecto Supabase se despliegan desde
+dos repos distintos - a documentar, no es un bug**
+
+`supabase functions list` contra el proyecto compartido muestra que `form-progress`
+tiene `entrypoint_path` apuntando a
+`.../landing-gerow/supabase/functions/form-progress/index.ts`, mientras que
+`form-lead-file`, `google-calendar-*` etc. tienen entrypoints en `.../LeadSeed/...`
+o rutas temporales (`/tmp/user_fn_...`, deploy manual/dashboard). Es decir: el
+mismo proyecto Supabase recibe deploys de Edge Functions desde LeadSeed Y desde
+landing-gerow segun cual repo sea dueno de esa funcionalidad (logica publica de
+formularios vive en landing-gerow, logica de la app vive en LeadSeed). Es
+consistente con el patron ya existente (`form-leads`, `form-lead-abandoned`,
+`form-public-availability` tambien viven en landing-gerow), asi que no es una
+regresion introducida hoy - pero no esta documentado en ningun lado y alguien que
+solo mire `LeadSeed/supabase/functions/` puede asumir erroneamente que
+`form-progress` no existe o esta roto. Recomiendo una linea en el README o en
+CONTROL aclarando que el codigo de Edge Functions publicas vive en landing-gerow.
+
+**4. Convencion dual `sql/migrations/` + `supabase/migrations/` rota en el bloque
+`9e60aae` (retiro) - INCUMPLIMIENTO CONFIRMADO**
+
+Todo el trabajo de seguridad y de origen de leads de hoy (migraciones 065-089,
+incluida la reconciliacion de la migracion huerfana `20260803000100`) mantuvo
+espejados ambos archivos: uno en `sql/migrations/0XX_*.sql` y su equivalente en
+`supabase/migrations/<timestamp>_*.sql`. El bloque `9e60aae` rompe esto: creo
+`supabase/migrations/20260805000600_form_progress_events_and_retiro_channel.sql`
+(512 lineas) y `supabase/migrations/20260805000700_reset_capture_link_progress.sql`
+sin ningun archivo equivalente en `sql/migrations/` (el ultimo numerado ahi es
+`089_chat_messages_replica_identity_full.sql`). Confirmado via
+`supabase migration list --linked` que ambas SI estan aplicadas en produccion
+(`local` == `remote`), asi que no hay drift real - es puramente un problema de
+convencion/trazabilidad para quien busca el historico de cambios de base de datos
+solo en `sql/migrations/`.
+
+**5. UX/UI (seccion 10.1) - revision superficial, sin emojis detectados**
+
+Revisados via grep con rangos Unicode de emoji/dingbats los componentes nuevos de
+los 3 bloques (`BanUserMenu.tsx`, `ChatBannedScreen.tsx`, `ChatFrozenBanner.tsx`,
+`DirectMessageWindow.tsx`, `PinnedMessagesBanner.tsx`, `AdminRetiroLinksPanel.tsx`,
+`CommunityPage.tsx` y todo `components/community/`): 0 coincidencias. No revise en
+profundidad compactacion para sidebar angosto ni comportamiento en movil (angulos
+de arquitectura/modularidad y compatibilidad con app movil futura de la seccion 10
+tampoco se revisaron a fondo) - lo declaro explicitamente para no repetir el error
+de informe incompleto de esta misma sesion.
+
+### Desacuerdos
+
+Ninguno.
+
+### Riesgos remanentes
+
+- Si un futuro desarrollador (humano o IA) busca el historico de migraciones solo
+  en `sql/migrations/`, no vera las dos migraciones de `9e60aae` y puede asumir
+  que no existen o reconstruirlas de memoria - mismo tipo de riesgo que ya causo
+  la reconciliacion de `20260803000100` mas arriba en este documento.
+- Los 3 bloques sin entrada propia en AI_SYNC.md dependen de que esta auditoria sea
+  su unico registro; si esta entrada se pierde o no se lee, no queda rastro de que
+  hayan sido auditados.
+- No se audito en profundidad UX/movil/arquitectura mas alla de lo declarado arriba.
+
+### Recomendacion de accion siguiente
+
+1. Quien cierre el proximo bloque debe agregar la entrada correspondiente para
+   `22e1a3a`, `e4e3f5a` y `9e60aae` en el momento del cierre, no despues via
+   auditoria externa - y agregarla al FINAL del archivo, no cerca del encabezado.
+2. Opcional, baja prioridad (no hay drift, solo trazabilidad): crear
+   `sql/migrations/090_form_progress_events_and_retiro_channel.sql` y
+   `091_reset_capture_link_progress.sql` como espejo de los dos archivos de
+   `supabase/migrations/` de hoy, para no romper la busqueda por numero
+   secuencial que usa el resto del historico.
+3. Documentar en algun lugar visible (README de `supabase/functions/` o en
+   CONTROL) que las Edge Functions de formularios publicos se despliegan desde
+   landing-gerow, no desde LeadSeed, para evitar que una futura auditoria las
+   reporte como "faltantes".
+4. Pendiente para quien continue: revisar compactacion de sidebar angosto y
+   comportamiento movil de `CommunityPage.tsx` y `DirectMessageWindow.tsx`
+   contra los requisitos de la seccion 10.1 (no fue cubierto en este pase).
+
+**Responde aca abajo si hay desacuerdo con algun hallazgo.**
+
+---
+
+## Claude (LeadSeed) - 2026-08-06 - Correccion de los 3 hallazgos de proceso de la auditoria cruzada
+
+El usuario pidio corregir los 3 puntos de la auditoria anterior. Se resolvieron
+los 3. Detalle de cada uno:
+
+### 1. Entradas faltantes en AI_SYNC.md para `22e1a3a`, `e4e3f5a`, `9e60aae`
+
+Se agregan abajo como entradas reconstruidas retroactivamente por mi
+(Claude), NO por quien cerro cada bloque originalmente. Reconstruidas a partir
+de `git show --stat` y el mensaje de commit real de cada uno, sin inventar
+contenido no verificable. Se marcan explicitamente como reconstruccion para no
+hacerlas pasar por el reporte original de la sesion que las cerro.
+
+Tambien se movio la entrada de `c59432d` (Rediseño de Enviar), que estaba
+pegada cerca del encabezado del archivo, a su lugar cronologico real -
+detallado arriba, en su propia entrada con nota de reubicacion.
+
+### 2. Migraciones de `9e60aae` sin espejo en `sql/migrations/`
+
+Creados:
+- `sql/migrations/090_form_progress_events_and_retiro_channel.sql`
+- `sql/migrations/091_reset_capture_link_progress.sql`
+
+Contenido identico byte a byte al de `supabase/migrations/20260805000600_*.sql`
+y `supabase/migrations/20260805000700_*.sql` (copia directa, no reescritos de
+memoria), con un comentario de encabezado en cada uno aclarando que son el
+espejo de trazabilidad y que la version ya aplicada en produccion es la de
+`supabase/migrations/`. No se re-ejecuta nada contra la base: ambas ya estaban
+aplicadas (confirmado antes via `supabase migration list --linked`), esto es
+solo para que la busqueda secuencial en `sql/migrations/` no se corte en `089`.
+
+### 3. Documentacion de que las Edge Functions publicas viven en landing-gerow
+
+Se crea `supabase/functions/README.md` explicando que las funciones de
+formularios publicos (`form-progress`, y por el mismo patron ya existente
+`form-leads`, `form-lead-abandoned`, `form-public-availability`) se despliegan
+desde el repo `landing-gerow`, no desde este repo, y que su ausencia en esta
+carpeta es esperada, no un bug. Referencia cruzada agregada tambien en
+`PROTOCOLO_CONTROL.md` para que quien lea CONTROL primero llegue a esta nota
+antes de reportar una funcion "faltante".
+
+### Estado
+
+Los 3 puntos de la auditoria cruzada quedan cerrados. Pendiente real: el punto
+4 de la recomendacion (revisar compactacion de sidebar angosto / movil de
+`CommunityPage.tsx` y `DirectMessageWindow.tsx`) sigue sin cubrir - no era parte
+de lo que el usuario pidio corregir ahora.
+
+---
+
+## Claude (LeadSeed) - 2026-08-04/05 - Entrada reconstruida retroactivamente: `22e1a3a` chat con menciones e integrantes, comunidad como foro
+
+> Reconstruida el 2026-08-06 por Claude durante la correccion de la auditoria
+> cruzada, a partir de `git show --stat 22e1a3a` y el mensaje de commit. No es
+> el reporte original de quien cerro este bloque (no existia ninguno). No
+> incluye validacion ejecutada ni riesgos abiertos declarados por el autor
+> original porque esa informacion no quedo registrada en ningun lado accesible.
+
+- Tipo: feature de chat + reemplazo de comunidad por foro
+- Commit: `22e1a3a` (2026-08-04 11:52 CLT)
+- Estado: cerrado (mergeado), sin entrada propia de CONTROL al momento del cierre
+- Objetivo (segun mensaje de commit):
+  - Chat: ventana con altura fija en vez de crecer con el contenido (`PageShell`
+    gana modo `fillHeight`), menciones `@` clicables a personas y publicaciones,
+    panel de integrantes conectados con perfil publico y DM en ventana flotante,
+    emoticones y reglas anti-spam compartidas con mensajes directos, indicador de
+    no leidos via `chat_room_reads`, alerta propia al ser mencionado.
+  - Comunidad: deja de ser un segundo chat sobre `internal_messages` y pasa a
+    foro (publicaciones, categorias, me gusta, comentarios, orden por tendencia).
+    `internal_messages` queda solo para mensajeria privada de soporte.
+- Migraciones: `sql/migrations/072_chat_message_mentions_length.sql`,
+  `073_chat_room_reads.sql`, `074_community_forum.sql`. Verificado en la
+  auditoria cruzada anterior: aplicadas en produccion, RLS correcta en las 4
+  tablas nuevas de comunidad (`community_categories`, `community_posts`,
+  `community_post_likes`, `community_comments`) y en `chat_room_reads`.
+- Archivos principales tocados: `src/App.tsx`,
+  `src/components/app/AppPageRenderer.tsx`,
+  `src/components/chat/{ChatMembersPanel,ChatRoom,ChatTabs,DirectMessageWindow,
+  EmojiPicker,FloatingWindow,MentionAutocomplete,MessageContent}.tsx`,
+  `src/components/community/{CategoryFilterBar,CommentItem,LikeButton,PostCard,
+  PostComposer}.tsx` (y mas componentes de comunidad no listados por brevedad).
+
+## Claude (LeadSeed) - 2026-08-05 - Entrada reconstruida retroactivamente: `e4e3f5a` moderacion de sala, DMs propios y adjuntos
+
+> Reconstruida el 2026-08-06 por Claude durante la correccion de la auditoria
+> cruzada, a partir de `git show --stat e4e3f5a` y el mensaje de commit. No es
+> el reporte original de quien cerro este bloque.
+
+- Tipo: feature de moderacion de chat + mensajeria directa propia + adjuntos
+- Commit: `e4e3f5a` (2026-08-05 08:29 CLT)
+- Estado: cerrado (mergeado), sin entrada propia de CONTROL al momento del cierre
+- Objetivo (segun mensaje de commit):
+  - Mensajes directos en tabla propia (`chat_direct_messages`), separados de la
+    mensajeria de soporte que antes compartian con `internal_messages`.
+  - Mensajes destacados, fijados y guardados.
+  - Bloqueo y silencio de usuarios entre pares.
+  - Reportes de mensajes con cola de revision para staff.
+  - Baneos por tiempo definido o indefinido.
+  - Adjuntos de imagenes (convertidas a WebP) y documentos en el chat.
+  - Panel de informacion de sala y comandos de staff `@silenciar`/`@limpiar`/
+    `@purgar` para pausar la sala o borrar su historial.
+- Migraciones: `sql/migrations/076` a `089` (14 archivos: saved/pinned/
+  announcements, retention window, direct messages, blocks/mutes, message
+  reports, staff delete, user bans, highlighted messages, room info,
+  attachments, freeze and cleanup, reply-to null-on-delete, fix de borrado de
+  objetos de adjuntos, replica identity full). Verificado en la auditoria
+  cruzada anterior: todas aplicadas en produccion, RLS correcta y consistente
+  (patron `auth.uid() = owner` o staff-check contra `profiles`) en las 9 tablas
+  nuevas de este bloque.
+- Bug de arquitectura encontrado y corregido en la misma sesion de auditoria
+  (no en este commit): colision de nombre de canal Realtime entre
+  `useChatUnread` (siempre montado) y `useDirectMessageSessions` (montado con
+  el chat abierto), ambos llamando a
+  `subscribeToAnyIncomingDirectMessage` con el mismo `userId` -> Supabase
+  rechazaba el segundo `.on()` con "cannot add postgres_changes callbacks...
+  after subscribe()". Corregido en
+  `src/repositories/directMessagesRepository.ts` sufijando el nombre de canal
+  con `crypto.randomUUID()`. Commit `cd70955`.
+- Archivos principales tocados: 14 migraciones SQL, `src/App.tsx`,
+  `src/components/chat/*` (14 componentes nuevos: `AttachmentLightbox`,
+  `BanUserMenu`, `ChatBannedScreen`, `ChatFrozenBanner`, `ConfirmAnnouncementModal`,
+  `ConfirmDangerModal`, `DmAvatarStrip`, `FreezeDurationMenu`,
+  `HighlightedMessagesCarousel`, `MessageAttachment`, `MessageAuthorMenu`,
+  `PinDurationMenu`, `PinnedMessagesBanner`, `ReportMessageMenu`,
+  `ReportedMessagesPanel`, `RoomInfoModal`, `SavedMessagesPanel`), mas hooks
+  nuevos (`useActiveBans`, `useChatBanStatus`, `useChatModeration`,
+  `useDirectMessageSessions`, `useFlipOnOverflow`, `useHighlightedMessages`,
+  `usePinnedMessages`, `useReportedMessages`).
+
+## Claude (LeadSeed) - 2026-08-05 - Entrada reconstruida retroactivamente: `9e60aae` canal retiro + funnel de visitas/paso1/paso2
+
+> Reconstruida el 2026-08-06 por Claude durante la correccion de la auditoria
+> cruzada, a partir de `git show --stat 9e60aae` y el mensaje de commit
+> (co-autoria Claude Sonnet 5 ya constaba en el commit original). No es un
+> reporte independiente de quien cerro este bloque, es reconstruccion.
+
+- Tipo: feature de atribucion de canal + funnel de conversion de formularios
+- Commit: `9e60aae` (2026-08-05 20:43 CLT)
+- Estado: cerrado (mergeado), sin entrada propia de CONTROL al momento del cierre
+- Objetivo (segun mensaje de commit):
+  - Filtro y columna "Canal" (`pb`/`general`/`retiro`) en Leads.
+  - Panel admin-only `AdminRetiroLinksPanel` para crear y medir links de
+    campaña del formulario `retiro-tecnico-extranjero`.
+  - Columnas de funnel (visitas/paso1/paso2) en el panel de links `pb` existente.
+- Migraciones (unicas de este bloque sin usar la convencion dual del resto del
+  historico - ver hallazgo 4 de la auditoria cruzada, ya corregido arriba con
+  el espejo en `sql/migrations/090` y `091`):
+  - `supabase/migrations/20260805000600_form_progress_events_and_retiro_channel.sql`:
+    tabla generica `form_progress_events` (reusable para futuros formularios),
+    columna `capture_links.link_type`, y fix de ownership para que los leads de
+    retiro siempre caigan en un profile `role='admin'`.
+  - `supabase/migrations/20260805000700_reset_capture_link_progress.sql`: RPC
+    para resetear a cero el funnel de un link sin afectar los leads ya
+    capturados.
+- Verificado en la auditoria cruzada anterior: ambas migraciones aplicadas en
+  produccion (`local` == `remote`), RLS de `form_progress_events` (0 policies,
+  `REVOKE ALL FROM anon, authenticated`) es diseño intencional verificado
+  end-to-end (escritura solo via Edge Function `form-progress` con service
+  role, lectura solo via `list_my_capture_links()` `SECURITY DEFINER`).
+- Archivos principales tocados: `src/components/admin/AdminRetiroLinksPanel.tsx`
+  (nuevo), `src/components/leads/{LeadCell,LeadsTable,LeadsTableControls}.tsx`,
+  `src/components/settings/CaptureLinksSettings.tsx`, `src/config/leadColumns.ts`,
+  `src/hooks/{useLeadFilters,useLeadsPageController}.ts`,
+  `src/pages/LeadsPage.tsx`, `src/pages/admin/AdminLayout.tsx`,
+  `src/repositories/{captureLinksRepository,leadsRepository}.ts`.
+
+---
+
+## Claude (LeadSeed) - 2026-08-06 - Dos hallazgos menores del usuario sobre `9e60aae`, corregidos
+
+El usuario reviso el bloque retiro (`9e60aae`) tras la auditoria cruzada y encontro
+2 problemas menores, no bloqueantes, que ni la auditoria cruzada ni la reconstruccion
+retroactiva de arriba habian detectado. Ambos corregidos.
+
+### 1. Contaminacion cruzada de funnel entre formularios
+
+`list_my_capture_links()` (CTE `progress`) agrupaba `form_progress_events` solo
+por `capture_ref`, sin `form_slug`. Si alguien visita `/form/?ref=<ref-de-un-
+link-pb>`, esos eventos (`form_slug='form'`) se sumaban igual al funnel del
+link `pb` con ese `ref_code` - contaminacion de analitica, sin afectar
+ownership ni leads reales.
+
+- Fix: `supabase/migrations/20260806000100_fix_capture_link_funnel_form_slug_leak.sql`
+  (espejo: `sql/migrations/092_fix_capture_link_funnel_form_slug_leak.sql`).
+  El CTE `progress` ahora agrupa tambien por `form_slug`, y el `JOIN` exige
+  `progress.form_slug = cl.link_type` (pb solo cuenta eventos `form_slug='pb'`,
+  retiro solo cuenta `form_slug='retiro'`). Los eventos `form_slug='form'`
+  (formulario generico) dejan de sumarse a cualquier link - correcto, porque
+  `/form` no es la misma conversion que `/pb` ni que `/retiro`.
+- Aplicada en produccion: `supabase db push --linked` confirmado, `local` ==
+  `remote` para `20260806000100`.
+- Verificado empiricamente en una transaccion revertida (`begin ... rollback`,
+  sin dejar datos de prueba): un link `pb` de prueba con 2 eventos legitimos
+  `form_slug='pb'` y 3 eventos contaminantes `form_slug='form'` con el mismo
+  `ref_code` devolvia `visits: 5` antes del fix; con el fix aplicado devuelve
+  `visits: 2`.
+
+### 2. Mezcla visual en el sub-filtro "Origen" de Leads
+
+`LeadsTableControls.tsx` (sub-filtro que aparece cuando `filterOrigin ===
+'web_form'`) llama `listMyCaptureLinks()` sin filtrar por tipo, asi que un
+admin ve sus links `pb` y `retiro` mezclados en el mismo desplegable sin
+ninguna etiqueta que los distinga. No es un bug funcional (ambos tipos de
+link pueden originar leads con `origin='web_form'`, asi que mezclarlos en el
+filtro es correcto), es solo confuso de leer.
+
+- Fix: `src/components/leads/LeadsTableControls.tsx` - cada opcion del
+  desplegable ahora agrega el sufijo `(PB)` o `(Retiro)` segun
+  `link.linkType`. No se filtro ningun tipo del listado (seguiria siendo
+  incorrecto ocultar los links de retiro si un admin quiere filtrar leads de
+  retiro por link especifico).
+
+### Estado
+
+Ambos corregidos y verificados. Pendiente: commit (el usuario no lo pidio
+todavia en este turno).
+
+---
+
+## Claude (LeadSeed) - 2026-08-06 - Registro unificado de tipos de formulario ("Links")
+
+Feature pedida por el usuario: dejar de tener `pb` y `retiro` hardcodeados en
+todo el codigo (CHECK constraint, RPCs, dos paneles de UI separados - uno en
+Settings solo para pb, otro en Admin solo para retiro) y poder registrar
+formularios nuevos (empezando por `/form`, ya desplegado en landing-gerow
+pero sin ninguna forma de trackearlo) sin escribir codigo cada vez. Plan
+completo en `C:\Users\henti\.claude\plans\ahi-puedes-ver-como-vivid-balloon.md`
+(aprobado por el usuario via plan mode antes de implementar).
+
+### Resultado
+
+Implementado, migrado a produccion y verificado empiricamente. Un hallazgo
+adicional (bug real, no parte del plan original) tambien corregido. Un
+bloqueo real detectado que NO es de este repo: la atribucion de `/form`
+(y de `/pb`, que ya tenia el mismo problema documentado) no funciona en
+produccion todavia porque landing-gerow no desplego su fix de `_redirects`.
+
+### Cambios en LeadSeed (esta sesion)
+
+**DB** (`supabase/migrations/20260806000300_form_types_registry.sql`, mirror
+`sql/migrations/093_form_types_registry.sql`):
+- Tabla `form_types` (slug PK, display_name, url_template con placeholder
+  `{ref}`, links_admin_only, is_active, created_by) + RLS (lectura:
+  autenticados ven activos, admin ve todos; escritura: admin-only).
+- Sembradas `pb` (`links_admin_only=false`) y `retiro` (`links_admin_only=true`)
+  con sus URLs reales, ANTES de convertir `capture_links.link_type` de CHECK
+  constraint a FK contra `form_types.slug` - por eso la conversion no
+  necesito backfill, las filas existentes ya cumplian la FK.
+- RPCs nuevas: `list_form_types()`, `create_form_type(...)` (admin-only,
+  normaliza el slug igual que `normalize_capture_ref`), `update_form_type(...)`
+  (admin-only, update parcial).
+- `create_my_capture_link`: el bloque `IF v_link_type NOT IN ('pb','retiro')`
+  hardcodeado se reemplazo por una consulta a `form_types` + su columna
+  `links_admin_only` (en vez de comparar el string `'retiro'` a mano). La
+  promocion a "link principal" se generalizo de `IF v_link_type = 'pb'` a
+  `IF NOT v_form_type.links_admin_only`.
+- `resolve_planespro_booking_context`: se quito el guard
+  `AND (v_source_channel <> 'retiro' OR cl.link_type = 'retiro')` del WHERE
+  que busca el capture_link por ref_code - era redundante (ref_code ya es
+  UNIQUE desde 020) y bloqueaba que un ref de un tipo nuevo resolviera si el
+  canal normalizado caia en 'pb' por default. El resto de la funcion (fallback
+  especifico de retiro a un admin, fallback generico por email/admin mas
+  antiguo) se dejo intacto a proposito.
+
+**Bug real encontrado DURANTE la verificacion (no en una transaccion de
+prueba - en el intento real de crear el primer link de tipo 'form'), y
+corregido en un migration aparte**
+(`supabase/migrations/20260806000400_fix_capture_links_default_index_per_type.sql`,
+mirror `sql/migrations/094_...sql`):
+- Un indice unico preexistente (`capture_links_one_default_per_owner_idx`,
+  de `021_capture_links_analytics_and_cross_exec_alerts.sql`) forzaba "un
+  solo link default POR USUARIO EN TODA LA CUENTA", no por tipo. Mi
+  generalizacion de "link principal por tipo" en `create_my_capture_link`
+  chocaba con ese indice: crear el primer link default de un tipo nuevo
+  fallaba con "duplicate key value violates unique constraint" si el usuario
+  ya tenia un default de otro tipo (ej. ya tenia su pb principal).
+  - Fix: se reemplazo el indice por uno scoped a `(owner_user_id, link_type)`.
+  - Se encontro el mismo problema en `update_my_capture_link`
+    (`024_capture_links_management_rpcs.sql`): al marcar un link como
+    principal, des-marcaba TODOS los defaults del owner sin filtrar por
+    `link_type` - se corrigio agregando `AND link_type = v_link.link_type`
+    al UPDATE que des-marca el default anterior.
+  - `is_default` no participa en ninguna resolucion de ownership de leads
+    (esa logica siempre resuelve por `ref_code`), es puramente un concepto
+    de UI - asi que "un default por tipo" es la semantica correcta ahora que
+    coexisten varios tipos, no "un default global" (que ya no representaba
+    nada concreto con mas de un tipo).
+
+**Frontend**:
+- `src/types/captureLinks.ts`: `CaptureLinkType` paso de `'pb' | 'retiro'` a
+  `string`; nuevo `interface FormType`.
+- `src/services/captureLinksService.ts`: arreglado un bug latente en
+  `mapCaptureLinkRow` (`row.link_type === 'retiro' ? 'retiro' : 'pb'`
+  colapsaba cualquier tipo desconocido a `'pb'`); `buildCaptureLinkUrl`/
+  `buildRetiroLinkUrl` (dos constantes hardcodeadas) reemplazados por
+  `buildLinkUrl(formType, refCode)` generico via `url_template`; agregadas
+  `listFormTypes`/`createFormType`/`updateFormType`; eliminadas
+  `listRetiroCaptureLinks`/`createRetiroCaptureLink`.
+- `src/repositories/captureLinksRepository.ts`: wrappers RPC para los 3
+  nuevos endpoints de `form_types`.
+- **Nuevos**: `src/components/settings/LinksSettings.tsx` (top-level, filtra
+  tipos visibles segun `isAdmin`, renderiza una seccion por tipo + el
+  formulario de registro admin-only), `FormTypeLinksSection.tsx`
+  (parametrizado por `FormType`, reemplaza la logica que antes estaba
+  duplicada entre los dos componentes viejos), `FormTypeRegistryForm.tsx`
+  (admin-only: registrar tipo nuevo, activar/desactivar, abrir/cerrar a
+  todos los usuarios).
+- **Borrados**: `src/components/settings/CaptureLinksSettings.tsx`,
+  `src/components/admin/AdminRetiroLinksPanel.tsx`.
+- `src/pages/SettingsPage.tsx`: tab `'links'` ahora renderiza `LinksSettings`.
+- `src/pages/admin/AdminLayout.tsx`: eliminado el tab `'retiro'` (ese
+  contenido vive ahora en Settings > Links, visible solo para admin).
+
+**Verificacion empirica ejecutada** (transacciones con `rollback`, sin dejar
+datos de prueba, mismo patron usado en los fixes anteriores de hoy):
+- Seed de `form_types` correcto (`pb`/`retiro` con sus URLs y
+  `links_admin_only` reales).
+- Admin pudo registrar un tipo de prueba y crear un link de ese tipo.
+- Usuario NO admin bloqueado explicitamente al intentar crear un link de un
+  tipo `links_admin_only=true`, con el mensaje de error esperado
+  (`admin role required to create <tipo> links`).
+- `npx tsc --noEmit` y `npm run build`: limpios.
+
+**Registro real (no de prueba, persistido)**: se registro el tipo `form`
+(`links_admin_only=false`, igual que pb, ajustable desde la UI nueva con
+"Volver a admin-only" si se prefiere) y se creo su primer link
+(`ref_code=k5fwrv`, promovido a principal correctamente sin tocar el default
+de `pb` del mismo usuario - prueba directa de que el fix del indice
+funciona).
+
+### Bloqueo detectado (fuera de este repo, no corregido aca)
+
+Al intentar verificar tracking end-to-end contra la URL publica real,
+`https://planespro.cl/form/k5fwrv` devuelve un **308 redirect real** (con
+header `Location: /form/`, no un rewrite interno) que borra el ref antes de
+que el JS del formulario pueda leerlo - mismo problema que la sesion ya
+documento para `/pb/<ref>` (ver comentario historico que tenia
+`buildCaptureLinkUrl`, ahora removido junto con la funcion al generalizarla).
+
+Se confirmo la causa exacta revisando el repo `landing-gerow`:
+- El fix YA EXISTE en el commit `38477c19` ("fix: preserve pb and form ref
+  urls in redirects", 2026-08-03 19:42, branch `master`), que cambia
+  `_redirects` de reglas que redirigen a `/pb/`/`/form/` perdiendo el ref, a
+  reglas de rewrite interno (`200`, no `301`/`308`) que preservan la URL
+  visible.
+- Pero la produccion (`https://planespro.cl`) sigue respondiendo con el
+  comportamiento VIEJO (308, ref perdido) - el commit esta en `master` pero
+  Cloudflare Pages no redesplego con el todavia.
+
+No se toco nada de landing-gerow ni se intento forzar un deploy: es un repo
+y una decision de deploy que no me corresponde tomar sin que el usuario lo
+pida explicitamente. El link `form`/`k5fwrv` creado hoy queda funcionando
+apenas ese deploy salga, sin necesitar ningun cambio adicional de este lado.
+
+### Riesgos remanentes
+
+- Mientras el deploy de landing-gerow no salga, CUALQUIER link nuevo de
+  cualquier tipo (`pb`, `retiro`, `form`) que dependa de `_redirects` para
+  preservar el ref en la URL no atribuye leads correctamente en produccion -
+  esto no es nuevo de hoy, ya estaba documentado para `pb`, pero ahora
+  tambien aplica a `form`.
+- El limite de links por usuario (`get_profile_capture_links_limit`) sigue
+  siendo GLOBAL a traves de todos los tipos (cuenta todos los
+  `capture_links` del owner sin filtrar por `link_type`), pero la UI nueva
+  (`FormTypeLinksSection`) muestra el cupo restante calculado solo con los
+  links DE ESA seccion/tipo. Hoy no importa en la practica (solo `pb` es
+  abierto a usuarios no-admin, y es el unico tipo con limite real ya que los
+  admin-only son siempre ilimitados), pero si en el futuro se abre un
+  SEGUNDO tipo a usuarios no-admin, el numero que ve el usuario en esa
+  seccion puede no reflejar el limite real compartido entre tipos. No se
+  corrigio en este pase por no ser parte de lo pedido; queda anotado para
+  cuando aplique.
+
+### Recomendacion de accion siguiente
+
+1. Coordinar con quien maneja los deploys de landing-gerow para desplegar
+   `master` (ya tiene el fix de `_redirects`) a produccion - esto desbloquea
+   `form` Y termina de resolver el problema de `pb` que ya estaba pendiente.
+2. Una vez desplegado, confirmar visitando `https://planespro.cl/form/k5fwrv`
+   directamente y viendo si `visits` sube en Settings > Links > Formulario
+   simplificado.
+3. Si se abre un segundo tipo no-admin-only a futuro, revisar el calculo de
+   cupos por tipo vs. limite global (ver Riesgos remanentes).
+
+---
+
+## Claude (LeadSeed) - 2026-08-06 - Deploy a produccion completado: /pb, /form y /retiro-tecnico-extranjero preservan el ref
+
+El usuario pidio explicitamente: "deployea unicamente lo necesario para que
+esto funcione" (referido al bloqueo de la entrada anterior). Esto SI
+requirio tocar landing-gerow (a diferencia de lo asumido en la entrada
+anterior de hoy) porque el repo tenia dos historias divergentes sin
+reconciliar y dos bugs reales de routing que solo aparecen en produccion
+real, no en tests unitarios con mocks. Detalle completo abajo porque este
+bloque termino siendo mucho mas grande de lo esperado.
+
+### Resultado
+
+Desplegado y verificado en produccion real (`planespro.cl`, no un preview):
+`/pb/<ref>`, `/form/<ref>` y `/retiro-tecnico-extranjero/<ref>` devuelven 200
+con el contenido real del formulario correspondiente, sin perder el ref -
+confirmado con multiples refs (incluido `58a2k6`, el ref historico usado
+como ejemplo en toda la sesion) de forma consistente tras la propagacion
+global de Cloudflare.
+
+### Hallazgo 1: dos historias divergentes en landing-gerow sin reconciliar
+
+`master` (local, commit `38477c19`) y `origin/master` (commit `72f0a7c4`,
+2 commits mas adelante, pusheado por otra sesion) resultaron ser
+incompatibles entre si:
+- `origin/master` retiro correctamente el runtime legacy `cloudflare/ppforms`
+  (verificado con su propio test `crm-forms-domain-ownership-smoke.mjs`,
+  que exige explicitamente que ppforms responda `status: "retired"` y 410
+  para rutas legacy) y volvio a servir `pb/`, `form/` directo desde la raiz
+  del repo (abandonando el prefijo `forms/` que existia en `master` local).
+  Esto es la direccion arquitectonica correcta, coherente con "migracion
+  hacia Supabase".
+- Pero esos mismos 2 commits de `origin/master` BORRARON por completo la
+  carpeta `retiro-tecnico-extranjero` Y quitaron el envio de
+  `form_slug`/`form-progress` de `form/app.js` - es decir, habrian roto el
+  formulario de retiro y el tracking de visitas construido hoy mismo en
+  LeadSeed si se desplegaba tal cual.
+- `master` local, al reves, tenia retiro y tracking completos pero **fallaba
+  su propio smoke test** (`crm-forms-domain-ownership-smoke.mjs` esperaba
+  ppforms retirado pero el codigo real no lo estaba - un commit a medio
+  terminar).
+
+Con autorizacion explicita del usuario ("Reconcilia vos las dos ramas"),
+se creo un branch nuevo `fix/reconcile-ppforms-retirement-with-tracking`
+desde `origin/master`, y se porto sobre el:
+- La carpeta `retiro-tecnico-extranjero/` completa (html, css, assets,
+  app.js) y su Pages Function, adaptada al patron root-level que
+  `origin/master` ya usa para pb/form (sin el prefijo `forms/`).
+- El tracking (`sessionId` + `trackProgress` + eventos `visit`/`step_1`/
+  `step_2`) a `frontend/lead-capture/js/app.js` (la fuente REAL de
+  `pb/app.js` - `build:lead-capture` sobreescribe `pb/app.js` en cada
+  build, asi que editarlo directo no sirve de nada, error que cometi una
+  vez y corregi antes de comitear) y a `form/app.js`. `pb` no tiene pasos
+  discretos (una sola pagina) asi que solo trackea `visit`, no se inventan
+  `step_1`/`step_2` sin una interaccion real que representen.
+- `supabase/functions/form-progress/index.ts`, que esos 2 commits habian
+  borrado del repo (sin afectar el deploy real en Supabase, que es
+  independiente del deploy de Cloudflare Pages).
+
+### Hallazgo 2 (bug real, pre-existente, no introducido por esta sesion): fuente legacy suelta rompia el build limpio
+
+`js/sidebar-form.js` y `css/sidebar-form.css` eran fuentes legacy sueltas
+(pre-reorg a `frontend/lead-capture/`) que el minificador generico de
+`build.js` recogia y usaba para sobreescribir
+`js/sidebar-form.min.js`/`css/sidebar-form.min.css` con contenido viejo
+DESPUES de que `frontend/lead-capture/build.js` ya habia escrito la version
+correcta en el mismo `npm run build`. Confirmado que esto rompe
+`lead-capture-legacy-runtime-boundary-smoke` en CUALQUIER build real desde
+cero de `origin/master` (probado en un worktree limpio sin ninguno de mis
+cambios). Se eliminaron ambos archivos legacy sueltos.
+
+Tambien se encontro y corrigio `tests/pb-capture-ref-length-smoke.mjs`:
+referenciado por `run-lead-capture-smoke-suite.mjs` pero nunca creado en
+ningun branch del historico - bloqueaba `smoke:gate` por completo.
+
+### Hallazgo 3 (bug real de produccion, no capturable por el test unitario): las Functions pedian `index.html` explicito
+
+Con el reconciliado ya en verde en `smoke:gate`, el primer deploy real a
+`planespro.cl` seguia mostrando el bug original (redirect real, ref
+perdido) para `/pb` y parcialmente para `/retiro-tecnico-extranjero`
+(devolvia 200 pero con el HTML de la home, no el formulario real). Dos
+causas distintas, diagnosticadas con curl directo contra produccion
+(incluida la URL de deployment `*.pages.dev` sin pasar por el dominio
+custom, para descartar reglas a nivel de zona):
+
+1. `_routes.json` no incluia `/retiro-tecnico-extranjero*` en `include` -
+   sin eso Cloudflare nunca intenta la Function para ese path.
+2. Las 3 Pages Functions (`functions/{pb,form,retiro-tecnico-extranjero}/
+   [[slug]].js`) pedian `context.env.ASSETS.fetch("${base}index.html")`
+   explicito para servir el ref. Un test unitario con `ASSETS.fetch`
+   mockeado no lo detecta, pero en produccion real `ASSETS.fetch` SI vuelve
+   a pasar por `_redirects`: como `_redirects` tiene (y conviene que tenga,
+   para navegacion directa de usuarios) una regla
+   `/pb/index.html -> /pb/ 301`, pedir `index.html` desde adentro de la
+   Function disparaba esa misma regla, y la Function devolvia el 301 tal
+   cual - perdiendo el ref igual que el bug original.
+   - Se encontro la referencia real que ya probaba el fix correcto: un
+     deploy preview de 2 dias atras (`fix-pb-form-ref-routing-preview`,
+     commit `bdcc08e`) que SI funcionaba, comparando su Function contra la
+     mia se vio la diferencia exacta: pedir la carpeta base (`"/pb/"`) en
+     vez de `"/pb/index.html"`.
+   - Fix aplicado a las 3 Functions, probado primero contra un **deploy
+     preview aislado** (`verify-form-fix-preview`, no produccion) antes de
+     tocar `planespro.cl` de nuevo.
+3. Tras el fix, hubo unos ~90 segundos de inconsistencia (algunos refs
+   devolvian 200, otros todavia 308) por propagacion global de Cloudflare
+   entre distintos edge nodes (confirmado por `CF-RAY` con sufijos de datacenter
+   distintos en las respuestas que fallaban vs las que no) - no un bug de
+   codigo. Se re-verifico despues de esperar y quedo 100% consistente.
+
+`tests/pb-form-retiro-slug-functions-smoke.mjs` (creado en esta sesion) se
+actualizo para reflejar y documentar la causa raiz completa, y ahora
+verifica ambas capas (Function pide la carpeta base + `_redirects`/
+`_routes.json` tienen las reglas necesarias), no solo el comportamiento
+aislado de la Function.
+
+### Deploy final
+
+- Repo: `landing-gerow`, branch `fix/reconcile-ppforms-retirement-with-tracking`
+  (pusheada a origin, 3 commits: reconciliacion, fix de `_redirects`/
+  `_routes.json`, fix de Functions). No se toco `master` ni `origin/master`
+  directamente - la reconciliacion completa vive en esta rama nueva,
+  pendiente de que alguien la mergee a `master` cuando corresponda.
+- `npm run build && npm run smoke:gate`: verde, desde una instalacion 100%
+  limpia (sin `node_modules` ni artefactos previos).
+- Deploy a produccion via `wrangler pages deploy . --project-name planespro
+  --branch master` (confirmado explicitamente por el usuario antes de cada
+  intento, via AskUserQuestion, porque el clasificador de permisos bloquea
+  esta accion por defecto al ser alto impacto).
+- Verificado en vivo contra `planespro.cl` (no solo el deployment preview)
+  con multiples refs frescos y con el ref historico `58a2k6`, de forma
+  consistente.
+
+### Riesgos remanentes
+
+- La reconciliacion vive en una rama aparte (`fix/reconcile-ppforms-retirement-with-tracking`),
+  no en `master`. Si otra sesion sigue trabajando directamente sobre
+  `origin/master` sin mergear esta rama, se puede volver a perder retiro/
+  tracking en un futuro deploy. Recomendado: mergear esta rama a `master`
+  cuanto antes, o al menos que quien coordine el proximo deploy de
+  landing-gerow sepa que esta rama es la que hay que usar.
+- La carpeta `cloudflare/ppforms` sigue existiendo como stub retirado (410),
+  no se borro fisicamente - eso ya era asi en `origin/master` antes de esta
+  sesion, no se toco.
+- Sigue pendiente (ver entrada anterior) el calculo de cupos por tipo vs.
+  limite global en LeadSeed si se abre un segundo tipo no-admin-only a
+  futuro.

@@ -500,6 +500,29 @@ Toda auditoria visual y toda implementacion de interfaz deben respetar estas reg
 - la referencia visual esperada es el lenguaje mas compacto y sobrio de `LeadSeed`, no el patron generico de tarjetas aisladas
 - no se deben usar emoticones, emojis ni adornos visuales infantiles en UI, documentos operativos o microcopy de producto salvo instruccion explicita del usuario
 
+#### Precision 10.1.a - Frontera exacta de la prohibicion de emojis
+
+Definicion del usuario, `2026-08-12`. Esta precision cierra la ambiguedad detectada en la auditoria
+`AUDITORIA_CONTROL_2026-08-11.md` y no debe reabrirse.
+
+La frontera no es "donde se ve el emoji", es **quien lo escribe**:
+
+- `PROHIBIDO` - todo emoji escrito en el codigo por un desarrollador o una IA. Sin excepcion. Esto
+  incluye:
+  - iconos decorativos en JSX
+  - microcopy, etiquetas, placeholders y mensajes de error
+  - valores centinela, fingerprints o marcas internas aunque nunca se rendericen
+  - comentarios de codigo, commits y documentacion operativa
+- `PERMITIDO` - emojis que el usuario final elige y envia como contenido de un mensaje. Son dato del
+  usuario, no diseno de interfaz.
+
+Corolario operativo: un catalogo de emojis existe legitimamente si su unico destino es que el usuario
+inserte uno en un mensaje. Deja de ser legitimo en el momento en que el producto usa alguno de esos
+glifos para construir su propia interfaz.
+
+Regla practica para una IA auditora: si el emoji desaparece al borrar el codigo, esta prohibido. Si
+desaparece solo al borrar un mensaje que escribio una persona, esta permitido.
+
 Si una propuesta visual incumple cualquiera de estas reglas, CONTROL debe marcarla al menos como observacion y, si afecta el patron general de interfaz, como hallazgo estructural.
 
 ---
@@ -726,6 +749,30 @@ Si crea objetos permanentes:
 ### 15.4 Politicas y RLS
 
 Cualquier cambio de RLS debe tratarse como cambio de alto riesgo.
+
+### 15.5 Edge Functions: dueño unico
+
+Regla vigente desde el `2026-08-12`: **todas las Edge Functions se despliegan solo desde LeadSeed.**
+`landing-gerow` no debe contener una carpeta `supabase/functions/`.
+
+Esta regla reemplaza al modelo anterior de propiedad repartida, que decia que las funciones de los
+formularios publicos vivian en `landing-gerow`. Ese reparto fallo: `form-leads` termino existiendo
+divergente en los dos repos sin que ninguna herramienta lo detectara, y la copia de este repo, al
+desplegarse, habria creado un lead duplicado por cada envio en `/form/` y `/retiro/`. El detalle esta
+en `supabase/functions/README.md` y en `AUDITORIA_CONTROL_2026-08-11.md`.
+
+Excepcion transitoria declarada: `form-progress` sigue en `landing-gerow` al `2026-08-12` porque su
+copia alla tiene cambios sin commitear. Es deuda con plan de salida, no convivencia permitida.
+
+LeadSeed y `landing-gerow` comparten el mismo proyecto Supabase, asi que un deploy desde el repo
+equivocado sobrescribe produccion. Por eso esta regla es de dueño unico y no de reparto por dominio.
+
+Antes de reportar una Edge Function como "faltante" o "rota" por no
+encontrarla en `supabase/functions/` de este repo, correr
+`npx supabase functions list` y revisar `entrypoint_path` para confirmar en
+que repo vive realmente. Este punto se agrego tras un hallazgo real de la
+auditoria cruzada CONTROL 14.4 del 2026-08-05 (`form-progress`), documentado
+en `AI_SYNC.md`.
 
 Antes de proponerlo o aplicarlo, una IA debe:
 

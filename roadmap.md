@@ -1,6 +1,7 @@
 # Roadmap Operativo: PlanesPro CRM / LeadSeed
 
-Fecha de control: 2026-07-22
+Fecha de control: 2026-08-11
+Fecha de control anterior: 2026-07-22 (el roadmap estuvo 20 dias sin actualizar; ver Seccion 12)
 Estado ejecutivo: base CRM, captura publica, links `pb`, agenda base, ownership por owner, realtime admin y backend del formulario ya quedaron migrados a Supabase en corte tecnico. La escalabilidad de la bandeja ya fue endurecida con indices, paginacion server-side y RPC de olvidados. El dashboard ya fue migrado a snapshot agregado server-side. Aplicando CONTROL, Cloudflare ya no ejecuta backend del formulario y queda reducido a hosting estatico y superficies editoriales de blog/noticias. El arranque del sidebar ya fue re-endurecido para quitar el splash bloqueante y el falso vacio inicial. El frente nuevo mas sensible es correo multi-canal: la arquitectura `gmail + resend` ya existe, pero Gmail como canal de envio efectivo aun sigue en validacion funcional final.
 
 Este roadmap esta dividido en secciones, capitulos y tareas para que cualquier IA o persona pueda saber exactamente donde estamos, que se cerro, que esta en curso y que falta.
@@ -101,7 +102,9 @@ Regla de avance vigente:
 - [COMPLETADO] Reducir uso de `any` en zonas criticas del alcance de fase.
 - [COMPLETADO] Limpiar mojibake en bloques tocados dentro del alcance de fase.
 - [COMPLETADO] Ejecutar primera pasada de performance por chunks de Vite.
-- [COMPLETADO] Bajar entry principal validado a 30.27 kB en build.
+- [PARCIAL] Bajar entry principal en build. El `2026-07-18` se midio `30.27 kB`, pero la medicion del
+  `2026-08-11` da `94.93 kB` (gzip `26.91 kB`). El valor historico quedaba declarado como `COMPLETADO`
+  y contradecia la realidad; se reclasifica. Chunks pesados actuales: `xlsx` 491 kB, `charts` 422 kB.
 - [COMPLETADO] Auditoria IA-B aprobo cierre de Fase 5 el 2026-07-18.
 
 ### Capitulo 3.2 - Reglas arquitectonicas vigentes
@@ -834,3 +837,365 @@ Antes de considerar exitoso el rediseño:
   - agenda
   - `Admin SaaS > Base`
   - `Enviar Mensajes`
+
+---
+
+## Seccion 12 - Actualizacion 2026-08-11: modulos construidos y no registrados
+
+Origen: `AUDITORIA_CONTROL_2026-08-11.md`.
+
+Entre el `2026-07-22` y el `2026-08-08` se construyeron modulos completos que nunca entraron a este
+roadmap, incumpliendo las reglas 8.4, 8.5 y 8.6 del protocolo. Se registran aqui con su estado real.
+
+Constancia obligatoria segun regla 5.1: esta apertura de frente se hizo contra la regla de avance
+vigente del roadmap, que condicionaba abrir nuevos modulos de producto al cierre de la validacion
+end-to-end de Google Calendar y Meet. Esa validacion sigue abierta. La desviacion queda declarada, no
+justificada retroactivamente: la decision de si el frente de comunidad/chat era prioritario sobre el
+cierre de agenda corresponde al usuario.
+
+### Capitulo 12.1 - Chat, sala y comunidad
+
+Base: commits `22e1a3a`, `e4e3f5a`, `cd70955`.
+
+- [EN REVISION] Sala de chat con menciones e integrantes.
+- [EN REVISION] Comunidad como foro.
+- [EN REVISION] Moderacion de sala.
+- [EN REVISION] Mensajes directos propios.
+- [EN REVISION] Adjuntos en el chat.
+- [EN REVISION] Correccion de colision de canal realtime al abrir el chat con DMs sin leer.
+- [PARCIAL] Borrado admin de mensajes de chat. El codigo y las dos migraciones existen en el arbol de
+  trabajo pero no estan commiteados al `2026-08-11`. Bloque a medio cerrar.
+- [PENDIENTE] Dividir `src/components/chat/ChatRoom.tsx`: 1097 lineas, ~30 `useState`, ~680 lineas de
+  JSX. Es el archivo de mayor riesgo de mantenibilidad del repositorio.
+- [HECHO] Resuelto el bloqueo sobre `EmojiPicker.tsx`. El usuario definio el `2026-08-12` la frontera
+  exacta de la prohibicion, incorporada al protocolo como precision `10.1.a`: la regla aplica a todo
+  emoji escrito en codigo, y no aplica a emojis que el usuario final elige y envia como contenido de
+  un mensaje. `src/components/chat/EmojiPicker.tsx` queda como **excepcion legitima** y se mantiene.
+- [PENDIENTE] Retirar el centinela con emoji de `ChatRoom.tsx:225` y `:376`. Correccion de la
+  auditoria: no se persiste como contenido del mensaje, alimenta solo el fingerprint interno del
+  anti-spam (`guard.verify` / `guard.confirmSent`). Sigue prohibido por `10.1.a` (emoji escrito en
+  codigo) y se sustituye por una marca ASCII sin cambio de comportamiento.
+
+### Capitulo 12.2 - Tipos de formulario y canales de captura
+
+Base: commits `9e60aae`, `f04729f`, `a351b59`.
+
+- [EN REVISION] Canal `retiro` con `source_channel` y funnel de visitas, paso 1 y paso 2.
+- [EN REVISION] Registro generico de tipos de formulario (`form_types`) que admite `form`.
+- [EN REVISION] Dejar de usar `Referer` como fallback de `ref` en disponibilidad publica.
+- [PENDIENTE] Cerrar el hueco de normalizacion de canal: `resolve_planespro_booking_context` solo
+  acepta `pb`, `general` y `retiro`. El formulario `/form/` envia `source_channel: "form"`, que sin un
+  ref valido cae silenciosamente como `general`. La migracion `20260806000300` registro `form` en
+  `form_types` pero no lo agrego a la normalizacion.
+- [PENDIENTE] Hacer que `form-progress` valide `form_slug` contra `form_types` en vez de un allowlist
+  hardcodeado. Hoy agregar un tipo de formulario desde la extension no habilita su telemetria.
+- [PENDIENTE] Corregir la atribucion de canal en el proxy `ppforms`, que fuerza `pb` para cualquier
+  request con ref y usa `Referer` como fuente de canal, contradiciendo el fix `a351b59` aguas abajo.
+
+### Capitulo 12.3 - Rediseno de Enviar y Secuencias
+
+Base: commit `c59432d`.
+
+- [EN REVISION] Rediseno de Enviar sobre el sistema visual del Dashboard.
+- [PENDIENTE] Registrar el alcance real del modulo Secuencias, mencionado en `AI_SYNC.md` pero sin
+  capitulo propio en este roadmap.
+
+---
+
+## Seccion 13 - Actualizacion 2026-08-11: hallazgos de auditoria CONTROL
+
+Origen: `AUDITORIA_CONTROL_2026-08-11.md`. Cada capitulo corresponde a un bloque del plan de accion.
+
+### Capitulo 13.1 - Contencion inmediata (bloque 0)
+
+Ejecutado el `2026-08-12`. Estado del bloque: `parcial`, pendiente de commit y de la limpieza en
+`landing-gerow`.
+
+Evidencia de Nivel 1 obtenida antes de actuar (`npx supabase functions list`, 2026-08-12), que
+confirmo la hipotesis de la auditoria en vez de asumirla:
+
+```
+form-leads  v23  ACTIVE
+entrypoint_path: .../landing-gerow/supabase/functions/form-leads/index.ts
+```
+
+- [HECHO] Resuelta la doble fuente de verdad de `supabase/functions/form-leads/index.ts`. Se adopto en
+  este repo la version desplegada en produccion (690 lineas, con el despacho de tres vias). La copia
+  anterior de 584 lineas queda reemplazada.
+- [HECHO] Verificado que `_shared/emailChannels.ts` **no requiere merge**: la version de este repo es
+  superset (381 vs 332 lineas) y `form-leads` solo importa `resolveUserEmailChannel`, presente aca.
+- [HECHO] Creada la migracion de reconciliacion
+  `supabase/migrations/20260812000100_reconcile_form_lead_two_phase_submit.sql` (espejo en
+  `sql/migrations/096_...`), con timestamp nuevo e idempotente, conteniendo
+  `leads_form_submission_id_uidx`, `update_planespro_public_lead_action` y
+  `submit_planespro_idempotent_public_lead`. Impacto nulo en produccion; su valor es que un
+  `supabase db reset` desde este repo reconstruya el esquema completo.
+- [HECHO] Reescrito `supabase/functions/README.md` con la regla vigente: **todas las Edge Functions se
+  despliegan solo desde LeadSeed**. Documenta el incidente y su evidencia.
+- [HECHO] Renumerada `sql/migrations/090_chat_message_admin_delete.sql` a `095_...`, cerrando la
+  colision de numero. Queda solo la colision historica `036`, anterior a esta pasada.
+- [PENDIENTE] Commitear el bloque completo, incluido el trabajo de borrado admin de chat que seguia
+  sin commitear.
+- [PENDIENTE] Migrar `form-progress` a este repo. No se movio porque al `2026-08-12` su copia en
+  `landing-gerow` tiene cambios sin commitear; mover un archivo sucio crearia el mismo drift que este
+  bloque busca cerrar.
+- [BLOQUEADO] Eliminar `supabase/functions/` y `supabase/migrations/` de `landing-gerow`. Ese repo
+  tiene al `2026-08-12` **1368 archivos sin commitear**, esta parado en la rama `fix/agenda-url-bug`
+  (no `master`), y tiene tres worktrees activos. Borrar ahi en ese estado es inseguro. Requiere una
+  pasada de ordenamiento propia de `landing-gerow` antes.
+- [PENDIENTE] Anadir un check de CI en `landing-gerow` que falle si reaparece `supabase/functions/`.
+
+Validacion ejecutada: `npm run build` en verde (14.03s). Conteo de migraciones consistente: 98 en
+`sql/migrations/` y 98 en `supabase/migrations/`.
+
+### Capitulo 13.1.b - Decisiones de arquitectura del 2026-08-12
+
+Definidas por el usuario. No deben reabrirse sin evidencia tecnica nueva.
+
+**Decision 1 - Hosting de los formularios.** El codigo fuente y el pipeline de build de los
+formularios se mueven a LeadSeed, pero **la URL publica no cambia**. Se implementa con un proyecto
+Cloudflare Pages separado mas rewrite a nivel de path:
+
+```
+planespro.cl/pb/*      -> rewrite -> proyecto "leadseed-forms"
+planespro.cl/form/*    -> rewrite -> proyecto "leadseed-forms"
+planespro.cl/retiro-*  -> rewrite -> proyecto "leadseed-forms"
+resto de planespro.cl  -> proyecto "planespro" (landing-gerow, sin cambios)
+```
+
+Motivo: los short links `planespro.cl/pb/<code>` ya estan distribuidos y son el mecanismo de
+atribucion por asesor. Cambiar esas URLs romperia atribucion comercial ya en circulacion. Con este
+modelo los dos repos dejan de compartir dueño sobre los mismos archivos, que es la raiz del incidente
+de `form-leads`.
+
+Corolario: el formulario sidebar largo de `landing-gerow` puede seguir conectado indefinidamente. El
+acoplamiento con LeadSeed no es de codigo sino de contrato HTTP contra `form-leads`, asi que cualquier
+formulario en cualquier repo o dominio sigue funcionando sin cambios. Esto habilita migracion gradual
+en vez de un corte unico.
+
+**Decision 2 - Destino movil: Expo + React Native.** Motivo decisivo: el nucleo reutilizable
+(`types`, `repositories`, `services`, `utils`) es TypeScript, y Expo lo conserva y lo comparte con la
+extension desde el mismo paquete. Flutter obligaria a descartarlo. Los nueve puertos de plataforma
+identificados en el capitulo 13.6 tienen implementacion directa en Expo (`expo-auth-session`,
+`expo-notifications`, `setBadgeCountAsync`, `expo-task-manager`, `Linking`, EAS Update); ninguno queda
+huerfano.
+
+Se descarta Capacitor: envolveria la UI actual, optimizada para sidebar angosto, y arrastraria intacto
+el acoplamiento al DOM.
+
+Consecuencias registradas: `xlsx` y `recharts` no cruzan a React Native y requieren sustituto o quedan
+como funcionalidad solo-escritorio.
+
+**Alcance de Cloudflare, precision del 2026-08-12.** Cloudflare no se retira como plataforma. Se
+retira solo como **fuente de verdad de datos de negocio**. Permanece como hosting estatico, CDN, DNS y
+WAF de `planespro.cl`, que es el uso correcto: biblioteca, centros de salud, farmacias, blog y
+noticias son contenido SEO estatico sin dependencia de LeadSeed. `farmacias/` usa ademas
+`caches.default` y `AbortController` con timeout contra la API de MINSAL, y esta bien resuelto. La
+redaccion previa del roadmap ("Cloudflare sale") era ambigua e inducia decisiones equivocadas.
+
+### Capitulo 13.2 - Alineacion de git (bloque 1)
+
+Historial verificado como lineal: `master` es ancestro directo de `develop`. No hay divergencia, solo
+retraso.
+
+- [PENDIENTE] Pushear los 4 commits pendientes de `develop`.
+- [PENDIENTE] Avanzar `master` (66 commits atras) hasta `develop` por fast-forward.
+- [PENDIENTE] Decidir el destino de la rama `design`, hoy un alias rezagado de `develop`.
+- [PENDIENTE] Coordinar el merge de `fix/reconcile-ppforms-retirement-with-tracking` a `master` en
+  `landing-gerow`. Sin ese merge, un deploy desde `master` pierde el formulario de retiro y el
+  tracking.
+
+### Capitulo 13.3 - Red de seguridad (bloque 2, prerrequisito)
+
+- [PENDIENTE ESTRUCTURAL] Instalar Vitest. Hoy hay cero tests en 305 archivos TypeScript.
+  Prioridad: `utils/rutNormalizer.ts`, `utils/importParser.ts`, `utils/smartLists.ts`,
+  `utils/mentionParser.ts`, `services/leadsService.ts` y
+  `repositories/leadsRepository.ts::tokenizeSearch` (defensa contra inyeccion en el `or()` de
+  PostgREST, hoy sin un solo test).
+- [PENDIENTE ESTRUCTURAL] Instalar ESLint con `eslint-plugin-react-hooks` y reglas de frontera que
+  hagan cumplir automaticamente la disciplina que hoy se sostiene a mano.
+- [PENDIENTE] Endurecer `tsconfig.json`: `noUnusedLocals`, `noUnusedParameters`,
+  `noUncheckedIndexedAccess`, `paths` para el alias `@`, y un `tsconfig.node.json`.
+- [PENDIENTE] Pinnear `xlsx`, hoy apuntando a `xlsx-latest.tgz` sin version: el build no es
+  reproducible y `npm audit` no lo cubre.
+- [PENDIENTE] Anadir CI con build, lint y tests.
+
+### Capitulo 13.4 - Correcciones funcionales (bloque 3)
+
+- [PENDIENTE] Unificar `ACTIVE_APPOINTMENT_STATUSES`, hoy definido tres veces y con comparacion
+  inconsistente: `useLeadDetail.ts:283` compara sin normalizar y falla en silencio si el backend
+  devuelve el estado capitalizado.
+- [PENDIENTE] Corregir `hasActiveLeadFilters` (`leadsRepository.ts:217-225`), que ignora
+  `captureLinkId` y `sourceChannel` y calcula mal el `totalCount` al filtrar por canal.
+- [PENDIENTE] Unificar `getErrorMessage`: existe el canonico, dos reimplementaciones y ~40 copias
+  inline con el mismo bug que el archivo canonico documenta.
+- [PENDIENTE] Unificar `AdminSupportChat` y `SupportFloatingChat` en un `useSupportThread(peerId)`, y
+  usar `removeChannel()` en vez de `unsubscribe()`.
+- [PENDIENTE] Sufijar los nombres de canal realtime con `userId`. Los nombres estaticos globales son el
+  mismo fallo ya parcheado en el chat en `cd70955`, latente en leads, listas y plantillas.
+- [PENDIENTE] Sacar el cliente Supabase de `hooks/useRealtimeRefresh.ts` y `services/realtimeService.ts`
+  hacia repositorios.
+- [PENDIENTE] Corregir el CORS de `supabase/functions/form-lead-file/index.ts`, que refleja cualquier
+  origin a diferencia del resto de funciones.
+- [PENDIENTE] Reenviar el header `Origin` desde el proxy al upstream. Hoy la allowlist CORS de las Edge
+  Functions no discrimina nada porque nunca ve el origen real.
+
+### Capitulo 13.5 - Consolidacion de formularios en LeadSeed (bloque 4)
+
+Principio: la extension y los formularios publicos no comparten runtime. La consolidacion es de codigo
+fuente y de deploy, no de bundle.
+
+- [PENDIENTE] Crear `public-forms/` como carpeta hermana con `package.json`, build, CI y deploy
+  propios.
+- [PENDIENTE] Mover `forms/{pb,form,retiro,retiro-v2}` y `frontend/lead-capture/` desde `landing-gerow`.
+- [PENDIENTE] Extraer un unico `shared/form-api-client.js`. Hoy hay cuatro implementaciones
+  independientes del normalizador de rutas mas `retiro-v2` que hardcodea rutas legacy.
+- [PENDIENTE] Borrar las copias muertas versionadas (`pb/app.js`, `form/app.js`,
+  `.codex-tmp/deploy-clean/`).
+- [PENDIENTE] Garantizar el aislamiento: `public-forms` excluido de `tsconfig.json` y de la config de
+  Vite, sin imports cruzados con `src/`, CI filtrado por `paths`.
+- [PENDIENTE] Arreglar `retiro-v2` antes de desplegarlo: canal invalido, sin idempotencia, y redirige a
+  Hotmart tanto si el lead se guardo como si fallo.
+- [PENDIENTE] No mover las Edge Functions a `public-forms/`: sirven tambien a la extension.
+
+### Capitulo 13.6 - Preparacion para app movil (bloque 5)
+
+Hallazgo clave: el acoplamiento que bloquea el port no es Chrome (93 usos bien contenidos en 18
+archivos) sino el DOM dentro de hooks de dominio.
+
+- [PENDIENTE ESTRUCTURAL] Crear `src/platform/` con nueve puertos: `KeyValueStore`, `Notifier`,
+  `BadgeCounter`, `OAuthLauncher`, `BackgroundScheduler`, `AppMessageBus`, `Dialogs`, `Navigation`,
+  `Deeplink`.
+- [PENDIENTE ESTRUCTURAL] Eliminar `confirm()`, `alert()` y `window.location.hash` de
+  `useLeadsPageController.ts` (nueve llamadas), `useLeadDetail.ts` y `useAgenda.ts`.
+- [PENDIENTE] Sacar `chrome.storage` de los componentes `DataManagement.tsx:60` y
+  `EmailSender.tsx:188`, y de `useEmailChannels.ts:329`.
+- [PENDIENTE] Evaluar TanStack Query como capa unica de estado servidor. Hoy no hay cache: cada
+  guardado cuesta del orden de 8 consultas por doble disparo entre refetch manual y evento realtime de
+  la propia escritura, y no hay guard de "ultima respuesta gana" en la bandeja.
+- [PENDIENTE] Mover a `src/types/` los tipos de dominio que hoy viven en hooks y utils.
+
+Frontera de portabilidad estimada: reutilizable tal cual `src/types/**`, `src/repositories/**`, la
+mayoria de `src/services/**` y `src/utils/**`.
+
+### Capitulo 13.7 - Division de archivos grandes (bloque 6)
+
+Por orden de riesgo: `ChatRoom.tsx` (1097), `useLeadsPageController.ts` (578, devuelve un objeto de 70
+propiedades), `leadsRepository.ts` (535), `useLeadDetail.ts` (493), `ListsPage.tsx` (480),
+`AdminUsersPage.tsx` (455), `AgendaSettings.tsx` (438), `useEmailChannels.ts` (433),
+`FormTypeLinksSection.tsx` (428).
+
+- [PENDIENTE] Aplicar el patron que ya funciona en el repo: `LeadsPage.tsx` (213 lineas) mas su
+  controller dedicado.
+
+### Capitulo 13.8 - Consolidacion del sistema visual (bloque 7)
+
+El sistema de tokens (`src/design/tokens.css`) existe y esta bien disenado. El problema es la adopcion
+parcial: conviven tres fuentes de verdad de color.
+
+- [PENDIENTE] Eliminar las clases legacy `.btn*` y `.card-*` de `src/index.css` (27 usos).
+- [PENDIENTE] Eliminar `src/components/ui/PageHeader.tsx` en favor de `src/design/PageShell.tsx`. Hoy
+  usan escalas tipograficas distintas (24px vs 17px) y producen jerarquia inconsistente.
+- [PENDIENTE] Erradicar 94 colores literales y reducir 575 arbitrary values de Tailwind.
+- [PENDIENTE] Eliminar 681 usos de `dark:*` ad-hoc; `tokens.css` ya resuelve el tema por variables.
+- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 186 veces en 83
+  archivos): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
+  `PipelinePage.tsx:137`.
+- [PENDIENTE] Reducir los 132 anchos fijos en px y grids de columnas fijas en 68 archivos, criticos
+  para sidebar angosto y movil.
+
+### Capitulo 13.9 - Accesibilidad WCAG 2.2
+
+Frente nuevo, nunca registrado en este roadmap.
+
+- [PENDIENTE ESTRUCTURAL] Botones icono sin nombre accesible: `LeadsTableRow.tsx:157-166` usa `title`
+  en vez de `aria-label`. Solo 6 apariciones de `aria-label` en todo `src/`. Incumple WCAG 4.1.2. La
+  primitiva correcta ya existe (`IconButton` fuerza `aria-label` por tipos) pero no se usa.
+- [PENDIENTE] Migrar los overlays manuales a `src/design/Modal.tsx`: 17 archivos usan
+  `fixed inset-0`, solo 4 manejan `Escape` o `role="dialog"`.
+- [PENDIENTE] Corregir `focus:ring-offset-[#0a0a0a]` en `src/index.css:42`, color literal que no
+  reacciona al tema y degrada el indicador de foco (WCAG 2.4.11).
+- [PENDIENTE] Auditar el contraste de `--ls-text-muted` (`#8c95a6` sobre blanco da ~3.0:1,
+  insuficiente para texto normal segun WCAG 1.4.3).
+
+### Capitulo 13.10 - Higiene de repositorio (bloque 8)
+
+- [PENDIENTE] Sacar del arbol de git los dos PDFs de diseno de la raiz (3.7 MB de binarios).
+- [PENDIENTE] Eliminar la dependencia `dotenv`, declarada y sin usar.
+- [PENDIENTE] Eliminar el codigo muerto confirmado: `ChannelPerformanceChart.tsx`, `InsightsPanel.tsx`,
+  `ListEditor.tsx`, `LayoutContext.tsx`, y el asset `assets/img/icons/leadseed-icon.png`.
+- [PENDIENTE] Renombrar la carpeta de rediseno de la raiz sin espacios ni tildes en el nombre.
+- [PENDIENTE] Quitar el `console.log` de `src/main.tsx:24`.
+- [PENDIENTE] Renombrar `package.json` de `leads-crm-extension` a `leadseed`: el rebranding quedo
+  incompleto.
+
+### Capitulo 13.11 - Correccion de la documentacion normativa (bloque 9)
+
+- [PENDIENTE ESTRUCTURAL] Reescribir `landing-gerow-cloudflare-context.md`. El protocolo seccion 7 lo
+  declara de lectura obligatoria antes de tocar la integracion, y esta desactualizado en nueve puntos
+  verificables. Un documento obligatorio y falso es peor que no tenerlo.
+- [PENDIENTE] Actualizar `planespro-form-integration-contract.md`: declara dos canales publicos cuando
+  existen cuatro (`general`, `pb`, `retiro`, `form`), y no documenta el protocolo de dos fases
+  (`submission_id`, `update_token`, `action_only`) vigente desde el 3 de agosto.
+- [PENDIENTE] Archivar `HANDOFF_NEXT_SESSION.md`, caducado: declara que chat, comunidad y foro no son
+  alcance, y los tres se construyeron despues.
+- [PENDIENTE] Archivar `pb_form_redesign_handoff.md`.
+- [PENDIENTE] Decidir el destino de `implementation_plan.md` (2314 lineas, solapa fuertemente con este
+  roadmap).
+- [PENDIENTE] Fusionar `UX_UI_CHECKLIST.md` dentro de este roadmap.
+- [PENDIENTE] Reorganizar la documentacion en `docs/`, dejando `PROTOCOLO_CONTROL.md` y `AI_SYNC.md` en
+  la raiz por ser registro normativo.
+
+### Capitulo 13.12 - Deuda de datos y rendimiento
+
+- [PENDIENTE ESTRUCTURAL] Definir un modelo unico de migraciones. `sql/migrations/` y
+  `supabase/migrations/` estan hoy sincronizadas byte a byte, pero el modelo dual ya provoco
+  colisiones de numero en `036` y `090`. Recomendacion: `supabase/migrations/` como unica fuente de
+  verdad, y `sql/migrations/` generada automaticamente o retirada. Esto cierra el pendiente historico
+  del capitulo 2.3.
+- [PENDIENTE] Migrar `list_my_forgotten_leads` a paginacion por cursor y anadir `pg_trgm` con indice
+  GIN. Hoy usa `ilike` con comodin inicial sin indice de soporte, `OFFSET`, y un `NOT EXISTS`
+  correlacionado.
+- [PENDIENTE] Corregir el orden de columnas de `send_logs_user_lead_type_idx`, que no favorece el
+  patron de `get_my_dashboard_snapshot`.
+- [PENDIENTE] Separar los scripts de reparacion de datos (`_recovery`, `repair_historical_`) de las
+  migraciones de esquema. Cierra otro pendiente del capitulo 2.3.
+- [PENDIENTE] Anadir `AbortController` con timeout a las llamadas a Resend y Google Calendar.
+
+### Capitulo 13.13 - Retiro final de Cloudflare
+
+- [PENDIENTE ESTRUCTURAL] Migrar `ppusers` fuera de `FORMS_DB` (D1 `ppforms_db`) y `FORMS_UPLOADS`
+  (R2 `ppforms-uploads`). Mientras siga montado ahi hay dos fuentes de verdad de leads, que es
+  exactamente lo que la regla 16.2 del protocolo prohibe.
+- [PENDIENTE] Anadir `*.supabase.co` a `connect-src` en `_headers` de `landing-gerow`. Sin eso los
+  formularios no pueden saltarse el proxy.
+- [PENDIENTE] Migrar `ppcrm` (`admin.planespro.cl/crm`).
+- [PENDIENTE] Retirar la ruta documentada `POST /api/form/appointments`, que ya no existe y devuelve
+  404.
+
+---
+
+## Punto exacto actual al 2026-08-11
+
+Lo consolidado y verificado en esta pasada:
+
+- la capa de datos es solida: 48 tablas, todas con RLS, cero hallazgos criticos o altos
+- la separacion `repositories / services / types` es real, no decorativa
+- el retiro de Cloudflare del backend del formulario efectivamente ocurrio: `ppforms` es un proxy de
+  288 lineas sin D1, sin R2, sin cron, sin Resend y sin Google Calendar
+- el historial git es lineal y limpio
+- `npm run build` esta en verde
+
+Lo que esta abierto y no debe maquillarse como cerrado:
+
+- doble fuente de verdad activa en `form-leads` entre este repo y `landing-gerow`
+- una migracion de produccion ausente del historial de este repo
+- cero tests y cero lint en 305 archivos TypeScript
+- validacion E2E de Google Calendar y Meet, abierta desde julio y ya rebasada por trabajo posterior
+- validacion funcional final del envio real por Gmail
+- retiro o encapsulamiento final de `emailjs`
+- `ppusers` como segunda fuente de verdad de leads
+
+Regla de avance revisada al 2026-08-11: los bloques 0 (contencion) y 1 (alineacion de git) del plan de
+accion deben cerrarse antes de abrir cualquier otro frente, incluido cualquier modulo nuevo de
+producto. Son los unicos dos frentes con riesgo activo de romper produccion o de perder trabajo.
