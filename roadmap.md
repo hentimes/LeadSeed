@@ -993,6 +993,38 @@ noticias son contenido SEO estatico sin dependencia de LeadSeed. `farmacias/` us
 `caches.default` y `AbortController` con timeout contra la API de MINSAL, y esta bien resuelto. La
 redaccion previa del roadmap ("Cloudflare sale") era ambigua e inducia decisiones equivocadas.
 
+### Capitulo 13.1.c - Restriccion de no regresion (2026-08-12)
+
+Definida por el usuario tras aprobar la auditoria: *"La version actual de LeadSeed me gusta como se ve
+y lo que hemos avanzado, procura que no se pierda ninguna funcionalidad. Que solo sean mejoras."*
+
+Esta restriccion es **vinculante para todos los bloques restantes** y tiene precedencia sobre la
+conveniencia tecnica de cualquier refactor propuesto en la Seccion 13.
+
+Reglas operativas derivadas:
+
+- todo bloque de refactor se ejecuta como cambio que **preserva comportamiento y apariencia**. Un
+  refactor que "de paso" cambia como se ve o como se comporta una pantalla no es un refactor, es un
+  rediseno no autorizado
+- ninguna funcionalidad existente se retira sin decision explicita del usuario, ni siquiera si la
+  auditoria la marca como deuda
+- los bloques 6 (division de archivos) y 7 (sistema visual) son los de mayor riesgo de regresion y no
+  se abren hasta que el bloque 2 este cerrado
+- antes de tocar una superficie visual hay que confirmar con el usuario si el cambio altera lo que se
+  ve, **aunque una norma interna lo justifique**
+
+Tension declarada, no resuelta: la regla 10.1 del protocolo prohibe el patron de caja blanca
+redondeada, y el capitulo 13.8 propone barrerlo de Listas, Plantillas, Pipeline e Historial. Ese
+barrido **si cambia como se ven esas pantallas**. Las dos normas no pueden cumplirse a la vez en esas
+superficies.
+
+Criterio de resolucion adoptado: el capitulo 13.8 deja de ser un barrido masivo y pasa a ejecutarse
+**superficie por superficie, con aprobacion previa del usuario para cada una**. Mientras no haya esa
+aprobacion, la restriccion de no regresion gana y la pantalla se queda como esta. Los sub-items de
+13.8 que no alteran apariencia (unificar primitivas duplicadas, tokenizar colores literales por su
+equivalente exacto, corregir el foco y el contraste) si pueden ejecutarse sin aprobacion por
+superficie, porque su resultado visual es identico o estrictamente mejor.
+
 ### Capitulo 13.2 - Alineacion de git (bloque 1)
 
 Historial verificado como lineal: `master` es ancestro directo de `develop`. No hay divergencia, solo
