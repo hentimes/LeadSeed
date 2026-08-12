@@ -214,13 +214,23 @@ function resolveLeadSort(params: LeadPageQuery): { column: string; ascending: bo
   };
 }
 
-function hasActiveLeadFilters(params: LeadPageQuery): boolean {
+/**
+ * Decide si la bandeja esta filtrada. Se usa para saber si hace falta una
+ * segunda consulta que traiga el total sin filtros: si no hay filtros, el total
+ * es el mismo conteo filtrado y esa consulta se ahorra.
+ *
+ * Exportada para test: omitir un filtro aca no rompe el listado, pero hace que
+ * la bandeja informe un total equivocado, que es dificil de notar a simple vista.
+ */
+export function hasActiveLeadFilters(params: LeadPageQuery): boolean {
   return !!(
     params.search?.trim() ||
     params.listId !== undefined && params.listId !== null ||
     params.status ||
     params.dateFilter ||
-    params.origin
+    params.origin ||
+    params.sourceChannel ||
+    (params.captureLinkId !== undefined && params.captureLinkId !== null)
   );
 }
 

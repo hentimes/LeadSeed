@@ -1079,13 +1079,33 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
 
 ### Capitulo 13.4 - Correcciones funcionales (bloque 3)
 
-- [PENDIENTE] Unificar `ACTIVE_APPOINTMENT_STATUSES`, hoy definido tres veces y con comparacion
-  inconsistente: `useLeadDetail.ts:283` compara sin normalizar y falla en silencio si el backend
-  devuelve el estado capitalizado.
-- [PENDIENTE] Corregir `hasActiveLeadFilters` (`leadsRepository.ts:217-225`), que ignora
-  `captureLinkId` y `sourceChannel` y calcula mal el `totalCount` al filtrar por canal.
-- [PENDIENTE] Unificar `getErrorMessage`: existe el canonico, dos reimplementaciones y ~40 copias
-  inline con el mismo bug que el archivo canonico documenta.
+- [HECHO] Unificado `ACTIVE_APPOINTMENT_STATUSES` en `src/utils/appointmentStatus.ts`, con el
+  predicado `isActiveAppointment(status)` que normaliza mayusculas y espacios y acepta nulos. Se
+  reemplazaron los seis puntos de uso en `useLeadDetail`, `useLeadsPageController` y
+  `backgroundAgendaAlertsService`. El bug real estaba en `useLeadDetail.ts:283`, que comparaba el
+  valor crudo del backend contra un Set en minusculas: una cita activa capitalizada simplemente no se
+  encontraba, sin error visible. 7 tests.
+- [HECHO] Corregido `hasActiveLeadFilters`. Ignoraba `sourceChannel`, asi que al filtrar solo por
+  canal `filtersActive` quedaba en `false`, `totalCount` colapsaba a `filteredCount` y la bandeja
+  informaba "X de X" ocultando el total real. Se agrego tambien `captureLinkId` por completitud. La
+  funcion se exporto para poder testearla: omitir un filtro no rompe el listado, solo falsea el
+  total, y eso es dificil de notar a simple vista. 9 tests, uno de ellos escrito en rojo antes del
+  arreglo.
+- [HECHO] Unificado el manejo de errores en `src/utils/errorMessage.ts`, retirando la
+  reimplementacion de `useLeadDetail` y la de `appSettingsService`. 10 tests.
+
+  **Correccion a la auditoria.** El informe proponia fusionar todo en la version de
+  `appSettingsService`, "mas completa" por incluir `code`, `details` y `hint`. Es incorrecto: no son
+  la misma funcion con distinto detalle, son dos propositos distintos, verificado por sus llamadores.
+  `describeError` se usa solo en `console.error` y `getErrorMessage` solo en `setError`. Fusionarlas
+  mostraria `code=42501 | details=...` al usuario final, que es una regresion de UX. Quedan las dos
+  en el mismo modulo, con la separacion documentada y un test que verifica que la version de UI no
+  filtra detalle tecnico.
+
+- [PENDIENTE] Migrar las ~40 copias inline de `error instanceof Error ? error.message : '...'` al
+  helper canonico. Se dejan para una pasada propia: cambian texto visible por el usuario (para mejor,
+  porque hoy muestran el generico donde deberian mostrar la causa), y conviene revisarlas por
+  superficie en vez de en un barrido.
 - [PENDIENTE] Unificar `AdminSupportChat` y `SupportFloatingChat` en un `useSupportThread(peerId)`, y
   usar `removeChannel()` en vez de `unsubscribe()`.
 - [PENDIENTE] Sufijar los nombres de canal realtime con `userId`. Los nombres estaticos globales son el

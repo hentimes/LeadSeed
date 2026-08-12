@@ -2,10 +2,10 @@ import { getDefaultAgendaRange, listMyAppointments } from './agendaService';
 import { getCurrentSession } from './authService';
 import { dispatchAlert, getAlertPreferences } from './alertNotifier';
 import { incrementBadgeCount } from './extensionBadgeTheme';
+import { isActiveAppointment } from '../utils/appointmentStatus';
 
 const STORAGE_KEY = 'agendaAlerts';
 const NOTIFIED_LIMIT = 50;
-const ACTIVE_STATUSES = new Set(['pendiente', 'agendada', 'confirmada', 'tentativa']);
 
 interface AgendaAlertsState {
   notifiedAppointmentIds: string[];
@@ -46,7 +46,7 @@ export async function checkUpcomingAppointments(): Promise<void> {
     const notified = new Set(state.notifiedAppointmentIds);
 
     const due = appointments.filter((appointment) => {
-      if (!ACTIVE_STATUSES.has(appointment.status.toLowerCase())) return false;
+      if (!isActiveAppointment(appointment.status)) return false;
       if (notified.has(appointment.id)) return false;
 
       const startsIn = new Date(appointment.startsAt).getTime() - now;

@@ -14,8 +14,8 @@ import { getSettings } from '../services/appSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
+import { isActiveAppointment } from '../utils/appointmentStatus';
 
-const ACTIVE_APPOINTMENT_STATUSES = new Set(['pendiente', 'agendada', 'confirmada', 'tentativa']);
 const PAGE_SIZE = 50;
 
 function getLeadAppointmentMetadata(lead: Lead): { appointmentId: string; appointmentStatus: string } {
@@ -126,19 +126,19 @@ export function useLeadsPageController() {
   const resolveActiveAppointmentId = useCallback(async (lead: Lead): Promise<string> => {
     const { appointmentId, appointmentStatus } = getLeadAppointmentMetadata(lead);
 
-    if (appointmentId && ACTIVE_APPOINTMENT_STATUSES.has(appointmentStatus)) {
+    if (appointmentId && isActiveAppointment(appointmentStatus)) {
       return appointmentId;
     }
 
     if (!lead.id) return '';
-    if (!lead.scheduledAt && !ACTIVE_APPOINTMENT_STATUSES.has(appointmentStatus)) {
+    if (!lead.scheduledAt && !isActiveAppointment(appointmentStatus)) {
       return '';
     }
 
     const range = getDefaultAgendaRange(365);
     const appointments = await listMyAppointments(range.from, range.to);
     const appointment = appointments.find(
-      (item) => item.leadId === lead.id && ACTIVE_APPOINTMENT_STATUSES.has(item.status.toLowerCase()),
+      (item) => item.leadId === lead.id && isActiveAppointment(item.status),
     );
 
     return appointment?.id || '';

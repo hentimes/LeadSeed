@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { tokenizeSearch } from './leadsRepository';
+import { hasActiveLeadFilters, tokenizeSearch } from './leadsRepository';
 
 /**
  * `tokenizeSearch` es la unica defensa entre el texto que escribe el usuario en
@@ -95,5 +95,60 @@ describe('tokenizeSearch', () => {
 
   test('conserva el arroba y el punto de un correo', () => {
     expect(tokenizeSearch('ana@empresa.cl')).toEqual(['ana@empresa.cl']);
+  });
+});
+
+/**
+ * `hasActiveLeadFilters` decide si se lanza la consulta de total sin filtros.
+ * Si devuelve false con la bandeja filtrada, `totalCount` colapsa a
+ * `filteredCount` y la UI informa "X de X" ocultando el total real.
+ */
+describe('hasActiveLeadFilters', () => {
+  const base = { page: 1, pageSize: 50 };
+
+  test('sin filtros no hay nada activo', () => {
+    expect(hasActiveLeadFilters(base)).toBe(false);
+  });
+
+  test('detecta busqueda por texto', () => {
+    expect(hasActiveLeadFilters({ ...base, search: 'ana' })).toBe(true);
+  });
+
+  test('una busqueda de solo espacios no cuenta como filtro', () => {
+    expect(hasActiveLeadFilters({ ...base, search: '   ' })).toBe(false);
+  });
+
+  test('detecta lista, estado, fecha y origen', () => {
+    expect(hasActiveLeadFilters({ ...base, listId: 3 })).toBe(true);
+    expect(hasActiveLeadFilters({ ...base, status: 'nuevo' })).toBe(true);
+    expect(hasActiveLeadFilters({ ...base, dateFilter: '7d' })).toBe(true);
+    expect(hasActiveLeadFilters({ ...base, origin: 'web_form' })).toBe(true);
+  });
+
+  test('listId nulo o ausente no cuenta como filtro', () => {
+    expect(hasActiveLeadFilters({ ...base, listId: null })).toBe(false);
+    expect(hasActiveLeadFilters({ ...base, listId: undefined })).toBe(false);
+  });
+
+  test('listId 0 si cuenta como filtro', () => {
+    // 0 es un id valido y no debe caer en la comprobacion de nulos.
+    expect(hasActiveLeadFilters({ ...base, listId: 0 })).toBe(true);
+  });
+
+  test('detecta el filtro por canal de origen', () => {
+    // Regresion: sourceChannel no estaba contemplado, asi que filtrar solo por
+    // canal hacia que la bandeja informara el total como si no hubiera filtro.
+    expect(hasActiveLeadFilters({ ...base, sourceChannel: 'pb' })).toBe(true);
+    expect(hasActiveLeadFilters({ ...base, sourceChannel: 'retiro' })).toBe(true);
+  });
+
+  test('detecta el filtro por link de captura', () => {
+    expect(
+      hasActiveLeadFilters({ ...base, origin: 'web_form', captureLinkId: 7 }),
+    ).toBe(true);
+  });
+
+  test('los valores nulos de canal y link no cuentan como filtro', () => {
+    expect(hasActiveLeadFilters({ ...base, sourceChannel: null, captureLinkId: null })).toBe(false);
   });
 });

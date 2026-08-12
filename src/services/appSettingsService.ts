@@ -5,36 +5,8 @@ import {
 } from '../repositories/settingsRepository';
 import type { AppSettings } from '../types';
 import { DEFAULT_LEAD_COLUMNS } from '../config/leadColumns';
+import { describeError } from '../utils/errorMessage';
 
-
-/**
- * Los errores de Supabase son objetos planos, no Error, y se registraban
- * como "[object Object]": el panel de errores de Chrome no mostraba nada
- * util para diagnosticar. Esto extrae los campos que si sirven.
- */
-function describeError(error: unknown): string {
-  if (!error) return 'error desconocido';
-  if (error instanceof Error) return error.message;
-
-  if (typeof error === 'object') {
-    const candidate = error as { message?: string; code?: string; details?: string; hint?: string };
-    const parts = [
-      candidate.message,
-      candidate.code ? `code=${candidate.code}` : '',
-      candidate.details ? `details=${candidate.details}` : '',
-      candidate.hint ? `hint=${candidate.hint}` : '',
-    ].filter(Boolean);
-    if (parts.length > 0) return parts.join(' | ');
-
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return String(error);
-    }
-  }
-
-  return String(error);
-}
 
 // Inicializar settings por defecto
 export async function getSettings(): Promise<AppSettings> {

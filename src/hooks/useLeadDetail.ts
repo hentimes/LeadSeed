@@ -25,6 +25,8 @@ import {
   markLeadCrossExecAlertsAsRead,
 } from '../services/leadDetailService';
 import { markLeadAsRead } from '../services/leadsService';
+import { isActiveAppointment } from '../utils/appointmentStatus';
+import { getErrorMessage } from '../utils/errorMessage';
 
 const TECHNICAL_METADATA_KEYS = new Set([
   'raw_payload',
@@ -71,7 +73,6 @@ const STEP1_OBJETIVO_LABELS: Record<string, string> = {
 
 const PLANESPRO_FILE_PROXY_URL =
   import.meta.env.VITE_PLANESPRO_FILE_PROXY_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/form-lead-file`;
-const ACTIVE_APPOINTMENT_STATUSES = new Set(['pendiente', 'agendada', 'confirmada', 'tentativa']);
 
 function toReadableValue(value: unknown) {
   if (value == null) return '';
@@ -113,15 +114,6 @@ function todayDate(): string {
 
 function toIsoLocal(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString();
-}
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (error && typeof error === 'object' && 'message' in error) {
-    const message = String((error as { message?: unknown }).message || '').trim();
-    if (message) return message;
-  }
-  return fallback;
 }
 
 export function toJourneyLabel(val: string, labels: Record<string, string>) {
@@ -193,7 +185,7 @@ export function useLeadDetail(lead: Lead) {
   const googlePendingSummary = getGoogleSyncPendingSummary(activeAppointment);
   const canCreateAppointment =
     !!leadId &&
-    (!visibleAppointmentStatus || !ACTIVE_APPOINTMENT_STATUSES.has(visibleAppointmentStatus.toLowerCase()));
+    (!visibleAppointmentStatus || !isActiveAppointment(visibleAppointmentStatus));
 
   const genericMetadataEntries = useMemo(
     () =>
@@ -280,7 +272,7 @@ export function useLeadDetail(lead: Lead) {
       const appointments = await listMyAppointments(range.from, range.to);
       if (cancelled) return;
       const appointment = appointments.find(
-        (item) => item.leadId === leadId && ACTIVE_APPOINTMENT_STATUSES.has(item.status),
+        (item) => item.leadId === leadId && isActiveAppointment(item.status),
       );
       setActiveAppointment(appointment || null);
     })();
