@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-globals -- DEUDA 13.6: confirm() nativo, no existe en
-   React Native. Se cierra con el puerto Dialogs. */
 import { useEffect, useRef, useState } from 'react';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant } from '../types';
 import {
@@ -16,6 +14,7 @@ import {
   unsubscribeFromMyAgendaChanges,
 } from '../services/agendaService';
 import { getAppointmentSuccessMessage } from '../utils/appointmentStatusCopy';
+import { webDialogs, webNavigation } from '../platform/web';
 
 export interface ParticipantFormState {
   name: string;
@@ -30,10 +29,8 @@ export interface RescheduleFormState {
 export const CLOSED_STATUSES = new Set(['cancelada', 'rechazada']);
 
 function readAppointmentIdFromHash(): string {
-  const hash = window.location.hash || '';
-  if (!hash.startsWith('#agenda')) return '';
-  const match = hash.match(/[?&]appointment=([^&]+)/);
-  return match ? decodeURIComponent(match[1]) : '';
+  const route = webNavigation.current();
+  return route?.name === 'agenda' ? (route.appointmentId ?? '') : '';
 }
 
 function toDateInputValue(value: string): string {
@@ -187,7 +184,7 @@ export function useAgenda() {
 
   const openFocusedAppointment = (appointmentId?: string) => {
     if (!appointmentId) return;
-    window.location.hash = `#agenda?appointment=${appointmentId}`;
+    webNavigation.replace({ name: 'agenda', appointmentId });
     setFocusedAppointmentId(appointmentId);
   };
 
@@ -221,7 +218,7 @@ export function useAgenda() {
   };
 
   const handleCancelAppointment = async (appointment: AgendaAppointment) => {
-    if (!confirm('Cancelar esta cita? El horario quedara disponible.')) return;
+    if (!(await webDialogs.confirm('Cancelar esta cita? El horario quedara disponible.'))) return;
 
     setAppointmentActionId(appointment.id);
     setMessage('');

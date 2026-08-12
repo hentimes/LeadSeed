@@ -1,8 +1,3 @@
-/* eslint-disable no-restricted-globals -- DEUDA 13.6: nueve confirm()/alert() nativos.
-   Es el bloqueador principal del port a movil: no existen en React Native. Se cierran
-   inyectando un puerto Dialogs, junto con la division de este hook (13.7). No se
-   corrigen aca porque tocan el flujo de papelera y acciones masivas de la bandeja, y
-   la restriccion de no regresion (13.1.c) tiene precedencia. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLeads } from './useLeads';
 import { useLists } from './useLists';
@@ -15,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 import { isActiveAppointment } from '../utils/appointmentStatus';
+import { webDialogs, webNavigation } from '../platform/web';
 
 const PAGE_SIZE = 50;
 
@@ -79,16 +75,12 @@ export function useLeadsPageController() {
   } = useLeadFilters();
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('filter=olvidados')) {
-      setFilterMode('olvidados');
-    } else {
-      setFilterMode(null);
-    }
-    if (hash.includes('action=new')) {
+    const route = webNavigation.current();
+    setFilterMode(route?.name === 'leads' && route.filter === 'olvidados' ? 'olvidados' : null);
+    if (route?.name === 'leads' && route.action === 'new') {
       setEditing(null);
       setShowForm(true);
-      window.location.hash = '#leads';
+      webNavigation.replace({ name: 'leads' });
     }
   }, []);
 
@@ -144,9 +136,9 @@ export function useLeadsPageController() {
     return appointment?.id || '';
   }, []);
 
-  const confirmDeleteLeadWithAgenda = (leadName: string, isPermanent: boolean): boolean => {
+  const confirmDeleteLeadWithAgenda = (leadName: string, isPermanent: boolean): Promise<boolean> => {
     const actionLabel = isPermanent ? 'eliminar definitivamente' : 'eliminar';
-    return confirm(
+    return webDialogs.confirm(
       `Este lead tiene una hora agendada. Si confirmas, el sistema va a ${actionLabel} este lead y se va a eliminar tambien la hora agendada. Estas seguro?`,
     );
   };
@@ -217,18 +209,18 @@ export function useLeadsPageController() {
       return;
     }
 
-    const leadHashMatch = window.location.hash.match(/[?&]lead=([^&]+)/);
-    const leadIdFromHash = leadHashMatch ? decodeURIComponent(leadHashMatch[1]) : '';
+    const currentRoute = webNavigation.current();
+    const leadIdFromHash = currentRoute?.name === 'leads' ? (currentRoute.leadId ?? '') : '';
     if (leadIdFromHash) {
       const leadFromHash = data.find((lead) => lead.id === leadIdFromHash);
       if (leadFromHash) {
         setViewing(leadFromHash);
-        window.location.hash = '#leads';
+        webNavigation.replace({ name: 'leads' });
       } else {
         const fetchedLead = await getById(leadIdFromHash);
         if (fetchedLead) {
           setViewing(fetchedLead);
-          window.location.hash = '#leads';
+          webNavigation.replace({ name: 'leads' });
         }
       }
     }
@@ -351,7 +343,7 @@ export function useLeadsPageController() {
       const messages: string[] = [];
       if (dupRut && !isSelfRut) messages.push(`RUT ${lead.rut} ya existe`);
       if (dupPhone && !isSelfPhone) messages.push(`Telefono ${lead.phone} ya existe`);
-      if (!confirm(`${messages.join(' y ')}. Guardar de todas formas?`)) return;
+      if (!(await webDialogs.confirm(`${messages.join(' y ')}. Guardar de todas formas?`))) return;
     }
 
     await save(lead);
@@ -388,15 +380,15 @@ export function useLeadsPageController() {
 
     if (showTrash) {
       if (hasActiveAppointment) {
-        if (!confirmDeleteLeadWithAgenda(lead?.name || 'este lead', true)) return;
+        if (!(await confirmDeleteLeadWithAgenda(lead?.name || 'este lead', true))) return;
         if (lead) await cancelLeadAppointmentBeforeDelete(lead, appointmentId);
-      } else if (!confirm('Eliminar definitivamente?')) {
+      } else if (!(await webDialogs.confirm('Eliminar definitivamente?'))) {
         return;
       }
       await permanentDelete(id);
     } else {
       if (hasActiveAppointment) {
-        if (!confirmDeleteLeadWithAgenda(lead?.name || 'este lead', false)) return;
+        if (!(await confirmDeleteLeadWithAgenda(lead?.name || 'este lead', false))) return;
         if (lead) await cancelLeadAppointmentBeforeDelete(lead, appointmentId);
       }
       await remove(id);
@@ -435,26 +427,22 @@ export function useLeadsPageController() {
 
     if (showTrash) {
       if (leadsWithAppointments.length > 0) {
-        if (
-          !confirm(
-            `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar definitivamente esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
-          )
-        )
-          return;
-      } else if (!confirm(`Eliminar definitivamente ${selectedIds.size} leads?`)) {
+        const aceptado = await webDialogs.confirm(
+          `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar definitivamente esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
+        );
+        if (!aceptado) return;
+      } else if (!(await webDialogs.confirm(`Eliminar definitivamente ${selectedIds.size} leads?`))) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
       for (const id of selectedIds) await permanentDelete(id);
     } else {
       if (leadsWithAppointments.length > 0) {
-        if (
-          !confirm(
-            `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
-          )
-        )
-          return;
-      } else if (!confirm(`Mover ${selectedIds.size} leads a la papelera?`)) {
+        const aceptado = await webDialogs.confirm(
+          `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
+        );
+        if (!aceptado) return;
+      } else if (!(await webDialogs.confirm(`Mover ${selectedIds.size} leads a la papelera?`))) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
@@ -485,7 +473,7 @@ export function useLeadsPageController() {
 
   const handleImport = async (rows: ParsedRow[]) => {
     if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
-      alert('Has superado el limite de 100 prospectos del plan Free. Actualiza tu plan para poder importar mas leads.');
+      await webDialogs.alert('Has superado el limite de 100 prospectos del plan Free. Actualiza tu plan para poder importar mas leads.');
       return;
     }
 
@@ -498,9 +486,9 @@ export function useLeadsPageController() {
     await loadLeads();
   };
 
-  const handleNewLeadClick = () => {
+  const handleNewLeadClick = async () => {
     if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
-      alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
+      await webDialogs.alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
       return;
     }
     setEditing(null);

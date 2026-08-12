@@ -1286,11 +1286,30 @@ fuente y de deploy, no de bundle.
 Hallazgo clave: el acoplamiento que bloquea el port no es Chrome (93 usos bien contenidos en 18
 archivos) sino el DOM dentro de hooks de dominio.
 
-- [PENDIENTE ESTRUCTURAL] Crear `src/platform/` con nueve puertos: `KeyValueStore`, `Notifier`,
-  `BadgeCounter`, `OAuthLauncher`, `BackgroundScheduler`, `AppMessageBus`, `Dialogs`, `Navigation`,
-  `Deeplink`.
-- [PENDIENTE ESTRUCTURAL] Eliminar `confirm()`, `alert()` y `window.location.hash` de
-  `useLeadsPageController.ts` (nueve llamadas), `useLeadDetail.ts` y `useAgenda.ts`.
+- [PARCIAL] `src/platform/` creado con los dos primeros puertos, `Dialogs` y `Navigation`, en
+  `types.ts`, mas su implementacion web en `web.ts`. Quedan por extraer los otros siete:
+  `KeyValueStore`, `Notifier`, `BadgeCounter`, `OAuthLauncher`, `BackgroundScheduler`,
+  `AppMessageBus` y `Deeplink`.
+- [HECHO] Eliminados `confirm()`, `alert()` y `window.location.hash` de la capa de dominio. **Este
+  era el bloqueador real del port a movil**, por encima del acoplamiento a Chrome.
+  - `useAgenda.ts`: un `confirm` y dos usos del hash.
+  - `useLeadsPageController.ts`: nueve dialogos y cinco usos del hash, en 15 sustituciones.
+  - Ambos `eslint-disable` retirados: ESLint vigila esos archivos activamente y pasa.
+  - Marcas de deuda de frontera: de 5 a 3. Las tres restantes son de 13.4, no de portabilidad.
+
+  Dos decisiones de diseño que conviene no revertir. Primera: `DialogsPort.confirm` devuelve una
+  promesa aunque la implementacion web sea sincrona, porque en movil o con un dialogo propio la
+  respuesta llega despues y un contrato sincrono lo haria inimplementable. Segunda: la navegacion se
+  modela como rutas con parametros (`{ name: 'leads', leadId, filter, action }`) y no como cadenas de
+  hash, porque el hash es un detalle del entorno web; el formato serializado se conserva identico
+  para no romper la shell, y el parseo quedo centralizado y con 15 tests, donde antes eran
+  expresiones regulares repartidas por dos hooks.
+
+  No se toco el comportamiento: la implementacion web sigue llamando a los mismos `confirm`, `alert`
+  y `window.location.hash` de antes. Lo que cambia es quien depende de quien.
+
+- [PENDIENTE] Los `window.location.hash` que quedan viven solo en `components/` y `pages/`, que es la
+  capa web y se reescribe para movil. No los cubre la regla de frontera de ESLint a proposito.
 - [PENDIENTE] Sacar `chrome.storage` de los componentes `DataManagement.tsx:60` y
   `EmailSender.tsx:188`, y de `useEmailChannels.ts:329`.
 - [PENDIENTE] Evaluar TanStack Query como capa unica de estado servidor. Hoy no hay cache: cada
