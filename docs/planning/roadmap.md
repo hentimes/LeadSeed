@@ -1190,6 +1190,40 @@ Descubierto el `2026-08-12` al preparar el deploy anterior, no estaba en la audi
 - [PENDIENTE] Reenviar el header `Origin` desde el proxy al upstream. Hoy la allowlist CORS de las Edge
   Functions no discrimina nada porque nunca ve el origen real.
 
+### Capitulo 13.4.c - Reconocimiento de Cloudflare para el corte de routing
+
+Ejecutado el `2026-08-12` con la API, solo lectura. Estado real de la cuenta:
+
+| Recurso | Estado |
+|---|---|
+| Zona | `planespro.cl`, activa, id `6bf0d82d...` |
+| Pages projects | **uno solo**: `planespro` (`landing-gerow.pages.dev`), sirviendo `planespro.cl` y `chatbot.planespro.cl` |
+| Workers | `pp-www-redirect`, `ppblog`, `ppcrm`, `ppcrm-staging`, `ppforms`, `ppnews`, `ppusers` |
+
+Hallazgo no contemplado: existe `ppcrm-staging` ademas de `ppcrm`. No estaba en ningun documento del
+proyecto. Debe inventariarse antes de dar por cerrado el retiro de Cloudflare.
+
+**Limite del token actual.** Permisos comprobados uno a uno:
+
+| Capacidad | Resultado |
+|---|---|
+| Leer zona | OK |
+| Workers routes | OK |
+| DNS records | OK |
+| Pages projects | OK (lectura confirmada) |
+| **Rulesets de zona** | **DENEGADO** |
+| Page rules legacy | DENEGADO |
+
+Consecuencia directa: **el corte por reglas de zona, que es la opcion mas limpia, no se puede
+ejecutar con el token actual.** Requiere anadirle el permiso `Zone / Transform Rules / Edit` sobre
+`planespro.cl`.
+
+Alternativa que si cabe en los permisos actuales: un Worker montado en las rutas
+`planespro.cl/pb/*`, `/form/*` y `/retiro-tecnico-extranjero/*` que sirva desde el Pages project de
+LeadSeed. Funciona, pero agrega un salto de computo donde una regla de configuracion no lo necesita,
+y va en direccion contraria al objetivo de reducir piezas en Cloudflare. Se prefiere pedir el
+permiso.
+
 ### Capitulo 13.5 - Consolidacion de formularios en LeadSeed (bloque 4)
 
 Principio: la extension y los formularios publicos no comparten runtime. La consolidacion es de codigo
