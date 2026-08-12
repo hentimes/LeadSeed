@@ -1158,6 +1158,11 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   allowlist se refleja, que un origen de extension se acepta, que un origen desconocido ya **no** se
   refleja y recibe el valor por defecto, y que la funcion sigue devolviendo `401` sin token.
 
+  Validacion funcional cerrada: el usuario confirmo el `2026-08-12` que los PDF siguen abriendo
+  correctamente desde la extension. Esto cierra el unico punto de la tanda que dependia de
+  observacion real y no de analisis, y confirma la conclusion previa de que el submit de formulario
+  hacia una ventana nueva no pasa por CORS.
+
 ### Capitulo 13.4.b - Fallo latente en la configuracion de Edge Functions
 
 Descubierto el `2026-08-12` al preparar el deploy anterior, no estaba en la auditoria original.
