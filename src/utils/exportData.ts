@@ -1,16 +1,13 @@
 import * as XLSX from 'xlsx';
 import type { Lead } from '../types';
+import { getPlatform } from '../platform/registry';
 
 function downloadFile(data: Blob | string, filename: string) {
-  const url = typeof data === 'string'
-    ? URL.createObjectURL(new Blob([data], { type: 'application/json' }))
-    : URL.createObjectURL(data);
-  // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  void getPlatform().fileSaver.save({
+    content: data,
+    filename,
+    mimeType: 'application/json',
+  });
 }
 
 export function exportToJSON(leads: Lead[]) {

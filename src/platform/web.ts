@@ -15,6 +15,7 @@ import type {
   AppRoute,
   DeeplinkPort,
   DialogsPort,
+  FileSaverPort,
   KeyValueStorePort,
   MessageBusPort,
   NavigationPort,
@@ -221,6 +222,24 @@ export const webOAuth: OAuthLauncherPort = {
 };
 
 
+export const webFileSaver: FileSaverPort = {
+  async save({ content, filename, mimeType }) {
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+
+    try {
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+    } finally {
+      // Siempre, incluso si `click()` falla: una URL de objeto sin revocar
+      // retiene el blob completo en memoria hasta recargar la pagina.
+      URL.revokeObjectURL(url);
+    }
+  },
+};
+
 export const webPlatform: Platform = {
   dialogs: webDialogs,
   navigation: webNavigation,
@@ -228,6 +247,7 @@ export const webPlatform: Platform = {
   deeplink: webDeeplink,
   messageBus: webMessageBus,
   oauth: webOAuth,
+  fileSaver: webFileSaver,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */

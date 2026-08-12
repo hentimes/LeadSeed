@@ -36,13 +36,11 @@ export function useLeadAlerts(onLeadsChanged?: () => void) {
   useEffect(() => {
     if (alerts.length === 0) return;
 
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    const timeoutId = window.setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setAlerts((current) => current.slice(0, -1));
     }, TOAST_DURATION_MS);
 
-    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
-    return () => window.clearTimeout(timeoutId);
+    return () => clearTimeout(timeoutId);
   }, [alerts]);
 
   const dismissAlert = (id: string) => {

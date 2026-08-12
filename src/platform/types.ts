@@ -148,6 +148,21 @@ export interface OAuthLauncherPort {
   launch(oauthUrl: string): Promise<string | null>;
 }
 
+/**
+ * Entrega un archivo generado al usuario.
+ *
+ * En la extension es el truco clasico de un `<a download>` sintetico; en movil
+ * seria `expo-file-system` mas `expo-sharing`, que guarda y abre la hoja de
+ * compartir. La diferencia es grande, y por eso el puerto habla de "entregar un
+ * archivo" y no de descargarlo: "descargar" ya es una palabra del navegador.
+ *
+ * Recibe el contenido y no una URL de objeto: crear y revocar la URL es un
+ * detalle del entorno web que no tiene equivalente en movil.
+ */
+export interface FileSaverPort {
+  save(file: { content: Blob | string; filename: string; mimeType: string }): Promise<void>;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
@@ -156,4 +171,5 @@ export interface Platform {
   deeplink: DeeplinkPort;
   messageBus: MessageBusPort;
   oauth: OAuthLauncherPort;
+  fileSaver: FileSaverPort;
 }

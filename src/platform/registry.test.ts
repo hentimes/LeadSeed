@@ -13,6 +13,7 @@ function plataformaFalsa(): Platform {
     deeplink: { openExternal: vi.fn() },
     messageBus: { isAvailable: vi.fn(() => false), send: vi.fn(async () => {}), subscribe: vi.fn(() => () => {}) },
     oauth: { redirectUrl: vi.fn(() => ''), canCompleteInApp: vi.fn(() => false), launch: vi.fn(async () => null) },
+    fileSaver: { save: vi.fn(async () => {}) },
   };
 }
 
@@ -45,12 +46,14 @@ describe('registro de plataforma', () => {
     expect(getPlatform()).toBe(segunda);
   });
 
-  test('expone los seis puertos del contrato', () => {
+  test('expone todos los puertos del contrato', () => {
+    // Si se agrega un puerto y no se actualiza este test, falla: obliga a
+    // decidir conscientemente que la plataforma falsa tambien lo cubra.
     setPlatform(plataformaFalsa());
     const p = getPlatform();
 
     expect(Object.keys(p).sort()).toEqual([
-      'deeplink', 'dialogs', 'messageBus', 'navigation', 'oauth', 'storage',
+      'deeplink', 'dialogs', 'fileSaver', 'messageBus', 'navigation', 'oauth', 'storage',
     ]);
   });
 
