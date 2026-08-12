@@ -1050,9 +1050,17 @@ retraso.
 
 Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan en verde.
 
-- [PARCIAL] Vitest instalado con 57 tests en verde sobre `tokenizeSearch`, `rutNormalizer` y
-  `mentionParser`. Quedan pendientes `utils/importParser.ts`, `utils/smartLists.ts` y el mapeo de
-  `services/leadsService.ts`.
+- [HECHO] Cobertura de los seis modulos de dominio priorizados por riesgo. 193 tests.
+  `tokenizeSearch`, `rutNormalizer`, `mentionParser`, `importParser`, `smartLists` y el mapeo de
+  `leadsService`, mas los puertos de plataforma y los helpers de soporte que aparecieron en el
+  camino.
+
+  Los tres ultimos cubren reglas de negocio que nunca habian tenido red: la fusion de nombre y
+  apellidos y de RUT con DV al importar, la deteccion de duplicados comparando telefonos con formatos
+  distintos, la clasificacion por sistema de salud y rango etario, y el mapeo fila-a-dominio, donde
+  se fijo por test una distincion sutil que era facil de romper: los campos de texto caen a cadena
+  vacia porque la UI los pinta directo, pero los de fecha caen a `undefined` porque se comparan con
+  `Date.parse` y una cadena vacia daria `NaN`.
 - [HECHO] ESLint instalado con reglas de frontera. Politica de severidad deliberada: **`error` queda
   reservado exclusivamente para violaciones de frontera arquitectonica**; toda la deuda de calidad
   entra como `warning`. El motivo es que un CI que falla por 106 problemas heterogeneos no se lee, se
