@@ -43,6 +43,7 @@ import ChatFrozenBanner from './ChatFrozenBanner';
 import {
   MAX_CHAT_MESSAGE_DISPLAY_LENGTH as MAX_LENGTH,
   cleanChatRoomMessages,
+  deleteChatMessage,
   freezeChatRoom,
   markChatRoomRead,
   purgeChatRoomMessages,
@@ -184,6 +185,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   const [cleanConfirmOpen, setCleanConfirmOpen] = useState(false);
   const [purgeConfirmOpen, setPurgeConfirmOpen] = useState(false);
   const [cleanupResult, setCleanupResult] = useState('');
+  const [deleteMessageTarget, setDeleteMessageTarget] = useState<ChatMessage | null>(null);
 
   const clearPendingFile = () => {
     if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
@@ -333,6 +335,18 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       setSendError(getErrorMessage(err, 'No se pudo purgar el chat.'));
     } finally {
       setPurgeConfirmOpen(false);
+    }
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!deleteMessageTarget) return;
+    try {
+      await deleteChatMessage(deleteMessageTarget.id);
+    } catch (err) {
+      console.error('Error eliminando el mensaje', err);
+      setActionError(getErrorMessage(err, 'No se pudo eliminar el mensaje.'));
+    } finally {
+      setDeleteMessageTarget(null);
     }
   };
 
@@ -587,16 +601,27 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
                     </div>
                   )}
 
-                  {msg.content && (
-                    <MessageContent content={msg.content} onMentionClick={handleMentionClick} />
-                  )}
+                  {msg.deleted_at ? (
+                    <p className="flex items-center gap-1.5 text-slate-400 dark:text-gray-500 italic text-[13px] sm:text-sm">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      {msg.content}
+                    </p>
+                  ) : (
+                    <>
+                      {msg.content && (
+                        <MessageContent content={msg.content} onMentionClick={handleMentionClick} />
+                      )}
 
-                  {msg.attachments && msg.attachments.length > 0 && (
-                    <div className={`flex flex-wrap gap-2 ${msg.content ? 'mt-2' : ''}`}>
-                      {msg.attachments.map((attachment) => (
-                        <MessageAttachment key={attachment.id} attachment={attachment} />
-                      ))}
-                    </div>
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className={`flex flex-wrap gap-2 ${msg.content ? 'mt-2' : ''}`}>
+                          {msg.attachments.map((attachment) => (
+                            <MessageAttachment key={attachment.id} attachment={attachment} />
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {isOwn && (
@@ -608,7 +633,10 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
                 </div>
               </div>
               
-              {/* Acciones del mensaje */}
+              {/* Acciones del mensaje: un mensaje ya eliminado no tiene mas
+                  nada que hacerle -- guardarlo, destacarlo o responderle a un
+                  aviso vacio no tiene sentido. */}
+              {!msg.deleted_at && (
               <div className={`relative opacity-0 group-hover:opacity-100 transition-opacity flex items-center ${isOwn ? 'mr-auto' : 'ml-auto'}`}>
                 <button
                   onClick={() => void handleToggleSaved(msg)}
@@ -687,7 +715,20 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
                 >
                   <Icon.Reply />
                 </button>
+
+                {isStaff && (
+                  <button
+                    onClick={() => setDeleteMessageTarget(msg)}
+                    className="p-1.5 text-slate-400 hover:text-state-danger hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                    title="Eliminar mensaje"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
               </div>
+              )}
             </div>
           );
         })}
@@ -1015,6 +1056,16 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
           confirmLabel="Purgar todo"
           onCancel={() => setPurgeConfirmOpen(false)}
           onConfirm={() => void handlePurge()}
+        />
+      )}
+
+      {deleteMessageTarget && (
+        <ConfirmDangerModal
+          title="Eliminar mensaje"
+          message="El mensaje se va a reemplazar por un aviso de que fue eliminado por un administrador. Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onCancel={() => setDeleteMessageTarget(null)}
+          onConfirm={() => void handleDeleteMessage()}
         />
       )}
 

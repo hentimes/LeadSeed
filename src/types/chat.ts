@@ -19,6 +19,8 @@ export interface ChatMessage {
   content: string;
   reply_to_id?: string;
   is_announcement?: boolean;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
 
   // Joins

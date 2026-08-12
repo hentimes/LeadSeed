@@ -8,6 +8,7 @@ import {
   subscribeToChatRoomUpdates,
   subscribeToRoomAttachmentInserts,
   subscribeToRoomMessageDeletes,
+  subscribeToRoomMessageUpdates,
   subscribeToRoomMessages,
 } from '../services/chatService';
 import type { ChatAttachment } from '../services/chatAttachmentsService';
@@ -82,6 +83,23 @@ export function useChat(roomId?: string) {
 
     return subscribeToRoomMessageDeletes(room.id, (messageId) => {
       setMessages((prev) => prev.filter((message) => message.id !== messageId));
+    });
+  }, [room?.id]);
+
+  // Cuando un admin borra un mensaje puntual, su contenido cambia por un
+  // aviso (no se borra la fila) -- sin esto, el resto de la gente conectada
+  // sigue viendo el mensaje original hasta que recarga la sala.
+  useEffect(() => {
+    if (!room) return;
+
+    return subscribeToRoomMessageUpdates(room.id, (updatedMessage) => {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === updatedMessage.id
+            ? { ...message, content: updatedMessage.content, deleted_at: updatedMessage.deleted_at, deleted_by: updatedMessage.deleted_by }
+            : message
+        )
+      );
     });
   }, [room?.id]);
 

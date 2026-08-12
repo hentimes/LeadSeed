@@ -89,6 +89,30 @@ export function subscribeToRoomMessageDeletes(
     .subscribe();
 }
 
+/** Borrado "blando" de un mensaje puntual: reemplaza su contenido por un
+ * aviso en vez de borrar la fila, para no romper la conversacion alrededor. */
+export async function deleteChatMessage(messageId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_chat_message', { p_message_id: messageId });
+  if (error) throw error;
+}
+
+/** Cambios de contenido de mensajes ya enviados (por ahora, solo el borrado
+ * de un admin) en vivo, para que a todos los conectados les llegue el aviso
+ * sin tener que recargar la sala. */
+export function subscribeToRoomMessageUpdates(
+  roomId: string,
+  onUpdate: (message: ChatMessage) => void
+): RealtimeChannel {
+  return supabase
+    .channel(`room-message-updates:${roomId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'chat_messages', filter: `room_id=eq.${roomId}` },
+      (payload) => onUpdate(payload.new as ChatMessage)
+    )
+    .subscribe();
+}
+
 export async function fetchChatProfileById(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase.from('profiles_public').select('*').eq('id', userId).single();
   if (error) return null;
@@ -118,7 +142,7 @@ export async function fetchReplyMessageById(messageId: string): Promise<ChatMess
 const ATTACHMENTS_EMBED =
   'attachments:chat_message_attachments(id, message_id, room_id, uploader_id, kind, storage_path, file_name, mime_type, size_bytes, width, height, created_at)';
 
-const MESSAGE_SELECT = `id, room_id, user_id, content, reply_to_id, is_announcement, created_at, ${USER_PROFILE_EMBED}, ${ATTACHMENTS_EMBED}`;
+const MESSAGE_SELECT = `id, room_id, user_id, content, reply_to_id, is_announcement, deleted_at, deleted_by, created_at, ${USER_PROFILE_EMBED}, ${ATTACHMENTS_EMBED}`;
 
 /** Ultimos mensajes de la sala, del mas viejo al mas nuevo. */
 export async function fetchRoomMessages(roomId: string, limit = 100): Promise<ChatMessage[]> {

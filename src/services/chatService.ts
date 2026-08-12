@@ -1,5 +1,6 @@
 import {
   cleanChatRoomMessages as cleanChatRoomMessagesRepo,
+  deleteChatMessage as deleteChatMessageRepo,
   fetchChatProfileById,
   fetchChatRoomById,
   fetchDefaultChatRoom,
@@ -22,6 +23,7 @@ import {
   subscribeToPinnedMessageChanges,
   subscribeToRoomAttachmentInserts as subscribeToRoomAttachmentInsertsRepo,
   subscribeToRoomMessageDeletes as subscribeToRoomMessageDeletesRepo,
+  subscribeToRoomMessageUpdates as subscribeToRoomMessageUpdatesRepo,
   unfreezeChatRoom as unfreezeChatRoomRepo,
   unpinChatMessage,
   unsaveChatMessage,
@@ -184,6 +186,23 @@ export function subscribeToRoomMessageDeletes(
   onDelete: (messageId: string) => void
 ): () => void {
   const channel = subscribeToRoomMessageDeletesRepo(roomId, onDelete);
+  return () => {
+    removeChatChannel(channel);
+  };
+}
+
+// --- Borrado de un mensaje puntual (admin/helper) --------------------------
+
+/** Reemplaza el contenido del mensaje por un aviso, en vez de borrar la fila. */
+export function deleteChatMessage(messageId: string): Promise<void> {
+  return deleteChatMessageRepo(messageId);
+}
+
+export function subscribeToRoomMessageUpdates(
+  roomId: string,
+  onUpdate: (message: ChatMessage) => void
+): () => void {
+  const channel = subscribeToRoomMessageUpdatesRepo(roomId, onUpdate);
   return () => {
     removeChatChannel(channel);
   };
