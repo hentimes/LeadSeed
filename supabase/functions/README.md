@@ -82,6 +82,20 @@ Deuda conocida (roadmap 13.4): `KNOWN_FORM_SLUGS` es un allowlist escrito a mano
 tiene `public.form_types` como registro editable. Agregar un tipo de formulario desde la extension no
 habilita su telemetria hasta editar y redesplegar esta funcion.
 
+## Cuidado con `functions download`
+
+`supabase functions download <slug>` **tambien sobrescribe `_shared/`** con la copia que venia
+empaquetada en el bundle desplegado de esa funcion. No solo baja el `index.ts` que se pidio.
+
+Paso de verdad el `2026-08-12`: al descargar `form-leads` para comparar, `_shared/emailChannels.ts`
+paso de 381 a 332 lineas y perdio toda la validacion de dominio de Resend (`getEmailDomain`, la
+comprobacion del remitente y la deteccion de credenciales restringidas a solo envio). El bundle de
+`form-leads` no necesita esa parte, pero `email-channels` si, y un deploy posterior habria publicado
+la perdida.
+
+Antes de descargar, respalda `_shared/`. Despues de descargar, revisa `git status`: si `_shared/`
+aparece modificado, casi seguro hay que restaurarlo.
+
 ## Comprobacion de deriva
 
 ```
