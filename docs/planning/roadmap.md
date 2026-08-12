@@ -920,24 +920,36 @@ form-leads  v23  ACTIVE
 entrypoint_path: .../landing-gerow/supabase/functions/form-leads/index.ts
 ```
 
-- [PARCIAL] Doble fuente de verdad de `supabase/functions/form-leads/index.ts`. Se adopto en este
-  repo la version desplegada (690 lineas, con el despacho de tres vias) y se reemplazo la de 584.
+- [HECHO] Doble fuente de verdad de `supabase/functions/form-leads/index.ts`, **cerrada del todo el
+  `2026-08-12`**: source y propiedad del deploy.
 
-  **Correccion del 2026-08-12, segunda auditoria.** Esto estuvo marcado `[HECHO]` y no lo estaba. El
-  source se adopto, pero **la funcion desplegada sigue registrada como propiedad de `landing-gerow`**,
-  asi que un `functions deploy` desde alla puede sobrescribir produccion. El propio chequeo del repo
-  lo reporta:
+  Historia del item, porque ilustra un patron de error: estuvo marcado `[HECHO]` cuando solo se habia
+  adoptado el source. La segunda auditoria lo detecto: la funcion desplegada seguia registrada a
+  nombre de `landing-gerow`, asi que un deploy desde alla podia sobrescribir produccion, y
+  `npm run check:functions` fallaba por ese motivo. Adoptar el codigo y adoptar la propiedad del
+  despliegue son dos cosas distintas y se trataron como una.
 
-  ```
-  $ npm run check:functions
-  form-leads: desplegada desde fuera de este repo
-  entrypoint: .../landing-gerow/supabase/functions/form-leads/index.ts
-  ```
+  Cerrado en dos pasos, que resuelven cosas distintas:
 
-  El criterio de cierre del bloque 0 exige que no quede ninguna funcion con dos versiones capaces de
-  pisarse. No se cumple. Cerrarlo requiere un redespliegue desde este repo, que es neutro en
-  contenido (verificado byte a byte con `functions download`) pero toca la funcion de captura de
-  leads, asi que espera decision explicita del usuario.
+  1. Redespliegue desde este repo. Cambia el registro de titularidad: `form-leads` v23 -> v24, con el
+     entrypoint ya sin apuntar a `landing-gerow`. Neutro en contenido, verificado byte a byte con
+     `functions download` antes de ejecutarlo.
+  2. Borrado de `supabase/` en `landing-gerow`. Es lo que de verdad elimina el riesgo: mientras esa
+     carpeta existiera, cualquiera podia volver a pisar la funcion. Se agrego alli un check de CI que
+     falla si reaparece.
+
+  Verificado archivo por archivo antes de borrar, para no perder nada: `form-leads` identico,
+  `emailChannels.ts` superset en este repo, y la migracion `20260803000100` integra en nuestra
+  reconciliacion `20260812000100`.
+
+  Se trabajo en un worktree aislado desde `origin/master`, dejando intacta la copia de trabajo de
+  `landing-gerow` con sus 1368 archivos sin commitear, comprobado despues.
+
+  Validacion en produccion tras el deploy automatico de Pages: home, `/pb/<code>`, `/form/<code>`,
+  `/retiro-tecnico-extranjero/<code>`, blog y biblioteca en `200`; la captura de leads respondiendo
+  con validacion (`400 name is required`, no `500`); y `npm run check:functions` reportando **12
+  funciones desplegadas, sin deriva**.
+
 - [HECHO] Verificado que `_shared/emailChannels.ts` **no requiere merge**: la version de este repo es
   superset (381 vs 332 lineas) y `form-leads` solo importa `resolveUserEmailChannel`, presente aca.
 - [HECHO] Creada la migracion de reconciliacion

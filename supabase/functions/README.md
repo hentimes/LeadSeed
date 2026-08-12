@@ -48,7 +48,7 @@ entonces la unica fuente de verdad.
 | `email-channels` | este repo | |
 | `form-lead-abandoned` | este repo | |
 | `form-lead-file` | este repo | CORS alineado a la allowlist y desplegado (v11) el 2026-08-12 |
-| `form-leads` | este repo (source) | **deploy aun registrado a nombre de `landing-gerow`**; ver abajo |
+| `form-leads` | este repo | source y deploy; v24 desplegada desde aqui el 2026-08-12 |
 | `form-public-availability` | este repo | |
 | `google-calendar-connect` | este repo | |
 | `google-calendar-create-event` | este repo | |
@@ -95,19 +95,6 @@ la perdida.
 
 Antes de descargar, respalda `_shared/`. Despues de descargar, revisa `git status`: si `_shared/`
 aparece modificado, casi seguro hay que restaurarlo.
-
-## Deriva abierta: form-leads
-
-El source vive aqui, pero la funcion desplegada sigue apuntando a `landing-gerow`:
-
-```
-$ npm run check:functions
-form-leads: desplegada desde fuera de este repo
-```
-
-Mientras eso siga asi, un `supabase functions deploy form-leads` desde `landing-gerow` sobrescribe
-produccion. Verificado por descarga que el contenido de ambos es identico, asi que redesplegar desde
-aqui seria neutro en contenido; queda pendiente de decision porque es la funcion de captura de leads.
 
 ## Comprobacion de deriva
 

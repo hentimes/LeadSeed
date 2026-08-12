@@ -765,10 +765,9 @@ Estado al `2026-08-12`: **las doce Edge Functions tienen su source en este repo.
 adopto obteniendo el codigo realmente desplegado con `supabase functions download`, no copiandolo del
 otro repo, porque el HEAD commiteado de `landing-gerow` tenia una version anterior.
 
-Excepcion abierta, distinta de la anterior: `form-leads` tiene su source aqui pero **la funcion
-desplegada sigue registrada como propiedad de `landing-gerow`**, asi que un deploy desde alla puede
-sobrescribirla. Comprobable con `npm run check:functions`, que hoy falla por ese motivo. Hasta que se
-redespliegue desde este repo, la regla de dueño unico esta escrita pero no cumplida.
+La regla quedo **cumplida y no solo escrita** el `2026-08-12`: `form-leads` se redesplego desde este
+repo y `landing-gerow` ya no tiene carpeta `supabase/`, con un check de CI alli que falla si
+reaparece. `npm run check:functions` reporta las doce funciones sin deriva.
 
 LeadSeed y `landing-gerow` comparten el mismo proyecto Supabase, asi que un deploy desde el repo
 equivocado sobrescribe produccion. Por eso esta regla es de dueño unico y no de reparto por dominio.
