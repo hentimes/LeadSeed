@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ColumnDef } from '../components/ColumnSelector';
+import type { ColumnDef } from '../types';
 import { LEAD_COLUMN_BY_KEY } from '../config/leadColumns';
 
 /** Ancho real del cromo de la tabla: checkbox (32) + acciones (92). */

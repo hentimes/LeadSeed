@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
+import type { ColumnDef } from '../types';
 
-export interface ColumnDef {
-  key: string;
-  label: string;
-  visible: boolean;
-}
+// El tipo vive en `src/types/`: es dominio, no UI. Se reexporta para no
+// obligar a cada consumidor visual a cambiar de origen.
+export type { ColumnDef } from '../types';
 
 interface Props {
   columns: ColumnDef[];

@@ -181,3 +181,21 @@ export interface AdminObservedLeadAlert {
   unseenNewLeadsCount: number;
   latestLeadCreatedAt?: string;
 }
+
+/**
+ * Estado de visibilidad de una columna de la bandeja.
+ *
+ * Vivia dentro de `components/ColumnSelector.tsx`, lo que invertia la
+ * dependencia: `services/appSettings.ts` y `config/leadColumns.ts` tenian que
+ * importar del arbol de UI para conocer un tipo de dominio, y con el se
+ * arrastraban a cualquier consumidor. Ver roadmap 13.4.
+ *
+ * No confundir con `LeadColumnDef` de `config/leadColumns.ts`, que describe la
+ * columna completa (ancho, campo de orden, si es fija). Este solo representa
+ * que columnas ve el usuario y en que orden.
+ */
+export interface ColumnDef {
+  key: string;
+  label: string;
+  visible: boolean;
+}

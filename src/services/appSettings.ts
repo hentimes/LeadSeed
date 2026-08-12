@@ -1,8 +1,5 @@
 import { getSettings, saveSettings } from './appSettingsService';
-// DEUDA 13.4: inversion de dependencia. ColumnDef debe vivir en src/types/, no en un
-// componente.
-// eslint-disable-next-line no-restricted-imports
-import type { ColumnDef } from '../components/ColumnSelector';
+import type { ColumnDef } from '../types';
 import type { AppSettings } from '../types';
 import { webStorage } from '../platform/web';
 
