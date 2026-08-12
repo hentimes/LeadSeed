@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { LeadAlertEvent } from '../types';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webMessageBus } from '../platform/web';
 
 const TOAST_DURATION_MS = 8000;
@@ -36,10 +37,12 @@ export function useLeadAlerts(onLeadsChanged?: () => void) {
   useEffect(() => {
     if (alerts.length === 0) return;
 
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     const timeoutId = window.setTimeout(() => {
       setAlerts((current) => current.slice(0, -1));
     }, TOAST_DURATION_MS);
 
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     return () => window.clearTimeout(timeoutId);
   }, [alerts]);
 

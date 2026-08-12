@@ -1,5 +1,6 @@
 import type { Lead } from '../types';
 import { getSettings } from '../services/appSettingsService';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webDeeplink, webMessageBus } from '../platform/web';
 
 /**

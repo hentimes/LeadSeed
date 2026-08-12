@@ -19,3 +19,4 @@ testDb.js
 
 # metadata local del CLI de Supabase, no del proyecto
 supabase/.temp/
+coverage/

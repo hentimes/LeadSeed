@@ -1,8 +1,14 @@
-/* eslint-disable no-restricted-globals -- Este archivo ES la frontera con el
-   entorno. Es el unico sitio del repositorio donde `confirm`, `alert` y las
-   APIs de `chrome` estan permitidos, y existe precisamente para que no
-   aparezcan en ningun otro lado. Ver src/platform/types.ts. */
-
+/**
+ * Implementacion de los puertos para la extension de Chrome.
+ *
+ * Este archivo ES la frontera con el entorno: es el sitio donde `chrome.*`,
+ * `window` y `document` estan permitidos por diseño, y existe precisamente para
+ * que no aparezcan en la capa de dominio.
+ *
+ * No lleva `eslint-disable`: `src/platform/` no esta en DOMAIN_LAYERS, asi que
+ * la regla no le aplica. Tuvo uno durante varios commits y era inerte, no
+ * suprimia nada. Lo detecto `reportUnusedDisableDirectives` en cuanto se activo.
+ */
 import { launchOAuthInTab } from './oauthTab';
 import type {
   AppMessage,
@@ -142,13 +148,20 @@ export const webDeeplink: DeeplinkPort = {
  * `chrome`: en una pagina web servida fuera de la extension el objeto puede
  * existir parcialmente sin que haya un service worker detras.
  */
+// Funciones de modulo y no metodos con `this`: un puerto existe para ser
+// inyectado, y en el momento en que alguien haga `const { send } = messageBus`
+// o pase `messageBus.send` como callback, `this` se pierde y revienta en
+// runtime. Con `this` el contrato diria "inyectable" y la implementacion
+// "solo invocable como metodo sobre el objeto original".
+function messageBusAvailable(): boolean {
+  return typeof chrome !== 'undefined' && Boolean(chrome.runtime?.id);
+}
+
 export const webMessageBus: MessageBusPort = {
-  isAvailable() {
-    return typeof chrome !== 'undefined' && Boolean(chrome.runtime?.id);
-  },
+  isAvailable: messageBusAvailable,
 
   async send(message: AppMessage) {
-    if (!this.isAvailable()) return;
+    if (!messageBusAvailable()) return;
     try {
       await chrome.runtime.sendMessage(message);
     } catch {
@@ -158,7 +171,7 @@ export const webMessageBus: MessageBusPort = {
   },
 
   subscribe(listener: (message: AppMessage) => void) {
-    if (!this.isAvailable()) return () => {};
+    if (!messageBusAvailable()) return () => {};
 
     const handler = (message: unknown) => {
       if (message && typeof message === 'object' && 'type' in message) {
@@ -178,23 +191,26 @@ export const webMessageBus: MessageBusPort = {
  * `LoginPage` y en `useEmailChannels`: ambos calculaban por su cuenta si
  * corrian dentro de la extension y de ahi derivaban la URL de retorno.
  */
-export const webOAuth: OAuthLauncherPort = {
-  canCompleteInApp() {
-    return window.location.protocol === 'chrome-extension:' && Boolean(chrome?.identity);
-  },
+function oauthCanCompleteInApp(): boolean {
+  return window.location.protocol === 'chrome-extension:' && Boolean(chrome?.identity);
+}
 
-  redirectUrl() {
-    // `chrome.identity.getRedirectURL()` devuelve un dominio reservado
-    // (<id>.chromiumapp.org) que no resuelve a ningun sitio real; solo sirve
-    // como marca de fin de flujo. Ver el comentario de oauthTab.ts.
-    return this.canCompleteInApp()
-      ? chrome.identity.getRedirectURL()
-      : `${window.location.origin}${window.location.pathname}`;
-  },
+function oauthRedirectUrl(): string {
+  // `chrome.identity.getRedirectURL()` devuelve un dominio reservado
+  // (<id>.chromiumapp.org) que no resuelve a ningun sitio real; solo sirve
+  // como marca de fin de flujo. Ver el comentario de oauthTab.ts.
+  return oauthCanCompleteInApp()
+    ? chrome.identity.getRedirectURL()
+    : `${window.location.origin}${window.location.pathname}`;
+}
+
+export const webOAuth: OAuthLauncherPort = {
+  canCompleteInApp: oauthCanCompleteInApp,
+  redirectUrl: oauthRedirectUrl,
 
   async launch(oauthUrl: string) {
-    if (this.canCompleteInApp()) {
-      return launchOAuthInTab(oauthUrl, this.redirectUrl());
+    if (oauthCanCompleteInApp()) {
+      return launchOAuthInTab(oauthUrl, oauthRedirectUrl());
     }
 
     // Web plano: se abandona la pagina y el proveedor traera de vuelta al
@@ -203,6 +219,7 @@ export const webOAuth: OAuthLauncherPort = {
     return null;
   },
 };
+
 
 export const webPlatform: Platform = {
   dialogs: webDialogs,

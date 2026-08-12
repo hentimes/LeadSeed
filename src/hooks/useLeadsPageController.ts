@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 import { isActiveAppointment } from '../utils/appointmentStatus';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webDialogs, webNavigation } from '../platform/web';
 
 const PAGE_SIZE = 50;
@@ -90,11 +91,14 @@ export function useLeadsPageController() {
 
   useEffect(() => {
     if (showForm) {
+      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
       document.body.style.overflow = 'hidden';
     } else {
+      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
       document.body.style.overflow = 'auto';
     }
     return () => {
+      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
       document.body.style.overflow = 'auto';
     };
   }, [showForm]);

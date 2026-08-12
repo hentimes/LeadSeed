@@ -435,7 +435,7 @@ export default function ListsPage() {
             >
                <div className="bg-slate-50/80 dark:bg-slate-900/80 px-5 py-2.5 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center group/folder">
                   <div className="flex items-center gap-2">
-                     <span className="text-slate-400 text-sm">📂</span>
+                     <span className="text-slate-400">{Icon.Lists()}</span>
                      <input 
                         type="text" 
                         value={group.name}

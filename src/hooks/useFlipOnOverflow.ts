@@ -17,6 +17,7 @@ export function useFlipOnOverflow<T extends HTMLElement>() {
     if (!el) return;
 
     const rect = el.getBoundingClientRect();
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     if (rect.bottom > window.innerHeight) {
       setOpenUpward(true);
     }

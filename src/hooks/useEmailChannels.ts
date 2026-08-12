@@ -3,6 +3,7 @@ import { getSettings, saveSettings } from '../services/appSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 import { getMyCalendarConnectionStatus } from '../services/agendaService';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webOAuth } from '../platform/web';
 import {
   createChannel,

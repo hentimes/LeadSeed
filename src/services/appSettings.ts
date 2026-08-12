@@ -1,6 +1,7 @@
 import { getSettings, saveSettings } from './appSettingsService';
 import type { ColumnDef } from '../types';
 import type { AppSettings } from '../types';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webStorage } from '../platform/web';
 
 export interface AppPreferences {

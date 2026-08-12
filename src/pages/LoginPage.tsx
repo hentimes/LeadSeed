@@ -1,6 +1,7 @@
 import React from 'react';
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import { chartColors } from '../design/palette';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webOAuth } from '../platform/web';
 
 export default function LoginPage() {

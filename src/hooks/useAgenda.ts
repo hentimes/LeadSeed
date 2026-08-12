@@ -14,6 +14,7 @@ import {
   unsubscribeFromMyAgendaChanges,
 } from '../services/agendaService';
 import { getAppointmentSuccessMessage } from '../utils/appointmentStatusCopy';
+// eslint-disable-next-line no-restricted-imports -- DEUDA BLOQUE 5: importa la implementacion de plataforma en vez de recibirla inyectada. Ver roadmap 13.6.
 import { webDialogs, webNavigation } from '../platform/web';
 
 export interface ParticipantFormState {
@@ -135,8 +136,7 @@ export function useAgenda() {
     };
 
     syncFocusedAppointmentFromHash();
-    window.addEventListener('hashchange', syncFocusedAppointmentFromHash);
-    return () => window.removeEventListener('hashchange', syncFocusedAppointmentFromHash);
+    return webNavigation.subscribe(syncFocusedAppointmentFromHash);
   }, []);
 
   useEffect(() => {
@@ -151,11 +151,11 @@ export function useAgenda() {
       setExpandedHistory((current) => (current[focusedAppointmentId] ? current : { ...current, [focusedAppointmentId]: true }));
     }
 
-    const timeoutId = window.setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       appointmentRefs.current[focusedAppointmentId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 30);
 
-    return () => window.clearTimeout(timeoutId);
+    return () => clearTimeout(timeoutId);
   }, [appointments, focusedAppointmentId]);
 
   const getParticipantsForAppointment = (appointmentId: string) =>

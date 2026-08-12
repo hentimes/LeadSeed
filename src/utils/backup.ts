@@ -22,6 +22,7 @@ export async function exportBackup(): Promise<void> {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
+  // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
   const a = document.createElement('a');
   a.href = url;
   a.download = `leads-crm-backup-${new Date().toISOString().slice(0, 10)}.json`;

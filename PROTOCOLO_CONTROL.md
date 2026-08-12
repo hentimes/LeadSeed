@@ -761,8 +761,14 @@ divergente en los dos repos sin que ninguna herramienta lo detectara, y la copia
 desplegarse, habria creado un lead duplicado por cada envio en `/form/` y `/retiro/`. El detalle esta
 en `supabase/functions/README.md` y en `docs/auditorias/AUDITORIA_CONTROL_2026-08-11.md`.
 
-Excepcion transitoria declarada: `form-progress` sigue en `landing-gerow` al `2026-08-12` porque su
-copia alla tiene cambios sin commitear. Es deuda con plan de salida, no convivencia permitida.
+Estado al `2026-08-12`: **las doce Edge Functions tienen su source en este repo.** `form-progress` se
+adopto obteniendo el codigo realmente desplegado con `supabase functions download`, no copiandolo del
+otro repo, porque el HEAD commiteado de `landing-gerow` tenia una version anterior.
+
+Excepcion abierta, distinta de la anterior: `form-leads` tiene su source aqui pero **la funcion
+desplegada sigue registrada como propiedad de `landing-gerow`**, asi que un deploy desde alla puede
+sobrescribirla. Comprobable con `npm run check:functions`, que hoy falla por ese motivo. Hasta que se
+redespliegue desde este repo, la regla de dueño unico esta escrita pero no cumplida.
 
 LeadSeed y `landing-gerow` comparten el mismo proyecto Supabase, asi que un deploy desde el repo
 equivocado sobrescribe produccion. Por eso esta regla es de dueño unico y no de reparto por dominio.

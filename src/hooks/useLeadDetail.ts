@@ -283,8 +283,10 @@ export function useLeadDetail(lead: Lead) {
   }, [leadId]);
 
   useEffect(() => {
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     document.body.style.overflow = 'hidden';
     return () => {
+      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
       document.body.style.overflow = 'auto';
     };
   }, []);
@@ -308,6 +310,7 @@ export function useLeadDetail(lead: Lead) {
     }
 
     const targetName = `planespro-pdf-${leadId || 'lead'}-${download ? 'download' : 'view'}`;
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     const openedWindow = window.open('', targetName);
     if (!openedWindow) {
       setPdfLoading(false);
@@ -315,6 +318,7 @@ export function useLeadDetail(lead: Lead) {
       return;
     }
 
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = PLANESPRO_FILE_PROXY_URL;
@@ -322,6 +326,7 @@ export function useLeadDetail(lead: Lead) {
     form.style.display = 'none';
 
     const appendField = (name: string, value: string) => {
+      // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
       const input = document.createElement('input');
       input.type = 'hidden';
       input.name = name;
@@ -333,8 +338,10 @@ export function useLeadDetail(lead: Lead) {
     appendField('path', pdfPath);
     appendField('download', download ? '1' : '0');
 
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     document.body.appendChild(form);
     form.submit();
+    // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
     document.body.removeChild(form);
     setPdfLoading(false);
   };

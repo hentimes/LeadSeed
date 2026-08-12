@@ -45,6 +45,17 @@ export default tseslint.config(
     ignores: ['dist/**', 'node_modules/**', 'public/**', 'assets/**', 'sql/**', 'supabase/**'],
   },
 
+  // Una marca de deuda que ya no hace falta debe FALLAR, no quedarse ahi.
+  // Es la diferencia entre este ratchet y la lista central de exenciones que se
+  // uso antes: aquella acumulo cuatro entradas inertes que no eximian de nada y
+  // nadie lo noto. Una directiva sobrante aqui rompe el CI y obliga a borrarla,
+  // asi que el contador de deuda no puede mentir hacia arriba.
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+    },
+  },
+
   js.configs.recommended,
   ...tseslint.configs.recommended,
 
@@ -89,17 +100,54 @@ export default tseslint.config(
     },
   },
 
-  // Frontera 1: el cliente Supabase vive solo en repositories.
-  // Regla arquitectonica ya declarada en roadmap 3.2 y hasta hoy sin verificar.
+  // FRONTERAS DE IMPORTACION
   //
-  // La lista incluye `services` y `contexts` desde el 2026-08-12: al cerrar la
-  // ultima marca de deuda se descubrio que la regla no los cubria, y
-  // `services/realtimeService.ts` importaba el cliente sin que nada protestara.
-  // Una frontera con un hueco no es una frontera.
+  // Tres bloques con conjuntos de archivos DISJUNTOS, y cada uno declara la
+  // lista completa de patrones que le aplica. Esto no es estilo, es obligatorio:
+  // en flat config las reglas se fusionan por clave y **gana la ultima
+  // definicion, las opciones no se acumulan**. Dos bloques que declaren
+  // `no-restricted-imports` sobre archivos solapados NO suman restricciones, se
+  // pisan.
+  //
+  // Ya paso: las Fronteras 1 y 2 estaban en bloques separados y solapados, y la
+  // segunda anulaba a la primera para `services/` y `config/`. El roadmap
+  // declaraba ese hueco cerrado mientras seguia abierto. Comprobado
+  // empiricamente el 2026-08-12 con un archivo de prueba.
+  //
+  // Si anades un patron, anadelo a los tres bloques que corresponda. Y
+  // compruebalo con un archivo de prueba, no leyendo la config.
+
+  // Capa de presentacion: puede componer UI libremente, pero no toca datos.
+  {
+    files: ['src/components/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/lib/supabaseClient', '**/lib/supabaseClient.ts'],
+              message: 'El cliente Supabase vive solo en src/repositories/. Ver roadmap 3.2 y 13.4.',
+            },
+            {
+              group: ['@supabase/supabase-js'],
+              importNames: ['createClient'],
+              message: 'No crees un cliente Supabase fuera de src/lib/supabaseClient.ts.',
+            },
+            {
+              group: ['**/platform/web', '**/platform/web.ts', '**/platform/oauthTab'],
+              message:
+                'Importa el contrato desde platform/types y recibe la implementacion por inyeccion. Ver roadmap 13.6.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Capa de dominio: ni datos crudos, ni UI, ni implementacion de plataforma.
   {
     files: [
-      'src/components/**/*.{ts,tsx}',
-      'src/pages/**/*.{ts,tsx}',
       'src/hooks/**/*.{ts,tsx}',
       'src/services/**/*.{ts,tsx}',
       'src/contexts/**/*.{ts,tsx}',
@@ -113,14 +161,22 @@ export default tseslint.config(
           patterns: [
             {
               group: ['**/lib/supabaseClient', '**/lib/supabaseClient.ts'],
-              message:
-                'El cliente Supabase vive solo en src/repositories/. Ver roadmap 3.2 y 13.4.',
+              message: 'El cliente Supabase vive solo en src/repositories/. Ver roadmap 3.2 y 13.4.',
             },
             {
               group: ['@supabase/supabase-js'],
               importNames: ['createClient'],
+              message: 'No crees un cliente Supabase fuera de src/lib/supabaseClient.ts.',
+            },
+            {
+              group: ['**/components/**', '**/pages/**'],
               message:
-                'No crees un cliente Supabase fuera de src/lib/supabaseClient.ts.',
+                'La capa de dominio no puede depender de la UI. Mueve el tipo a src/types/. Ver roadmap 13.4.',
+            },
+            {
+              group: ['**/platform/web', '**/platform/web.ts', '**/platform/oauthTab'],
+              message:
+                'Importa el contrato desde platform/types y recibe la implementacion por inyeccion. Importar platform/web arrastra chrome.* al grafo de modulos. Ver roadmap 13.6.',
             },
           ],
         },
@@ -128,12 +184,10 @@ export default tseslint.config(
     },
   },
 
-  // Frontera 2: la capa de dominio no depende de la UI.
-  // Hoy services/appSettings.ts y config/leadColumns.ts importan un tipo desde
-  // components/ColumnSelector, que invierte la dependencia y arrastra el arbol
-  // de UI a cualquier consumidor del dominio.
+  // Repositorios: son los unicos dueños del cliente Supabase, pero tampoco
+  // dependen de la UI ni de la implementacion de plataforma.
   {
-    files: ['src/services/**/*.{ts,tsx}', 'src/config/**/*.{ts,tsx}', 'src/repositories/**/*.{ts,tsx}'],
+    files: ['src/repositories/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -141,8 +195,11 @@ export default tseslint.config(
           patterns: [
             {
               group: ['**/components/**', '**/pages/**'],
-              message:
-                'La capa de dominio no puede depender de la UI. Mueve el tipo a src/types/. Ver roadmap 13.4.',
+              message: 'Un repositorio no puede depender de la UI. Ver roadmap 13.4.',
+            },
+            {
+              group: ['**/platform/web', '**/platform/web.ts'],
+              message: 'Un repositorio no depende de la implementacion de plataforma. Ver roadmap 13.6.',
             },
           ],
         },
@@ -181,6 +238,26 @@ export default tseslint.config(
           name: 'chrome',
           message:
             'Las APIs de Chrome no existen en React Native. Usa un puerto de src/platform/. Ver roadmap 13.6.',
+        },
+        // El diagnostico de la auditoria fue que el bloqueador real del port es
+        // el DOM, no Chrome. Durante varios commits la regla prohibio solo
+        // confirm/alert/prompt/chrome: media el sintoma y no la propiedad, asi
+        // que se pudo declarar el bloqueador eliminado con 20 usos de DOM
+        // intactos en la capa de dominio. Corregido el 2026-08-12.
+        {
+          name: 'window',
+          message:
+            'window no existe en React Native. Usa un puerto de src/platform/. Ver roadmap 13.6.',
+        },
+        {
+          name: 'document',
+          message:
+            'document no existe en React Native. Usa un puerto de src/platform/. Ver roadmap 13.6.',
+        },
+        {
+          name: 'localStorage',
+          message:
+            'localStorage no existe en React Native. Usa el puerto KeyValueStore. Ver roadmap 13.6.',
         },
       ],
     },

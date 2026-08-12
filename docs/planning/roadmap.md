@@ -863,8 +863,9 @@ Base: commits `22e1a3a`, `e4e3f5a`, `cd70955`.
 - [EN REVISION] Mensajes directos propios.
 - [EN REVISION] Adjuntos en el chat.
 - [EN REVISION] Correccion de colision de canal realtime al abrir el chat con DMs sin leer.
-- [PARCIAL] Borrado admin de mensajes de chat. El codigo y las dos migraciones existen en el arbol de
-  trabajo pero no estan commiteados al `2026-08-11`. Bloque a medio cerrar.
+- [HECHO] Borrado admin de mensajes de chat, commit `8fd5f3e`. Migraciones
+  `sql/migrations/095_chat_message_admin_delete.sql` y su espejo. Este item decia "no estan
+  commiteados" y contradecia al capitulo 13.1, que ya declaraba el commit; corregido el `2026-08-12`.
 - [PENDIENTE] Dividir `src/components/chat/ChatRoom.tsx`: 1097 lineas, ~30 `useState`, ~680 lineas de
   JSX. Es el archivo de mayor riesgo de mantenibilidad del repositorio.
 - [HECHO] Resuelto el bloqueo sobre `EmojiPicker.tsx`. El usuario definio el `2026-08-12` la frontera
@@ -919,9 +920,24 @@ form-leads  v23  ACTIVE
 entrypoint_path: .../landing-gerow/supabase/functions/form-leads/index.ts
 ```
 
-- [HECHO] Resuelta la doble fuente de verdad de `supabase/functions/form-leads/index.ts`. Se adopto en
-  este repo la version desplegada en produccion (690 lineas, con el despacho de tres vias). La copia
-  anterior de 584 lineas queda reemplazada.
+- [PARCIAL] Doble fuente de verdad de `supabase/functions/form-leads/index.ts`. Se adopto en este
+  repo la version desplegada (690 lineas, con el despacho de tres vias) y se reemplazo la de 584.
+
+  **Correccion del 2026-08-12, segunda auditoria.** Esto estuvo marcado `[HECHO]` y no lo estaba. El
+  source se adopto, pero **la funcion desplegada sigue registrada como propiedad de `landing-gerow`**,
+  asi que un `functions deploy` desde alla puede sobrescribir produccion. El propio chequeo del repo
+  lo reporta:
+
+  ```
+  $ npm run check:functions
+  form-leads: desplegada desde fuera de este repo
+  entrypoint: .../landing-gerow/supabase/functions/form-leads/index.ts
+  ```
+
+  El criterio de cierre del bloque 0 exige que no quede ninguna funcion con dos versiones capaces de
+  pisarse. No se cumple. Cerrarlo requiere un redespliegue desde este repo, que es neutro en
+  contenido (verificado byte a byte con `functions download`) pero toca la funcion de captura de
+  leads, asi que espera decision explicita del usuario.
 - [HECHO] Verificado que `_shared/emailChannels.ts` **no requiere merge**: la version de este repo es
   superset (381 vs 332 lineas) y `form-leads` solo importa `resolveUserEmailChannel`, presente aca.
 - [HECHO] Creada la migracion de reconciliacion
@@ -1071,7 +1087,7 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   - Frontera 3 (la que mas importa para movil): `confirm`, `alert` y `prompt` prohibidos en
     `services`, `repositories`, `hooks`, `utils` y `config`. Estas reglas son el contrato de
     portabilidad a Expo escrito en forma verificable.
-  - Estado: `0 errores, 214 warnings`.
+  - Estado al cierre del bloque: `0 errores, 212 warnings`.
 - [HECHO] Ratchet de deuda de frontera preexistente. Las violaciones que ya existian quedan marcadas
   con `eslint-disable` y el comentario `DEUDA 13.x` que apunta al capitulo donde se corrigen, en vez
   de corregirse en el mismo paso: tocar `useRealtimeRefresh` arrastra `useLeads`, `useLists` y
@@ -1091,7 +1107,7 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
 - [PENDIENTE] Endurecer `tsconfig.json`: `noUnusedLocals`, `noUnusedParameters`,
   `noUncheckedIndexedAccess`, `paths` para el alias `@`, y un `tsconfig.node.json`. Se deja para
   despues de bajar el volumen de warnings, porque hoy anadiria ruido sobre ruido.
-- [PENDIENTE] Reducir los 214 warnings por bloques. No son un objetivo en si: bajan solos al ejecutar
+- [PENDIENTE] Reducir los ~212 warnings por bloques. No son un objetivo en si: bajan solos al ejecutar
   13.4, 13.6 y 13.7.
 
 ### Capitulo 13.4 - Correcciones funcionales (bloque 3)
@@ -1146,8 +1162,20 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   `USER_CLOSED_CHAT`). Forzarlos a un hook comun es reescribir dos chats que funcionan, sin tests de
   integracion que respalden el resultado, y eso choca con la restriccion 13.1.c. Queda pendiente
   hasta tener pruebas de integracion sobre esas dos superficies.
-- [HECHO] Nombres de canal realtime unicos por suscripcion. Ya no queda ningun `.channel()` con
-  nombre literal en `src/`. 12 tests.
+- [PARCIAL] Nombres de canal realtime unicos por suscripcion en los once sitios migrados. 12 tests.
+
+  **Correccion del 2026-08-12.** La afirmacion original, "ya no queda ningun `.channel()` con nombre
+  literal en `src/`", era falsa. De 29 llamadas a `.channel()`, solo 10 usan los helpers. Quedan:
+
+  - `presenceRepository.ts:25`: nombre constante puro (`'online-users'`).
+  - ~18 con nombre interpolado solo por ambito (`chatRepository.ts:53,84,108,172,243,364`,
+    `agendaRepository.ts:400`, `authRealtimeRepository.ts:22,50`, `directMessagesRepository.ts:81`,
+    `leadAlertsRepository.ts:63`, `messageAlertsRepository.ts:26,77`,
+    `communityForumRepository.ts:178`), que es exactamente el patron que este mismo capitulo declara
+    insuficiente: sufijar por usuario no evita que dos componentes de la misma sesion colisionen.
+
+  El caso de `presence` puede ser correcto a proposito (un canal de presencia compartido es
+  deliberadamente global), pero eso hay que decidirlo y declararlo, no darlo por hecho.
 
   Precision sobre el diagnostico original: la auditoria proponia sufijar con `userId`, y **eso no
   habria bastado**. La colision no necesita dos usuarios; basta que dos componentes de la misma
@@ -1197,9 +1225,12 @@ Descubierto el `2026-08-12` al preparar el deploy anterior, no estaba en la audi
   cuerpo y la funcion lo valida por su cuenta. Con `verify_jwt = true` el gateway rechazaria la
   peticion antes de que la funcion llegara a leerlo.
 
-  Con las once declaraciones en `config.toml`, el estado correcto pasa a ser el que el repo describe
-  en vez de depender de que quien despliegue recuerde un flag. `form-progress` no se declara aca
-  porque su source todavia vive en `landing-gerow`.
+  Con las declaraciones en `config.toml`, el estado correcto pasa a ser el que el repo describe en
+  vez de depender de que quien despliegue recuerde un flag.
+
+  Correccion del `2026-08-12`: este parrafo decia "once declaraciones" y que `form-progress` no se
+  declaraba aqui. Son **doce**, y `form-progress` **si** esta declarada desde que se adopto ese mismo
+  dia. El texto quedo describiendo el estado anterior al commit que lo acompañaba.
 - [HECHO] El cliente Supabase quedo confinado a `repositories/`. Se cerraron las dos fugas:
   `useRealtimeRefresh` pasa por el nuevo `repositories/realtimeRepository.ts`, y
   `services/realtimeService.ts` se movio a `repositories/authRealtimeRepository.ts`.
@@ -1208,8 +1239,8 @@ Descubierto el `2026-08-12` al preparar el deploy anterior, no estaba en la audi
   `hooks`, asi que `services/` podia importar el cliente sin que nada protestara, que es exactamente
   como habia sobrevivido `realtimeService`. La regla ahora cubre tambien `services`, `contexts`,
   `utils` y `config`. Una frontera con un hueco no es una frontera.
-- [PENDIENTE] Corregir el CORS de `supabase/functions/form-lead-file/index.ts`, que refleja cualquier
-  origin a diferencia del resto de funciones.
+- [HECHO] CORS de `supabase/functions/form-lead-file/index.ts` alineado a la allowlist y desplegado
+  (v11). Duplicaba el item de 13.1 con estado contradictorio; unificado el `2026-08-12`.
 - [PENDIENTE] Reenviar el header `Origin` desde el proxy al upstream. Hoy la allowlist CORS de las Edge
   Functions no discrimina nada porque nunca ve el origen real.
 
@@ -1369,8 +1400,11 @@ archivos) sino el DOM dentro de hooks de dominio.
   `eslint.config.js`**, no por `eslint-disable` repartidos. La diferencia importa: una lista en un
   solo archivo se audita de un vistazo y crece solo con una decision visible en el diff.
 
-  Resultado: fuera de `src/platform/` y de esa lista, los unicos `chrome.*` que quedan viven en
-  `App.tsx` y `LoginPage.tsx`, que son la shell de la extension y su uso ahi es legitimo.
+  Resultado: fuera de `src/platform/` y de esa lista, el unico `chrome.*` que queda vive en
+  `App.tsx`, que es la shell de la extension y su uso ahi es legitimo.
+
+  Correccion del `2026-08-12`: este parrafo tambien citaba `LoginPage.tsx`, que ya no contiene
+  ninguno desde que se migro al puerto `OAuthLauncher` en el mismo bloque.
 
 **Estado final del bloque al `2026-08-12`: no queda ni un archivo de dominio acoplado a Chrome.**
 Los `chrome.*` que sobreviven estan en `src/platform/`, en los dos puntos de entrada de la extension
@@ -1440,8 +1474,8 @@ parcial: conviven tres fuentes de verdad de color.
 - [PENDIENTE] Eliminar `src/components/ui/PageHeader.tsx` en favor de `src/design/PageShell.tsx`. Hoy
   usan escalas tipograficas distintas (24px vs 17px) y producen jerarquia inconsistente.
 - [PENDIENTE] Erradicar 94 colores literales y reducir 575 arbitrary values de Tailwind.
-- [PENDIENTE] Eliminar 681 usos de `dark:*` ad-hoc; `tokens.css` ya resuelve el tema por variables.
-- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 186 veces en 83
+- [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (709 lineas, ~1034 ocurrencias); `tokens.css` ya resuelve el tema por variables.
+- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 185 veces en 82
   archivos): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
   `PipelinePage.tsx:137`.
 - [PENDIENTE] Reducir los 132 anchos fijos en px y grids de columnas fijas en 68 archivos, criticos
@@ -1503,14 +1537,13 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 - [PENDIENTE] Actualizar `planespro-form-integration-contract.md`: declara dos canales publicos cuando
   existen cuatro (`general`, `pb`, `retiro`, `form`), y no documenta el protocolo de dos fases
   (`submission_id`, `update_token`, `action_only`) vigente desde el 3 de agosto.
-- [PENDIENTE] Archivar `HANDOFF_NEXT_SESSION.md`, caducado: declara que chat, comunidad y foro no son
-  alcance, y los tres se construyeron despues.
-- [PENDIENTE] Archivar `pb_form_redesign_handoff.md`.
+- [HECHO] Archivados `HANDOFF_NEXT_SESSION.md` y `pb_form_redesign_handoff.md` en `docs/_revision/`.
+  Duplicaban items ya cerrados en 13.10.
 - [PENDIENTE] Decidir el destino de `docs/_revision/implementation_plan.md` (2314 lineas, solapa fuertemente con este
   roadmap).
-- [PENDIENTE] Fusionar `UX_UI_CHECKLIST.md` dentro de este roadmap.
-- [PENDIENTE] Reorganizar la documentacion en `docs/`, dejando `PROTOCOLO_CONTROL.md` y `AI_SYNC.md` en
-  la raiz por ser registro normativo.
+- [PENDIENTE] Fusionar `docs/planning/ux-ui-checklist.md` dentro de este roadmap. La ruta citada
+  antes (`UX_UI_CHECKLIST.md` en la raiz) quedo obsoleta tras la reorganizacion.
+- [HECHO] Documentacion reorganizada en `docs/`. Duplicaba el item ya cerrado en 13.10.
 
 ### Capitulo 13.12 - Deuda de datos y rendimiento
 
@@ -1541,27 +1574,58 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 
 ---
 
-## Punto exacto actual al 2026-08-11
+## Punto exacto actual al 2026-08-12
 
-Lo consolidado y verificado en esta pasada:
+Este bloque se reescribio tras la **segunda auditoria** (cinco agentes independientes sobre los 28
+commits del 2026-08-12). La version anterior seguia listando como abierto lo que la Seccion 13
+declaraba cerrado, y viceversa. Ironicamente acertaba en algo que un `[HECHO]` negaba.
 
-- la capa de datos es solida: 48 tablas, todas con RLS, cero hallazgos criticos o altos
-- la separacion `repositories / services / types` es real, no decorativa
-- el retiro de Cloudflare del backend del formulario efectivamente ocurrio: `ppforms` es un proxy de
-  288 lineas sin D1, sin R2, sin cron, sin Resend y sin Google Calendar
-- el historial git es lineal y limpio
-- `npm run build` esta en verde
+Verificado por auditoria independiente:
 
-Lo que esta abierto y no debe maquillarse como cerrado:
+- **Correccion: cero bugs.** Se revisaron uno por uno los diez sitios de conversion de `confirm()`
+  sincrono a asincrono. Todos con `await` correcto; no hay inversion de logica ni borrado sin
+  confirmar. Veredicto: aprobado.
+- **Seguridad: cero criticos, cero altos.** El CORS de `form-lead-file` ya desplegado es correcto: la
+  allowlist usa comparacion exacta y la autorizacion real no depende de CORS sino del Bearer token
+  mas la validacion de propiedad del lead. Las doce declaraciones de `verify_jwt` se contrastaron una
+  a una contra el codigo: ninguna funcion quedo desprotegida.
+- 193 tests, `npm run build` en verde, historial git lineal.
+- La capa de datos sigue solida: 48 tablas, todas con RLS.
 
-- doble fuente de verdad activa en `form-leads` entre este repo y `landing-gerow`
-- una migracion de produccion ausente del historial de este repo
-- cero tests y cero lint en 305 archivos TypeScript
-- validacion E2E de Google Calendar y Meet, abierta desde julio y ya rebasada por trabajo posterior
+Lo que la auditoria encontro mal, y que la Seccion 13 daba por cerrado:
+
+- **`form-leads` sigue desplegada desde `landing-gerow`.** Estaba marcado `[HECHO]`. El source se
+  adopto, la propiedad del deploy no. `npm run check:functions` falla hoy.
+- **La regla de frontera tenia un hueco real** en `services/` y `config/` por colision de claves en
+  flat config. Estaba declarado cerrado con la frase "una frontera con un hueco no es una frontera".
+  Corregido y verificado empiricamente con archivos de prueba.
+- **La regla medía el sintoma, no la propiedad.** Prohibia cuatro identificadores mientras quedaban
+  20 usos de DOM en la capa de dominio y diez imports directos de `platform/web`, que arrastran
+  `chrome.*` al grafo de modulos igual que antes. Corregido: la deuda real son 29 marcas contables.
+- **Los puertos son interfaces, no un seam.** El agregado `Platform` no tiene ni un consumidor y no
+  hay inyeccion. El bloque 5 **no** esta cerrado.
+- Varias cifras del roadmap eran falsas y un emoji seguia vivo en la UI pese a estar registrado como
+  norma. Corregidos.
+
+Lo que sigue abierto de verdad:
+
+- propiedad del deploy de `form-leads` (requiere decision del usuario)
+- inyeccion real de la plataforma: sin ella, el nucleo no corre en Expo
+- 29 marcas `DEUDA BLOQUE 5` contables con `grep -rc "DEUDA BLOQUE 5" src`
+- cobertura de tests del 11,6%, sin umbral minimo configurado
+- validacion E2E de Google Calendar y Meet, abierta desde julio
 - validacion funcional final del envio real por Gmail
 - retiro o encapsulamiento final de `emailjs`
 - `ppusers` como segunda fuente de verdad de leads
+- la rama `fix/reconcile-ppforms-retirement-with-tracking` de `landing-gerow`, sin mergear
 
-Regla de avance revisada al 2026-08-11: los bloques 0 (contencion) y 1 (alineacion de git) del plan de
-accion deben cerrarse antes de abrir cualquier otro frente, incluido cualquier modulo nuevo de
-producto. Son los unicos dos frentes con riesgo activo de romper produccion o de perder trabajo.
+**Leccion metodologica, registrada para que no se repita.** El patron de error de las 28 primeras
+entregas fue consistente: *declarar una propiedad como conseguida cuando lo conseguido era que la
+comprobacion pasara*. Ocurrio tres veces (frontera de Supabase, bloqueador del DOM, marcas de deuda).
+La contramedida adoptada no es prometer mas cuidado, sino tres cambios verificables:
+
+1. toda regla nueva se comprueba con un archivo de prueba que debe fallar, no leyendo la config
+2. `reportUnusedDisableDirectives: 'error'` hace que una marca de deuda sobrante rompa el CI, asi que
+   el contador no puede mentir hacia arriba
+3. las marcas viven en el archivo afectado y no en una lista central, porque una lista central
+   acumulo cuatro entradas inertes sin que nadie lo notara

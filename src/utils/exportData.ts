@@ -5,6 +5,7 @@ function downloadFile(data: Blob | string, filename: string) {
   const url = typeof data === 'string'
     ? URL.createObjectURL(new Blob([data], { type: 'application/json' }))
     : URL.createObjectURL(data);
+  // eslint-disable-next-line no-restricted-globals -- DEUDA BLOQUE 5: usa el DOM directamente, sin puerto. Ver roadmap 13.6.
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
