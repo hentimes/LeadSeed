@@ -97,17 +97,17 @@ Nada puede marcarse como `hecho` si contradice esa realidad.
 
 Los documentos operativos vigentes de este repo son:
 
-- [roadmap.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/roadmap.md:1)
-- [implementation_plan.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/implementation_plan.md:1)
-- [AI_SYNC.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/AI_SYNC.md:1)
-- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/landing-gerow-cloudflare-context.md:1)
+- [roadmap.md](docs/planning/roadmap.md:1)
+- [implementation_plan.md](docs/_revision/implementation_plan.md:1)
+- [AI_SYNC.md](AI_SYNC.md:1)
+- [landing-gerow-cloudflare-context.md](docs/integrations/landing-gerow-cloudflare-context.md:1)
 
 Cada uno cumple una funcion distinta:
 
-- `roadmap.md`: secuencia macro del producto
-- `implementation_plan.md`: estrategia de implementacion para migracion e integracion
+- `docs/planning/roadmap.md`: secuencia macro del producto
+- `docs/_revision/implementation_plan.md`: estrategia de implementacion para migracion e integracion
 - `AI_SYNC.md`: coordinacion viva entre IAs
-- `landing-gerow-cloudflare-context.md`: contexto operativo del formulario y backend actual de `planespro.cl`
+- `docs/integrations/landing-gerow-cloudflare-context.md`: contexto operativo del formulario y backend actual de `planespro.cl`
 
 Estos documentos no son estaticos.
 Deben evolucionar con el proyecto.
@@ -145,9 +145,9 @@ Eso significa que `avanza` activa implicitamente este flujo:
 1. leer `AI_SYNC.md`
 2. revisar `git status`
 3. revisar reservas activas
-4. revisar `roadmap.md` e `implementation_plan.md`
+4. revisar `docs/planning/roadmap.md` e `docs/_revision/implementation_plan.md`
 5. revisar el codigo real del bloque siguiente
-6. si aplica, revisar `landing-gerow-cloudflare-context.md`
+6. si aplica, revisar `docs/integrations/landing-gerow-cloudflare-context.md`
 7. auditar el estado real antes de ejecutar
 8. reservar el bloque que tomara
 9. actualizar plan y roadmap si el nuevo requerimiento o hallazgo lo exige
@@ -323,7 +323,7 @@ Cuando una tarea toque cualquiera de estos dominios:
 
 la IA debe leer obligatoriamente:
 
-- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/landing-gerow-cloudflare-context.md:1)
+- [landing-gerow-cloudflare-context.md](docs/integrations/landing-gerow-cloudflare-context.md:1)
 
 Ese documento es la fuente contextual obligatoria para la integracion con `landing-gerow`.
 
@@ -354,7 +354,7 @@ El roadmap vigente debe respetarse como fuente operativa, pero con una precision
 
 ### 8.1 El roadmap expresa direccion y fases
 
-`roadmap.md` define:
+`docs/planning/roadmap.md` define:
 
 - que fases existen
 - que esta marcado como completado
@@ -362,7 +362,7 @@ El roadmap vigente debe respetarse como fuente operativa, pero con una precision
 
 ### 8.2 El roadmap no reemplaza la validacion real
 
-Si `roadmap.md` dice `completada` pero el codigo o backend muestran una brecha real:
+Si `docs/planning/roadmap.md` dice `completada` pero el codigo o backend muestran una brecha real:
 
 - no se falsifica la realidad para proteger el roadmap
 - se deja constancia de la contradiccion
@@ -375,7 +375,7 @@ Ejemplo:
 
 ### 8.3 El implementation plan tampoco reemplaza la realidad
 
-`implementation_plan.md` puede describir arquitectura objetivo o pasos de migracion, pero si sobredeclara estado no desplegado:
+`docs/_revision/implementation_plan.md` puede describir arquitectura objetivo o pasos de migracion, pero si sobredeclara estado no desplegado:
 
 - debe tratarse como plan
 - no como evidencia de implementacion productiva
@@ -384,8 +384,8 @@ Ejemplo:
 
 Cada nuevo requerimiento relevante debe evaluarse para ver si:
 
-- entra como nueva tarea en `implementation_plan.md`
-- entra como nueva tarea o sub-tarea en `roadmap.md`
+- entra como nueva tarea en `docs/_revision/implementation_plan.md`
+- entra como nueva tarea o sub-tarea en `docs/planning/roadmap.md`
 - cambia prioridad de una fase existente
 - obliga a reclasificar una tarea ya existente
 
@@ -503,7 +503,7 @@ Toda auditoria visual y toda implementacion de interfaz deben respetar estas reg
 #### Precision 10.1.a - Frontera exacta de la prohibicion de emojis
 
 Definicion del usuario, `2026-08-12`. Esta precision cierra la ambiguedad detectada en la auditoria
-`AUDITORIA_CONTROL_2026-08-11.md` y no debe reabrirse.
+`docs/auditorias/AUDITORIA_CONTROL_2026-08-11.md` y no debe reabrirse.
 
 La frontera no es "donde se ve el emoji", es **quien lo escribe**:
 
@@ -533,11 +533,11 @@ Toda IA debe revisar:
 
 - `AI_SYNC.md`
 - `git status`
-- `roadmap.md`
-- `implementation_plan.md`
+- `docs/planning/roadmap.md`
+- `docs/_revision/implementation_plan.md`
 - codigo real del modulo a tocar
 - si aplica, backend remoto real
-- si aplica, `landing-gerow-cloudflare-context.md`
+- si aplica, `docs/integrations/landing-gerow-cloudflare-context.md`
 
 Luego debe determinar:
 
@@ -581,7 +581,7 @@ Y debe dejar trazabilidad en:
 
 - `AI_SYNC.md`
 - documento tecnico si el cambio lo amerita
-- `roadmap.md` y/o `implementation_plan.md` si el bloque cambio el estado real del trabajo
+- `docs/planning/roadmap.md` y/o `docs/_revision/implementation_plan.md` si el bloque cambio el estado real del trabajo
 
 Si el trabajo recibio un requerimiento nuevo o abrio una tarea no contemplada, la actualizacion del plan y del roadmap deja de ser opcional y pasa a ser parte del cierre del bloque.
 
@@ -759,7 +759,7 @@ Esta regla reemplaza al modelo anterior de propiedad repartida, que decia que la
 formularios publicos vivian en `landing-gerow`. Ese reparto fallo: `form-leads` termino existiendo
 divergente en los dos repos sin que ninguna herramienta lo detectara, y la copia de este repo, al
 desplegarse, habria creado un lead duplicado por cada envio en `/form/` y `/retiro/`. El detalle esta
-en `supabase/functions/README.md` y en `AUDITORIA_CONTROL_2026-08-11.md`.
+en `supabase/functions/README.md` y en `docs/auditorias/AUDITORIA_CONTROL_2026-08-11.md`.
 
 Excepcion transitoria declarada: `form-progress` sigue en `landing-gerow` al `2026-08-12` porque su
 copia alla tiene cambios sin commitear. Es deuda con plan de salida, no convivencia permitida.
@@ -823,7 +823,7 @@ El orden arquitectonicamente correcto es:
 
 Toda decision en esta area debe contrastarse con:
 
-- [landing-gerow-cloudflare-context.md](C:/Users/henti/OneDrive/Documentos/IA/deepseek/PROYECTOS/LeadSeed-Project/LeadSeed/landing-gerow-cloudflare-context.md:1)
+- [landing-gerow-cloudflare-context.md](docs/integrations/landing-gerow-cloudflare-context.md:1)
 
 ---
 
@@ -887,7 +887,7 @@ Antes de tocar algo:
 
 1. lee `AI_SYNC.md`
 2. lee roadmap/plan
-3. si toca integracion con formulario/agencia, lee `landing-gerow-cloudflare-context.md`
+3. si toca integracion con formulario/agencia, lee `docs/integrations/landing-gerow-cloudflare-context.md`
 4. revisa codigo y estado real
 5. reserva bloque
 

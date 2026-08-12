@@ -623,14 +623,14 @@ El patron a replicar ya existe y funciona en el repo: `LeadsPage.tsx` (213 linea
 
 ### Bloque 9 - Documentacion
 
-1. Actualizar `roadmap.md` (se ejecuta en esta misma pasada).
-2. Reescribir `landing-gerow-cloudflare-context.md`: esta desactualizado en 9 puntos verificables y el
+1. Actualizar `docs/planning/roadmap.md` (se ejecuta en esta misma pasada).
+2. Reescribir `docs/integrations/landing-gerow-cloudflare-context.md`: esta desactualizado en 9 puntos verificables y el
    protocolo seccion 7 lo declara de lectura obligatoria. Un documento obligatorio y falso es peor que
    no tenerlo.
 3. Actualizar `planespro-form-integration-contract.md` con los cuatro canales reales y el protocolo de
    dos fases.
 4. Archivar `HANDOFF_NEXT_SESSION.md` y `pb_form_redesign_handoff.md` con fecha en el nombre.
-5. Decidir el destino de `implementation_plan.md` (2314 lineas, solapa fuertemente con el roadmap).
+5. Decidir el destino de `docs/_revision/implementation_plan.md` (2314 lineas, solapa fuertemente con el roadmap).
 6. Fusionar `UX_UI_CHECKLIST.md` dentro del roadmap.
 
 Estructura propuesta:

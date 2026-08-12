@@ -8,7 +8,7 @@
 significa que hay dos repos capaces de sobrescribir la misma funcion desplegada.
 
 Esta regla reemplaza al modelo anterior de propiedad repartida, que causo un incidente real
-documentado en `AUDITORIA_CONTROL_2026-08-11.md`. El detalle esta mas abajo porque explica por que la
+documentado en `docs/auditorias/AUDITORIA_CONTROL_2026-08-11.md`. El detalle esta mas abajo porque explica por que la
 regla es tan tajante.
 
 ## Por que la regla cambio

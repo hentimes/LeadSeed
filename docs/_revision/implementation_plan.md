@@ -860,7 +860,7 @@ Bloque completado en esta pasada:
 
 Validacion ejecutada:
 
-- `rg` global de mojibake en `src`, `PROTOCOLO_CONTROL.md`, `AI_SYNC.md`, `implementation_plan.md` y `roadmap.md`: sin coincidencias.
+- `rg` global de mojibake en `src`, `PROTOCOLO_CONTROL.md`, `AI_SYNC.md`, `docs/_revision/implementation_plan.md` y `docs/planning/roadmap.md`: sin coincidencias.
 - `rg` de `any` en el bloque critico de paginas, hooks, servicios, repositorios, admin y soporte: sin coincidencias.
 - `rg` de `supabaseClient` en paginas/hook/zonas migradas: sin coincidencias.
 - `npm run build`: OK el 2026-07-18.

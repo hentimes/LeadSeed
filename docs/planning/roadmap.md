@@ -557,7 +557,7 @@ Regla de avance vigente:
 - [COMPLETADO] Registrar que roadmap y plan deben actualizarse ante requerimientos nuevos.
 - [COMPLETADO] Registrar que tareas finalizadas deben pasar a auditoria cruzada.
 - [COMPLETADO] Registrar que la otra IA debe auditar el trabajo terminado aplicando CONTROL.
-- [PENDIENTE] Auditar si `PROTOCOLO_CONTROL.md`, `AI_SYNC.md`, `implementation_plan.md` y este roadmap siguen totalmente alineados despues de la fase de agenda.
+- [PENDIENTE] Auditar si `PROTOCOLO_CONTROL.md`, `AI_SYNC.md`, `docs/_revision/implementation_plan.md` y este roadmap siguen totalmente alineados despues de la fase de agenda.
 
 ### Capitulo 11.2 - AI_SYNC
 
@@ -842,7 +842,7 @@ Antes de considerar exitoso el rediseño:
 
 ## Seccion 12 - Actualizacion 2026-08-11: modulos construidos y no registrados
 
-Origen: `AUDITORIA_CONTROL_2026-08-11.md`.
+Origen: `docs/auditorias/AUDITORIA_CONTROL_2026-08-11.md`.
 
 Entre el `2026-07-22` y el `2026-08-08` se construyeron modulos completos que nunca entraron a este
 roadmap, incumpliendo las reglas 8.4, 8.5 y 8.6 del protocolo. Se registran aqui con su estado real.
@@ -904,7 +904,7 @@ Base: commit `c59432d`.
 
 ## Seccion 13 - Actualizacion 2026-08-11: hallazgos de auditoria CONTROL
 
-Origen: `AUDITORIA_CONTROL_2026-08-11.md`. Cada capitulo corresponde a un bloque del plan de accion.
+Origen: `docs/auditorias/AUDITORIA_CONTROL_2026-08-11.md`. Cada capitulo corresponde a un bloque del plan de accion.
 
 ### Capitulo 13.1 - Contencion inmediata (bloque 0)
 
@@ -1177,18 +1177,41 @@ Frente nuevo, nunca registrado en este roadmap.
 
 ### Capitulo 13.10 - Higiene de repositorio (bloque 8)
 
-- [PENDIENTE] Sacar del arbol de git los dos PDFs de diseno de la raiz (3.7 MB de binarios).
-- [PENDIENTE] Eliminar la dependencia `dotenv`, declarada y sin usar.
-- [PENDIENTE] Eliminar el codigo muerto confirmado: `ChannelPerformanceChart.tsx`, `InsightsPanel.tsx`,
-  `ListEditor.tsx`, `LayoutContext.tsx`, y el asset `assets/img/icons/leadseed-icon.png`.
-- [PENDIENTE] Renombrar la carpeta de rediseno de la raiz sin espacios ni tildes en el nombre.
-- [PENDIENTE] Quitar el `console.log` de `src/main.tsx:24`.
-- [PENDIENTE] Renombrar `package.json` de `leads-crm-extension` a `leadseed`: el rebranding quedo
-  incompleto.
+Ejecutado el `2026-08-12`. La raiz del repositorio paso de 29 archivos versionados a 17, y los que
+quedan son solo normativos (`PROTOCOLO_CONTROL.md`, `AI_SYNC.md`, `README.md`), configuracion y
+puntos de entrada.
+
+- [HECHO] Reorganizada la documentacion en `docs/` con `planning/`, `integrations/`, `auditorias/`,
+  `redesign/`, `design-assets/` y `_revision/`. Indice en `docs/README.md`.
+- [HECHO] Corregidas las referencias cruzadas tras el movimiento, incluidas las rutas absolutas de
+  Windows que el protocolo tenia escritas a mano y que rompian el documento en cualquier otra maquina.
+- [HECHO] Eliminado el codigo muerto, reverificado archivo por archivo antes de borrar:
+  `ChannelPerformanceChart.tsx`, `InsightsPanel.tsx`, `ListEditor.tsx`, `LayoutContext.tsx` y el asset
+  `assets/img/icons/leadseed-icon.png`.
+- [HECHO] Eliminada la dependencia `dotenv`, declarada y sin un solo uso.
+- [HECHO] Renombrada la carpeta `rediseño leadseed/` a `docs/redesign/`, sin espacios ni tildes.
+- [HECHO] Retirado el `console.log` de arranque de `src/main.tsx`.
+- [HECHO] `package.json` renombrado de `leads-crm-extension` a `leadseed`.
+- [HECHO] PDFs de diseno movidos a `docs/design-assets/` con nombres sin mayusculas ni parentesis.
+
+Precision sobre el peso del repositorio: la auditoria proponia "sacar los PDFs del arbol de git" para
+recuperar 3.7 MB. Eso es incorrecto y no se hizo. Dejar de trackear un archivo **no reduce el tamaño
+del clon**, porque los blobs siguen en el historial. Solo una reescritura de historial lo lograria, y
+eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
+
+- [BLOQUEADO] Decidir el destino de los tres documentos en `docs/_revision/`. Estan documentados uno
+  por uno en `docs/_revision/README.md` con su motivo de obsolescencia y su valor residual. Requiere
+  decision del usuario, no de una IA.
+  - `handoff-2026-07-30.md`: caducado, pero su seccion 2 tiene decisiones de arquitectura que no
+    estan registradas en ningun otro lado y conviene extraer antes de borrar.
+  - `pb-form-redesign-2026-07-29.md`: verificar vigencia contra `landing-gerow`.
+  - `implementation_plan.md`: **no se puede borrar sin cambiar el protocolo**. La seccion 4.2 lo
+    declara documento operativo de Nivel 2 y varias secciones mandan mantenerlo al dia. Eliminarlo
+    exige actualizar `PROTOCOLO_CONTROL.md` en el mismo movimiento.
 
 ### Capitulo 13.11 - Correccion de la documentacion normativa (bloque 9)
 
-- [PENDIENTE ESTRUCTURAL] Reescribir `landing-gerow-cloudflare-context.md`. El protocolo seccion 7 lo
+- [PENDIENTE ESTRUCTURAL] Reescribir `docs/integrations/landing-gerow-cloudflare-context.md`. El protocolo seccion 7 lo
   declara de lectura obligatoria antes de tocar la integracion, y esta desactualizado en nueve puntos
   verificables. Un documento obligatorio y falso es peor que no tenerlo.
 - [PENDIENTE] Actualizar `planespro-form-integration-contract.md`: declara dos canales publicos cuando
@@ -1197,7 +1220,7 @@ Frente nuevo, nunca registrado en este roadmap.
 - [PENDIENTE] Archivar `HANDOFF_NEXT_SESSION.md`, caducado: declara que chat, comunidad y foro no son
   alcance, y los tres se construyeron despues.
 - [PENDIENTE] Archivar `pb_form_redesign_handoff.md`.
-- [PENDIENTE] Decidir el destino de `implementation_plan.md` (2314 lineas, solapa fuertemente con este
+- [PENDIENTE] Decidir el destino de `docs/_revision/implementation_plan.md` (2314 lineas, solapa fuertemente con este
   roadmap).
 - [PENDIENTE] Fusionar `UX_UI_CHECKLIST.md` dentro de este roadmap.
 - [PENDIENTE] Reorganizar la documentacion en `docs/`, dejando `PROTOCOLO_CONTROL.md` y `AI_SYNC.md` en
