@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 
 type Padding = 'none' | 'sm' | 'md' | 'lg';
 
@@ -23,9 +23,13 @@ interface CardProps {
  * `bg-white border border-[#E6EAF0] rounded-[8px] shadow-...` repetido
  * en decenas de archivos.
  */
-export function Card({ children, padding = 'md', flat, className = '', onClick }: CardProps) {
+export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+  { children, padding = 'md', flat, className = '', onClick },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       onClick={onClick}
       className={`bg-surface border border-line rounded-lg ${flat ? '' : 'shadow-card'} ${PADDING[padding]} ${
         onClick ? 'cursor-pointer transition-colors hover:bg-surface-hover' : ''
@@ -34,7 +38,7 @@ export function Card({ children, padding = 'md', flat, className = '', onClick }
       {children}
     </div>
   );
-}
+});
 
 /**
  * Bloque tenido, para destacar sin competir con una Card.

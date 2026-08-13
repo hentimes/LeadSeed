@@ -10,6 +10,7 @@ import {
 } from '../services/historyService';
 import type { Page } from '../types';
 import { Icon } from '../utils/icons';
+import { Card } from '../design';
 
 interface Props {
   onNavigate: (page: Page) => void;
@@ -118,7 +119,7 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
       </div>
 
       {tab === 'envios' ? (
-        <div className="card-standard overflow-hidden">
+        <Card className="overflow-hidden">
           {filteredLogs.length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-gray-400">No hay envios.</p>
           ) : (
@@ -155,9 +156,9 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
               </div>
             ))
           )}
-        </div>
+        </Card>
       ) : (
-        <div className="card-standard overflow-hidden">
+        <Card className="overflow-hidden">
           {filteredActivity.length === 0 ? (
             <p className="px-3 py-8 text-center text-xs text-gray-400">No hay actividad.</p>
           ) : (
@@ -169,7 +170,7 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
               </div>
             ))
           )}
-        </div>
+        </Card>
       )}
 
       {totalPages > 1 && (

@@ -10,6 +10,7 @@ import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
 import { createFollowUpTaskForLead } from '../services/tasksService';
 import { Button } from '../design';
+import { Card } from '../design';
 
 
 export default function PipelinePage() {
@@ -214,7 +215,7 @@ export default function PipelinePage() {
         </div>
       </div>
 
-      <div className="card-standard flex flex-col max-h-[250px] min-h-[150px] overflow-hidden mb-5">
+      <Card className="flex flex-col max-h-[250px] min-h-[150px] overflow-hidden mb-5">
         <div className="bg-slate-50 dark:bg-slate-900 dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700/50 dark:border-gray-700 px-3 py-2 flex justify-between items-center shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 dark:text-gray-300 flex items-center gap-2">
             Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span>
@@ -256,7 +257,7 @@ export default function PipelinePage() {
             ))
           )}
         </div>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         {(['contactado', 'interesado', 'convertido', 'descartado'] as LeadStatus[]).map((s) => renderSquareCard(s))}

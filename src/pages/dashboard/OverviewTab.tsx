@@ -6,6 +6,7 @@ import MetricCard from '../../components/dashboard/MetricCard';
 import AlertCard from '../../components/dashboard/AlertCard';
 import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
+import { Card } from '../../design';
 
 interface OverviewTabProps {
   snapshot: DashboardSnapshot;
@@ -44,7 +45,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
       {/* Progreso de metas */}
-      <div className="card-standard">
+      <Card>
         <div className="card-header">
           <h2 className="card-title">Progreso de metas (hoy)</h2>
           <div className="text-[11px] font-medium text-ink-secondary bg-surface-muted px-3 py-1 rounded-[6px]">
@@ -87,7 +88,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             tooltipText={`${callToday} de ${settings.dailyGoalCalls} llamadas registradas.`}
           />
         </div>
-      </div>
+      </Card>
 
       {/* Conversión global */}
       <ConversionBar 
@@ -98,7 +99,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       />
 
       {/* Rendimiento hoy */}
-      <div className="card-standard mt-1">
+      <Card className="mt-1">
         <div className="card-header">
           <h2 className="card-title">Rendimiento hoy</h2>
         </div>
@@ -129,7 +130,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             onClick={() => onNavigate?.('chat')}
           />
         </div>
-      </div>
+      </Card>
 
       {/* Alerta olvidados */}
       {/* Alerta olvidados */}

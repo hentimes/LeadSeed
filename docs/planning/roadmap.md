@@ -1774,9 +1774,37 @@ Lo que aparecio al ejecutarlos, que el plan no anticipaba:
   desincroniza un valor. Uno de los 9 vigila la premisa, no los valores: que ninguno de estos colores
   pase a redefinirse en modo oscuro, porque ese dia la constante empezaria a mentir.
 
-- [PENDIENTE] Quedan las clases `.card-*` de `index.css`, con 40 usos. Entraban en el mismo item del
-  plan que `.btn*` pero **no se tocaron**: no se le describieron al usuario al pedir la aprobacion, y
-  aprovechar un "si" dado sobre los botones para barrer tambien las tarjetas seria estirar el permiso.
+- [PARCIAL] Las clases `.card-*`. Al mapearlas aparecio la diferencia clave con los botones:
+  **`.card-standard` y la primitiva `Card` generan exactamente el mismo conjunto de clases**
+  (`bg-surface border border-line rounded-lg shadow-card p-3`), asi que migrar no cambia nada visual
+  y no necesita aprobacion. Con los botones no pasaba: ahi los dos sistemas tenian medidas distintas.
+
+  **18 de 24 usos migrados**, verificados uno por uno con un script que compara el conjunto de clases
+  resultante antes de tocar nada. Los `p-4` pasan a `padding="lg"`, que es el mismo `p-4`.
+
+  `Card` gana `forwardRef` en el camino: la tabla de leads mide su propio ancho con un ref, y sin
+  reenviarlo ese uso no podia adoptar la primitiva. No era una excepcion legitima, era una carencia
+  de la primitiva.
+
+  Los 6 que quedan tienen cada uno su razon, y ninguna es pereza:
+
+  | Uso | Por que no |
+  |---|---|
+  | `TemplatesPage:199` | anade `bg-slate-50`, que pelea con el `bg-surface` de la primitiva |
+  | `TemplatesPage:223` | anade `p-5`, que no existe como valor de `padding` |
+  | `TemplatesPage:237` | estado seleccionado con `bg-primary-soft/30`, mismo conflicto de fondo |
+  | `PipelinePage:155` | anade `border-2`, que pelea con el `border` de la primitiva |
+  | `SendStep:29` | es un `<section>`, y `Card` renderiza un `div`. Cambiarlo seria perder semantica |
+  | `VariableDropdown:26-27` | la clase se compone en una variable, no en el JSX |
+
+  Los cuatro primeros se arreglan dando a `Card` variantes de fondo y de borde; los dos ultimos, un
+  prop `as` y una pequena reescritura. Ninguno es urgente y todos cambian algo visible o estructural,
+  asi que se dejan anotados en vez de forzarlos.
+
+- [PENDIENTE] `.card-header` (5 usos) y `.card-title` (10). `card-title` equivale a la primitiva
+  `CardTitle`, pero esta renderiza `<h3>` y los usos actuales son `<h2>`: migrar cambiaria el orden
+  de encabezados de la pagina, que es una decision de accesibilidad y no de estilo. `.card-header`
+  no tiene primitiva equivalente; es solo un atajo de maquetacion.
 - [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (709 lineas, ~1034 ocurrencias); `tokens.css` ya resuelve el tema por variables.
 - [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 185 veces en 82
   archivos): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,

@@ -9,6 +9,7 @@ import LeadsTableRow from './LeadsTableRow';
 import LoadingOverlay from '../LoadingOverlay';
 import { useResponsiveColumns } from '../../hooks/useResponsiveColumns';
 import { LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
+import { Card } from '../../design';
 
 interface Props {
   leads: Lead[];
@@ -230,7 +231,7 @@ export default function LeadsTable({
         onFilterSourceChannelChange={onFilterSourceChannelChange}
       />
 
-      <div ref={containerRef} className="card-standard overflow-x-auto w-full min-w-0">
+      <Card ref={containerRef} className="overflow-x-auto w-full min-w-0">
         <table className="w-full table-fixed text-[13px] text-ink">
           <thead className="border-b border-line text-ink-secondary bg-white">
             <tr>
@@ -359,7 +360,7 @@ export default function LeadsTable({
             )}
           </tbody>
         </table>
-      </div>
+      </Card>
       
       {/* Bottom Pagination */}
       {pageCount > 1 && (

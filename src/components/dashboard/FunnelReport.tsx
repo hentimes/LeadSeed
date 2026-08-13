@@ -7,6 +7,7 @@ import AdvancedFunnelChart from './charts/AdvancedFunnelChart';
 import TimeInStageChart from './charts/TimeInStageChart';
 import LossReasonsChart from './charts/LossReasonsChart';
 import QualityMatrix from './charts/QualityMatrix';
+import { Card } from '../../design';
 
 interface FunnelReportProps {
   snapshot: DashboardSnapshot;
@@ -62,7 +63,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
       {/* 1. KPIs */}
       <div className="grid grid-cols-4 gap-3">
         {/* Tasa de conversión */}
-        <div className="card-standard p-3 flex flex-col">
+        <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-ink-secondary">
             <div className="w-5 h-5 flex items-center justify-center bg-primary-soft text-primary-light rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -74,10 +75,10 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[10px] font-bold text-state-success">+ 3 pp</span>
           </div>
           <span className="text-[9px] text-ink-muted mt-1 leading-none">vs periodo anterior</span>
-        </div>
+        </Card>
 
         {/* Ciclo de ventas */}
-        <div className="card-standard p-3 flex flex-col">
+        <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-ink-secondary">
             <div className="w-5 h-5 flex items-center justify-center bg-primary-soft text-primary-light rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -89,10 +90,10 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[10px] font-medium text-ink-secondary">días</span>
           </div>
           <span className="text-[9px] text-state-success mt-1 font-bold leading-none">+ 1.5 días vs ant.</span>
-        </div>
+        </Card>
 
         {/* Tasa de pérdida */}
-        <div className="card-standard p-3 flex flex-col">
+        <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-ink-secondary">
             <div className="w-5 h-5 flex items-center justify-center bg-primary-soft text-primary-light rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -104,10 +105,10 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[10px] font-bold text-state-danger">↑ 2 pp</span>
           </div>
           <span className="text-[9px] text-ink-muted mt-1 leading-none">vs periodo anterior</span>
-        </div>
+        </Card>
 
         {/* Valor de Oportunidades */}
-        <div className="card-standard p-3 flex flex-col">
+        <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-ink-secondary">
             <div className="w-5 h-5 flex items-center justify-center bg-primary-soft text-primary-light rounded-full shrink-0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -118,14 +119,14 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[20px] font-bold text-ink leading-none">$12.4k</span>
           </div>
           <span className="text-[9px] text-ink-muted mt-1 leading-none">Basado en leads activos</span>
-        </div>
+        </Card>
       </div>
 
       {/* 2. Gráfico Avanzado de Embudo y Razones de Pérdida */}
       <div className="grid grid-cols-3 gap-3">
         
         {/* Drop-off Analysis */}
-        <div className="col-span-2 card-standard p-3 flex flex-col">
+        <Card className="col-span-2 flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
             <h3 className="text-card-title font-medium text-ink">Análisis de Fugas (Drop-offs)</h3>
             <div className="text-ink-muted"><Icon.Help /></div>
@@ -133,10 +134,10 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
           <div className="flex-1 flex items-center justify-center min-h-[140px] max-w-[400px] w-full mx-auto">
             <AdvancedFunnelChart snapshot={snapshot} />
           </div>
-        </div>
+        </Card>
 
         {/* Loss Reasons */}
-        <div className="card-standard p-3 flex flex-col">
+        <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-card-title font-medium text-ink">Razones de descarte</h3>
             <div className="text-ink-muted"><Icon.Help /></div>
@@ -144,14 +145,14 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
           <div className="flex-1 min-h-[140px]">
             <LossReasonsChart />
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* 3. Análisis de Tiempos y Calidad por Fuente */}
       <div className="grid grid-cols-2 gap-3">
         
         {/* Time in Stage */}
-        <div className="card-standard p-3 flex flex-col">
+        <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
             <h3 className="text-card-title font-medium text-ink">Tiempo promedio por etapa</h3>
             <div className="text-ink-muted"><Icon.Help /></div>
@@ -159,10 +160,10 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
           <div className="flex-1">
             <TimeInStageChart />
           </div>
-        </div>
+        </Card>
 
         {/* Quality Matrix */}
-        <div className="card-standard p-3 flex flex-col overflow-hidden">
+        <Card className="flex flex-col overflow-hidden">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-card-title font-medium text-ink">Calidad de Leads por Fuente</h3>
             <div className="text-ink-muted"><Icon.Help /></div>
@@ -170,7 +171,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
           <div className="flex-1 overflow-auto custom-scrollbar">
             <QualityMatrix />
           </div>
-        </div>
+        </Card>
       </div>
 
 

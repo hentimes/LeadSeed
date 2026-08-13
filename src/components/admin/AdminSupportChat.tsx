@@ -17,6 +17,7 @@ import {
 } from '../../services/supportService';
 import { getErrorMessage } from '../../utils/errorMessage';
 import { Button, IconButton, Input } from '../../design';
+import { Card } from '../../design';
 
 function formatMessageDate(dateStr: string) {
   if (!dateStr) return '';
@@ -208,7 +209,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
 
   return (
     <div className="w-full h-[600px]">
-      <div className="w-full h-full flex flex-col card-standard overflow-hidden">
+      <Card className="w-full h-full flex flex-col overflow-hidden">
         <div className="bg-[var(--color-surface)] border-b border-line p-4 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-lg text-slate-800 dark:text-slate-200">Chat Maestro</h2>
@@ -288,7 +289,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
             disabled={!newMessage.trim()}
           />
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

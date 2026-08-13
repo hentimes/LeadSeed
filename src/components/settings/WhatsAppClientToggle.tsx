@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../../services/appSettingsService';
 import { Icon } from '../../utils/icons';
+import { Card } from '../../design';
 
 export default function WhatsAppClientToggle() {
   const [preference, setPreference] = useState<'web' | 'app'>('web');
@@ -24,7 +25,7 @@ export default function WhatsAppClientToggle() {
   if (loading) return null;
 
   return (
-    <div className="card-standard p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <Card padding="lg" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div className="flex gap-3">
         <div className="w-10 h-10 rounded-[8px] bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0">
           {Icon.Phone()} 
@@ -59,6 +60,6 @@ export default function WhatsAppClientToggle() {
           App de Escritorio
         </button>
       </div>
-    </div>
+    </Card>
   );
 }

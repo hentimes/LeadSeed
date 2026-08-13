@@ -4,6 +4,7 @@ import FunnelRow from '../../components/dashboard/FunnelRow';
 import MonthlyChart from '../../components/dashboard/MonthlyChart';
 import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
+import { Card } from '../../design';
 
 interface PipelineTabProps {
   snapshot: DashboardSnapshot;
@@ -105,7 +106,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
   return (
     <div className="flex flex-col gap-4 animate-ios-slide-up pb-2">
       {/* Embudo de ventas */}
-      <div className="card-standard">
+      <Card>
         <div className="card-header">
           <h2 className="card-title">Embudo de ventas</h2>
           
@@ -156,10 +157,10 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
             <Icon.ArrowRight />
           </button>
         </div>
-      </div>
+      </Card>
 
       {/* Adquisición mensual */}
-      <div className="card-standard">
+      <Card>
         <div className="card-header">
           <h2 className="card-title">Adquisición mensual</h2>
           
@@ -223,7 +224,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
             <Icon.ArrowRight />
           </button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
