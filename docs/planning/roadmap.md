@@ -1160,6 +1160,11 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   bloque con mas valor real y el que mas cuidado exige, porque tocarlos cambia el momento en que se
   actualiza la interfaz.
 
+  Avance del `2026-08-13`: de 166 a **160**. Se cerraron seis `no-explicit-any` en `TemplatesPage` y
+  `useSort`, y no fue cosmetico: al tipar la pagina salio que el id de una plantilla es
+  `string | number` y se pasaba a funciones que esperan `number` con un `!` por medio, seis veces.
+  Ahora se convierte en un solo sitio y una plantilla sin id no se puede seleccionar ni borrar.
+
 ### Capitulo 13.4 - Correcciones funcionales (bloque 3)
 
 - [HECHO] Unificado `ACTIVE_APPOINTMENT_STATUSES` en `src/utils/appointmentStatus.ts`, con el
