@@ -1995,10 +1995,11 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 - [PENDIENTE] Migrar `list_my_forgotten_leads` a paginacion por cursor y anadir `pg_trgm` con indice
   GIN. Hoy usa `ilike` con comodin inicial sin indice de soporte, `OFFSET`, y un `NOT EXISTS`
   correlacionado.
-- [PENDIENTE DE DEPLOY] Corregido el orden de columnas para el patron de `get_my_dashboard_snapshot`.
-  Migracion `097_send_logs_dashboard_index.sql` escrita y espejada en `supabase/migrations/`, **sin
-  aplicar todavia**. El intento del `2026-08-13` quedo bloqueado por la capa de permisos del entorno,
-  que autoriza `supabase functions deploy` pero no `supabase db push`.
+- [HECHO] Corregido el orden de columnas para el patron de `get_my_dashboard_snapshot`.
+  Migracion `097_send_logs_dashboard_index.sql`, **aplicada en produccion el `2026-08-13`** junto con
+  la de reconciliacion del dia anterior. El `NOTICE` de Postgres al aplicarla
+  (`relation "leads_form_submission_id_uidx" already exists, skipping`) confirmo en la practica lo que
+  esa migracion afirmaba pero no se habia podido verificar: sus objetos ya estaban en produccion.
 
   Dato que hay que tener presente antes de aplicarla: `db push` arrastra **dos** migraciones, no una.
   La otra es `20260812000100_reconcile_form_lead_two_phase_submit.sql`, escrita el dia anterior al
