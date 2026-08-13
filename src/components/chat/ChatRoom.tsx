@@ -51,6 +51,7 @@ import {
 } from '../../services/chatService';
 import { getErrorMessage } from '../../utils/errorMessage';
 import { buildAttachmentFingerprint, usePendingAttachment } from '../../hooks/usePendingAttachment';
+import { useChatScroll } from '../../hooks/useChatScroll';
 
 interface ChatRoomProps {
   roomId?: string; // Si es undefined, carga "General"
@@ -86,8 +87,6 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // El termino viaja por estado porque las sugerencias de publicaciones se
@@ -113,28 +112,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     setMentionTerm(mentions.term);
   }, [mentions.term]);
 
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Auto-scroll y lógica de "mensajes no leídos"
-  const handleScroll = () => {
-    if (!containerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-    const atBottom = scrollHeight - scrollTop - clientHeight < 50;
-    setIsAtBottom(atBottom);
-    if (atBottom) {
-      setUnreadCount(0);
-    }
-  };
-
-  useEffect(() => {
-    if (isAtBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      setUnreadCount(prev => prev + 1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages]);
 
   // Marca la sala como leida al abrirla y con cada mensaje visto, para que el
   // indicador del menu de navegacion no quede encendido.
@@ -143,11 +121,6 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     void markChatRoomRead(room.id, user.id);
   }, [room?.id, user?.id, messages.length]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setIsAtBottom(true);
-    setUnreadCount(0);
-  };
 
   // Una mencion de usuario abre la pestana de integrantes filtrada por esa
   // persona; las de publicacion las resuelve quien monta el chat.
@@ -160,6 +133,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     onMentionClick?.(mention);
   };
 
+  const scroll = useChatScroll(messages.length);
   const [sendError, setSendError] = useState('');
 
   // El unico gatillo para anunciar es escribir "@todos" al principio del
@@ -201,7 +175,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       mentions.reset();
       attachment.clear();
       // Forzar scroll al fondo después de enviar
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scroll.scrollToBottom, 100);
 
       if (fileToSend && messageId && room && user) {
         setUploadingAttachment(true);
@@ -433,8 +407,8 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
 
       {/* Message List */}
       <div
-        ref={containerRef}
-        onScroll={handleScroll}
+        ref={scroll.containerRef}
+        onScroll={scroll.handleScroll}
         className="flex-1 overflow-y-auto p-4 space-y-4 relative"
       >
         {visibleMessages.length === 0 && (
@@ -704,17 +678,17 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
             </div>
           );
         })}
-        <div ref={messagesEndRef} />
+        <div ref={scroll.endRef} />
       </div>
 
       {/* Unread Badge Overlay */}
-      {!isAtBottom && unreadCount > 0 && (
+      {!scroll.isAtBottom && scroll.unreadCount > 0 && (
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-20">
           <button 
-            onClick={scrollToBottom}
+            onClick={scroll.scrollToBottom}
             className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1 transition-all"
           >
-            Hay {unreadCount} {unreadCount === 1 ? 'mensaje por leer' : 'mensajes por leer'} ↓
+            Hay {scroll.unreadCount} {scroll.unreadCount === 1 ? 'mensaje por leer' : 'mensajes por leer'} ↓
           </button>
         </div>
       )}
