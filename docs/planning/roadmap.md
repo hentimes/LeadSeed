@@ -1801,13 +1801,25 @@ Lo que aparecio al ejecutarlos, que el plan no anticipaba:
   prop `as` y una pequena reescritura. Ninguno es urgente y todos cambian algo visible o estructural,
   asi que se dejan anotados en vez de forzarlos.
 
-- [PENDIENTE] `.card-header` (5 usos) y `.card-title` (10). `card-title` equivale a la primitiva
-  `CardTitle`, pero esta renderiza `<h3>` y los usos actuales son `<h2>`: migrar cambiaria el orden
-  de encabezados de la pagina, que es una decision de accesibilidad y no de estilo. `.card-header`
-  no tiene primitiva equivalente; es solo un atajo de maquetacion.
-- [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (709 lineas, ~1034 ocurrencias); `tokens.css` ya resuelve el tema por variables.
-- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 185 veces en 82
-  archivos): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
+- [HECHO] (`2026-08-13`) `.card-title` migrado a la primitiva `CardTitle`. **0 usos de la clase**.
+  El conteo anterior de "10" mezclaba dos cosas: 5 usos de la clase legacy y 5 del token
+  `text-card-title`, que no es legacy y no habia que tocar.
+
+  `CardTitle` gana un prop `as` en el camino. Migrar a ciegas habria bajado esos titulos de `h2` a
+  `h3` "porque la primitiva dice h3", y esas paginas no tienen ni `h1` ni `h2`: el orden de
+  encabezados habria quedado peor. Con `as="h2"` el render es identico y la decision de nivel queda
+  explicita.
+
+- [PENDIENTE] Lo que queda del sistema de tarjetas, ya sin `.card-title`:
+  - `.card-header` (5 usos). No tiene primitiva equivalente; es un atajo de maquetacion
+    (`flex justify-between items-center mb-2`). Decidir si merece primitiva o se inlinea.
+  - Los 4 titulos inline de `FunnelReport` (`text-card-title font-medium text-ink`). Podrian usar
+    `CardTitle`, pero la primitiva es `font-semibold` y estos son `font-medium`: **cambia el peso
+    visual**. Requiere aprobacion.
+- [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (**1022 ocurrencias** al `2026-08-13`; eran ~1034);
+  `tokens.css` ya resuelve el tema por variables. Es el item mas grande que queda del bloque 7.
+- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (**180 veces en 82 archivos** al
+  `2026-08-13`; eran 185): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
   `PipelinePage.tsx:137`.
 - [PENDIENTE] Reducir los 132 anchos fijos en px y grids de columnas fijas en 68 archivos, criticos
   para sidebar angosto y movil.
