@@ -1820,7 +1820,18 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
   correlacionado.
 - [PENDIENTE DE DEPLOY] Corregido el orden de columnas para el patron de `get_my_dashboard_snapshot`.
   Migracion `097_send_logs_dashboard_index.sql` escrita y espejada en `supabase/migrations/`, **sin
-  aplicar todavia**: es DDL sobre produccion y no se ejecuta sin decision explicita.
+  aplicar todavia**. El intento del `2026-08-13` quedo bloqueado por la capa de permisos del entorno,
+  que autoriza `supabase functions deploy` pero no `supabase db push`.
+
+  Dato que hay que tener presente antes de aplicarla: `db push` arrastra **dos** migraciones, no una.
+  La otra es `20260812000100_reconcile_form_lead_two_phase_submit.sql`, escrita el dia anterior al
+  cerrar la doble fuente de verdad con `landing-gerow`. Es idempotente por construccion
+  (`create index if not exists`, `create or replace function`) y su contenido se copio de la version
+  que ya corre en produccion, pero **eso no se pudo verificar contra el esquema real**: el volcado
+  con `supabase db dump` tambien quedo bloqueado. Si esas dos funciones hubieran derivado desde
+  entonces, el `create or replace` las sobreescribiria, y tocan la ruta publica de captura de leads.
+  El modo de fallo del indice unico, en cambio, es benigno: si hubiera `form_submission_id`
+  duplicados la transaccion se revierte entera.
 
   Al verificar la consulta real antes de tocar nada, el hallazgo fue mas concreto que lo que decia la
   auditoria. Seis de los ocho conteos filtran por `user_id` y `template_type` con rango en `sent_at`.
@@ -1848,7 +1859,23 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
   listaba por ser interna: encadena hacia Google y hereda su latencia, asi que un Google lento
   colgaba el guardado del lead, que es lo unico que el usuario esta esperando de verdad.
 
-  **Pendiente de deploy**: el codigo esta commiteado pero las funciones no se han redesplegado.
+  **Desplegado el `2026-08-13`.** Las siete funciones afectadas (`form-leads`, `send-email` y las
+  cinco de `google-calendar-*`), en ese orden de riesgo creciente: primero
+  `google-calendar-sync-attendees` como prueba de que Deno resuelve el nuevo `_shared/http.ts` en el
+  bundle, y `form-leads` de ultima por ser la ruta publica de captura. El CLI confirma que sube
+  `_shared/http.ts` junto a cada una.
+
+  Antes de tocar `form-leads` se comprobo que su diff contra la version adoptada de produccion
+  (`ea03ac6`) fueran **solo** los tres cambios de timeout, sin arrastrar nada mas.
+
+  Verificacion posterior: preflight `OPTIONS` a `/api/form/leads`, `/api/form/leads/abandoned` y
+  `/api/form/progress`, los tres 204. Un preflight arranca la funcion, asi que un import roto habria
+  salido ahi. `GET /api/public/availability` sigue en 200 como control, y las tres paginas publicas
+  (`/pb/`, `/form/`, `/retiro-tecnico-extranjero/`) en 200.
+
+  Matiz sobre `npm run check:functions`: valida **propiedad** (de que repo salio el deploy), no
+  contenido. Que diga "sin deriva" no demuestra que el codigo nuevo este vivo; eso lo demuestran los
+  preflights.
 
 ### Capitulo 13.13 - Retiro final de Cloudflare
 
