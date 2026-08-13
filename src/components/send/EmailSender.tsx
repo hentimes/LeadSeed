@@ -154,8 +154,9 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
   // Set default preview lead when recipients change
   useEffect(() => {
-    if (recipients.length > 0 && !previewLead) {
-      setPreviewLead(recipients[0]);
+    const primero = recipients[0];
+    if (primero && !previewLead) {
+      setPreviewLead(primero);
     }
   }, [recipients, previewLead]);
 

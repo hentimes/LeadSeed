@@ -159,6 +159,9 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
           if (onColsChange && from >= 0 && to >= 0) {
             const newCols = [...visibleCols];
             const [moved] = newCols.splice(from, 1);
+            // splice devuelve vacio si el origen cae fuera de rango; sin
+            // columna que mover, reordenar no significa nada.
+            if (moved === undefined) return;
             newCols.splice(to, 0, moved);
             onColsChange(newCols);
           }

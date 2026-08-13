@@ -325,12 +325,12 @@ export default function AdminUsersPage() {
                       <div className="flex flex-col justify-center min-w-0 pr-2">
                         <div className="flex items-center">
                           <p className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">{p.full_name || p.email.split('@')[0]}</p>
-                          {leadAlertCounts[p.id] > 0 && (
+                          {(leadAlertCounts[p.id] ?? 0) > 0 && (
                             <span className="bg-amber-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full shadow-sm ml-1 shrink-0">
                               {leadAlertCounts[p.id]}
                             </span>
                           )}
-                          {unreadCounts[p.id] > 0 && (
+                          {(unreadCounts[p.id] ?? 0) > 0 && (
                             <span className="bg-purple-600 text-white text-[9px] font-bold px-1 py-0.5 rounded-full shadow-sm animate-pulse ml-1 shrink-0">
                               {unreadCounts[p.id]}
                             </span>
@@ -403,7 +403,7 @@ export default function AdminUsersPage() {
             )}
             <button onClick={() => setActiveTab('soporte')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'soporte' ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>
               Mensajes
-              {unreadCounts[selectedUser.id] > 0 && activeTab !== 'soporte' && <span className="absolute top-0 right-0 w-2 h-2 bg-purple-600 rounded-full animate-ping"></span>}
+              {(unreadCounts[selectedUser.id] ?? 0) > 0 && activeTab !== 'soporte' && <span className="absolute top-0 right-0 w-2 h-2 bg-purple-600 rounded-full animate-ping"></span>}
             </button>
             {(selectedUser.is_helper || selectedUser.role === 'admin') && (
               <button onClick={() => setActiveTab('helper')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'helper' ? 'bg-orange-500 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-gray-200'}`}>

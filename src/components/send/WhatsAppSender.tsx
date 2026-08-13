@@ -70,8 +70,9 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   // Set default preview lead
   useEffect(() => {
-    if (recipients.length > 0 && !previewLead) {
-      setPreviewLead(recipients[0]);
+    const primero = recipients[0];
+    if (primero && !previewLead) {
+      setPreviewLead(primero);
     }
   }, [recipients, previewLead]);
 

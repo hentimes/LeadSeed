@@ -12,8 +12,8 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
       const currentVal = payload[0].value;
       let trendEl = null;
       
-      if (currentIndex > 0) {
-        const prevData = data[currentIndex - 1];
+      const prevData = data[currentIndex - 1];
+      if (prevData) {
         const prevVal = prevData.value;
         const percent = prevVal === 0 ? (currentVal > 0 ? 100 : 0) : Math.round(((currentVal - prevVal) / prevVal) * 100);
         const isPositive = percent >= 0;

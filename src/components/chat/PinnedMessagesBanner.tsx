@@ -29,6 +29,8 @@ export default function PinnedMessagesBanner({ pinned, canUnpin, onUnpin }: Pinn
   if (pinned.length === 0) return null;
 
   const current = pinned[index] ?? pinned[0];
+  if (!current) return null;
+
   const hasMultiple = pinned.length > 1;
 
   return (

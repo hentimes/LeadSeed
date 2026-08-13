@@ -110,6 +110,9 @@ export default function LeadsTable({
 
     const reordered = [...pinnedIds];
     const [moved] = reordered.splice(from, 1);
+    // splice devuelve un array vacio si `from` cae fuera de rango; en ese caso
+    // no hay nada que reinsertar y reordenar no tiene sentido.
+    if (moved === undefined) return;
     reordered.splice(to, 0, moved);
 
     onReorderPinned?.(reordered);

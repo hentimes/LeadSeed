@@ -20,9 +20,15 @@ export function parseMentions(content: string): MentionToken[] {
       tokens.push({ type: 'text', value: content.slice(lastIndex, start) });
     }
 
+    // Los tres grupos son obligatorios en el patron, pero el tipado de
+    // RegExpExecArray no lo distingue de un grupo opcional. Se comprueban en
+    // vez de afirmarlos: una mencion a medias se descarta y el texto sigue.
+    const [, label, kind, id] = match;
+    if (!label || !kind || !id) continue;
+
     tokens.push({
       type: 'mention',
-      mention: { label: match[1], kind: match[2] as Mention['kind'], id: match[3] },
+      mention: { label, kind: kind as Mention['kind'], id },
     });
 
     lastIndex = start + match[0].length;
@@ -71,7 +77,9 @@ export function detectMentionQuery(text: string, cursor: number): MentionQuery |
   if (/[\s[\]()]/.test(term)) return null;
 
   // El `@` debe abrir palabra: o inicia el texto, o viene despues de un espacio.
-  const charBefore = at > 0 ? text[at - 1] : ' ';
+  // En la posicion 0 no hay caracter previo y cuenta como inicio de palabra,
+  // que es justo lo que representa el espacio.
+  const charBefore = text[at - 1] ?? ' ';
   if (!/\s/.test(charBefore)) return null;
 
   return { term, start: at, end: cursor };

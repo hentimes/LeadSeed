@@ -108,11 +108,10 @@ function parseRut(rutStr: string, dvStr?: string): RutParts | null {
   const normalized = normalizeRut(rutStr, dvStr);
   if (!normalized) return null;
 
-  const parts = normalized.split('-');
-  return {
-    rut: parts[0],
-    dv: parts.length > 1 ? parts[1] : '',
-  };
+  // split siempre devuelve al menos un elemento, pero el compilador no lo
+  // sabe; los valores por defecto lo dejan explicito sin inventar nada.
+  const [rut = '', dv = ''] = normalized.split('-');
+  return { rut, dv };
 }
 
 export function formatRutDisplay(rut: string): string {
@@ -125,9 +124,11 @@ export function formatRutDisplay(rut: string): string {
   // Insertar puntos cada 3 dígitos desde la derecha
   const reversed = body.split('').reverse();
   const withDots: string[] = [];
-  for (let i = 0; i < reversed.length; i++) {
+  // Recorrer con entries() en vez de por indice: el caracter llega ya tipado
+  // como string, sin necesidad de afirmar que existe.
+  for (const [i, caracter] of reversed.entries()) {
     if (i > 0 && i % 3 === 0) withDots.push('.');
-    withDots.push(reversed[i]);
+    withDots.push(caracter);
   }
   const formatted = withDots.reverse().join('');
 

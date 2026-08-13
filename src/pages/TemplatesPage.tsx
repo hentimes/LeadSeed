@@ -43,7 +43,9 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
   // Category form
   const [catName, setCatName] = useState('');
-  const [catColor, setCatColor] = useState(COLORS[0].value);
+  // COLORS es una constante de este archivo y nunca esta vacia; el respaldo
+  // existe para no depender de eso desde otro punto del codigo.
+  const [catColor, setCatColor] = useState(COLORS[0]?.value ?? '#3B82F6');
 
   // View filters
   const [filterCatId, setFilterCatId] = useState<number | null>(null);

@@ -39,8 +39,8 @@ export default function AdvancedFunnelChart({ snapshot }: AdvancedFunnelChartPro
         const widthPercent = Math.max((step.count / maxCount) * 100, 5); // min 5%
         
         let dropoff = null;
-        if (idx < funnel.length - 1) {
-          const nextStep = funnel[idx + 1];
+        const nextStep = funnel[idx + 1];
+        if (nextStep) {
           const drop = step.count > 0 ? Math.round(((step.count - nextStep.count) / step.count) * 100) : 0;
           if (drop > 0) {
             dropoff = drop;

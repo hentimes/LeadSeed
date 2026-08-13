@@ -26,8 +26,11 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
 
   // Agrupar por categoría
   const byCategory = SMART_LIST_DEFS.reduce((acc, list) => {
-    if (!acc[list.category]) acc[list.category] = [];
-    acc[list.category].push(list);
+    // Se toma la referencia una vez, en vez de comprobar que existe y volver a
+    // buscarla en la linea siguiente.
+    const delGrupo = acc[list.category] ?? [];
+    delGrupo.push(list);
+    acc[list.category] = delGrupo;
     return acc;
   }, {} as Record<string, typeof SMART_LIST_DEFS>);
 

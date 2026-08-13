@@ -42,6 +42,10 @@ export default function EmailEditor({
       const reader = new FileReader();
       reader.onload = (ev) => {
         const base64String = (ev.target?.result as string).split(',')[1];
+        if (!base64String) {
+          console.error('No se pudo leer el contenido del adjunto', file.name);
+          return;
+        }
         setAttachments((prev) => [...prev, { filename: file.name, content: base64String }]);
       };
       reader.readAsDataURL(file);

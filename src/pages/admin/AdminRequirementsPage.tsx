@@ -105,7 +105,7 @@ export default function AdminRequirementsPage() {
               <img src={selectedReq.user_profile.avatar_url} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-700/50" />
             ) : (
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                {selectedReq.user_profile?.email?.[0].toUpperCase()}
+                {selectedReq.user_profile?.email?.[0]?.toUpperCase()}
               </div>
             )}
             <div>
@@ -252,7 +252,7 @@ export default function AdminRequirementsPage() {
                       <img src={req.user_profile.avatar_url} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-100" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-400 dark:text-slate-500 font-bold text-[11px] shrink-0 border border-slate-200 dark:border-slate-700/50">
-                        {req.user_profile?.email?.[0].toUpperCase()}
+                        {req.user_profile?.email?.[0]?.toUpperCase()}
                       </div>
                     )}
                     <div className="flex flex-col min-w-0 pr-2">

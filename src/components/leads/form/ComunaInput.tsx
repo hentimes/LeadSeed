@@ -76,11 +76,11 @@ export function ComunaInput({ comuna, region, onComunaChange, onRegionChange }: 
       let bestMatch: string | null = null;
       let minDistance = Infinity;
 
-      for (let i = 0; i < allComunas.length; i++) {
-        const distance = getLevenshteinDistance(normalizedInput, normalizeText(allComunas[i]));
+      for (const comuna of allComunas) {
+        const distance = getLevenshteinDistance(normalizedInput, normalizeText(comuna));
         if (distance < minDistance) {
           minDistance = distance;
-          bestMatch = allComunas[i];
+          bestMatch = comuna;
         }
         if (distance === 0) break;
       }

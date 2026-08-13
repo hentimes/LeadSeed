@@ -40,7 +40,10 @@ export default function NavigationDrawer({
   if (!isOpen) return null;
 
   // Custom categories based on new layout
-  const categorizedRoutes: Record<string, RouteDef[]> = {
+  // Las claves son literales, no `string`: con `Record<string, T>` el
+  // compilador tiene que asumir que cualquier clave puede faltar, incluidas
+  // estas cuatro que se acaban de escribir dos lineas mas arriba.
+  const categorizedRoutes: Record<'Principal' | 'Colaboración' | 'Analítica' | 'Sistema', RouteDef[]> = {
     'Principal': [],
     'Colaboración': [],
     'Analítica': [],

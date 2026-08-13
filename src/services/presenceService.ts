@@ -14,8 +14,11 @@ function mapPresenceStateToUsersMap(state: Record<string, PresenceStateUser[]>):
   const users: OnlineUsersMap = {};
 
   for (const [key, presences] of Object.entries(state)) {
-    if (presences.length > 0) {
-      users[key] = presences[0];
+    // Realtime puede reportar varias presencias por usuario si tiene mas de una
+    // pestaña abierta; se toma la primera, que es la que ya se tomaba.
+    const primera = presences[0];
+    if (primera) {
+      users[key] = primera;
     }
   }
 

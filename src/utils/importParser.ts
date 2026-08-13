@@ -29,7 +29,8 @@ export function parseJSONFile(file: File): Promise<{ rows: Record<string, string
       try {
         const data = JSON.parse(e.target?.result as string);
         const rows: Record<string, string>[] = Array.isArray(data) ? data : [data];
-        const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+        const primeraFila = rows[0];
+        const columns = primeraFila ? Object.keys(primeraFila) : [];
         resolve({ rows, columns });
       } catch {
         reject(new Error('JSON inválido'));
@@ -50,9 +51,21 @@ export function parseExcelFile(file: File): Promise<{ rows: Record<string, strin
     reader.onload = (e) => {
       try {
         const wb = XLSX.read(e.target?.result, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
+
+        // Un libro sin hojas es un archivo valido para la libreria pero inutil
+        // para importar. Antes se le pasaba `undefined` a sheet_to_json y el
+        // fallo salia por el catch como "Excel invalido", que no dice nada:
+        // el usuario no sabia si el problema era el formato o el contenido.
+        const nombreHoja = wb.SheetNames[0];
+        const ws = nombreHoja ? wb.Sheets[nombreHoja] : undefined;
+        if (!ws) {
+          reject(new Error('El archivo Excel no tiene ninguna hoja con datos'));
+          return;
+        }
+
         const data = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
-        const columns = data.length > 0 ? Object.keys(data[0]) : [];
+        const primeraFila = data[0];
+        const columns = primeraFila ? Object.keys(primeraFila) : [];
         resolve({ rows: data, columns });
       } catch {
         reject(new Error('Excel inválido'));
@@ -258,8 +271,9 @@ export function findDuplicatesInBatch(
   const batchRuts = new Map<string, number>();   // rut → first row index
   const batchPhones = new Map<string, number>(); // phone → first row index
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
+  // entries() en vez de indice suelto: la fila llega ya tipada, sin tener que
+  // afirmar que existe en cada uno de los diez accesos de este bloque.
+  for (const [i, row] of rows.entries()) {
     const rowDupes: DuplicateInfo[] = [];
 
     // Check RUT

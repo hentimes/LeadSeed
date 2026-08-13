@@ -57,6 +57,7 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
         <tbody className="divide-y divide-gray-100">
           {leads.map((lead) => {
             const isSelected = selectedIds.has(lead.id!);
+            const enviosDelLead = sendCounts[lead.id!];
             return (
               <tr
                 key={lead.id}
@@ -73,14 +74,14 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
                 <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-200">
                   <div className="flex items-center gap-1.5">
                     {shortName(lead.name)}
-                    {sendCounts[lead.id!]?.whatsapp > 0 && (
-                      <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full shadow-sm" title={`${sendCounts[lead.id!].whatsapp} WhatsApp(s) enviado(s)`}>
-                        {sendCounts[lead.id!].whatsapp}
+                    {(enviosDelLead?.whatsapp ?? 0) > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full shadow-sm" title={`${enviosDelLead?.whatsapp} WhatsApp(s) enviado(s)`}>
+                        {enviosDelLead?.whatsapp}
                       </span>
                     )}
-                    {sendCounts[lead.id!]?.email > 0 && (
-                      <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full shadow-sm" title={`${sendCounts[lead.id!].email} Email(s) enviado(s)`}>
-                        {sendCounts[lead.id!].email}
+                    {(enviosDelLead?.email ?? 0) > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full shadow-sm" title={`${enviosDelLead?.email} Email(s) enviado(s)`}>
+                        {enviosDelLead?.email}
                       </span>
                     )}
                   </div>

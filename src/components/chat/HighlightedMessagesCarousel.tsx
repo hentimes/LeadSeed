@@ -26,7 +26,13 @@ export default function HighlightedMessagesCarousel({
     return <p className="text-sm text-ink-muted">Nadie destacó ningún mensaje todavía.</p>;
   }
 
+  // El indice puede quedar fuera de rango un render, entre que cambia la lista
+  // y el efecto lo devuelve a cero; por eso el respaldo al primero. Y el guard
+  // no es defensivo por si acaso: es lo que le demuestra al compilador que a
+  // esta altura ya se descarto la lista vacia.
   const current = highlights[index] ?? highlights[0];
+  if (!current) return null;
+
   const hasMultiple = highlights.length > 1;
 
   return (

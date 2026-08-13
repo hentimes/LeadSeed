@@ -57,6 +57,9 @@ const LeadsTableRow = ({
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
+  // Se toma una vez por fila: antes se indexaba el registro seis veces, y la
+  // comprobacion usaba `?.` pero la lectura de al lado no.
+  const enviosDelLead = sendCounts[lead.id!];
 
   const cellPad = compactMode ? 'px-2.5 py-1.5' : 'px-2.5 py-2';
   // Un lead sin abrir se tiñe hasta que se ve su detalle. No depende del badge
@@ -115,28 +118,28 @@ const LeadsTableRow = ({
               {Icon.Warning()} Cruce
             </span>
           )}
-          {sendCounts[lead.id!]?.whatsapp > 0 && (
+          {(enviosDelLead?.whatsapp ?? 0) > 0 && (
             <span
               onClick={(event) => {
                 event.stopPropagation();
                 onView(lead);
               }}
               className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full cursor-pointer hover:bg-green-600 shadow-sm"
-              title={`${sendCounts[lead.id!].whatsapp} WhatsApp(s) enviado(s)`}
+              title={`${enviosDelLead?.whatsapp} WhatsApp(s) enviado(s)`}
             >
-              {sendCounts[lead.id!].whatsapp}
+              {enviosDelLead?.whatsapp}
             </span>
           )}
-          {sendCounts[lead.id!]?.email > 0 && (
+          {(enviosDelLead?.email ?? 0) > 0 && (
             <span
               onClick={(event) => {
                 event.stopPropagation();
                 onView(lead);
               }}
               className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 shadow-sm"
-              title={`${sendCounts[lead.id!].email} Email(s) enviado(s)`}
+              title={`${enviosDelLead?.email} Email(s) enviado(s)`}
             >
-              {sendCounts[lead.id!].email}
+              {enviosDelLead?.email}
             </span>
           )}
           {filterMode === 'olvidados' && (

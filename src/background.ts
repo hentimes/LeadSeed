@@ -119,10 +119,11 @@ async function openAppFromNotification() {
     const url = chrome.runtime.getURL('index.html');
     const tabs = await chrome.tabs.query({ url: `${url}*` });
 
-    if (tabs.length > 0 && tabs[0].id !== undefined) {
-      await chrome.tabs.update(tabs[0].id, { active: true });
-      if (tabs[0].windowId !== undefined) {
-        await chrome.windows.update(tabs[0].windowId, { focused: true });
+    const yaAbierta = tabs[0];
+    if (yaAbierta?.id !== undefined) {
+      await chrome.tabs.update(yaAbierta.id, { active: true });
+      if (yaAbierta.windowId !== undefined) {
+        await chrome.windows.update(yaAbierta.windowId, { focused: true });
       }
       return;
     }
@@ -164,10 +165,9 @@ async function abrirWhatsAppWeb(numero: string, mensaje: string) {
     url: ["https://web.whatsapp.com/*"],
   });
 
-  if (tabs.length > 0) {
-    const whatsappTab = tabs[0];
-
-    await chrome.tabs.update(whatsappTab.id!, {
+  const whatsappTab = tabs[0];
+  if (whatsappTab?.id !== undefined) {
+    await chrome.tabs.update(whatsappTab.id, {
       url: url.toString(),
       active: true,
     });

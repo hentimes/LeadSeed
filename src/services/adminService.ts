@@ -253,8 +253,8 @@ export async function loadAdminUserHeatmap(selectedUser: Profile) {
       profile:
         profiles.find((profile) => profile.id === userId) ||
         ({ id: userId, email: 'Usuario Eliminado', role: 'user', created_at: '' } as Profile),
-      messageCount: interactionMap[userId].count,
-      lastInteraction: interactionMap[userId].lastMsg,
+      messageCount: interactionMap[userId]?.count ?? 0,
+      lastInteraction: interactionMap[userId]?.lastMsg ?? '',
     }))
     .sort((a, b) => b.messageCount - a.messageCount)
     .slice(0, 5);

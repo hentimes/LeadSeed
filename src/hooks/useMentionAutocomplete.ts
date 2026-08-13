@@ -110,8 +110,10 @@ export function useMentionAutocomplete({
       }
 
       if (event.key === 'Enter' || event.key === 'Tab') {
+        const elegida = suggestions[highlighted];
+        if (!elegida) return false;
         event.preventDefault();
-        select(suggestions[highlighted]);
+        select(elegida);
         return true;
       }
 

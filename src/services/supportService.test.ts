@@ -34,7 +34,7 @@ describe('reconcileIncomingSupportMessage', () => {
     const actual = reconcileIncomingSupportMessage(current, message({ id: 'real-1', message: 'hola' }));
 
     expect(actual).toHaveLength(2);
-    expect(actual[1].id).toBe('real-1');
+    expect(actual[1]?.id).toBe('real-1');
   });
 
   test('respeta el orden al sustituir un optimista que no es el ultimo', () => {
@@ -96,8 +96,8 @@ describe('applySupportMessageUpdate', () => {
 
     const actual = applySupportMessageUpdate(current, message({ id: 'm1', is_read: true }));
 
-    expect(actual[0].is_read).toBe(true);
-    expect(actual[1].id).toBe('m2');
+    expect(actual[0]?.is_read).toBe(true);
+    expect(actual[1]?.id).toBe('m2');
   });
 
   test('deja la lista igual si el id no esta', () => {
@@ -111,6 +111,6 @@ describe('applySupportMessageUpdate', () => {
 
     applySupportMessageUpdate(current, message({ id: 'm1', is_read: true }));
 
-    expect(current[0].is_read).toBe(false);
+    expect(current[0]?.is_read).toBe(false);
   });
 });

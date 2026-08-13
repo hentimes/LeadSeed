@@ -121,8 +121,9 @@ export default function SupportFloatingChat() {
   useEffect(() => {
     if (isOpen && user) {
       if (hasUnread) setHasUnread(false);
-      if (messages.length > 0) {
-        localStorage.setItem(`support_read_${user.id}`, messages[messages.length - 1].id);
+      const ultimo = messages[messages.length - 1];
+      if (ultimo) {
+        localStorage.setItem(`support_read_${user.id}`, ultimo.id);
       }
       if (adminId) {
         void markConversationRead(user.id, adminId);

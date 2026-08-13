@@ -94,9 +94,11 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
   }));
 
   const calculateMonthlyGrowth = () => {
-    if (chartData.length < 2) return 0;
-    const current = chartData[chartData.length - 1].value;
-    const previous = chartData[chartData.length - 2].value;
+    const ultimo = chartData[chartData.length - 1];
+    const penultimo = chartData[chartData.length - 2];
+    if (!ultimo || !penultimo) return 0;
+    const current = ultimo.value;
+    const previous = penultimo.value;
     if (previous === 0) return current > 0 ? 100 : 0;
     return Math.round(((current - previous) / previous) * 100);
   };

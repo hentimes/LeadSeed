@@ -36,23 +36,26 @@ function mapDuplicateLeadRow(row: DuplicateLeadRow): Lead {
 export async function findUserDuplicatePairs(userId: string): Promise<DuplicatePair[]> {
   const active = (await fetchActiveDuplicateLeadRows(userId)).map(mapDuplicateLeadRow);
   const found: DuplicatePair[] = [];
-  const seenRut = new Map<string, number>();
-  const seenPhone = new Map<string, number>();
+  // Los mapas guardan el lead, no su posicion. Antes guardaban el indice y
+  // habia que volver a `active[indice]` para recuperarlo, con el rodeo de
+  // afirmar dos veces que existia. El lead es lo que se necesita.
+  const seenRut = new Map<string, Lead>();
+  const seenPhone = new Map<string, Lead>();
 
-  for (let index = 0; index < active.length; index += 1) {
-    const lead = active[index];
-
-    if (lead.rut && seenRut.has(lead.rut)) {
-      found.push({ lead1: active[seenRut.get(lead.rut)!], lead2: lead, reason: `RUT: ${lead.rut}` });
+  for (const lead of active) {
+    const primeroConRut = lead.rut ? seenRut.get(lead.rut) : undefined;
+    if (lead.rut && primeroConRut) {
+      found.push({ lead1: primeroConRut, lead2: lead, reason: `RUT: ${lead.rut}` });
     } else if (lead.rut) {
-      seenRut.set(lead.rut, index);
+      seenRut.set(lead.rut, lead);
     }
 
     const phone = lead.phone?.replace(/[^+\d]/g, '');
-    if (phone && seenPhone.has(phone)) {
-      found.push({ lead1: active[seenPhone.get(phone)!], lead2: lead, reason: `Telefono: ${lead.phone}` });
+    const primeroConTelefono = phone ? seenPhone.get(phone) : undefined;
+    if (phone && primeroConTelefono) {
+      found.push({ lead1: primeroConTelefono, lead2: lead, reason: `Telefono: ${lead.phone}` });
     } else if (phone) {
-      seenPhone.set(phone, index);
+      seenPhone.set(phone, lead);
     }
   }
 

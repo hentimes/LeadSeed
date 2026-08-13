@@ -97,9 +97,9 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
     
     const reversed = body.split('').reverse();
     const withDots: string[] = [];
-    for (let i = 0; i < reversed.length; i++) {
+    for (const [i, caracter] of reversed.entries()) {
       if (i > 0 && i % 3 === 0) withDots.push('.');
-      withDots.push(reversed[i]);
+      withDots.push(caracter);
     }
     const formattedBody = withDots.reverse().join('');
     

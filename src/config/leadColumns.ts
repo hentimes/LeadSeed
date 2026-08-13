@@ -101,7 +101,7 @@ export function getLeadColumnValue(lead: Lead, key: string, lists: LeadList[]): 
       return text(raw(lead).comuna);
     case 'origin': {
       const metadata = (lead.metadata || {}) as PlanesproLeadMetadata;
-      const label = metadata.origin ? ORIGIN_LABELS[metadata.origin] : '';
+      const label = (metadata.origin ? ORIGIN_LABELS[metadata.origin] : '') ?? metadata.origin ?? '';
       if (metadata.origin === 'web_form' && metadata.capture_link_name) {
         return `${label} · ${metadata.capture_link_name}`;
       }
