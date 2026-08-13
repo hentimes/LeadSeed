@@ -3,6 +3,11 @@ import { useMemo, useState } from 'react';
 export type SortField = 'createdAt' | 'name' | 'rut';
 type SortDir = 'asc' | 'desc';
 
+/** Lo unico que `useSort` asume del elemento mas alla de los extractores. */
+interface Anclable {
+  isPinned?: boolean;
+}
+
 export interface SortConfig {
   field: SortField;
   dir: SortDir;
@@ -23,8 +28,11 @@ export function useSort<T>(items: T[], extractors: Record<SortField, (item: T) =
     const dir = sort.dir === 'asc' ? 1 : -1;
     return [...items].sort((a, b) => {
       // Pinned leads always at the top
-      const isPinnedA = (a as any).isPinned ? 1 : 0;
-      const isPinnedB = (b as any).isPinned ? 1 : 0;
+      // `useSort` es generico y no exige `isPinned`, pero los leads lo traen y
+      // los anclados van siempre arriba. Se declara esa suposicion en un tipo
+      // en vez de apagar el tipado con `any`.
+      const isPinnedA = (a as T & Anclable).isPinned ? 1 : 0;
+      const isPinnedB = (b as T & Anclable).isPinned ? 1 : 0;
       if (isPinnedA !== isPinnedB) {
         return isPinnedB - isPinnedA;
       }

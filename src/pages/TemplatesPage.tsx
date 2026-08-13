@@ -5,6 +5,7 @@ import {
   useCallTemplates, useCallTemplateLists,
 } from '../hooks/useTemplates';
 import type { SendLog } from '../types';
+import type { AnyTemplate, AnyTemplateList, EditableTemplate } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
@@ -33,9 +34,11 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const emT = useEmailTemplates(); const emL = useEmailTemplateLists();
   const caT = useCallTemplates(); const caL = useCallTemplateLists();
 
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [tplLists, setTplLists] = useState<any[]>([]);
-  const [editing, setEditing] = useState<any | null>(null);
+  // Los tres canales comparten la forma de WhatsAppTemplate; lo que cambia es
+  // de que hook vienen, no el tipo.
+  const [templates, setTemplates] = useState<AnyTemplate[]>([]);
+  const [tplLists, setTplLists] = useState<AnyTemplateList[]>([]);
+  const [editing, setEditing] = useState<EditableTemplate | null>(null);
   const [saving, setSaving] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showLog, setShowLog] = useState<number | null>(null); // templateId to show log
@@ -123,6 +126,35 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     setSelectedIds(new Set());
     load();
   };
+
+  /**
+   * El id de una plantilla es `string | number` en el tipo porque asi lo
+   * declara el dominio, pero la seleccion y el editor trabajan con numeros.
+   * Se convierte en un solo sitio en vez de repartir `as number` por el JSX.
+   */
+  const idNumerico = (t: AnyTemplate): number | null => {
+    if (typeof t.id === 'number') return t.id;
+    if (typeof t.id === 'string' && t.id.trim() !== '') {
+      const n = Number(t.id);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  };
+
+  /** Recorta una plantilla a lo que el editor necesita. */
+  const aEditable = (t: AnyTemplate): EditableTemplate => ({
+    ...(idNumerico(t) !== null ? { id: idNumerico(t) as number } : {}),
+    nombre: t.nombre,
+    contenido: t.contenido,
+    ...('asunto' in t ? { asunto: t.asunto } : {}),
+    ...('isHtml' in t ? { isHtml: t.isHtml } : {}),
+    templateListIds: t.templateListIds,
+  });
+
+  /** Solo las categorias ya guardadas: sin id no hay nada a que asociar. */
+  const categoriasConId = tplLists.flatMap((l) =>
+    typeof l.id === 'number' ? [{ id: l.id, name: l.name, color: l.color }] : [],
+  );
 
   const toggleSel = (id: number) => {
     setSelectedIds((prev) => {
@@ -228,7 +260,13 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
             <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 transition-colors"><Icon.Close /></button>
           </div>
 
-          <TemplateEditor template={editing} type={tab} categories={tplLists} onSave={handleSave} onCancel={() => setEditing(null)} />
+          <TemplateEditor
+            template={editing}
+            type={tab}
+            categories={categoriasConId}
+            onSave={handleSave}
+            onCancel={() => setEditing(null)}
+          />
         </div>
       )}
 
@@ -236,24 +274,24 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
       <div className="grid gap-3">
         {filtered.map((t) => (
           <div key={t.id}>
-            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${selectedIds.has(t.id!) ? 'border-primary bg-primary-soft/30' : 'hover:border-slate-300'}`}>
-              <input type="checkbox" checked={selectedIds.has(t.id!)} onChange={() => toggleSel(t.id!)} className="rounded mt-1 border-slate-300 text-primary focus:ring-primary" />
+            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${idNumerico(t) !== null && selectedIds.has(idNumerico(t)!) ? 'border-primary bg-primary-soft/30' : 'hover:border-slate-300'}`}>
+              <input type="checkbox" checked={idNumerico(t) !== null && selectedIds.has(idNumerico(t)!)} onChange={() => { const id = idNumerico(t); if (id !== null) toggleSel(id); }} className="rounded mt-1 border-slate-300 text-primary focus:ring-primary" />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
-                  <button onClick={() => { setEditing(t); }} className="text-left flex-1 min-w-0">
+                  <button onClick={() => { setEditing(aEditable(t)); }} className="text-left flex-1 min-w-0">
                     <div className="text-[15px] font-semibold text-slate-800 truncate mb-1">{t.nombre || '(sin nombre)'}</div>
                     <div className="text-[13px] text-slate-500 truncate">{t.contenido?.substring(0, 80) || '...'}</div>
                   </button>
-                  <button onClick={() => handleDelete(t.id!)} className="text-slate-400 hover:text-red-500 transition-colors ml-2 shrink-0 p-1"><Icon.Trash /></button>
+                  <button onClick={() => { const id = idNumerico(t); if (id !== null) handleDelete(id); }} className="text-slate-400 hover:text-red-500 transition-colors ml-2 shrink-0 p-1"><Icon.Trash /></button>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {(t.templateListIds || []).map((lid: number) => {
-                    const cat = tplLists.find((c: any) => c.id === lid);
+                    const cat = tplLists.find((c) => c.id === lid);
                     return cat ? (
                       <span key={lid} className="px-1 py-0 rounded text-xs text-white" style={{ backgroundColor: cat.color }}>{cat.name}</span>
                     ) : null;
                   })}
-                  <button onClick={() => handleShowLog(t.id!)}
+                  <button onClick={() => { const id = idNumerico(t); if (id !== null) handleShowLog(id); }}
                     className="text-xs text-gray-400 hover:text-blue-600 ml-auto">
                     {showLog === t.id ? 'Ocultar log' : 'Ver envíos'}
                   </button>

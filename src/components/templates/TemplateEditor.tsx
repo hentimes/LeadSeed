@@ -3,16 +3,10 @@ import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { Icon } from '../../utils/icons';
 import { Button, Modal } from '../../design';
+import type { EditableTemplate } from '../../types';
 
 interface Props {
-  template?: {
-    id?: number;
-    nombre: string;
-    contenido: string;
-    asunto?: string;
-    isHtml?: boolean;
-    templateListIds?: number[];
-  } | null;
+  template?: EditableTemplate | null;
   type: 'whatsapp' | 'email' | 'call';
   categories?: { id: number; name: string; color: string }[];
   onSave: (data: {
