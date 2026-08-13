@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4'
+import { fetchWithTimeout } from '../_shared/http.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -55,7 +56,7 @@ async function getAuthenticatedUser(accessToken: string) {
 }
 
 async function fetchGoogleIdentity(providerToken: string) {
-  const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+  const response = await fetchWithTimeout('https://www.googleapis.com/oauth2/v3/userinfo', {
     headers: {
       Authorization: `Bearer ${providerToken}`,
     },
@@ -72,7 +73,7 @@ async function fetchGoogleIdentity(providerToken: string) {
 }
 
 async function fetchGrantedScopes(providerToken: string) {
-  const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(providerToken)}`)
+  const response = await fetchWithTimeout(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(providerToken)}`)
 
   if (!response.ok) {
     return ''

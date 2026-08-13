@@ -1,4 +1,5 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.57.4'
+import { fetchWithTimeout } from './http.ts'
 
 export type EmailChannelRow = {
   id: string
@@ -186,7 +187,7 @@ export async function validateChannelCredentials(
     }
 
     try {
-      const response = await fetch('https://api.resend.com/domains', {
+      const response = await fetchWithTimeout('https://api.resend.com/domains', {
         headers: {
           Authorization: `Bearer ${credentials.apiKey}`,
         },

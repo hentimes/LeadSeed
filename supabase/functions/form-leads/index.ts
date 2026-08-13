@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4'
 import { resolveUserEmailChannel } from '../_shared/emailChannels.ts'
+import { fetchWithTimeout } from '../_shared/http.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -338,7 +339,7 @@ async function sendResendEmail(
   html: string,
   text: string,
 ) {
-  const response = await fetch('https://api.resend.com/emails', {
+  const response = await fetchWithTimeout('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
@@ -495,7 +496,10 @@ async function sendAppointmentNotifications(appointmentId: string) {
 async function createGoogleCalendarEventForAppointment(appointmentId: string) {
   if (!appointmentId) return { status: 'skipped' }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/google-calendar-create-event`, {
+  // Tambien con limite de tiempo: esta llamada encadena hacia Google, asi que
+  // hereda su latencia. Sin timeout, un Google lento cuelga el guardado del
+  // lead, que es lo unico que el usuario esta esperando de verdad.
+  const response = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/google-calendar-create-event`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,

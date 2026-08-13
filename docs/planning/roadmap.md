@@ -1746,11 +1746,37 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 - [PENDIENTE] Migrar `list_my_forgotten_leads` a paginacion por cursor y anadir `pg_trgm` con indice
   GIN. Hoy usa `ilike` con comodin inicial sin indice de soporte, `OFFSET`, y un `NOT EXISTS`
   correlacionado.
-- [PENDIENTE] Corregir el orden de columnas de `send_logs_user_lead_type_idx`, que no favorece el
-  patron de `get_my_dashboard_snapshot`.
+- [PENDIENTE DE DEPLOY] Corregido el orden de columnas para el patron de `get_my_dashboard_snapshot`.
+  Migracion `097_send_logs_dashboard_index.sql` escrita y espejada en `supabase/migrations/`, **sin
+  aplicar todavia**: es DDL sobre produccion y no se ejecuta sin decision explicita.
+
+  Al verificar la consulta real antes de tocar nada, el hallazgo fue mas concreto que lo que decia la
+  auditoria. Seis de los ocho conteos filtran por `user_id` y `template_type` con rango en `sent_at`.
+  `send_logs_user_lead_type_idx (user_id, lead_id, template_type)` mete `lead_id` en medio, y como la
+  consulta no filtra por esa columna el recorrido se corta en `user_id`: la tercera columna de un
+  indice solo sirve si las dos anteriores estan fijadas. Se crea
+  `send_logs_user_type_sent_at_idx (user_id, template_type, sent_at desc)`.
+
+  De paso, el indice viejo se reduce a su prefijo util `(user_id, lead_id)`: se reviso consulta por
+  consulta y **ninguna** fija `user_id` y `lead_id` y ademas filtra por `template_type`, asi que esa
+  tercera columna no la aprovechaba nadie. La migracion lleva la tabla de que consulta va a que
+  indice y su bloque de reversion.
 - [PENDIENTE] Separar los scripts de reparacion de datos (`_recovery`, `repair_historical_`) de las
   migraciones de esquema. Cierra otro pendiente del capitulo 2.3.
-- [PENDIENTE] Anadir `AbortController` con timeout a las llamadas a Resend y Google Calendar.
+- [HECHO] (`2026-08-12`) `AbortController` con timeout en las llamadas a Resend y Google, via
+  `supabase/functions/_shared/http.ts`. **18 puntos de llamada** en ocho funciones, mas de los 12 que
+  estimaba la auditoria.
+
+  El limite es de 15 s y queda por debajo del corte de ejecucion de una Edge Function a proposito:
+  la idea es fallar nosotros, con un mensaje que se entienda en un log, antes de que nos corten sin
+  explicacion. El helper encadena un `signal` que traiga el llamador en vez de pisarlo, y distingue
+  el aborto por reloj del aborto pedido, porque `AbortError` no dice quien fue.
+
+  Incluida tambien la llamada de `form-leads` a `google-calendar-create-event`, que la auditoria no
+  listaba por ser interna: encadena hacia Google y hereda su latencia, asi que un Google lento
+  colgaba el guardado del lead, que es lo unico que el usuario esta esperando de verdad.
+
+  **Pendiente de deploy**: el codigo esta commiteado pero las funciones no se han redesplegado.
 
 ### Capitulo 13.13 - Retiro final de Cloudflare
 

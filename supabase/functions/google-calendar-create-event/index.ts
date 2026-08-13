@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4'
+import { fetchWithTimeout } from '../_shared/http.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -111,7 +112,7 @@ async function refreshGoogleAccessToken(connection: CalendarConnectionRow) {
     body.set('client_secret', GOOGLE_OAUTH_CLIENT_SECRET)
   }
 
-  const response = await fetch('https://oauth2.googleapis.com/token', {
+  const response = await fetchWithTimeout('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
@@ -197,7 +198,7 @@ async function insertGoogleEvent(
   const requestId = `meet-${appointment.id.replace(/-/g, '')}`.slice(0, 64)
   const sendUpdates = participants.length > 0 ? 'all' : 'none'
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=${sendUpdates}`,
     {
       method: 'POST',
