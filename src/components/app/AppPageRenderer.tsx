@@ -43,6 +43,26 @@ const PAGE_WIDTH: Partial<Record<Page, 'full' | 'md' | 'lg'>> = {
 };
 
 /**
+ * Encabezado de pagina, cuando lo hay.
+ *
+ * La mayoria de las secciones no lleva: la barra superior ya dice en cual
+ * estas, y repetirlo dentro solo gasta alto en un panel angosto. Plantillas es
+ * la excepcion porque su descripcion aporta algo que el nombre no dice.
+ *
+ * Hasta el 2026-08-13 esto lo resolvia `components/ui/PageHeader.tsx`, un
+ * segundo encabezado con su propia escala (24px en negrita) que convivia con
+ * el del sistema (17px). Plantillas era la unica pagina que lo usaba, o sea la
+ * unica con un titulo grande en toda la extension. Se elimino ese componente y
+ * el encabezado pasa por PageShell, que es el que ya envuelve a todas.
+ */
+const PAGE_HEADER: Partial<Record<Page, { title: string; description?: string }>> = {
+  templates: {
+    title: 'Plantillas',
+    description: 'Gestiona tus plantillas de mensajes y respuestas rapidas.',
+  },
+};
+
+/**
  * El chat y la comunidad necesitan una altura fija (ver PageShell.fillHeight)
  * para que solo su panel de mensajes/lista scrollee, en vez de crecer con el
  * contenido como el resto de las paginas.
@@ -223,7 +243,12 @@ export default function AppPageRenderer({
 
   return (
     <PageSuspense>
-      <PageShell maxWidth={PAGE_WIDTH[page] || 'lg'} fillHeight={PAGE_FILL_HEIGHT[page]}>
+      <PageShell
+        maxWidth={PAGE_WIDTH[page] || 'lg'}
+        fillHeight={PAGE_FILL_HEIGHT[page]}
+        title={PAGE_HEADER[page]?.title}
+        description={PAGE_HEADER[page]?.description}
+      >
         {pageContent}
       </PageShell>
     </PageSuspense>

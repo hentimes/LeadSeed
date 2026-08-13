@@ -8,9 +8,9 @@ import type { SendLog } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
-import PageHeader from '../components/ui/PageHeader';
 import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
 import { Icon } from '../utils/icons';
+import { Button } from '../design';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -141,12 +141,6 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
   return (
     <div>
-      <PageHeader
-        title="Plantillas"
-        description="Gestiona tus plantillas de mensajes y respuestas rápidas."
-      >
-      </PageHeader>
-
       <div className="flex justify-end mb-4">
         <div className="flex gap-1">
           <button onClick={() => setTab('whatsapp')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>WhatsApp</button>
@@ -163,18 +157,18 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
-        <button 
+        <Button
+          variant="primary"
           onClick={() => {
             if (templates.length >= 3 && !hasFeature('pro:unlimited_templates')) {
-              alert(` Límite Alcanzado: El Plan Free solo permite crear 3 plantillas de ${tab}. Actualiza al Plan Pro para crear plantillas ilimitadas.`);
+              alert(`Limite alcanzado: el Plan Free solo permite crear 3 plantillas de ${tab}. Actualiza al Plan Pro para crear plantillas ilimitadas.`);
               return;
             }
             setEditing({ nombre: '', contenido: '', asunto: '', isHtml: false });
           }}
-          className="btn btn-primary"
         >
           + Nueva plantilla
-        </button>
+        </Button>
 
         {/* Category filter */}
         <select value={filterCatId ?? ''} onChange={(e) => setFilterCatId(e.target.value ? Number(e.target.value) : null)}
@@ -183,15 +177,18 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
           {tplLists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
 
-        <button onClick={() => setShowCatManager(!showCatManager)}
-          className={`btn ${showCatManager ? 'bg-slate-200 text-slate-700' : 'btn-secondary'}`}>
+        <Button
+          variant={showCatManager ? 'primary' : 'secondary'}
+          aria-expanded={showCatManager}
+          onClick={() => setShowCatManager(!showCatManager)}
+        >
           Gestionar categorías
-        </button>
+        </Button>
 
         {selectedIds.size > 0 && (
-          <button onClick={handleBulkDelete} className="btn bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+          <Button variant="danger" onClick={handleBulkDelete}>
             Eliminar ({selectedIds.size})
-          </button>
+          </Button>
         )}
 
         <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">{templates.length} plantillas</span>
@@ -207,7 +204,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
             <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none">
               {COLORS.map((c) => <option key={c.value} value={c.value}>{c.name}</option>)}
             </select>
-            <button type="submit" className="btn btn-primary">Crear</button>
+            <Button type="submit" variant="primary">Crear</Button>
           </form>
           <div className="flex flex-wrap gap-2">
             {tplLists.map((l) => (

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { Icon } from '../../utils/icons';
+import { Button } from '../../design';
 
 interface Props {
   template?: {
@@ -285,19 +286,12 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       </div>
 
       <div className="flex gap-2 pt-2">
-        <button
-          type="submit"
-          className="btn btn-primary"
-        >
+        <Button type="submit" variant="primary">
           {template?.id ? 'Actualizar' : 'Crear Plantilla'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn btn-secondary"
-        >
+        </Button>
+        <Button type="button" onClick={onCancel}>
           Cancelar
-        </button>
+        </Button>
       </div>
     </form>
   );
