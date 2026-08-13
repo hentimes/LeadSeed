@@ -2076,8 +2076,30 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
   colisiones de numero en `036` y `090`. Recomendacion: `supabase/migrations/` como unica fuente de
   verdad, y `sql/migrations/` generada automaticamente o retirada. Esto cierra el pendiente historico
   del capitulo 2.3.
-- [PENDIENTE] Migrar `list_my_forgotten_leads` a paginacion por cursor y anadir `pg_trgm` con indice
-  GIN. Hoy usa `ilike` con comodin inicial sin indice de soporte, `OFFSET`, y un `NOT EXISTS`
+- [PARCIAL] `list_my_forgotten_leads`. **`pg_trgm` con indice GIN aplicado en produccion el
+  `2026-08-13`** (migracion 098). El buscador usa `ilike '%token%'`, y un comodin inicial inutiliza
+  cualquier B-tree: cada busqueda recorria entera la lista de olvidados del usuario, que en la cuenta
+  de referencia son **1927 de 1930 leads**.
+
+  Hubo que tocar tambien la funcion, y el motivo no es evidente: para que el planificador use un
+  indice de expresion, la expresion indexada debe coincidir **exactamente** con la del `where`, y la
+  funcion usaba `concat_ws`, que Postgres declara STABLE y por tanto no se puede indexar. Se
+  sustituyo por concatenacion con `||` y `coalesce`, que si es inmutable.
+
+  El resultado de la busqueda no cambia: la unica diferencia es que `concat_ws` omite los nulos y la
+  nueva deja un espacio de mas, y como los tokens se parten por espacios antes de comparar, ninguno
+  puede contener uno.
+
+  **Metodo, que aqui importo.** El primer intento reescribio la funcion a mano y **truncó el
+  `ORDER BY`**: se perdieron los casos de `healthSystem`, `isapre` y `comuna`, que ordenan leyendo
+  dentro de `metadata`. Habria roto el orden por esas tres columnas sin que nada fallara. Se
+  descarto y se regenero la migracion **derivandola del texto de 063**, sustituyendo solo el filtro
+  de busqueda. Verificado despues, comparando ambas funciones sin comentarios ni espacios, que la
+  unica diferencia entre las dos es esa expresion.
+
+- [PENDIENTE] Migrar `list_my_forgotten_leads` a paginacion por cursor. Se separa del item anterior a
+  proposito: cambia la firma del RPC y el contrato con la bandeja, asi que toca frontend y no es una
+  optimizacion transparente como el indice. Hoy usa `ilike` con comodin inicial sin indice de soporte, `OFFSET`, y un `NOT EXISTS`
   correlacionado.
 - [HECHO] Corregido el orden de columnas para el patron de `get_my_dashboard_snapshot`.
   Migracion `097_send_logs_dashboard_index.sql`, **aplicada en produccion el `2026-08-13`** junto con
@@ -2147,8 +2169,12 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 - [PENDIENTE] Anadir `*.supabase.co` a `connect-src` en `_headers` de `landing-gerow`. Sin eso los
   formularios no pueden saltarse el proxy.
 - [PENDIENTE] Migrar `ppcrm` (`admin.planespro.cl/crm`).
-- [PENDIENTE] Retirar la ruta documentada `POST /api/form/appointments`, que ya no existe y devuelve
-  404.
+- [HECHO] (`2026-08-13`) Retirada la ruta `POST /api/form/appointments` de la documentacion. Se
+  comprobo que sigue devolviendo **404** en produccion y que **no queda ninguna referencia a ella en
+  el codigo**, ni en la extension ni en las Edge Functions: solo la citaban documentos. Los dos
+  documentos vigentes (`landing-gerow-cloudflare-context.md` y el contrato de formularios, ambos en
+  version 2.0) ya no la declaran como ruta valida, la listan como correccion de lo que la version
+  anterior afirmaba de mas.
 
 ---
 
