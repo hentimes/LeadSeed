@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { Icon } from '../../utils/icons';
-import { Button } from '../../design';
+import { Button, Modal } from '../../design';
 
 interface Props {
   template?: {
@@ -239,8 +239,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
 
           {/* WhatsApp preview Modal */}
           {showPreview && type === 'whatsapp' && contenido && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-              <div className="bg-white rounded-xl overflow-hidden flex flex-col w-full max-w-[320px] shadow-2xl max-h-[85vh] animate-scale-in">
+            <Modal onClose={() => setShowPreview(false)} maxWidth="320px" label="Vista previa del mensaje">
                 <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-[#25D366]"><Icon.Messages /></span> 
@@ -254,8 +253,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                   </div>
                   <div className="clear-both"></div>
                 </div>
-              </div>
-            </div>
+            </Modal>
           )}
         </div>
       </div>

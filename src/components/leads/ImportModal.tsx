@@ -9,7 +9,7 @@ import {
   type DuplicateInfo,
 } from '../../utils/importParser';
 import { getErrorMessage } from '../../utils/errorMessage';
-import { Button } from '../../design';
+import { Button, Modal } from '../../design';
 
 interface Props {
   existingRuts: Set<string>;
@@ -137,8 +137,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="modal-container w-full max-w-5xl max-h-[90vh] flex flex-col">
+    <Modal onClose={onClose} maxWidth="1024px" label="Importar leads">
         <div className="p-4 border-b flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-section-title font-semibold text-ink tracking-tight">Importar Leads</h2>
@@ -360,7 +359,6 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

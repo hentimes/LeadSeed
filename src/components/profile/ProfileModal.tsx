@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { changeAvatar, saveProfileFields } from '../../services/profileService';
 import { Icon } from '../../utils/icons';
+import { Modal } from '../../design';
 
 interface Props {
   isOpen: boolean;
@@ -69,8 +70,8 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800/80 dark:backdrop-blur-md p-6 shadow-2xl dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+    <Modal onClose={onClose} maxWidth="448px" label="Editar perfil">
+      <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 dark:text-white">Editar Perfil</h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-slate-500 dark:text-slate-400 dark:hover:text-gray-300">
@@ -204,6 +205,6 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
 import { createSupportTicket } from '../../services/supportService';
+import { Modal } from '../../design';
 
 interface Props {
   isOpen: boolean;
@@ -40,8 +41,7 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
+    <Modal onClose={onClose} maxWidth="448px" label="Levantar requerimiento de soporte">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white text-center">
           <button 
@@ -115,7 +115,6 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
             </button>
           </form>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

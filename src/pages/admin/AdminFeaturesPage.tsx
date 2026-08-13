@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSaaS } from '../../hooks/useSaaS';
 import type { Feature } from '../../types';
+import { Modal } from '../../design';
 
 export default function AdminFeaturesPage() {
   const { getFeatures, saveFeature } = useSaaS();
@@ -84,9 +85,12 @@ export default function AdminFeaturesPage() {
       </div>
 
       {editingFeature && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in">
-            <div className="p-6 border-b border-gray-100">
+        <Modal
+          onClose={() => setEditingFeature(null)}
+          maxWidth="512px"
+          label={`${editingFeature.id ? 'Editar' : 'Nueva'} funcionalidad`}
+        >
+            <div className="p-6 border-b border-line">
               <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{editingFeature.id ? 'Editar' : 'Nueva'} Funcionalidad</h3>
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
@@ -137,8 +141,7 @@ export default function AdminFeaturesPage() {
                 <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors">Guardar</button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

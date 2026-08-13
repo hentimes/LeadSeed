@@ -57,10 +57,10 @@
   }
 
   /* --- Modales y Paneles Maestros --- */
-  .modal-container {
-    @apply bg-surface rounded-modal shadow-float border border-line;
-  }
-  
+  /* .modal-container se retiro el 2026-08-13: su ultimo consumidor, el modal
+     de importacion, adopto la primitiva `design/Modal.tsx`, que ademas del
+     aspecto trae Escape, clic fuera, role="dialog" y bloqueo de scroll. */
+
   .panel-container {
     @apply bg-surface rounded-md border border-line;
   }

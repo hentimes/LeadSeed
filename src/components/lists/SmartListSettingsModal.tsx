@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SMART_LIST_DEFS } from '../../utils/smartLists';
-import { Button } from '../../design';
+import { Button, Modal } from '../../design';
 
 interface Props {
   activeSmartLists: string[];
@@ -32,8 +32,7 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
   }, {} as Record<string, typeof SMART_LIST_DEFS>);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-card w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
+    <Modal onClose={onClose} maxWidth="512px" label="Configuracion de listas inteligentes">
         <div className="px-4 py-2.5 border-b border-line flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
           <h2 className="text-sm font-semibold text-ink dark:text-slate-200">Configuración de Listas Inteligentes</h2>
           <button onClick={onClose} className="text-ink-secondary hover:text-ink">✕</button>
@@ -69,7 +68,6 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
           <Button size="sm" onClick={onClose}>Cancelar</Button>
           <Button variant="primary" size="sm" onClick={handleSave}>Guardar Configuración</Button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

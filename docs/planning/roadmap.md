@@ -1831,7 +1831,7 @@ Frente nuevo, nunca registrado en este roadmap.
     tabla de cincuenta leads no le dice a nadie *cual*: son cincuenta botones con el mismo nombre.
     Se usa `Eliminar ${lead.name}`, `Editar ${task.titulo}`, `Eliminar la lista ${list.name}`. El
     `title` se conserva porque sigue sirviendo al puntero.
-- [PARCIAL] Los 16 archivos con `fixed inset-0` se revisaron uno por uno, y el item resulto ser
+- [HECHO] Los 16 archivos con `fixed inset-0` se revisaron uno por uno, y el item resulto ser
   **dos problemas distintos que el plan trataba como uno**:
 
   - **6 no son dialogos y no deben serlo**: los cuatro menus del chat, el menu de usuario y el cajon
@@ -1839,10 +1839,24 @@ Frente nuevo, nunca registrado en este roadmap.
     desplegable no atrapa el foco ni bloquea el scroll, y convertirlo en `Modal` cambiaria como se
     ve. Lo que si les faltaba es la tecla: **se cerraban unicamente con el raton** (WCAG 2.1.2).
     Resuelto con `useCloseOnEscape`, 8 tests. Sin cambio visual.
-  - **7 si son dialogos** (`ImportModal`, `SmartListSettingsModal`, `ProfileModal`,
-    `SendConfirmModal`, `SupportTicketModal`, `TemplateEditor`, `AdminFeaturesPage`) y migrarlos a
-    `Modal` **cambia el fondo, el radio, la sombra y el centrado**. [PENDIENTE, requiere aprobacion
-    por superficie.]
+  - **6 eran dialogos y estan migrados** (`2026-08-13`, aprobado por el usuario): `ImportModal`,
+    `SmartListSettingsModal`, `ProfileModal`, `SupportTicketModal`, la vista previa de
+    `TemplateEditor` y el editor de `AdminFeaturesPage`. Eran 7 en la cuenta anterior:
+    `SendConfirmModal` ya usaba la primitiva y entro en la lista por un `fixed inset-0` que estaba
+    **dentro de un comentario**.
+
+    Lo que se ve distinto: el panel pasa a `rounded-[8px]` con borde del sistema, donde antes cada uno
+    elegia el suyo (`rounded-3xl` en soporte, `rounded-2xl` en perfil y admin, `rounded-xl` en la
+    vista previa), y el fondo del overlay se unifica.
+
+    Lo que se gana, que es el motivo real: cierran con **Escape** y con **clic fuera**, declaran
+    `role="dialog"` y `aria-modal`, bloquean el scroll de atras y se montan por portal a
+    `document.body`. Eso ultimo no es cosmetico: un elemento `fixed` deja de posicionarse contra el
+    viewport si algun ancestro tiene `transform`, `filter` o `contain`, y estos vivian dentro de
+    `<main>`, que ademas scrollea. Estaban a una clase de distancia de aparecer recortados.
+
+    Con el ultimo consumidor migrado, `.modal-container` queda sin usos y se retira de `index.css`.
+    Verificado que no aparece en el CSS compilado.
   - Los 3 restantes ya estaban bien o no aplican: `Modal.tsx` es la primitiva, `AttachmentLightbox`
     ya maneja Escape y `role="dialog"`, y `LoadingOverlay` no es interactivo.
 
