@@ -41,28 +41,6 @@ const SRC = join(RAIZ, 'src');
  */
 const PERMITIDAS = new Map([
   ['dark', 'La agrega el propio codigo para alternar el tema, no para estilar.'],
-
-  // --- Deuda conocida: opacidad sobre un color propio ---
-  //
-  // Los colores del sistema estan definidos en tailwind.config.js como
-  // `var(--ls-primary)`, y esas variables guardan un hexadecimal. El modificador
-  // de opacidad de Tailwind (`/25`) necesita poder inyectar el canal alfa, cosa
-  // que no puede hacer sobre un `var()` opaco, asi que descarta la clase entera
-  // en vez de avisar.
-  //
-  // Consecuencia: TODA opacidad sobre un color propio no hace nada hoy, incluida
-  // la de las primitivas Badge, Surface y Button. Arreglarlo hace aparecer
-  // bordes y fondos donde ahora no hay ninguno, o sea que cambia la apariencia y
-  // necesita aprobacion. Registrado en el roadmap, capitulo 13.8.
-  //
-  // Estas entradas se retiran cuando se arregle la causa, no una por una.
-  ['bg-primary/10', 'opacidad sobre color propio'],
-  ['dark:bg-primary/20', 'opacidad sobre color propio'],
-  ['hover:border-primary/40', 'opacidad sobre color propio'],
-  ['border-state-success/25', 'opacidad sobre color propio'],
-  ['border-state-warning/25', 'opacidad sobre color propio'],
-  ['border-state-danger/25', 'opacidad sobre color propio'],
-  ['border-state-info/25', 'opacidad sobre color propio'],
 ]);
 
 /** Quita comentarios: lo que se documenta no es lo que se aplica. */
@@ -175,10 +153,27 @@ function main() {
     process.exit(1);
   }
 
-  const css = readdirSync(DIST)
-    .filter((f) => f.endsWith('.css'))
-    .map((f) => readFileSync(join(DIST, f), 'utf-8'))
-    .join('\n');
+  const hojas = readdirSync(DIST).filter((f) => f.endsWith('.css'));
+  const css = hojas.map((f) => readFileSync(join(DIST, f), 'utf-8')).join('\n');
+
+  // Un `dist/` viejo da un resultado que parece valido y no lo es. Durante el
+  // desarrollo de este mismo detector, un CSS obsoleto hizo pasar por muertas
+  // once clases que si se generaban, y la conclusion equivocada sobrevivio
+  // varias comprobaciones. Comparar fechas cuesta nada.
+  if (hojas.length > 0) {
+    const cssMasNuevo = Math.max(...hojas.map((f) => statSync(join(DIST, f)).mtimeMs));
+    const fuenteMasNueva = Math.max(
+      ...archivos(SRC, ['.tsx', '.ts', '.css']).map((f) => statSync(f).mtimeMs),
+      statSync(join(RAIZ, 'tailwind.config.js')).mtimeMs,
+    );
+    if (fuenteMasNueva > cssMasNuevo) {
+      console.error(
+        '[check:classes] El CSS de dist/ es anterior al codigo fuente.\n' +
+          'Ejecuta `npm run build` antes: comparar contra un build viejo da falsos positivos.',
+      );
+      process.exit(1);
+    }
+  }
 
   if (!css.trim()) {
     console.error('[check:classes] dist/assets no tiene ningun CSS.');

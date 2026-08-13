@@ -6,6 +6,36 @@
  *
  * @type {import('tailwindcss').Config}
  */
+/**
+ * Expone un token de color de forma que Tailwind pueda aplicarle opacidad.
+ *
+ * El problema que resuelve: los tokens guardan un hexadecimal
+ * (`--ls-primary: #6c4cf6`). El modificador de opacidad de Tailwind (`/25`)
+ * necesita inyectar un canal alfa, y sobre un `var()` opaco no puede, asi que
+ * **descartaba la clase entera sin avisar**. El 2026-08-13 se midio el efecto:
+ * once clases muertas, incluidos los bordes `border-state-*\/25` de las
+ * primitivas Badge, Surface y Button, que llevaban quien sabe cuanto sin
+ * pintarse.
+ *
+ * La alternativa habitual es guardar los tokens como tripletes
+ * (`--ls-primary: 108 76 246`) y componer `rgb(var(--x) / <alpha-value>)`. Aca
+ * no sirve: hay 30 sitios que usan `var(--ls-*)` directamente en CSS y en
+ * estilos en linea, mas `palette.ts`, que lee la variable y se la pasa a
+ * Recharts como color. Un triplete rompe las tres cosas.
+ *
+ * `color-mix` mantiene el hexadecimal intacto y funciona en Chrome 111+, que
+ * para una extension de Chrome es un piso seguro.
+ *
+ * Cuando no hay modificador, Tailwind pasa su propia variable de opacidad con
+ * 1 por defecto, asi que la mezcla queda al 100% y el color no cambia.
+ */
+function conAlfa(variable) {
+  return ({ opacityValue }) => {
+    if (opacityValue === undefined) return `var(${variable})`;
+    return `color-mix(in srgb, var(${variable}) calc(${opacityValue} * 100%), transparent)`;
+  };
+}
+
 export default {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -13,45 +43,45 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: 'var(--ls-primary)',
-          hover: 'var(--ls-primary-hover)',
-          deep: 'var(--ls-primary-deep)',
-          light: 'var(--ls-primary-light)',
-          soft: 'var(--ls-primary-soft)',
-          'soft-strong': 'var(--ls-primary-soft-strong)',
+          DEFAULT: conAlfa('--ls-primary'),
+          hover: conAlfa('--ls-primary-hover'),
+          deep: conAlfa('--ls-primary-deep'),
+          light: conAlfa('--ls-primary-light'),
+          soft: conAlfa('--ls-primary-soft'),
+          'soft-strong': conAlfa('--ls-primary-soft-strong'),
         },
         ink: {
-          DEFAULT: 'var(--ls-text)',
-          secondary: 'var(--ls-text-secondary)',
-          muted: 'var(--ls-text-muted)',
-          inverse: 'var(--ls-text-inverse)',
+          DEFAULT: conAlfa('--ls-text'),
+          secondary: conAlfa('--ls-text-secondary'),
+          muted: conAlfa('--ls-text-muted'),
+          inverse: conAlfa('--ls-text-inverse'),
         },
         surface: {
-          DEFAULT: 'var(--ls-surface)',
-          hover: 'var(--ls-surface-hover)',
-          muted: 'var(--ls-bg)',
-          unread: 'var(--ls-surface-unread)',
-          'unread-hover': 'var(--ls-surface-unread-hover)',
+          DEFAULT: conAlfa('--ls-surface'),
+          hover: conAlfa('--ls-surface-hover'),
+          muted: conAlfa('--ls-bg'),
+          unread: conAlfa('--ls-surface-unread'),
+          'unread-hover': conAlfa('--ls-surface-unread-hover'),
         },
         line: {
-          DEFAULT: 'var(--ls-border)',
-          strong: 'var(--ls-border-strong)',
+          DEFAULT: conAlfa('--ls-border'),
+          strong: conAlfa('--ls-border-strong'),
         },
         state: {
-          success: 'var(--ls-success)',
-          'success-soft': 'var(--ls-success-soft)',
-          warning: 'var(--ls-warning)',
-          'warning-soft': 'var(--ls-warning-soft)',
-          danger: 'var(--ls-danger)',
-          'danger-soft': 'var(--ls-danger-soft)',
-          info: 'var(--ls-info)',
-          'info-soft': 'var(--ls-info-soft)',
+          success: conAlfa('--ls-success'),
+          'success-soft': conAlfa('--ls-success-soft'),
+          warning: conAlfa('--ls-warning'),
+          'warning-soft': conAlfa('--ls-warning-soft'),
+          danger: conAlfa('--ls-danger'),
+          'danger-soft': conAlfa('--ls-danger-soft'),
+          info: conAlfa('--ls-info'),
+          'info-soft': conAlfa('--ls-info-soft'),
         },
         // Alias heredado: el codigo previo usa brand-*.
         brand: {
-          primary: 'var(--ls-primary)',
-          secondary: 'var(--ls-primary-light)',
-          blue: 'var(--ls-info)',
+          primary: conAlfa('--ls-primary'),
+          secondary: conAlfa('--ls-primary-light'),
+          blue: conAlfa('--ls-info'),
         },
       },
       borderRadius: {

@@ -1765,7 +1765,7 @@ Comprobado que falla, con codigo de salida 1, si se reintroducen las clases del 
   eran decorativas. Retiradas.
 - **Once por una sola causa sistemica**, que es el hallazgo de fondo. Ver abajo.
 
-- [PENDIENTE, requiere aprobacion] **La opacidad sobre colores propios no funciona en ningun sitio.**
+- [HECHO] (`2026-08-13`, aprobado por el usuario) **La opacidad sobre colores propios ya funciona.**
   Los colores estan definidos en `tailwind.config.js` como `var(--ls-primary)`, y esas variables
   guardan un hexadecimal. El modificador `/25` necesita inyectar un canal alfa, cosa que no puede
   hacer sobre un `var()` opaco, asi que Tailwind descarta la clase entera.
@@ -1774,10 +1774,32 @@ Comprobado que falla, con codigo de salida 1, si se reintroducen las clases del 
   `Button` declaran bordes `border-state-*/25` que **no se estan pintando**. Tambien `bg-primary/10`
   en el login y `dark:bg-primary/20` en varios paneles del chat.
 
-  La solucion es cambiar como el config expone los colores, para que acepten alfa. Eso hace aparecer
-  bordes y fondos donde hoy no hay ninguno, o sea que **cambia la apariencia** y entra en la regla de
-  aprobacion por superficie de 13.1.c. Mientras tanto las once clases estan en la lista de permitidas
-  del detector, con el motivo escrito, para que la deuda quede visible y el check siga sirviendo.
+  **Solucion adoptada:** `tailwind.config.js` expone cada token a traves de un helper `conAlfa` que
+  usa `color-mix`. Se descarto la via habitual (guardar los tokens como tripletes
+  `--ls-primary: 108 76 246` y componer `rgb(var(--x) / <alpha-value>)`) porque aqui rompe tres
+  cosas: los **30 usos directos** de `var(--ls-*)` en CSS y en estilos en linea, y `palette.ts`, que
+  lee la variable y se la pasa a Recharts como color. Un triplete no es un color valido en ninguno de
+  esos sitios. `color-mix` deja el hexadecimal intacto y funciona desde Chrome 111, piso de sobra
+  para una extension.
+
+  Sin modificador el color no cambia: Tailwind pasa su variable de opacidad con 1 por defecto y la
+  mezcla queda al 100%. Verificado en el CSS compilado.
+
+  **Lo que se ve distinto**, que es exactamente el diseño que llevaba tiempo sin aplicarse:
+
+  | Donde | Que aparece |
+  |---|---|
+  | `Badge` y `Surface` | borde tenue del color del estado en los cuatro tonos |
+  | `Button` variante `danger` | su borde rojo al 25% |
+  | Chat: pestañas, miembros, menciones, adjuntos, me gusta | fondo violeta tenue del estado activo |
+  | Adjuntos, tarjetas de comunidad, info de sala | borde violeta al pasar el cursor |
+  | Login | el halo suave bajo el logo |
+
+  **Aviso metodologico.** El primer intento parecio no funcionar: las clases seguian sin generarse
+  despues de tres comprobaciones. La causa no era el config sino un `dist/` obsoleto que Vite
+  reutilizaba. Se llego a concluir que el problema era el anidamiento con `DEFAULT`, y una sonda lo
+  desmintio. Por eso el detector gano un guardian que **falla si el CSS es anterior al codigo**: el
+  error no fue de codigo, fue de sacar conclusiones de un build que ya no correspondia.
 
 ### 13.8.b - Los tres sub-items que alteran apariencia: EJECUTADOS el `2026-08-13`
 
