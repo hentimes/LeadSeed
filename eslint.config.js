@@ -282,7 +282,7 @@ export default tseslint.config(
 
   // Los tests si pueden tocar globals y tipos laxos.
   {
-    files: ['src/**/*.test.ts', 'src/test/**/*.ts'],
+    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-globals': 'off',
       '@typescript-eslint/no-explicit-any': 'off',

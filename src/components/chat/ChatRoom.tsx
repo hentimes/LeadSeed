@@ -35,7 +35,7 @@ import { useHighlightedMessages } from '../../hooks/useHighlightedMessages';
 import MessageAuthorMenu from './MessageAuthorMenu';
 import RoomInfoModal from './RoomInfoModal';
 import type { ChatRoom as ChatRoomType } from '../../types';
-import { attachFileToMessage, validateAttachmentSize } from '../../services/chatAttachmentsService';
+import { attachFileToMessage } from '../../services/chatAttachmentsService';
 import MessageAttachment from './MessageAttachment';
 import FreezeDurationMenu from './FreezeDurationMenu';
 import ConfirmDangerModal from './ConfirmDangerModal';
@@ -50,6 +50,7 @@ import {
   unfreezeChatRoom,
 } from '../../services/chatService';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { buildAttachmentFingerprint, usePendingAttachment } from '../../hooks/usePendingAttachment';
 
 interface ChatRoomProps {
   roomId?: string; // Si es undefined, carga "General"
@@ -81,8 +82,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   const [authorMenuFor, setAuthorMenuFor] = useState<string | null>(null);
   const guard = useMessageGuard();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
+  const attachment = usePendingAttachment();
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -187,47 +187,19 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   const [cleanupResult, setCleanupResult] = useState('');
   const [deleteMessageTarget, setDeleteMessageTarget] = useState<ChatMessage | null>(null);
 
-  const clearPendingFile = () => {
-    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
-    setPendingFile(null);
-    setPendingPreviewUrl(null);
-  };
-
-  const handleFileSelected = (file: File | undefined) => {
-    if (!file) return;
-
-    const sizeError = validateAttachmentSize(file);
-    if (sizeError) {
-      setSendError(sizeError);
-      return;
-    }
-
-    setSendError('');
-    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
-    setPendingFile(file);
-    setPendingPreviewUrl(file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
-  };
-
-  // Se libera el object URL de la previsualizacion tambien al desmontar,
-  // no solo al reemplazarla, para no dejar memoria colgada.
-  useEffect(() => {
-    return () => {
-      if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
-    };
-  }, [pendingPreviewUrl]);
 
   const performSend = async (content: string, asAnnouncement: boolean) => {
     const finalContent = asAnnouncement ? stripAnnouncementTrigger(content) : content;
-    const fileToSend = pendingFile;
+    const fileToSend = attachment.file;
 
     try {
       const messageId = await sendMessage(mentions.serialize(finalContent), replyTo?.id, asAnnouncement);
-      guard.confirmSent(content || (fileToSend ? `📎 ${fileToSend.name}:${fileToSend.size}` : ''));
+      guard.confirmSent(content || (fileToSend ? buildAttachmentFingerprint(fileToSend) : ''));
       setInputText('');
       setReplyTo(null);
       setSendError('');
       mentions.reset();
-      clearPendingFile();
+      attachment.clear();
       // Forzar scroll al fondo después de enviar
       setTimeout(scrollToBottom, 100);
 
@@ -369,11 +341,11 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     }
 
     const draft = inputText.trim();
-    if ((!draft && !pendingFile) || draft.length > MAX_LENGTH) return;
+    if ((!draft && !attachment.file) || draft.length > MAX_LENGTH) return;
     // Sin texto (solo adjunto), el chequeo anti-spam necesita algo no vacio
     // para evaluar; se usa una marca especifica del archivo, no un valor fijo,
     // para no confundir dos fotos distintas mandadas seguidas con un duplicado.
-    const spamCheckText = draft || (pendingFile ? `📎 ${pendingFile.name}:${pendingFile.size}` : '');
+    const spamCheckText = draft || (attachment.file ? buildAttachmentFingerprint(attachment.file) : '');
     if (!guard.verify(spamCheckText)) return;
 
     if (isAnnouncementDraft) {
@@ -837,10 +809,10 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
             />
           )}
 
-          {pendingFile && (
+          {attachment.file && (
             <div className="flex items-center gap-2 mb-2 px-2 py-1.5 rounded-xl bg-surface-muted dark:bg-gray-800 border border-line dark:border-gray-700">
-              {pendingPreviewUrl ? (
-                <img src={pendingPreviewUrl} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+              {attachment.previewUrl ? (
+                <img src={attachment.previewUrl} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
               ) : (
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-gray-900 text-ink-muted flex-shrink-0">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -849,11 +821,11 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
                 </span>
               )}
               <span className="flex-1 min-w-0 text-xs text-ink dark:text-gray-100 truncate">
-                {pendingFile.name}
+                {attachment.file.name}
               </span>
               <button
                 type="button"
-                onClick={clearPendingFile}
+                onClick={attachment.clear}
                 className="p-1 rounded-full text-ink-muted hover:bg-white dark:hover:bg-gray-700 hover:text-ink transition-colors flex-shrink-0"
                 title="Quitar adjunto"
               >
@@ -870,7 +842,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
               className="hidden"
               onChange={(e) => {
-                handleFileSelected(e.target.files?.[0]);
+                attachment.select(e.target.files?.[0]);
                 e.target.value = '';
               }}
             />
@@ -937,7 +909,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
 
             <button
               type="submit"
-              disabled={(!inputText.trim() && !pendingFile) || inputText.length > MAX_LENGTH || uploadingAttachment}
+              disabled={(!inputText.trim() && !attachment.file) || inputText.length > MAX_LENGTH || uploadingAttachment}
               className="w-10 h-10 mb-0.5 ml-1 bg-primary hover:bg-primary-hover disabled:bg-line disabled:text-slate-400 text-white rounded-[14px] flex items-center justify-center flex-shrink-0 transition-all transform active:scale-95"
             >
               <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>

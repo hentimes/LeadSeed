@@ -2,8 +2,11 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
+    // `happy-dom` y no `node`: hace falta un DOM para poder probar hooks y
+    // componentes con React Testing Library. Es mas ligero que jsdom y cubre
+    // de sobra lo que este proyecto necesita.
+    environment: 'happy-dom',
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['src/test/setup.ts'],
     // `lib/supabaseClient.ts` aborta el arranque si faltan estas variables.
     // Los tests no tocan la red: solo necesitan que el modulo se pueda importar

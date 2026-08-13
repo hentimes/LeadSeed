@@ -872,10 +872,10 @@ Base: commits `22e1a3a`, `e4e3f5a`, `cd70955`.
   exacta de la prohibicion, incorporada al protocolo como precision `10.1.a`: la regla aplica a todo
   emoji escrito en codigo, y no aplica a emojis que el usuario final elige y envia como contenido de
   un mensaje. `src/components/chat/EmojiPicker.tsx` queda como **excepcion legitima** y se mantiene.
-- [PENDIENTE] Retirar el centinela con emoji de `ChatRoom.tsx:225` y `:376`. Correccion de la
-  auditoria: no se persiste como contenido del mensaje, alimenta solo el fingerprint interno del
-  anti-spam (`guard.verify` / `guard.confirmSent`). Sigue prohibido por `10.1.a` (emoji escrito en
-  codigo) y se sustituye por una marca ASCII sin cambio de comportamiento.
+- [HECHO] Retirado el centinela con emoji de `ChatRoom.tsx`. Se resolvio al extraer
+  `usePendingAttachment`: la huella anti-spam paso a `buildAttachmentFingerprint`, con prefijo ASCII
+  y un test que verifica que no contenga emojis. **Ya no queda ningun emoji en el codigo fuera del
+  selector del chat**, verificado sobre todo `src/`.
 
 ### Capitulo 12.2 - Tipos de formulario y canales de captura
 
