@@ -46,7 +46,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
                 </svg>
               </button>
             </div>
-            <div className="p-4 overflow-y-auto custom-scrollbar">
+            <div className="p-4 overflow-y-auto">
               <LeadForm
                 lead={p.editing}
                 lists={p.lists}

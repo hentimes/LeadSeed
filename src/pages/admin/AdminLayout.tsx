@@ -52,7 +52,7 @@ export default function AdminLayout() {
   return (
     <div className="h-full flex flex-col bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 overflow-hidden">
       <div className="flex border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/50">
-        <div className="flex w-full overflow-x-auto hide-scrollbar">
+        <div className="flex w-full overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}

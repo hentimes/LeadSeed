@@ -55,3 +55,13 @@ jobs:
           # los valores reales se inyectan al empaquetar la extension.
           VITE_SUPABASE_URL: http://localhost:54321
           VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+
+      - name: Clases CSS muertas
+        # Va DESPUES del build a proposito: compara contra el CSS que Tailwind
+        # acaba de emitir. Con un dist/ viejo el resultado no significaria nada.
+        #
+        # Detecta clases que se usan pero no generan ninguna regla. Nacio de un
+        # caso real: `dark:backdrop-blur-md/20`, que dejo un cuadrado en blanco
+        # en el modal de soporte durante quien sabe cuanto, porque Tailwind
+        # descarta en silencio lo que no entiende.
+        run: npm run check:classes

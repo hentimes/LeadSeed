@@ -23,7 +23,7 @@ export default function AdminUserLicenses({
   onRemoveFeature,
 }: Props) {
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-fade-in">
       <section>
         <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
           <span className="text-blue-500">{Icon.Settings()}</span> Perfil Base (Plan)

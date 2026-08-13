@@ -1742,6 +1742,43 @@ Son los dos sub-items que 13.1.c autoriza por ser "identico o estrictamente mejo
   no grande, asi que el umbral que aplica es el de 4.5 y no el de 3. Actualizado tambien el respaldo
   en `palette.ts`, que por contrato debe coincidir con `tokens.css`.
 
+### 13.8.c - Detector de clases CSS muertas (`2026-08-13`)
+
+Nacio de un hallazgo del usuario: en el modal de soporte habia un cuadrado en blanco donde deberia
+verse un icono. La causa era `dark:backdrop-blur-md/20`, una clase que no existe. Tailwind no avisa
+de eso: descarta en silencio lo que no entiende, y la clase se queda en el codigo sin hacer nada
+hasta que alguien nota el hueco a ojo.
+
+`npm run check:classes` compara las clases usadas en el codigo contra las que Tailwind emitio de
+verdad en el CSS compilado. Es deliberadamente empirico: no reimplementa la gramatica de Tailwind,
+que cambia entre versiones y admite valores arbitrarios. Le pregunta al build.
+
+Corre en CI **despues** del build, porque con un `dist/` viejo el resultado no significaria nada.
+Comprobado que falla, con codigo de salida 1, si se reintroducen las clases del caso original.
+
+**25 clases muertas en la primera pasada.** Repartidas en tres causas:
+
+- `animate-fadeIn` en cuatro paneles de admin, cuando el CSS define `animate-fade-in`. Esos cuatro
+  paneles no tenian animacion de entrada. Corregido.
+- `custom-scrollbar`, `scrollbar-hide` y `hide-scrollbar`: tres nombres distintos para lo mismo, y
+  **ninguno definido en ningun CSS**. `index.css` ya oculta la barra en todo el documento, asi que
+  eran decorativas. Retiradas.
+- **Once por una sola causa sistemica**, que es el hallazgo de fondo. Ver abajo.
+
+- [PENDIENTE, requiere aprobacion] **La opacidad sobre colores propios no funciona en ningun sitio.**
+  Los colores estan definidos en `tailwind.config.js` como `var(--ls-primary)`, y esas variables
+  guardan un hexadecimal. El modificador `/25` necesita inyectar un canal alfa, cosa que no puede
+  hacer sobre un `var()` opaco, asi que Tailwind descarta la clase entera.
+
+  No es un detalle de tres sitios: afecta a las primitivas del propio sistema. `Badge`, `Surface` y
+  `Button` declaran bordes `border-state-*/25` que **no se estan pintando**. Tambien `bg-primary/10`
+  en el login y `dark:bg-primary/20` en varios paneles del chat.
+
+  La solucion es cambiar como el config expone los colores, para que acepten alfa. Eso hace aparecer
+  bordes y fondos donde hoy no hay ninguno, o sea que **cambia la apariencia** y entra en la regla de
+  aprobacion por superficie de 13.1.c. Mientras tanto las once clases estan en la lista de permitidas
+  del detector, con el motivo escrito, para que la deuda quede visible y el check siga sirviendo.
+
 ### 13.8.b - Los tres sub-items que alteran apariencia: EJECUTADOS el `2026-08-13`
 
 Se verificaron uno por uno antes de tocarlos, y ninguno resulto ser el cambio neutro que el plan

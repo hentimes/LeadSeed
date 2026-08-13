@@ -39,7 +39,7 @@ export default function AdminUserHeatmap({ selectedUser }: Props) {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fade-in">
       <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="text-orange-500 text-xl">{Icon.ChartPie()}</div>

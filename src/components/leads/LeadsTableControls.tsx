@@ -101,7 +101,7 @@ export default function LeadsTableControls({
       </div>
 
       {/* Bulk Actions and inline Filters */}
-      <div className="flex items-center gap-3 mb-2 min-h-[28px] overflow-x-auto scrollbar-hide text-[12px] font-semibold text-ink-secondary">
+      <div className="flex items-center gap-3 mb-2 min-h-[28px] overflow-x-auto text-[12px] font-semibold text-ink-secondary">
         {bulkActions && (
           <div className="flex items-center gap-3 shrink-0">
             {bulkActions}

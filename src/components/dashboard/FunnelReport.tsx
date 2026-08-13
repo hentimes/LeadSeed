@@ -168,7 +168,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <h3 className="text-card-title font-medium text-ink">Calidad de Leads por Fuente</h3>
             <div className="text-ink-muted"><Icon.Help /></div>
           </div>
-          <div className="flex-1 overflow-auto custom-scrollbar">
+          <div className="flex-1 overflow-auto">
             <QualityMatrix />
           </div>
         </Card>

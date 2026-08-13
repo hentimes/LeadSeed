@@ -54,12 +54,12 @@ export function Modal({ onClose, children, maxWidth = '460px', label }: ModalPro
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-4 backdrop-blur-sm custom-scrollbar"
+      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-4 backdrop-blur-sm"
     >
       {/* my-auto centra el panel cuando entra, y lo deja crecer hacia abajo
           con scroll propio cuando no cabe, en vez de recortarse. */}
       <div
-        className="relative my-auto flex max-h-full w-full flex-col overflow-y-auto rounded-[8px] border border-line bg-surface shadow-2xl animate-scale-in custom-scrollbar"
+        className="relative my-auto flex max-h-full w-full flex-col overflow-y-auto rounded-[8px] border border-line bg-surface shadow-2xl animate-scale-in"
         style={{ maxWidth }}
       >
         {children}

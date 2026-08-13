@@ -51,7 +51,7 @@ export default function AdminUserTelemetry({ selectedUser }: Props) {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fade-in">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-blue-100 p-3 rounded-full text-blue-600">

@@ -37,7 +37,7 @@ export default function AdminUserInventory({ selectedUser }: Props) {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 uppercase tracking-wider flex items-center gap-2">
           <span className="text-indigo-500">{Icon.Database()}</span> Plantillas Creadas
