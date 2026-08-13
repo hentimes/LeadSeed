@@ -557,7 +557,7 @@ Regla de avance vigente:
 - [COMPLETADO] Registrar que roadmap y plan deben actualizarse ante requerimientos nuevos.
 - [COMPLETADO] Registrar que tareas finalizadas deben pasar a auditoria cruzada.
 - [COMPLETADO] Registrar que la otra IA debe auditar el trabajo terminado aplicando CONTROL.
-- [PENDIENTE] Auditar si `PROTOCOLO_CONTROL.md`, `AI_SYNC.md`, `docs/_revision/implementation_plan.md` y este roadmap siguen totalmente alineados despues de la fase de agenda.
+- [PENDIENTE] Auditar si `PROTOCOLO_CONTROL.md`, `AI_SYNC.md` y este roadmap siguen totalmente alineados despues de la fase de agenda.
 
 ### Capitulo 11.2 - AI_SYNC
 
@@ -1021,6 +1021,29 @@ WAF de `planespro.cl`, que es el uso correcto: biblioteca, centros de salud, far
 noticias son contenido SEO estatico sin dependencia de LeadSeed. `farmacias/` usa ademas
 `caches.default` y `AbortController` con timeout contra la API de MINSAL, y esta bien resuelto. La
 redaccion previa del roadmap ("Cloudflare sale") era ambigua e inducia decisiones equivocadas.
+
+### Capitulo 13.1.d - Decisiones de arquitectura de alertas (cerradas el `2026-07-30`)
+
+Rescatadas de `HANDOFF_NEXT_SESSION.md` al eliminarlo el `2026-08-13`. Eran el unico sitio donde
+estaban escritas y siguen vigentes: se verifico una por una contra el codigo actual antes de moverlas.
+
+- **Supabase es la fuente de verdad de las alertas.** La alerta nace de la persistencia final del
+  lead, no de un paso intermedio.
+- **Cloudflare queda fuera de la cadena de alertas.** Ni Workers nuevos, ni badge, ni deduplicacion,
+  ni feed de eventos.
+- **Realtime es el mecanismo primario; `chrome.alarms` a 30s solo reconcilia.** Se descarto el sondeo
+  a 3 segundos con la extension cerrada porque MV3 no lo garantiza, y 30s es el minimo util que
+  ofrece la API. Sigue siendo asi: `background.ts` lo documenta en su cabecera.
+- **No se reutiliza `public.admin_lead_events` para alertas personales.** Pertenece al dominio de
+  supervision y su semantica no corresponde a la alerta del owner. Por eso existe
+  `public.user_lead_alert_events`.
+- **`src/background.ts` es un orquestador, no un archivo omnibus.** La logica de alertas vive en
+  modulos dedicados, hoy en `src/platform/backgroundLeadAlerts.ts` y `backgroundAgendaAlerts.ts`.
+
+Lo que **no** se rescato: ese documento declaraba comunidad, foro y chat como "fuera del alcance
+actual". Los tres se construyeron despues, asi que esa parte estaba contradicha por el codigo. Era
+justo el motivo por el que el documento resultaba peligroso en la raiz del repositorio: cualquier
+sesion nueva lo leia como vigente.
 
 ### Capitulo 13.1.c - Restriccion de no regresion (2026-08-12)
 
@@ -2001,15 +2024,17 @@ recuperar 3.7 MB. Eso es incorrecto y no se hizo. Dejar de trackear un archivo *
 del clon**, porque los blobs siguen en el historial. Solo una reescritura de historial lo lograria, y
 eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 
-- [BLOQUEADO] Decidir el destino de los tres documentos en `docs/_revision/`. Estan documentados uno
-  por uno en `docs/_revision/README.md` con su motivo de obsolescencia y su valor residual. Requiere
-  decision del usuario, no de una IA.
-  - `handoff-2026-07-30.md`: caducado, pero su seccion 2 tiene decisiones de arquitectura que no
-    estan registradas en ningun otro lado y conviene extraer antes de borrar.
-  - `pb-form-redesign-2026-07-29.md`: verificar vigencia contra `landing-gerow`.
-  - `implementation_plan.md`: **no se puede borrar sin cambiar el protocolo**. La seccion 4.2 lo
-    declara documento operativo de Nivel 2 y varias secciones mandan mantenerlo al dia. Eliminarlo
-    exige actualizar `PROTOCOLO_CONTROL.md` en el mismo movimiento.
+- [HECHO] (`2026-08-13`, decidido por el usuario) Eliminada `docs/_revision/` entera, 2962 lineas.
+  - `handoff-2026-07-30.md`: sus decisiones de arquitectura de alertas, que solo estaban ahi, se
+    verificaron contra el codigo actual y se movieron al capitulo 13.1.d. El resto del documento
+    estaba contradicho por el codigo: declaraba comunidad, foro y chat fuera de alcance, y los tres
+    existen.
+  - `pb-form-redesign-2026-07-29.md`: no aporta nada que no este ya, verificado y mas actualizado, en
+    el contrato de formularios y el contexto de landing-gerow, ambos en version 2.0.
+  - `implementation_plan.md`: absorbido por este roadmap, que es lo que ya venia pasando de hecho.
+    Requeria un cambio normativo y se hizo en el mismo movimiento: el protocolo lo citaba en **siete
+    sitios** y todos apuntan ahora al roadmap. Sin eso el protocolo habria quedado exigiendo mantener
+    al dia un archivo inexistente, que es peor que el problema que se queria resolver.
 
 ### Capitulo 13.11 - Correccion de la documentacion normativa (bloque 9)
 
@@ -2038,8 +2063,8 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
   verificadas con preflight.
 - [HECHO] Archivados `HANDOFF_NEXT_SESSION.md` y `pb_form_redesign_handoff.md` en `docs/_revision/`.
   Duplicaban items ya cerrados en 13.10.
-- [PENDIENTE] Decidir el destino de `docs/_revision/implementation_plan.md` (2314 lineas, solapa fuertemente con este
-  roadmap).
+- [HECHO] Eliminado `implementation_plan.md` junto con el resto de `docs/_revision/`. Detalle y
+  cambio normativo asociado en 13.10.
 - [PENDIENTE] Fusionar `docs/planning/ux-ui-checklist.md` dentro de este roadmap. La ruta citada
   antes (`UX_UI_CHECKLIST.md` en la raiz) quedo obsoleta tras la reorganizacion.
 - [HECHO] Documentacion reorganizada en `docs/`. Duplicaba el item ya cerrado en 13.10.

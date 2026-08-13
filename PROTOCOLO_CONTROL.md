@@ -98,14 +98,12 @@ Nada puede marcarse como `hecho` si contradice esa realidad.
 Los documentos operativos vigentes de este repo son:
 
 - [roadmap.md](docs/planning/roadmap.md:1)
-- [implementation_plan.md](docs/_revision/implementation_plan.md:1)
 - [AI_SYNC.md](AI_SYNC.md:1)
 - [landing-gerow-cloudflare-context.md](docs/integrations/landing-gerow-cloudflare-context.md:1)
 
 Cada uno cumple una funcion distinta:
 
-- `docs/planning/roadmap.md`: secuencia macro del producto
-- `docs/_revision/implementation_plan.md`: estrategia de implementacion para migracion e integracion
+- `docs/planning/roadmap.md`: secuencia macro del producto, estado por bloque y estrategia de migracion
 - `AI_SYNC.md`: coordinacion viva entre IAs
 - `docs/integrations/landing-gerow-cloudflare-context.md`: contexto operativo del formulario y backend actual de `planespro.cl`
 
@@ -145,7 +143,7 @@ Eso significa que `avanza` activa implicitamente este flujo:
 1. leer `AI_SYNC.md`
 2. revisar `git status`
 3. revisar reservas activas
-4. revisar `docs/planning/roadmap.md` e `docs/_revision/implementation_plan.md`
+4. revisar `docs/planning/roadmap.md`
 5. revisar el codigo real del bloque siguiente
 6. si aplica, revisar `docs/integrations/landing-gerow-cloudflare-context.md`
 7. auditar el estado real antes de ejecutar
@@ -373,9 +371,9 @@ Ejemplo:
 - una fase puede estar “completada” a nivel de intencion
 - pero aun tener `pendiente estructural` o `pendiente de validacion real` en algun punto
 
-### 8.3 El implementation plan tampoco reemplaza la realidad
+### 8.3 El roadmap tampoco reemplaza la realidad
 
-`docs/_revision/implementation_plan.md` puede describir arquitectura objetivo o pasos de migracion, pero si sobredeclara estado no desplegado:
+`docs/planning/roadmap.md` puede describir arquitectura objetivo o pasos de migracion, pero si sobredeclara estado no desplegado:
 
 - debe tratarse como plan
 - no como evidencia de implementacion productiva
@@ -384,7 +382,6 @@ Ejemplo:
 
 Cada nuevo requerimiento relevante debe evaluarse para ver si:
 
-- entra como nueva tarea en `docs/_revision/implementation_plan.md`
 - entra como nueva tarea o sub-tarea en `docs/planning/roadmap.md`
 - cambia prioridad de una fase existente
 - obliga a reclasificar una tarea ya existente
@@ -534,7 +531,6 @@ Toda IA debe revisar:
 - `AI_SYNC.md`
 - `git status`
 - `docs/planning/roadmap.md`
-- `docs/_revision/implementation_plan.md`
 - codigo real del modulo a tocar
 - si aplica, backend remoto real
 - si aplica, `docs/integrations/landing-gerow-cloudflare-context.md`
@@ -581,7 +577,7 @@ Y debe dejar trazabilidad en:
 
 - `AI_SYNC.md`
 - documento tecnico si el cambio lo amerita
-- `docs/planning/roadmap.md` y/o `docs/_revision/implementation_plan.md` si el bloque cambio el estado real del trabajo
+- `docs/planning/roadmap.md` si el bloque cambio el estado real del trabajo
 
 Si el trabajo recibio un requerimiento nuevo o abrio una tarea no contemplada, la actualizacion del plan y del roadmap deja de ser opcional y pasa a ser parte del cierre del bloque.
 

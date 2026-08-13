@@ -45,7 +45,17 @@ Nota honesta sobre el peso: sacarlos del control de versiones **no reduciria el 
 porque los blobs siguen en el historial de git. Solo un reescritura de historial lo lograria, y eso
 es disruptivo para cualquiera que tenga el repo clonado. Se opta por ordenarlos, no por purgarlos.
 
-## docs/_revision - candidatos a eliminar
+## docs/_revision - eliminada el 2026-08-13
 
-Documentos que ya no reflejan la realidad. **No se borraron**: se movieron aca para que el usuario
-decida. Ver `docs/_revision/README.md` para el detalle de por que cada uno esta obsoleto.
+Contenia tres documentos obsoletos que se conservaban a la espera de decision. Resuelto:
+
+- `handoff-2026-07-30.md`: sus decisiones de arquitectura de alertas se extrajeron al roadmap
+  (capitulo 13.1.d) y el resto estaba contradicho por el codigo. Eliminado.
+- `pb-form-redesign-2026-07-29.md`: su contenido vive hoy, verificado y actualizado, en
+  `integrations/planespro-form-integration-contract.md` y en `landing-gerow-cloudflare-context.md`,
+  ambos en version 2.0. Eliminado.
+- `implementation_plan.md`: absorbido por `planning/roadmap.md`, que es lo que ya venia pasando de
+  hecho. El protocolo lo citaba en siete sitios como documento operativo de Nivel 2; esas
+  referencias se redirigieron al roadmap en el mismo movimiento, porque borrarlo sin eso habria
+  dejado al protocolo exigiendo mantener al dia un archivo inexistente.
+
