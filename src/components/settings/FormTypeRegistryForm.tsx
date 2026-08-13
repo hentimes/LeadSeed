@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createFormType, updateFormType } from '../../services/captureLinksService';
 import type { FormType } from '../../types';
 import { Icon } from '../../utils/icons';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface Props {
   formTypes: FormType[];
@@ -60,7 +61,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
       setForm(emptyForm);
       onChanged();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo registrar el tipo de formulario');
+      setError(getErrorMessage(err, 'No se pudo registrar el tipo de formulario'));
     } finally {
       setSaving(false);
     }
@@ -75,7 +76,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
       setMessage(formType.isActive ? `"${formType.displayName}" desactivado` : `"${formType.displayName}" reactivado`);
       onChanged();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cambiar el estado del tipo');
+      setError(getErrorMessage(err, 'No se pudo cambiar el estado del tipo'));
     } finally {
       setSaving(false);
     }
@@ -94,7 +95,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
       );
       onChanged();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cambiar el permiso del tipo');
+      setError(getErrorMessage(err, 'No se pudo cambiar el permiso del tipo'));
     } finally {
       setSaving(false);
     }

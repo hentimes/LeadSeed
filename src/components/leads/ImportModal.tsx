@@ -8,6 +8,7 @@ import {
   type ParsedRow,
   type DuplicateInfo,
 } from '../../utils/importParser';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface Props {
   existingRuts: Set<string>;
@@ -72,7 +73,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
       setSelected(initialSelected);
       setStep('preview');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al procesar archivo');
+      setError(getErrorMessage(e, 'Error al procesar archivo'));
     } finally {
       setLoading(false);
     }

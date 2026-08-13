@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import type { EmailChannelSummary } from '../types';
+import { getErrorMessage } from '../utils/errorMessage';
 
 type EmailChannelsResponse = {
   ok?: boolean;
@@ -57,11 +58,7 @@ async function extractFunctionError(error: unknown, fallback: string) {
     }
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-
-  return fallback
+  return getErrorMessage(error, fallback)
 }
 
 export async function listEmailChannels(): Promise<EmailChannelSummary[]> {

@@ -15,6 +15,7 @@ import {
 } from '../services/agendaService';
 import { getAppointmentSuccessMessage } from '../utils/appointmentStatusCopy';
 import { getPlatform } from '../platform/registry';
+import { getErrorMessage } from '../utils/errorMessage';
 
 export interface ParticipantFormState {
   name: string;
@@ -101,7 +102,7 @@ export function useAgenda() {
       setParticipants(nextParticipants);
       setAuditEvents(nextAuditEvents);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cargar la agenda');
+      setError(getErrorMessage(err, 'No se pudo cargar la agenda'));
     } finally {
       if (!silent) setLoading(false);
     }
@@ -209,7 +210,7 @@ export function useAgenda() {
       await loadAgenda(true);
       setMessage(getAppointmentSuccessMessage('reschedule', result.googleSyncStatus));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo reprogramar la cita');
+      setError(getErrorMessage(err, 'No se pudo reprogramar la cita'));
       await loadAgenda(true);
     } finally {
       setAppointmentActionId('');
@@ -227,7 +228,7 @@ export function useAgenda() {
       await loadAgenda(true);
       setMessage(getAppointmentSuccessMessage('cancel', result.googleSyncStatus));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cancelar la cita');
+      setError(getErrorMessage(err, 'No se pudo cancelar la cita'));
       await loadAgenda(true);
     } finally {
       setAppointmentActionId('');
@@ -267,7 +268,7 @@ export function useAgenda() {
       setParticipantForms((current) => ({ ...current, [appointment.id]: defaultParticipantForm() }));
       await loadAgenda(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo agregar el participante');
+      setError(getErrorMessage(err, 'No se pudo agregar el participante'));
       await loadAgenda(true);
     } finally {
       setParticipantActionId('');
@@ -283,7 +284,7 @@ export function useAgenda() {
       await syncParticipantsAfterChange(appointmentId);
       await loadAgenda(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo quitar el participante');
+      setError(getErrorMessage(err, 'No se pudo quitar el participante'));
       await loadAgenda(true);
     } finally {
       setParticipantActionId('');

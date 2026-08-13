@@ -1,4 +1,5 @@
 import React from 'react';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface AppErrorBoundaryProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
   static getDerivedStateFromError(error: unknown): AppErrorBoundaryState {
     return {
       hasError: true,
-      message: error instanceof Error ? error.message : 'Error inesperado en la extension',
+      message: getErrorMessage(error, 'Error inesperado en la extension'),
     };
   }
 

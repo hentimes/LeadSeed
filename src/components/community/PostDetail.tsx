@@ -7,6 +7,7 @@ import LoadingOverlay from '../LoadingOverlay';
 import CommentItem from './CommentItem';
 import LikeButton from './LikeButton';
 import type { CommunityCategory } from '../../types/community';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface PostDetailProps {
   postId: string;
@@ -55,7 +56,7 @@ export default function PostDetail({
       await comment(draft);
       setDraft('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo comentar.');
+      setError(getErrorMessage(err, 'No se pudo comentar.'));
     } finally {
       setSending(false);
     }

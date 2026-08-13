@@ -15,6 +15,7 @@ import {
 } from '../../services/agendaService';
 import type { AvailabilityBlock, AvailabilityRule, CalendarConnectionStatus, CalendarSettings } from '../../types';
 import { Icon } from '../../utils/icons';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 const dayLabels = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
 
@@ -83,7 +84,7 @@ export default function AgendaSettings() {
       setRules(nextRules);
       setBlocks(nextBlocks);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cargar la agenda');
+      setError(getErrorMessage(err, 'No se pudo cargar la agenda'));
     } finally {
       if (!silent) setLoading(false);
     }
@@ -127,7 +128,7 @@ export default function AgendaSettings() {
       setSettings(nextSettings);
       setMessage('Agenda actualizada');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron guardar los ajustes');
+      setError(getErrorMessage(err, 'No se pudieron guardar los ajustes'));
     } finally {
       setSaving(false);
     }
@@ -142,7 +143,7 @@ export default function AgendaSettings() {
       setRules(nextRules);
       setMessage('Horario semanal actualizado');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el horario');
+      setError(getErrorMessage(err, 'No se pudo guardar el horario'));
     } finally {
       setSaving(false);
     }
@@ -176,7 +177,7 @@ export default function AgendaSettings() {
       await loadAgenda(true);
       setMessage('Bloqueo creado');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear el bloqueo');
+      setError(getErrorMessage(err, 'No se pudo crear el bloqueo'));
     } finally {
       setSaving(false);
     }
@@ -191,7 +192,7 @@ export default function AgendaSettings() {
       await loadAgenda(true);
       setMessage(`Google Calendar sincronizado: ${result.busyCount} bloqueos detectados`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo sincronizar Google Calendar');
+      setError(getErrorMessage(err, 'No se pudo sincronizar Google Calendar'));
       await loadAgenda(true);
     } finally {
       setSyncingGoogle(false);
@@ -209,7 +210,7 @@ export default function AgendaSettings() {
       await loadAgenda(true);
       setMessage('Bloqueo eliminado');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo eliminar el bloqueo');
+      setError(getErrorMessage(err, 'No se pudo eliminar el bloqueo'));
     } finally {
       setSaving(false);
     }

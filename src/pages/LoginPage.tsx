@@ -1,6 +1,7 @@
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
 import { chartColors } from '../design/palette';
 import { getPlatform } from '../platform/registry';
+import { getErrorMessage } from '../utils/errorMessage';
 
 export default function LoginPage() {
   const handleGoogleLogin = async () => {
@@ -19,7 +20,7 @@ export default function LoginPage() {
         window.location.reload();
       } catch (callbackError) {
         const message =
-          callbackError instanceof Error ? callbackError.message : 'No se pudo completar el login.';
+          getErrorMessage(callbackError, 'No se pudo completar el login.');
         alert(message);
       }
     } catch (error) {

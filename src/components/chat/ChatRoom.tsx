@@ -186,7 +186,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       // Antes este error solo quedaba en consola: el usuario veia el boton
       // "no hacer nada" sin ninguna pista de que el envio habia fallado.
       setSendError(
-        err instanceof Error ? err.message : 'No se pudo enviar el mensaje. Intentá de nuevo.'
+        getErrorMessage(err, 'No se pudo enviar el mensaje. Intentá de nuevo.')
       );
     }
   };
@@ -202,7 +202,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       await toggleSaved(message);
     } catch (err) {
       console.error('Error guardando mensaje', err);
-      setActionError(err instanceof Error ? err.message : 'No se pudo guardar el mensaje.');
+      setActionError(getErrorMessage(err, 'No se pudo guardar el mensaje.'));
     }
   };
 
@@ -212,7 +212,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       await pin(messageId, user.id, hours);
     } catch (err) {
       console.error('Error fijando mensaje', err);
-      setActionError(err instanceof Error ? err.message : 'No se pudo fijar el mensaje.');
+      setActionError(getErrorMessage(err, 'No se pudo fijar el mensaje.'));
     }
   };
 
@@ -221,7 +221,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       await unpin(messageId);
     } catch (err) {
       console.error('Error desfijando mensaje', err);
-      setActionError(err instanceof Error ? err.message : 'No se pudo desfijar el mensaje.');
+      setActionError(getErrorMessage(err, 'No se pudo desfijar el mensaje.'));
     }
   };
 

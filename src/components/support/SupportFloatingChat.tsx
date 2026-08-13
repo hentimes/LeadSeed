@@ -20,6 +20,7 @@ import {
   closeTypingControlChannel,
   type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 function formatMessageDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -184,7 +185,7 @@ export default function SupportFloatingChat() {
       await createSupportMessage(user.id, targetAdminId, text);
     } catch (error: unknown) {
       console.error('Error enviando mensaje:', error);
-      alert('Error al enviar el mensaje: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+      alert('Error al enviar el mensaje: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 

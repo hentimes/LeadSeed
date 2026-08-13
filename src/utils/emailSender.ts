@@ -3,6 +3,7 @@ import { getSettings } from '../services/appSettingsService';
 import { invokeSendEmailBatch } from '../repositories/emailDeliveryRepository';
 import type { EmailAttachment, EmailProvider, Lead } from '../types';
 import { replaceVariables } from './waHelper';
+import { getErrorMessage } from './errorMessage';
 
 
 type DeliveryPayload = {
@@ -73,7 +74,7 @@ async function sendEmailJsEmail(
   } catch (error: unknown) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error desconocido en EmailJS',
+      error: getErrorMessage(error, 'Error desconocido en EmailJS'),
     };
   }
 }

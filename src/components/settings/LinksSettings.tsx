@@ -4,6 +4,7 @@ import { listFormTypes } from '../../services/captureLinksService';
 import type { FormType } from '../../types';
 import FormTypeLinksSection from './FormTypeLinksSection';
 import FormTypeRegistryForm from './FormTypeRegistryForm';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 /**
  * Reemplaza CaptureLinksSettings (solo pb) y AdminRetiroLinksPanel (solo
@@ -25,7 +26,7 @@ export default function LinksSettings() {
       const types = await listFormTypes();
       setFormTypes(types);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los tipos de formulario');
+      setError(getErrorMessage(err, 'No se pudieron cargar los tipos de formulario'));
     } finally {
       setLoading(false);
     }

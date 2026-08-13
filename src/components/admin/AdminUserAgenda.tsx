@@ -3,6 +3,7 @@ import type { AgendaAppointment, Profile } from '../../types';
 import { loadAdminUserAgenda } from '../../services/adminService';
 import { getDefaultAgendaRange } from '../../services/agendaService';
 import { getGoogleSyncPendingSummary } from '../../utils/appointmentStatusCopy';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface Props {
   selectedUser: Profile;
@@ -41,7 +42,7 @@ export default function AdminUserAgenda({ selectedUser }: Props) {
         const nextAppointments = await loadAdminUserAgenda(selectedUser.id, range.from, range.to);
         if (!cancelled) setAppointments(nextAppointments);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'No se pudo cargar la agenda observada');
+        if (!cancelled) setError(getErrorMessage(err, 'No se pudo cargar la agenda observada'));
       } finally {
         if (!cancelled) setLoading(false);
       }

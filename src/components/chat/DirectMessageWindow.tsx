@@ -5,6 +5,7 @@ import { MAX_CHAT_MESSAGE_DISPLAY_LENGTH as MAX_LENGTH } from '../../services/ch
 import { Icon } from '../../utils/icons';
 import EmojiPicker from './EmojiPicker';
 import FloatingWindow from './FloatingWindow';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface DirectMessageWindowProps {
   userId: string;
@@ -46,10 +47,15 @@ export default function DirectMessageWindow({
       setSendError('');
     } catch (error) {
       console.error('Error enviando mensaje directo', error);
+      // El bloqueo entre usuarios lo impone un trigger de Postgres con
+      // RAISE EXCEPTION (ver 079_chat_blocks_mutes.sql), y ese error llega como
+      // PostgrestError, que es un objeto plano y NO una instancia de Error. El
+      // `instanceof Error` que habia aqui daba false siempre, asi que el aviso
+      // de "no podes enviarle mensajes a este usuario" nunca se mostraba: el
+      // usuario veia el generico y no entendia por que no llegaba su mensaje.
+      const detalle = getErrorMessage(error, '');
       setSendError(
-        error instanceof Error && error.message.includes('podés enviarle')
-          ? error.message
-          : 'No se pudo enviar el mensaje.'
+        detalle.includes('podés enviarle') ? detalle : 'No se pudo enviar el mensaje.'
       );
     }
   };

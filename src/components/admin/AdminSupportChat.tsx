@@ -15,6 +15,7 @@ import {
   closeTypingControlChannel,
   type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 function formatMessageDate(dateStr: string) {
   if (!dateStr) return '';
@@ -196,7 +197,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
       });
     } catch (error: unknown) {
       console.error('Error enviando mensaje:', error);
-      alert('Error al enviar el mensaje: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+      alert('Error al enviar el mensaje: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 

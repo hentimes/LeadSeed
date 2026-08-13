@@ -50,6 +50,7 @@ import type {
   GoogleCalendarSyncResult,
   LeadAppointmentInput,
 } from '../types';
+import { getErrorMessage } from '../utils/errorMessage';
 
 const DEFAULT_TIMEZONE = 'America/Santiago';
 
@@ -315,7 +316,7 @@ export async function createAppointmentFromLead(input: LeadAppointmentInput): Pr
     return {
       appointment,
       googleSyncStatus: 'error',
-      googleSyncError: err instanceof Error ? err.message : 'No se pudo crear el evento Google Calendar',
+      googleSyncError: getErrorMessage(err, 'No se pudo crear el evento Google Calendar'),
     };
   }
 }
@@ -334,7 +335,7 @@ async function syncAppointmentAfterMutation(
     return {
       appointment,
       googleSyncStatus: 'error',
-      googleSyncError: err instanceof Error ? err.message : 'No se pudo sincronizar Google Calendar',
+      googleSyncError: getErrorMessage(err, 'No se pudo sincronizar Google Calendar'),
     };
   }
 }

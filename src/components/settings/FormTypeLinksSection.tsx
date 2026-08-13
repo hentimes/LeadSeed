@@ -11,6 +11,7 @@ import {
 } from '../../services/captureLinksService';
 import type { CaptureLink, CaptureLinkStats, FormType } from '../../types';
 import { Icon } from '../../utils/icons';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface LinkFormState {
   label: string;
@@ -81,7 +82,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       setLimit(nextLimit);
       setSelectedId((current) => current ?? nextLinks[0]?.id ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los links');
+      setError(getErrorMessage(err, 'No se pudieron cargar los links'));
     } finally {
       setLoading(false);
     }
@@ -135,7 +136,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       resetForm();
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el link');
+      setError(getErrorMessage(err, 'No se pudo guardar el link'));
     } finally {
       setSaving(false);
     }
@@ -157,7 +158,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       setMessage('Link desactivado');
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo desactivar el link');
+      setError(getErrorMessage(err, 'No se pudo desactivar el link'));
     } finally {
       setSaving(false);
     }
@@ -176,7 +177,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       setMessage('Link reactivado');
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo reactivar el link');
+      setError(getErrorMessage(err, 'No se pudo reactivar el link'));
     } finally {
       setSaving(false);
     }
@@ -196,7 +197,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       setMessage('Link principal actualizado');
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cambiar el link principal');
+      setError(getErrorMessage(err, 'No se pudo cambiar el link principal'));
     } finally {
       setSaving(false);
     }
@@ -213,7 +214,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       setMessage('Contador reseteado');
       await loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo resetear el contador');
+      setError(getErrorMessage(err, 'No se pudo resetear el contador'));
     } finally {
       setSaving(false);
     }

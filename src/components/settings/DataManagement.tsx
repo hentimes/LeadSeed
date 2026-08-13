@@ -12,6 +12,7 @@ import { useLeads } from '../../hooks/useLeads';
 import type { ParsedRow } from '../../utils/importParser';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPlatform } from '../../platform/registry';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface Props {
   exportFormat: ExportFormat;
@@ -73,7 +74,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
       setTimeout(() => setRestoreMsg(''), 5000);
       window.location.reload();
     } catch (err) {
-      setRestoreMsg(err instanceof Error ? err.message : 'Error al restaurar');
+      setRestoreMsg(getErrorMessage(err, 'Error al restaurar'));
       setTimeout(() => setRestoreMsg(''), 5000);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';

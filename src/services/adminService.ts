@@ -3,6 +3,7 @@ import type { LeadRow } from '../repositories/leadsRepository';
 import { mapLeadRowToDomain } from './leadsService';
 import { fetchLeadRows } from '../repositories/leadsRepository';
 import { fetchTemplateRowsByUserId } from '../repositories/templatesRepository';
+import { getErrorMessage } from '../utils/errorMessage';
 import {
   type AdminLeadEventChangesPayload,
   type AdminLeadAlertRow,
@@ -123,12 +124,15 @@ export async function loadAdminUserBase(userId: string, currentUserId?: string) 
 
   const [leadResult, templateResult] = await Promise.allSettled([leadTask, templateTask]);
 
+  // `reason` puede ser un PostgrestError, que es un objeto plano: el
+  // `instanceof Error` que habia aqui lo descartaba y tiraba el mensaje
+  // generico, perdiendo la causa real justo cuando mas hace falta.
   if (leadResult.status === 'rejected') {
-    throw leadResult.reason instanceof Error ? leadResult.reason : new Error('No se pudo cargar los leads observados');
+    throw new Error(getErrorMessage(leadResult.reason, 'No se pudo cargar los leads observados'));
   }
 
   if (templateResult.status === 'rejected') {
-    throw templateResult.reason instanceof Error ? templateResult.reason : new Error('No se pudo cargar las plantillas observadas');
+    throw new Error(getErrorMessage(templateResult.reason, 'No se pudo cargar las plantillas observadas'));
   }
 
   const leadRows = leadResult.value as LeadRow[];

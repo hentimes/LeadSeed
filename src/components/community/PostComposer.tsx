@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Modal } from '../../design';
 import { POST_BODY_MAX, POST_TITLE_MAX } from '../../services/communityForumService';
 import type { CommunityCategory, NewCommunityPost } from '../../types/community';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface PostComposerProps {
   categories: CommunityCategory[];
@@ -31,7 +32,7 @@ export default function PostComposer({
       await onPublish({ categoryId, title, body });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo publicar.');
+      setError(getErrorMessage(err, 'No se pudo publicar.'));
     } finally {
       setSaving(false);
     }

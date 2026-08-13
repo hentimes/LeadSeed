@@ -1157,10 +1157,30 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   en el mismo modulo, con la separacion documentada y un test que verifica que la version de UI no
   filtra detalle tecnico.
 
-- [PENDIENTE] Migrar las ~40 copias inline de `error instanceof Error ? error.message : '...'` al
-  helper canonico. Se dejan para una pasada propia: cambian texto visible por el usuario (para mejor,
-  porque hoy muestran el generico donde deberian mostrar la causa), y conviene revisarlas por
-  superficie en vez de en un barrido.
+- [HECHO] (`2026-08-12`) Migradas al helper canonico las copias inline de
+  `error instanceof Error ? error.message : '...'`. Eran **49**, no ~40, repartidas en 24 archivos.
+  Cero quedan.
+
+  Es un cambio de texto visible, y va en la direccion buena: los errores de supabase-js son objetos
+  planos, no instancias de `Error`, asi que cada una de esas 49 lineas mostraba el mensaje generico
+  justo cuando el backend habia mandado la causa concreta.
+
+  Al revisarlas una por una aparecieron cuatro que no eran copias del mismo patron, y dos de ellas
+  eran **bugs reales**, no deuda estetica:
+
+  - `DirectMessageWindow.tsx`: el bloqueo entre usuarios lo impone un trigger con `RAISE EXCEPTION`
+    (`079_chat_blocks_mutes.sql`) y llega como `PostgrestError`. El `instanceof Error` daba false
+    siempre, asi que el aviso "no podes enviarle mensajes a este usuario" **nunca se mostro**: el
+    usuario veia "No se pudo enviar el mensaje" y no entendia por que.
+  - `adminService.loadAdminUserBase`: descartaba el `reason` de un `Promise.allSettled` cuando no era
+    `Error`, o sea siempre que fallaba una consulta, y lo cambiaba por el mensaje generico.
+  - `AdminUserBase.tsx` tenia una reimplementacion local del helper, `resolveErrorMessage`. Eliminada.
+  - `emailChannelsRepository.extractFunctionError` conserva su logica propia (lee el cuerpo del
+    `FunctionsHttpError`) y solo delega la cola.
+
+  Efecto colateral: `main.tsx` interpolaba el mensaje en `innerHTML`. Mientras el texto salia de un
+  `Error` nuestro daba igual; ahora que puede venir del backend, se construye el nodo y se usa
+  `textContent`. Se ve exactamente igual.
 - [PARCIAL] Deduplicacion de los dos chats de soporte. Se cerro la duplicacion real y la fuga de
   canales; la unificacion en un hook unico queda abierta. 11 tests.
 

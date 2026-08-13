@@ -11,6 +11,7 @@ import {
 } from '../services/emailChannelsService';
 import type { CalendarConnectionStatus, EmailChannelSummary, EmailProvider } from '../types';
 import { getPlatform } from '../platform/registry';
+import { getErrorMessage } from '../utils/errorMessage';
 
 export type EmailJsConfig = {
   userId: string;
@@ -140,7 +141,7 @@ export function useEmailChannels() {
         }
       } catch (error) {
         if (!active) return;
-        setErrorMessage(error instanceof Error ? error.message : 'No se pudieron cargar los ajustes de correo');
+        setErrorMessage(getErrorMessage(error, 'No se pudieron cargar los ajustes de correo'));
       } finally {
         if (active) {
           setLoading(false);
@@ -246,7 +247,7 @@ export function useEmailChannels() {
       setShowCreateForm(false);
       setChannelMessage('Canal guardado correctamente.');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo crear el canal');
+      setErrorMessage(getErrorMessage(error, 'No se pudo crear el canal'));
     } finally {
       setCreatingChannel(false);
     }
@@ -275,7 +276,7 @@ export function useEmailChannels() {
       closeEdit();
       setChannelMessage('Canal actualizado correctamente.');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo actualizar el canal');
+      setErrorMessage(getErrorMessage(error, 'No se pudo actualizar el canal'));
     } finally {
       setBusyChannelId('');
     }
@@ -291,7 +292,7 @@ export function useEmailChannels() {
       await persistSettings(provider, emailJsConfig, nextChannels);
       setChannelMessage(!channel.isActive ? `"${channel.channelName}" quedo conectado.` : `"${channel.channelName}" quedo pausado.`);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo actualizar el estado del canal');
+      setErrorMessage(getErrorMessage(error, 'No se pudo actualizar el estado del canal'));
     } finally {
       setBusyChannelId('');
     }
@@ -310,7 +311,7 @@ export function useEmailChannels() {
       }
       setChannelMessage(`"${channel.channelName}" fue eliminado.`);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo eliminar el canal');
+      setErrorMessage(getErrorMessage(error, 'No se pudo eliminar el canal'));
     } finally {
       setBusyChannelId('');
     }
@@ -347,7 +348,7 @@ export function useEmailChannels() {
           : 'Google se conecto, pero el permiso de envio no quedo concedido.',
       );
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo conectar Gmail');
+      setErrorMessage(getErrorMessage(error, 'No se pudo conectar Gmail'));
     } finally {
       setConnectingGoogle(false);
     }
@@ -377,7 +378,7 @@ export function useEmailChannels() {
           : `"${channel?.channelName || 'Canal'}" quedo como canal activo por defecto.`,
       );
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo activar el canal');
+      setErrorMessage(getErrorMessage(error, 'No se pudo activar el canal'));
     } finally {
       setBusyChannelId('');
     }

@@ -15,6 +15,7 @@ import { useAppKeyboardShortcuts } from './hooks/useAppKeyboardShortcuts';
 import { loadAppPreferences, syncSettingsToChromeStorage, updateStoredSettings } from './services/appSettings';
 import { DEFAULT_LEAD_COLUMNS } from './config/leadColumns';
 import { loadPendingTaskCount, processScheduledEmails, purgeDeletedLeads } from './services/appMaintenance';
+import { getErrorMessage } from './utils/errorMessage';
 
 
 export default function App() {
@@ -60,7 +61,7 @@ export default function App() {
       setDbError('');
     } catch (error) {
       console.error('App error', error);
-      setDbError(error instanceof Error ? error.message : String(error));
+      setDbError(getErrorMessage(error, String(error)));
     }
   }, []);
 

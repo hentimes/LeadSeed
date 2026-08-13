@@ -3,6 +3,7 @@ import type { Profile, Lead, WhatsAppTemplate } from '../../types';
 import { Icon } from '../../utils/icons';
 import { loadAdminUserBase, transferAdminUserAssets } from '../../services/adminService';
 import { useAuth } from '../../contexts/AuthContext';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface Props {
   selectedUser: Profile;
@@ -71,15 +72,6 @@ export default function AdminUserBase({
     void loadBase();
   }, [realtimeRefreshKey]);
 
-  const resolveErrorMessage = (loadError: unknown): string => {
-    if (loadError instanceof Error && loadError.message) {
-      return loadError.message;
-    }
-    if (loadError && typeof loadError === 'object' && 'message' in loadError && typeof loadError.message === 'string') {
-      return loadError.message;
-    }
-    return 'No se pudo cargar la base observada';
-  };
 
   const loadBase = async () => {
     setLoading(true);
@@ -93,7 +85,7 @@ export default function AdminUserBase({
     } catch (loadError) {
       setLeads([]);
       setTemplates([]);
-      setError(resolveErrorMessage(loadError));
+      setError(getErrorMessage(loadError, 'No se pudo cargar la base observada'));
     } finally {
       setLoading(false);
     }
