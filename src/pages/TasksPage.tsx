@@ -13,6 +13,7 @@ import {
 } from '../services/tasksService';
 import type { Lead, LeadList, Task, TaskStatus } from '../types';
 import { Icon } from '../utils/icons';
+import { Button } from '../design';
 
 const STATUS_TABS: { key: TaskStatus | 'todas'; label: string; color: string }[] = [
   { key: 'pendiente', label: 'Pendientes', color: 'text-amber-600' },
@@ -119,9 +120,9 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
             <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} manana</span>
           )}
         </div>
-        <button onClick={openNew} className="btn btn-primary flex items-center gap-2">
-          {Icon.Plus()} Tarea
-        </button>
+        <Button variant="primary" onClick={openNew} icon={Icon.Plus()}>
+          Tarea
+        </Button>
       </div>
 
       <div className="flex gap-1 mb-3 border-b border-line">

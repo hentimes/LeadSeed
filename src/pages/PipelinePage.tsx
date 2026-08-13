@@ -9,6 +9,7 @@ import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
 import { createFollowUpTaskForLead } from '../services/tasksService';
+import { Button } from '../design';
 
 
 export default function PipelinePage() {
@@ -288,10 +289,13 @@ export default function PipelinePage() {
                 {waTemplates.map((t: WhatsAppTemplate) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
               </select>
               {selectedTemplate && taskPrompt?.lead && (
-                <button onClick={() => { openWhatsAppForLeads([taskPrompt.lead!], waTemplates.find((t: WhatsAppTemplate) => t.id === selectedTemplate)?.contenido || ''); }}
-                  className="btn btn-primary shrink-0">
+                <Button
+                  variant="primary"
+                  className="shrink-0"
+                  onClick={() => { openWhatsAppForLeads([taskPrompt.lead!], waTemplates.find((t: WhatsAppTemplate) => t.id === selectedTemplate)?.contenido || ''); }}
+                >
                   Enviar
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -299,9 +303,9 @@ export default function PipelinePage() {
             <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 px-2 py-1.5">
               Omitir
             </button>
-            <button onClick={createTask} className="btn btn-primary shadow-sm">
+            <Button variant="primary" onClick={createTask}>
               Crear tarea
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -9,6 +9,7 @@ import ListLeadsTable from '../components/lists/ListLeadsTable';
 import { SmartListSettingsModal } from '../components/lists/SmartListSettingsModal';
 import { SMART_LIST_DEFS, getSmartListLeads } from '../utils/smartLists';
 import { getSettings, saveSettings } from '../services/appSettingsService';
+import { Button, IconButton } from '../design';
 
 const AVAILABLE_COLORS = [
   // Página 1: Alta Variedad (Claros y Primarios)
@@ -413,14 +414,17 @@ export default function ListsPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
             </div>
-            <button type="submit" className="btn btn-primary btn-sm whitespace-nowrap ml-1 rounded">
+            <Button type="submit" variant="primary" size="sm" className="ml-1">
                + Crear
-            </button>
+            </Button>
          </form>
 
-         <button onClick={() => setShowSmartSettings(true)} className="btn btn-secondary p-1.5 rounded-md text-slate-500 ml-auto" title="Configurar Listas Inteligentes">
-            {Icon.Settings()}
-         </button>
+         <IconButton
+            label="Configurar Listas Inteligentes"
+            icon={Icon.Settings()}
+            className="ml-auto"
+            onClick={() => setShowSmartSettings(true)}
+         />
       </div>
 
       <div className="bg-[#ffffff] dark:bg-slate-800 rounded-md shadow-sm border border-line dark:border-slate-700 overflow-hidden">

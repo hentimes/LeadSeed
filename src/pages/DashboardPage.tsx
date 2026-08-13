@@ -11,6 +11,7 @@ import PipelineTab from './dashboard/PipelineTab';
 import TasksTab from './dashboard/TasksTab';
 import PipelineReport from '../components/dashboard/PipelineReport';
 import FunnelReport from '../components/dashboard/FunnelReport';
+import { Button } from '../design';
 
 type TabType = 'overview' | 'pipeline' | 'tasks';
 
@@ -100,11 +101,13 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
         
         {/* Date Picker (Mock) */}
         <div className="pb-2">
-          <button className="btn btn-secondary btn-sm flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <Button
+            size="sm"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>}
+          >
             Hoy, {new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-secondary ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
+          </Button>
         </div>
       </div>
 
