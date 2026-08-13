@@ -42,19 +42,32 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
 
   return (
     <Modal onClose={onClose} maxWidth="448px" label="Levantar requerimiento de soporte">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white text-center">
-          <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+        {/* Header
+            El icono estaba en un bloque propio de 48px centrado, con el titulo
+            debajo: eso hacia la cabecera mucho mas alta de lo que su contenido
+            justifica. Ahora va en linea con el titulo.
+
+            Ademas el recuadro del icono declaraba
+            `bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/20 backdrop-blur-md`.
+            Eso era `bg-white/20` antes de un barrido de modo oscuro que le metio
+            clases en medio y dejo el `/20` pegado a `dark:backdrop-blur-md`, que
+            no es una clase que exista. Resultado: blanco opaco con un icono
+            blanco encima, o sea un cuadrado en blanco. */}
+        <div className="relative flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20 shadow-inner backdrop-blur-md">
+            <Icon.Messages />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold leading-tight">Levantar Requerimiento</h2>
+            <p className="text-xs text-indigo-100 opacity-90">Soporte Técnico VIP</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="ml-auto shrink-0 text-white/70 transition-colors hover:text-white"
           >
             <Icon.Close />
           </button>
-          <div className="w-12 h-12 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-inner">
-            <Icon.Messages />
-          </div>
-          <h2 className="text-xl font-bold">Levantar Requerimiento</h2>
-          <p className="text-sm text-indigo-100 mt-1 opacity-90">Soporte Técnico VIP</p>
         </div>
 
         {success ? (

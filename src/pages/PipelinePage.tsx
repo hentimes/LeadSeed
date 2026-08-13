@@ -135,7 +135,7 @@ export default function PipelinePage() {
       >
         <div className="flex items-center justify-center gap-1.5">
           <span className="uppercase tracking-wider">NUEVO</span>
-          <span className="text-[10px] px-1.5 rounded bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/70 text-slate-700 dark:text-slate-200 shadow-sm">{total}</span>
+          <span className="text-[10px] px-1.5 rounded bg-white/70 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 shadow-sm">{total}</span>
         </div>
       </button>
     );
@@ -176,7 +176,7 @@ export default function PipelinePage() {
                  handleDragStart(e, lead);
                }}
                onDragEnd={handleDragEnd}
-               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white dark:bg-slate-800/80 dark:backdrop-blur-md/5 rounded text-slate-600 dark:text-slate-300 dark:text-gray-300 font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
+               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white/5 rounded text-slate-600 dark:text-slate-300 dark:text-gray-300 font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
              >
                <span className="truncate">{lead.name}</span>
                <span className="text-[10px] text-gray-300 group-hover/item:text-slate-400 dark:text-slate-500 opacity-0 group-hover/item:opacity-100 font-mono tracking-tighter ml-1">|||</span>
