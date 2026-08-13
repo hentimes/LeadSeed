@@ -1,4 +1,5 @@
 import { useFlipOnOverflow } from '../../hooks/useFlipOnOverflow';
+import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
 
 interface MessageAuthorMenuProps {
   isMuted: boolean;
@@ -26,6 +27,7 @@ export default function MessageAuthorMenu({
   onToggleBlock,
   onClose,
 }: MessageAuthorMenuProps) {
+  useCloseOnEscape(onClose);
   const itemClass =
     'w-full text-left px-3 py-2 text-xs font-medium text-ink dark:text-gray-100 hover:bg-surface-muted dark:hover:bg-gray-700 transition-colors';
   const { ref, openUpward } = useFlipOnOverflow<HTMLDivElement>();

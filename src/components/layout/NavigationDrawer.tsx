@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { primaryRoutes, secondaryRoutes, RouteDef } from '../../config/routes';
 import type { Page } from '../../types';
 import { Icon } from '../../utils/icons';
+import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
 
 interface Props {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export default function NavigationDrawer({
   unreadChatCount,
   isChatBanned,
 }: Props) {
+  useCloseOnEscape(onClose, isOpen);
   const { hasFeature } = useAuth();
   
   // Estado para submenús

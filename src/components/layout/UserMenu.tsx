@@ -1,5 +1,6 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
+import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
 
 interface Props {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function UserMenu({ isOpen, onClose, onOpenProfile, onNavigateSettings }: Props) {
+  useCloseOnEscape(onClose, isOpen);
   const { signOut, user, profile } = useAuth();
 
   if (!isOpen) return null;

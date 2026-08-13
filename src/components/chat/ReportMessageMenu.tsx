@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useFlipOnOverflow } from '../../hooks/useFlipOnOverflow';
+import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
 
 const REASON_MAX_LENGTH = 40;
 
@@ -10,6 +11,7 @@ interface ReportMessageMenuProps {
 }
 
 export default function ReportMessageMenu({ onSubmit, onClose, align = 'right' }: ReportMessageMenuProps) {
+  useCloseOnEscape(onClose);
   const [reason, setReason] = useState('');
   const { ref, openUpward } = useFlipOnOverflow<HTMLDivElement>();
 

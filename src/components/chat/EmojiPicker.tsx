@@ -1,3 +1,4 @@
+import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
 /**
  * Selector de emoticones curado.
  *
@@ -26,6 +27,7 @@ interface EmojiPickerProps {
 }
 
 export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
+  useCloseOnEscape(onClose);
   return (
     <>
       {/* Capa de cierre: un click fuera baja el panel. */}

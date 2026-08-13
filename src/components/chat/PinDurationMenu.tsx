@@ -1,4 +1,5 @@
 import { useFlipOnOverflow } from '../../hooks/useFlipOnOverflow';
+import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
 
 interface PinDurationMenuProps {
   onSelect: (hours: number) => void;
@@ -14,6 +15,7 @@ const OPTIONS: { label: string; hours: number }[] = [
 ];
 
 export default function PinDurationMenu({ onSelect, onClose, align = 'right' }: PinDurationMenuProps) {
+  useCloseOnEscape(onClose);
   const { ref, openUpward } = useFlipOnOverflow<HTMLDivElement>();
 
   return (

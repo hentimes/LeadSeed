@@ -323,6 +323,11 @@ export default tseslint.config(
       // algo que no cruza.
       'src/hooks/useAppKeyboardShortcuts.ts',
       'src/hooks/useFlipOnOverflow.ts',
+      // Cerrar con Escape. En un telefono no hay tecla Escape: el gesto
+      // equivalente es el boton atras del sistema, que se escucha con otra API
+      // entera. No es el mismo mecanismo con otro nombre, asi que no hay puerto
+      // que valga; se reescribe.
+      'src/hooks/useCloseOnEscape.ts',
       // Mide el ancho real del panel con ResizeObserver para decidir cuantas
       // columnas caben. En movil el layout responsivo se resuelve con
       // Dimensions y flex, no midiendo un nodo.

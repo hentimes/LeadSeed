@@ -1803,8 +1803,30 @@ Frente nuevo, nunca registrado en este roadmap.
     tabla de cincuenta leads no le dice a nadie *cual*: son cincuenta botones con el mismo nombre.
     Se usa `Eliminar ${lead.name}`, `Editar ${task.titulo}`, `Eliminar la lista ${list.name}`. El
     `title` se conserva porque sigue sirviendo al puntero.
-- [PENDIENTE] Migrar los overlays manuales a `src/design/Modal.tsx`: 17 archivos usan
-  `fixed inset-0`, solo 4 manejan `Escape` o `role="dialog"`.
+- [PARCIAL] Los 16 archivos con `fixed inset-0` se revisaron uno por uno, y el item resulto ser
+  **dos problemas distintos que el plan trataba como uno**:
+
+  - **6 no son dialogos y no deben serlo**: los cuatro menus del chat, el menu de usuario y el cajon
+    de navegacion. Usan `fixed inset-0` solo como capa invisible para cazar el clic. Un menu
+    desplegable no atrapa el foco ni bloquea el scroll, y convertirlo en `Modal` cambiaria como se
+    ve. Lo que si les faltaba es la tecla: **se cerraban unicamente con el raton** (WCAG 2.1.2).
+    Resuelto con `useCloseOnEscape`, 8 tests. Sin cambio visual.
+  - **7 si son dialogos** (`ImportModal`, `SmartListSettingsModal`, `ProfileModal`,
+    `SendConfirmModal`, `SupportTicketModal`, `TemplateEditor`, `AdminFeaturesPage`) y migrarlos a
+    `Modal` **cambia el fondo, el radio, la sombra y el centrado**. [PENDIENTE, requiere aprobacion
+    por superficie.]
+  - Los 3 restantes ya estaban bien o no aplican: `Modal.tsx` es la primitiva, `AttachmentLightbox`
+    ya maneja Escape y `role="dialog"`, y `LoadingOverlay` no es interactivo.
+
+  Sobre el hook: lleva una **pila** en vez de un listener por instancia, y la razon no es elegancia.
+  Con un listener por hook, un Escape con dos menus anidados los cerraba los dos, porque todos
+  cuelgan del mismo `document` y `stopPropagation` no detiene a los demas listeners del mismo nodo.
+  Lo descubrio el test, que se escribio antes y fallo. Con la pila gana siempre el ultimo montado,
+  que es el mas interno.
+
+  Queda en la lista de exentos de la frontera de portabilidad, junto a los otros de mecanica web: en
+  un telefono no hay tecla Escape, el gesto equivalente es el boton atras del sistema y se escucha
+  con otra API entera.
 - [HECHO] Corregido `focus:ring-offset-[#0a0a0a]` (WCAG 2.4.11) y el contraste de
   `--ls-text-muted` (WCAG 1.4.3). Ambos se cerraron en el bloque 7; el detalle y las mediciones
   estan en 13.8.a.
