@@ -19,7 +19,7 @@ const FALLBACK: Record<string, string> = {
   '--ls-primary-soft-strong': '#e0d4ff',
   '--ls-text': '#161a24',
   '--ls-text-secondary': '#5b6475',
-  '--ls-text-muted': '#8c95a6',
+  '--ls-text-muted': '#697387',
   '--ls-surface': '#ffffff',
   '--ls-border': '#e6eaf0',
   '--ls-success': '#22c55e',

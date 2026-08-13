@@ -39,7 +39,14 @@
 @layer components {
   /* --- Sistema Base de Botones --- */
   .btn {
-    @apply inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    /* El offset del anillo de foco tiene que ser el color de DETRAS del boton,
+       para que el hueco de 2px se funda con el fondo. Aca habia un #0a0a0a
+       fijo: en modo oscuro pasaba desapercibido, pero en modo claro dibujaba
+       un halo casi negro alrededor de cada boton enfocado, que es justo lo
+       contrario de lo que un anillo de foco debe hacer. Con el token sigue
+       viendose igual en oscuro y deja de romperse en claro. */
+    --tw-ring-offset-color: var(--ls-bg);
     border-radius: var(--ls-radius-md);
     padding: 0.5rem 1rem;
     font-size: 0.875rem;

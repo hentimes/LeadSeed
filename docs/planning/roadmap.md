@@ -1681,10 +1681,62 @@ Estado de los dos monolitos: `ChatRoom.tsx` de 1097 a 1069 lineas,
 El sistema de tokens (`src/design/tokens.css`) existe y esta bien disenado. El problema es la adopcion
 parcial: conviven tres fuentes de verdad de color.
 
-- [PENDIENTE] Eliminar las clases legacy `.btn*` y `.card-*` de `src/index.css` (27 usos).
-- [PENDIENTE] Eliminar `src/components/ui/PageHeader.tsx` en favor de `src/design/PageShell.tsx`. Hoy
-  usan escalas tipograficas distintas (24px vs 17px) y producen jerarquia inconsistente.
-- [PENDIENTE] Erradicar 94 colores literales y reducir 575 arbitrary values de Tailwind.
+### 13.8.a - Lo ejecutado sin aprobacion por superficie (`2026-08-12`)
+
+Son los dos sub-items que 13.1.c autoriza por ser "identico o estrictamente mejor". Los otros tres
+**no** lo eran, y el detalle de por que esta mas abajo, porque el hallazgo cambia el plan.
+
+- [HECHO] Corregido el offset del anillo de foco en `src/index.css`. Habia un `#0a0a0a` fijo en
+  `focus:ring-offset-[...]` de `.btn`. El offset debe ser el color de **detras** del boton, para que
+  el hueco de 2px se funda con el fondo; con un casi-negro fijo, en modo oscuro pasaba desapercibido
+  pero en modo **claro** dibujaba un halo negro alrededor de cada boton enfocado, o sea justo lo
+  contrario de lo que hace un anillo de foco. Ahora usa `var(--ls-bg)`. Verificado en el CSS
+  compilado: `#0a0a0a` ya no aparece en `dist/`.
+
+- [HECHO] Corregido el contraste de `--ls-text-muted`, que **incumplia WCAG 2.2 AA en los dos temas**.
+  Medido, no estimado:
+
+  | | antes | sobre surface | sobre bg | ahora | sobre surface | sobre bg |
+  |---|---|---|---|---|---|---|
+  | claro | `#8c95a6` | 3.02 | 2.86 | `#697387` | 4.77 | 4.53 |
+  | oscuro | `#64748b` | 3.66 | 3.97 | `#73839a` | 4.51 | 4.90 |
+
+  El minimo para texto normal es 4.5. Se movio **solo la luminosidad**, conservando tono y
+  saturacion, para que siga siendo el mismo gris azulado.
+
+  El radio de impacto resulto ser mucho menor de lo que sugiere un token de texto: sus unicos
+  consumidores reales son las etiquetas de los ejes de los graficos, a 10px. Y 10px es texto normal,
+  no grande, asi que el umbral que aplica es el de 4.5 y no el de 3. Actualizado tambien el respaldo
+  en `palette.ts`, que por contrato debe coincidir con `tokens.css`.
+
+### 13.8.b - Los tres sub-items que SI alteran apariencia
+
+Se verificaron uno por uno antes de tocarlos, y ninguno resulto ser el cambio neutro que el plan
+suponia. **Quedan a la espera de aprobacion por superficie (13.1.c).**
+
+- [BLOQUEADO POR APROBACION] Unificar `.btn*` con la primitiva `Button`. El plan lo daba por
+  neutro. No lo es: son dos sistemas con medidas distintas. `.btn` usa padding `8px 16px`, fuente de
+  14px y altura libre; `Button` usa altura fija de 34px, padding de 12px y fuente de 13px. Ademas
+  `.btn-secondary` pinta el texto con `--ls-text` y `Button secondary` con `--ls-text-secondary`, y
+  el hover de `.btn-ghost` es `--ls-surface` mientras que el de `Button ghost` es `--ls-primary-soft`
+  con texto violeta. Migrar los 32 usos cambiaria el tamano, el peso visual y el hover de cada boton
+  afectado. Es un rediseno, no un refactor.
+- [BLOQUEADO POR APROBACION] Eliminar `PageHeader.tsx` en favor de `PageShell.tsx`. El propio
+  roadmap ya lo decia: 24px contra 17px. Cambia el titulo de cada pagina que lo use.
+- [DESCARTADO EN SU FORMA ACTUAL] "Erradicar 94 colores literales". Al inventariarlos aparece que la
+  premisa esta mal: **la mayoria no son estilo, son datos**. Son las paletas de `SMART_LIST_DEFS`,
+  `STATUS_COLORS`, `SOURCE_CHANNEL_COLORS` y `BADGE_COLORS`: valores que se guardan, se serializan o
+  se le pasan a una API. `BADGE_COLORS` en particular **no puede** ser un token, porque lo consume
+  `chrome.action` desde el service worker, donde no hay DOM del que leer una variable CSS. Y de los
+  que si son estilo, casi ninguno tiene "equivalente exacto": sustituir un `#ffffff` por
+  `var(--ls-surface)` se ve igual en claro y **cambia en oscuro**, porque ese token se redefine.
+
+  Los unicos tokens seguros de sustituir son los que **no** cambian entre temas (`--ls-primary` y
+  familia, y los cuatro de estado), y para esos ya existe `palette.ts` como puente.
+
+  Reformulacion propuesta del item: en vez de un barrido de 94 literales, hacer que los ficheros de
+  datos de color consuman `palette.ts` donde el valor coincida con un token invariante, y dejar el
+  resto como esta. Es bastante menos trabajo y bastante mas honesto.
 - [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (709 lineas, ~1034 ocurrencias); `tokens.css` ya resuelve el tema por variables.
 - [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 185 veces en 82
   archivos): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,

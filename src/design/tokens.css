@@ -34,7 +34,14 @@
    * --------------------------------------------------------------- */
   --ls-text: #161a24;
   --ls-text-secondary: #5b6475;
-  --ls-text-muted: #8c95a6;
+  /* Medido el 2026-08-12: el valor anterior (#8c95a6) daba 3.02:1 sobre
+     --ls-surface y 2.86:1 sobre --ls-bg. WCAG 2.2 AA pide 4.5:1 para texto
+     normal, y este token se usa sobre todo en las etiquetas de ejes de los
+     graficos, que son de 10px: texto normal, no grande. Este valor da 4.77 y
+     4.53. Se movio solo la luminosidad, conservando tono y saturacion, para
+     que siga siendo el mismo gris azulado y no cambie el caracter de la
+     paleta. */
+  --ls-text-muted: #697387;
   --ls-text-inverse: #ffffff;
 
   /* ---------------------------------------------------------------
@@ -125,7 +132,9 @@
 .dark {
   --ls-text: #f1f5f9;
   --ls-text-secondary: #94a3b8;
-  --ls-text-muted: #64748b;
+  /* Mismo caso en oscuro: #64748b daba 3.66:1 sobre --ls-surface. Este da
+     4.51 y 4.90, y mantiene la distancia con --ls-text-secondary (6.79). */
+  --ls-text-muted: #73839a;
 
   --ls-bg: #0f1115;
   --ls-surface: #171a21;
