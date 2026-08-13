@@ -3,6 +3,7 @@ import { getGoogleSyncBadgeLabel, getGoogleSyncPendingSummary } from '../../util
 import { Icon } from '../../utils/icons';
 import type { ParticipantFormState, RescheduleFormState } from '../../hooks/useAgenda';
 import { EVENT_TYPE_LABELS, formatAuditEventSummary, formatDateTime, getAppointmentNotice, openMeetLink } from './agendaFormat';
+import { Button } from '../../design';
 
 interface Props {
   appointment: AgendaAppointment;
@@ -91,13 +92,14 @@ export default function AgendaAppointmentCard({
             </span>
           )}
           {appointment.meetLink && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => openMeetLink(appointment.meetLink as string)}
-              className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-sm"
             >
               Abrir Meet
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -117,17 +119,12 @@ export default function AgendaAppointmentCard({
           onChange={(event) => onUpdateRescheduleForm({ time: event.target.value })}
           className="border border-line rounded-sm px-2 py-1 text-[11px] bg-surface-muted"
         />
-        <button type="button" onClick={onReschedule} disabled={isBusy} className="btn btn-ghost btn-sm disabled:opacity-40">
+        <Button type="button" variant="ghost" size="sm" onClick={onReschedule} disabled={isBusy}>
           Reprogramar
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isBusy}
-          className="btn btn-ghost btn-sm text-red-500 hover:text-red-400 disabled:opacity-40"
-        >
+        </Button>
+        <Button type="button" variant="ghost-danger" size="sm" onClick={onCancel} disabled={isBusy}>
           Cancelar
-        </button>
+        </Button>
       </div>
 
       <div className="mt-2">
@@ -178,9 +175,9 @@ export default function AgendaAppointmentCard({
                 placeholder="email@dominio.cl"
                 className="border border-line rounded-sm px-2 py-1 text-[11px] bg-surface-muted"
               />
-              <button type="button" onClick={onAddParticipant} disabled={participantActionId === appointment.id} className="btn btn-ghost btn-sm disabled:opacity-40">
+              <Button type="button" variant="ghost" size="sm" onClick={onAddParticipant} disabled={participantActionId === appointment.id}>
                 Agregar
-              </button>
+              </Button>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'ghost-danger';
 type Size = 'sm' | 'md';
 
 const VARIANTS: Record<Variant, string> = {
@@ -8,6 +8,10 @@ const VARIANTS: Record<Variant, string> = {
   secondary: 'bg-surface text-ink-secondary border border-line hover:bg-surface-hover hover:text-ink shadow-sm',
   ghost: 'bg-transparent text-ink-secondary hover:bg-primary-soft hover:text-primary',
   danger: 'bg-state-danger-soft text-state-danger border border-state-danger/25 hover:bg-state-danger hover:text-ink-inverse',
+  // Accion destructiva sin peso visual: para tarjetas densas, donde un boton
+  // relleno competiria con el contenido. Agregada el 2026-08-13 al unificar
+  // Agenda, que resolvia esto con `btn-ghost text-red-500` suelto.
+  'ghost-danger': 'bg-transparent text-state-danger hover:bg-state-danger-soft',
 };
 
 const SIZES: Record<Size, string> = {
@@ -45,20 +49,39 @@ export function Button({
   );
 }
 
-/** Boton cuadrado de solo icono, para barras de acciones. */
+/**
+ * Boton de solo icono, para barras de acciones.
+ *
+ * `label` es obligatorio y alimenta a la vez el `title` y el `aria-label`: un
+ * boton sin texto no tiene nombre accesible, y con el `title` solo no basta.
+ *
+ * `shape="circle"` existe para los que se emparejan con un campo redondeado,
+ * como el de enviar del chat. Antes eso se hacia con un `rounded-full` suelto
+ * encima del `rounded-md` de la primitiva, que solo funcionaba por el orden en
+ * que Tailwind emite las utilidades: si ese orden cambiara, el boton volveria a
+ * ser cuadrado sin que nadie tocara nada.
+ */
 export function IconButton({
   icon,
   label,
+  variant = 'ghost',
   size = 'md',
+  shape = 'square',
   className = '',
   ...rest
-}: Omit<Props, 'children' | 'icon'> & { icon: ReactNode; label: string }) {
+}: Omit<Props, 'children' | 'icon'> & {
+  icon: ReactNode;
+  label: string;
+  shape?: 'square' | 'circle';
+}) {
   return (
     <button
       {...rest}
       title={label}
       aria-label={label}
-      className={`inline-flex items-center justify-center rounded-md text-ink-secondary transition-colors hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`inline-flex items-center justify-center transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+        shape === 'circle' ? 'rounded-full' : 'rounded-md'
+      } ${VARIANTS[variant]} ${
         size === 'sm' ? 'h-control-sm w-control-sm' : 'h-control w-control'
       } ${className}`}
     >

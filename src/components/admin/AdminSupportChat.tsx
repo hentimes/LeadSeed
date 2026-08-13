@@ -16,6 +16,7 @@ import {
   type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { Button, IconButton, Input } from '../../design';
 
 function formatMessageDate(dateStr: string) {
   if (!dateStr) return '';
@@ -213,9 +214,9 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
             <h2 className="font-bold text-lg text-slate-800 dark:text-slate-200">Chat Maestro</h2>
             <p className="text-xs text-slate-500">En vivo con {selectedUser.full_name || selectedUser.email}</p>
           </div>
-          <button onClick={closeUserChat} className="btn bg-red-50 text-red-600 hover:bg-red-100 border-red-200">
+          <Button variant="danger" onClick={closeUserChat}>
             Cerrar Chat al Usuario
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#e5ddd5]">
@@ -267,16 +268,25 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
         </div>
 
         <form onSubmit={handleSend} className="p-4 bg-[var(--color-surface)] border-t border-line flex gap-2">
-          <input
+          {/* El campo declaraba `input-standard`, una clase que no existe en
+              ningun CSS del proyecto: estaba sin borde, sin alto y sin padding.
+              Pasa a la primitiva, que ademas mide 34px igual que el boton. */}
+          <Input
             type="text"
+            fullWidth={false}
             value={newMessage}
             onChange={handleTyping}
             placeholder="Enviar un mensaje directo..."
-            className="flex-1 input-standard rounded-full"
+            className="flex-1 rounded-full"
           />
-          <button type="submit" disabled={!newMessage.trim()} className="btn btn-primary rounded-full w-10 h-10 p-0 flex justify-center items-center">
-            <Icon.Send />
-          </button>
+          <IconButton
+            type="submit"
+            variant="primary"
+            shape="circle"
+            label="Enviar mensaje"
+            icon={<Icon.Send />}
+            disabled={!newMessage.trim()}
+          />
         </form>
       </div>
     </div>

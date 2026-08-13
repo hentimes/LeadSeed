@@ -1,5 +1,6 @@
 import type { AgendaAppointment } from '../../types';
 import { formatDateTime } from './agendaFormat';
+import { Button } from '../../design';
 
 interface Props {
   appointment: AgendaAppointment;
@@ -24,20 +25,22 @@ export default function AgendaCancelledRow({ appointment, isFocused, setRef, onO
           {appointment.leadName}
         </button>
         <div className="flex items-center gap-1">
-          <button
+          <Button
             type="button"
             onClick={() => onView(appointment.id)}
-            className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-sm"
+            variant="ghost"
+            size="sm"
           >
             Ver
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => onOpenLead(appointment.leadId)}
-            className="btn btn-ghost text-[10px] px-1.5 py-0.5 rounded-sm"
+            variant="ghost"
+            size="sm"
           >
             Agendar
-          </button>
+          </Button>
         </div>
       </div>
       <p className="text-[11px] text-slate-400">Creada: {formatDateTime(appointment.createdAt)}</p>

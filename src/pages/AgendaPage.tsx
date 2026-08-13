@@ -4,6 +4,7 @@ import { Icon } from '../utils/icons';
 import { useAgenda } from '../hooks/useAgenda';
 import AgendaAppointmentCard from '../components/agenda/AgendaAppointmentCard';
 import AgendaCancelledRow from '../components/agenda/AgendaCancelledRow';
+import { Button } from '../design';
 
 interface AgendaPageProps {
   onNavigate: (page: Page) => void;
@@ -25,9 +26,9 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-end mb-4">
-        <button type="button" onClick={() => onNavigate('settings')} className="btn btn-ghost btn-sm">
+        <Button type="button" variant="ghost" size="sm" onClick={() => onNavigate('settings')}>
           Configurar
-        </button>
+        </Button>
       </div>
 
       {(agenda.message || agenda.error) && (

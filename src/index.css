@@ -37,58 +37,11 @@
 }
 
 @layer components {
-  /* --- Sistema Base de Botones --- */
-  .btn {
-    @apply inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
-    /* El offset del anillo de foco tiene que ser el color de DETRAS del boton,
-       para que el hueco de 2px se funda con el fondo. Aca habia un #0a0a0a
-       fijo: en modo oscuro pasaba desapercibido, pero en modo claro dibujaba
-       un halo casi negro alrededor de cada boton enfocado, que es justo lo
-       contrario de lo que un anillo de foco debe hacer. Con el token sigue
-       viendose igual en oscuro y deja de romperse en claro. */
-    --tw-ring-offset-color: var(--ls-bg);
-    border-radius: var(--ls-radius-md);
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    transition-timing-function: var(--ls-easing);
-  }
-
-  .btn-primary {
-    background-color: var(--ls-primary);
-    color: #ffffff;
-    box-shadow: var(--ls-shadow-sm);
-  }
-
-  .btn-primary:hover {
-    background-color: var(--ls-primary-hover);
-    box-shadow: var(--ls-shadow-card);
-  }
-
-  .btn-secondary {
-    background-color: var(--ls-surface);
-    color: var(--ls-text);
-    border: 1px solid var(--ls-border);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--ls-surface-hover);
-    border-color: var(--ls-border-strong);
-  }
-
-  .btn-ghost {
-    background-color: transparent;
-    color: var(--ls-text-secondary);
-  }
-
-  .btn-ghost:hover {
-    background-color: var(--ls-surface);
-    color: var(--ls-text);
-  }
-
-  .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-  }
+  /* Las clases .btn* vivieron aca hasta el 2026-08-13. Se retiraron al pasar
+     los 30 botones que las usaban a la primitiva `design/Button.tsx`: dos
+     sistemas de botones en paralelo era justo la duplicacion que el bloque 7
+     venia a cerrar. Si hace falta una variante nueva, se agrega a la
+     primitiva, no se reabre este bloque. */
 
   /* --- Sistema Base de Tarjetas (Dashboard Cards) --- */
   .card-standard {
