@@ -11,6 +11,7 @@ import { cancelMyAppointment, getDefaultAgendaRange, listMyAppointments } from '
 import type { LeadPageQuery, LeadSortField } from '../repositories/leadsRepository';
 import { isActiveAppointment } from '../utils/appointmentStatus';
 import { getPlatform } from '../platform/registry';
+import { useLeadsSelection } from './useLeadsSelection';
 
 const PAGE_SIZE = 50;
 
@@ -32,12 +33,12 @@ export function useLeadsPageController() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [lists, setLists] = useState<LeadList[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const selection = useLeadsSelection(leads);
   const [filteredCount, setFilteredCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [leadIdentities, setLeadIdentities] = useState<Array<{ id: string; rut: string; phone: string }>>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
+
   const [editing, setEditing] = useState<Lead | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -289,7 +290,7 @@ export function useLeadsPageController() {
 
   useEffect(() => {
     setCurrentPage(1);
-    setSelectedIds(new Set());
+    selection.clear();
   }, [filterCaptureLinkId, filterDate, filterListId, filterMode, filterOrigin, filterSourceChannel, filterStatus, search, showTrash, sort.field, sort.dir]);
 
   const onSort = useCallback((field: LeadSortField) => {
@@ -299,38 +300,8 @@ export function useLeadsPageController() {
     }));
   }, []);
 
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
 
-  const selectAll = useCallback(() => {
-    setSelectedIds((prev) => {
-      if (prev.size === leads.length) return new Set();
-      return new Set(leads.map((lead) => lead.id!));
-    });
-  }, [leads]);
 
-  const rangeSelect = useCallback(
-    (from: number, to: number, select: boolean) => {
-      const start = Math.min(from, to);
-      const end = Math.max(from, to);
-      const idsInRange = leads.slice(start, end + 1).map((lead) => lead.id!);
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        for (const id of idsInRange) {
-          if (select) next.add(id);
-          else next.delete(id);
-        }
-        return next;
-      });
-    },
-    [leads],
-  );
 
   const handleSave = async (lead: Lead) => {
     const dupRut = lead.rut && existingRuts.has(lead.rut);
@@ -364,8 +335,8 @@ export function useLeadsPageController() {
 
   const handleExport = async () => {
     let data: Lead[];
-    if (selectedIds.size > 0) {
-      data = leads.filter((lead) => selectedIds.has(lead.id!));
+    if (selection.selectedIds.size > 0) {
+      data = leads.filter((lead) => selection.selectedIds.has(lead.id!));
     } else {
       data = showTrash ? await getDeleted() : await getAll();
     }
@@ -398,11 +369,7 @@ export function useLeadsPageController() {
         setTimeout(() => setToast((prev) => (prev?.id === id ? null : prev)), 6000);
       }
     }
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+    selection.remove(id);
     await loadLeads();
   };
 
@@ -414,13 +381,13 @@ export function useLeadsPageController() {
 
   const handleRestore = async (id: string) => {
     await restore(id);
-    setSelectedIds(new Set());
+    selection.clear();
     await loadLeads();
   };
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    const selectedLeads = leads.filter((lead) => lead.id && selectedIds.has(lead.id));
+    if (selection.selectedIds.size === 0) return;
+    const selectedLeads = leads.filter((lead) => lead.id && selection.selectedIds.has(lead.id));
     const appointmentEntries = await Promise.all(
       selectedLeads.map(async (lead) => ({ lead, appointmentId: await resolveActiveAppointmentId(lead) })),
     );
@@ -429,47 +396,47 @@ export function useLeadsPageController() {
     if (showTrash) {
       if (leadsWithAppointments.length > 0) {
         const aceptado = await getPlatform().dialogs.confirm(
-          `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar definitivamente esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
+          `${leadsWithAppointments.length} de los ${selection.selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar definitivamente esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
         );
         if (!aceptado) return;
-      } else if (!(await getPlatform().dialogs.confirm(`Eliminar definitivamente ${selectedIds.size} leads?`))) {
+      } else if (!(await getPlatform().dialogs.confirm(`Eliminar definitivamente ${selection.selectedIds.size} leads?`))) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
-      for (const id of selectedIds) await permanentDelete(id);
+      for (const id of selection.selectedIds) await permanentDelete(id);
     } else {
       if (leadsWithAppointments.length > 0) {
         const aceptado = await getPlatform().dialogs.confirm(
-          `${leadsWithAppointments.length} de los ${selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
+          `${leadsWithAppointments.length} de los ${selection.selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
         );
         if (!aceptado) return;
-      } else if (!(await getPlatform().dialogs.confirm(`Mover ${selectedIds.size} leads a la papelera?`))) {
+      } else if (!(await getPlatform().dialogs.confirm(`Mover ${selection.selectedIds.size} leads a la papelera?`))) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
-      for (const id of selectedIds) await remove(id);
+      for (const id of selection.selectedIds) await remove(id);
     }
-    setSelectedIds(new Set());
+    selection.clear();
     await loadLeads();
   };
 
   const handleBulkRestore = async () => {
-    if (selectedIds.size === 0) return;
-    for (const id of selectedIds) await restore(id);
-    setSelectedIds(new Set());
+    if (selection.selectedIds.size === 0) return;
+    for (const id of selection.selectedIds) await restore(id);
+    selection.clear();
     await loadLeads();
   };
 
   const handleBulkStatusChange = async (status: LeadStatus) => {
-    if (selectedIds.size === 0) return;
-    for (const id of selectedIds) await save({ id, status } as Lead);
+    if (selection.selectedIds.size === 0) return;
+    for (const id of selection.selectedIds) await save({ id, status } as Lead);
     await loadLeads();
   };
 
   const handleAddToList = async (listaId: number) => {
-    for (const id of selectedIds) await addToList(id, listaId);
+    for (const id of selection.selectedIds) await addToList(id, listaId);
     await loadLeads();
-    setSelectedIds(new Set());
+    selection.clear();
   };
 
   const handleImport = async (rows: ParsedRow[]) => {
@@ -507,10 +474,10 @@ export function useLeadsPageController() {
     currentPage,
     setCurrentPage,
     isLoadingPage,
-    selectedIds,
-    setSelectedIds,
-    lastClickedIndex,
-    setLastClickedIndex,
+    selectedIds: selection.selectedIds,
+    clearSelection: selection.clear,
+    lastClickedIndex: selection.lastClickedIndex,
+    setLastClickedIndex: selection.setLastClickedIndex,
     editing,
     setEditing,
     showForm,
@@ -550,9 +517,9 @@ export function useLeadsPageController() {
     loadLeads,
 
     onSort,
-    toggleSelect,
-    selectAll,
-    rangeSelect,
+    toggleSelect: selection.toggle,
+    selectAll: selection.toggleAll,
+    rangeSelect: selection.selectRange,
     handleSave,
     handleTogglePin,
     handleExport,

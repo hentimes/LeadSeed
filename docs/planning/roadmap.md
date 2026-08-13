@@ -1584,6 +1584,43 @@ propiedades), `leadsRepository.ts` (535), `useLeadDetail.ts` (493), `ListsPage.t
 - [PENDIENTE] Aplicar el patron que ya funciona en el repo: `LeadsPage.tsx` (213 lineas) mas su
   controller dedicado.
 
+### Capitulo 13.7.b - Extracciones ejecutadas del bloque 6
+
+Metodo adoptado el `2026-08-12`, tras introducirme tres bugs con transformaciones automaticas
+durante el bloque 2: **extraer a mano, una unidad por vez, escribiendo antes el test de la pieza
+extraida**. Nada de scripts sobre estructuras donde la posicion importa.
+
+Prerrequisito resuelto primero: React Testing Library y `happy-dom`, sin los cuales no se puede
+verificar que una extraccion de hook no cambie comportamiento. Se corrigio de paso el glob de tests
+de ESLint, que solo cubria `.test.ts` y habria aplicado la frontera de portabilidad al primer test
+de componente.
+
+- [HECHO] `usePendingAttachment` fuera de `ChatRoom`. 14 tests. Unidad coherente: tres estados que
+  solo tienen sentido juntos mas la gestion del `object URL`, que hay que revocar al limpiar, al
+  reemplazar y al desmontar. Repartir esa responsabilidad entre hook y consumidor es como se filtra
+  memoria.
+- [HECHO] `useLeadsSelection` fuera de `useLeadsPageController`. 16 tests. Incluye
+  `lastClickedIndex`, que solo existe como ancla de la seleccion por rango: separarlo obligaria al
+  llamador a sincronizar dos estados que son uno.
+
+  El hook expone acciones con nombre en vez del `setSelectedIds` crudo, y eso destapo algo: el
+  controller limpiaba la seleccion desde seis sitios con `setSelectedIds(new Set())` repetido, y
+  `LeadsPage` hacia lo mismo desde fuera dos veces mas. Ahora hay una sola `clear()`.
+
+- [HECHO] `src/platform/dialogs.contract.test.ts`, que cubre el hueco marcado como critico por la
+  auditoria: los diez `confirm`/`alert` convertidos a asincronos no tenian red. Un test demuestra
+  explicitamente el fallo que se evita: sin `await`, la negacion de una Promise nunca corta y la
+  accion destructiva se ejecutaria aunque el usuario cancele.
+
+Estado de los dos monolitos: `ChatRoom.tsx` de 1097 a 1069 lineas,
+`useLeadsPageController.ts` de 572 a 538.
+
+- [PENDIENTE] El resto de las extracciones de `ChatRoom` son de JSX (composer, lista de mensajes,
+  panel de moderacion, seis modales) y **no se pueden verificar sin un test de render del componente
+  completo**, que exige simular unos quince hooks. Extraerlas a ciegas bajaria el numero de lineas
+  rapido y es exactamente lo que la restriccion 13.1.c prohibe. Decision pendiente del usuario:
+  seguir extrayendo hooks con test propio, o invertir primero en ese test de render.
+
 ### Capitulo 13.8 - Consolidacion del sistema visual (bloque 7)
 
 El sistema de tokens (`src/design/tokens.css`) existe y esta bien disenado. El problema es la adopcion

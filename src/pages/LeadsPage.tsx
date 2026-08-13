@@ -75,7 +75,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
             onDelete={p.handleBulkDelete}
             onStatusChange={p.handleBulkStatusChange}
             onAddToList={p.handleAddToList}
-            onClearSelection={() => p.setSelectedIds(new Set())}
+            onClearSelection={p.clearSelection}
           />
         }
         leftActions={
@@ -105,7 +105,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
             <button
               onClick={() => {
                 p.setShowTrash(!p.showTrash);
-                p.setSelectedIds(new Set());
+                p.clearSelection();
               }}
               className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-white text-ink-secondary border-line hover:bg-gray-50'}`}
               title={p.showTrash ? 'Volver a leads' : 'Papelera'}
