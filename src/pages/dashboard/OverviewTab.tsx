@@ -7,6 +7,7 @@ import AlertCard from '../../components/dashboard/AlertCard';
 import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
 import { Card } from '../../design';
+import { CardTitle } from '../../design';
 
 interface OverviewTabProps {
   snapshot: DashboardSnapshot;
@@ -47,7 +48,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       {/* Progreso de metas */}
       <Card>
         <div className="card-header">
-          <h2 className="card-title">Progreso de metas (hoy)</h2>
+          <CardTitle as="h2">Progreso de metas (hoy)</CardTitle>
           <div className="text-[11px] font-medium text-ink-secondary bg-surface-muted px-3 py-1 rounded-[6px]">
             {compareLabel}
           </div>
@@ -101,7 +102,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       {/* Rendimiento hoy */}
       <Card className="mt-1">
         <div className="card-header">
-          <h2 className="card-title">Rendimiento hoy</h2>
+          <CardTitle as="h2">Rendimiento hoy</CardTitle>
         </div>
         
         <div className="flex justify-between items-center divide-x divide-line">

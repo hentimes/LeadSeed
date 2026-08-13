@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CardTitle } from '../../design';
 
 /**
  * Paso numerado del flujo de envio.
@@ -32,7 +33,7 @@ export function SendStep({
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-soft text-micro font-bold text-primary">
             {step}
           </span>
-          <h2 className="card-title truncate">{title}</h2>
+          <CardTitle as="h2" className="truncate">{title}</CardTitle>
         </div>
         {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
       </div>

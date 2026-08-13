@@ -5,6 +5,7 @@ import MonthlyChart from '../../components/dashboard/MonthlyChart';
 import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
 import { Card } from '../../design';
+import { CardTitle } from '../../design';
 
 interface PipelineTabProps {
   snapshot: DashboardSnapshot;
@@ -108,7 +109,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       {/* Embudo de ventas */}
       <Card>
         <div className="card-header">
-          <h2 className="card-title">Embudo de ventas</h2>
+          <CardTitle as="h2">Embudo de ventas</CardTitle>
           
           <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
             <option>Hoy</option>
@@ -162,7 +163,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
       {/* Adquisición mensual */}
       <Card>
         <div className="card-header">
-          <h2 className="card-title">Adquisición mensual</h2>
+          <CardTitle as="h2">Adquisición mensual</CardTitle>
           
           <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
             <option>Últimos 6 meses</option>
