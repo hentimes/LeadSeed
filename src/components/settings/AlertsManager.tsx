@@ -3,7 +3,7 @@ import {
   getAlertPreferences,
   setAlertTypePreference,
   setAppointmentLeadMinutes,
-} from '../../services/alertNotifier';
+} from '../../platform/alertNotifier';
 import {
   ALERT_TYPES,
   ALERT_TYPE_LABELS,

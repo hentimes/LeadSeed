@@ -1,5 +1,5 @@
-import { getDefaultAgendaRange, listMyAppointments } from './agendaService';
-import { getCurrentSession } from './authService';
+import { getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
+import { getCurrentSession } from '../services/authService';
 import { dispatchAlert, getAlertPreferences } from './alertNotifier';
 import { incrementBadgeCount } from './extensionBadgeTheme';
 import { isActiveAppointment } from '../utils/appointmentStatus';

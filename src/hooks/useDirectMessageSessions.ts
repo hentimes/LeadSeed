@@ -2,14 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchPublicProfile } from '../repositories/publicProfileRepository';
 import { subscribeToAnyIncomingDirectMessage, type DirectMessage } from '../repositories/directMessagesRepository';
 import { usePresence } from './usePresence';
-
-export interface DmSession {
-  userId: string;
-  label: string;
-  avatarUrl?: string;
-  minimized: boolean;
-  unreadCount: number;
-}
+import type { DmSession } from '../types';
 
 /**
  * Sesiones de mensaje directo visibles en la barra superior del chat.

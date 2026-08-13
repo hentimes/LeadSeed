@@ -6,14 +6,14 @@ import {
   restartLeadAlertsRuntime,
   restoreLeadAlertBadge,
   startLeadAlertsRuntime,
-} from './services/backgroundLeadAlertsService';
+} from './platform/backgroundLeadAlerts';
 import {
   restartMessageAlertsRuntime,
   startMessageAlertsRuntime,
 } from './services/backgroundMessageAlertsService';
-import { checkUpcomingAppointments } from './services/backgroundAgendaAlertsService';
-import { dispatchAlert } from './services/alertNotifier';
-import { clearBadge, setBadgeCount } from './services/extensionBadgeTheme';
+import { checkUpcomingAppointments } from './platform/backgroundAgendaAlerts';
+import { dispatchAlert } from './platform/alertNotifier';
+import { clearBadge, setBadgeCount } from './platform/extensionBadgeTheme';
 
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
@@ -21,7 +21,7 @@ chrome.sidePanel
 
 /**
  * Ciclo de tareas. El badge de leads NO se toca aca: lo maneja
- * backgroundLeadAlertsService por eventos, no por sondeo.
+ * backgroundLeadAlerts por eventos, no por sondeo.
  */
 async function updateTaskAlerts() {
   try {

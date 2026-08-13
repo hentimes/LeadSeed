@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { usePresence, type OnlineUser } from './usePresence';
+import { usePresence } from './usePresence';
+import type { OnlineUser } from '../types';
 
 export interface OnlineDirectory {
   users: OnlineUser[];

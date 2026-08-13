@@ -8,8 +8,8 @@ import {
   subscribeToIncomingSupportMessages,
 } from '../repositories/messageAlertsRepository';
 import { getCurrentSession } from './authService';
-import { dispatchAlert } from './alertNotifier';
-import { incrementBadgeCount } from './extensionBadgeTheme';
+import { dispatchAlert } from '../platform/alertNotifier';
+import { incrementBadgeCount } from '../platform/extensionBadgeTheme';
 import { toPlainText } from '../utils/mentionParser';
 
 function truncate(text: string, max = 90): string {

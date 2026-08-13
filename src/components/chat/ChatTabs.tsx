@@ -1,5 +1,5 @@
 import DmAvatarStrip from './DmAvatarStrip';
-import type { DmSession } from '../../hooks/useDirectMessageSessions';
+import type { DmSession } from '../../types';
 
 export type ChatTab = 'messages' | 'saved' | 'reports';
 

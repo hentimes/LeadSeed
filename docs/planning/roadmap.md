@@ -1468,10 +1468,24 @@ Los `chrome.*` que sobreviven estan en `src/platform/`, en los dos puntos de ent
 (`background.ts`, `offscreen.ts`), en `App.tsx` (la shell) y en los cinco servicios de plataforma
 declarados como exentos.
 
-- [PENDIENTE] Mover a `src/platform/` los cinco servicios que siguen en `services/`
-  (`alertNotifier`, `offscreenAudio`, `extensionBadgeTheme` y los dos de background) mas
-  `lib/chromeStorageAdapter.ts`. Es reubicacion, no refactor: su codigo ya es correcto, pero
-  conviviendo en `services/` con dominio portable confunden sobre que se porta y que se reescribe.
+- [HECHO] (`2026-08-12`) Movidos a `src/platform/` los cinco servicios que seguian en `services/`
+  mas `lib/chromeStorageAdapter.ts`. Reubicacion pura: ni una linea de logica cambio, solo rutas de
+  import. Los dos de background pierden el sufijo `Service` en el camino (`backgroundLeadAlerts`,
+  `backgroundAgendaAlerts`), porque en `platform/` ese sufijo nombraba una capa a la que ya no
+  pertenecen.
+
+  El criterio del corte, que conviene dejar escrito porque no es obvio: **`platform/` es lo que hay
+  que reescribir para otra plataforma, no lo que se ejecuta en segundo plano.** Por eso
+  `backgroundMessageAlertsService` **se queda en `services/`** aunque sea hermano de los otros dos y
+  arranque desde el mismo service worker: se verifico que no toca ni una API de Chrome. Es
+  suscripciones de Realtime mas una llamada a `dispatchAlert`, y eso se porta a Expo casi tal cual.
+  Los otros dos si usan `chrome.storage` para su estado de deduplicacion.
+
+  Efecto en `eslint.config.js`: la lista de exentos de la frontera pierde seis entradas y gana una,
+  el glob `src/platform/**`. Queda anotado ahi mismo que eso es un comodin y que la garantia deja de
+  ser el linter: si esa carpeta crece hasta no poder revisarse de un vistazo, hay que volver a
+  enumerar archivo por archivo. Verificado con archivos sonda que la frontera sigue disparando en
+  `services/` y en `hooks/`.
 - [HECHO] Decidido **no construir** cuatro de los nueve puertos que listaba la auditoria:
   `Notifier`, `BadgeCounter`, `BackgroundScheduler` y el audio. Envolverlos no quitaria acoplamiento,
   solo agregaria indireccion: no se portan a movil, se reescriben con el equivalente nativo. Se marca
@@ -1507,7 +1521,19 @@ declarados como exentos.
 - [PENDIENTE] Evaluar TanStack Query como capa unica de estado servidor. Hoy no hay cache: cada
   guardado cuesta del orden de 8 consultas por doble disparo entre refetch manual y evento realtime de
   la propia escritura, y no hay guard de "ultima respuesta gana" en la bandeja.
-- [PENDIENTE] Mover a `src/types/` los tipos de dominio que hoy viven en hooks y utils.
+- [PARCIAL] Movidos a `src/types/` los tipos de dominio que vivian en hooks: `OnlineUser` y
+  `DmSession`, ambos a `types/chat.ts`. `DmSession` era el caso claro, lo importaban tres
+  componentes desde un hook.
+
+  El item se cierra mas chico de lo que prometia, y la razon es que al revisarlo uno por uno la
+  mayoria de candidatos **no eran tipos de dominio**. De los 22 tipos exportados desde `hooks/` y
+  `utils/`, el resto se divide en tres grupos que estan bien donde estan: contratos de retorno de un
+  hook (`ChatScroll`, `LeadsSelection`, `UseAgendaResult`), estado de formulario
+  (`ParticipantFormState`, `RescheduleFormState`, `ChannelDraft`) y forma de salida de una funcion
+  (`ParsedRow`, `MentionQuery`, `CompressedImage`). Cuatro de ellos, ademas, tienen un unico
+  consumidor que es su propio archivo: moverlos separaria una funcion de su firma a cambio de nada.
+  Se deja como PARCIAL y no como HECHO para que quede claro que el resto es una decision tomada, no
+  trabajo olvidado.
 
 Frontera de portabilidad estimada: reutilizable tal cual `src/types/**`, `src/repositories/**`, la
 mayoria de `src/services/**` y `src/utils/**`.

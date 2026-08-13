@@ -2,7 +2,7 @@
  * Predicado unico sobre el estado de una cita.
  *
  * Existia el mismo Set literal declarado tres veces (`useLeadDetail`,
- * `useLeadsPageController` y `backgroundAgendaAlertsService`) y la comparacion
+ * `useLeadsPageController` y `platform/backgroundAgendaAlerts`) y la comparacion
  * no era consistente entre ellos: dos normalizaban a minusculas y un tercero
  * comparaba el valor crudo que devuelve el backend. Esa rama fallaba en
  * silencio si el estado llegaba capitalizado, y el sintoma no era un error sino

@@ -299,18 +299,22 @@ export default tseslint.config(
   // vistazo que NO esta creciendo. Si alguien agrega una entrada aqui, es una
   // decision visible en el diff, no una linea perdida dentro de un archivo.
   //
-  // Deuda declarada (roadmap 13.6): estos modulos deberian terminar dentro de
-  // `src/platform/`, que es donde vive lo especifico de plataforma. Mientras
-  // sigan en `services/` y `utils/` conviven con dominio portable, que es
-  // justo la mezcla que este bloque intenta deshacer.
+  // Desde el `2026-08-12` la mayor parte de la lista es una sola entrada,
+  // `src/platform/**`, porque los seis modulos que estaban sueltos en
+  // `services/` y `lib/` ya viven ahi. Conviene ser honesto sobre lo que eso
+  // implica: es un comodin, y quien meta dominio dentro de `src/platform/` se
+  // salta la frontera sin que nadie lo note en el diff de este archivo. La
+  // garantia deja de ser el linter y pasa a ser que esa carpeta es pequeña y
+  // se revisa entera. Si crece hasta dejar de ser revisable de un vistazo,
+  // toca volver a enumerar archivo por archivo.
   {
     files: [
       // Puntos de entrada de la extension. No portables por definicion.
       'src/background.ts',
       'src/offscreen.ts',
-      'src/lib/chromeStorageAdapter.ts',
-      // Flujo OAuth por pestaña, especifico de chrome.identity.
-      'src/platform/oauthTab.ts',
+      // Todo `src/platform/` es plataforma por definicion: es la carpeta cuyo
+      // contenido se reescribe al portar, no se adapta.
+      'src/platform/**',
       // Mecanica de interfaz web, no dominio. No se portan a movil: se
       // reemplazan por el equivalente nativo o dejan de tener sentido.
       // Un atajo de teclado no existe en un telefono, y medir el viewport para
@@ -327,14 +331,6 @@ export default tseslint.config(
       // nativa (expo-image-manipulator), no con este algoritmo: es sustitucion,
       // no adaptacion.
       'src/utils/imageCompression.ts',
-      // Notificaciones, badge y audio: superficie nativa de Chrome.
-      'src/services/alertNotifier.ts',
-      'src/services/offscreenAudio.ts',
-      'src/services/extensionBadgeTheme.ts',
-      // Servicios que corren dentro del service worker MV3.
-      'src/services/backgroundLeadAlertsService.ts',
-      'src/services/backgroundAgendaAlertsService.ts',
-
     ],
     rules: {
       'no-restricted-globals': 'off',

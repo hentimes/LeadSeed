@@ -3,7 +3,7 @@ import {
   fetchLeadAlertEventsSince,
   subscribeToLeadAlertEvents,
 } from '../repositories/leadAlertsRepository';
-import { getCurrentSession } from './authService';
+import { getCurrentSession } from '../services/authService';
 import { restoreBadge, setBadgeCount } from './extensionBadgeTheme';
 import { dispatchAlert } from './alertNotifier';
 import type { LeadAlertEvent } from '../types';

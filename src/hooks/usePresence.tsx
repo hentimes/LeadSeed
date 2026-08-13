@@ -1,14 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { connectPresence } from '../services/presenceService';
-
-export interface OnlineUser {
-  id: string;
-  email: string;
-  full_name?: string;
-  avatar_url?: string;
-  online_at: string;
-}
+import type { OnlineUser } from '../types';
 
 interface PresenceContextType {
   onlineUsers: Record<string, OnlineUser>;

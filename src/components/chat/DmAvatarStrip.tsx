@@ -1,4 +1,4 @@
-import type { DmSession } from '../../hooks/useDirectMessageSessions';
+import type { DmSession } from '../../types';
 
 interface DmAvatarStripProps {
   sessions: DmSession[];
