@@ -1390,11 +1390,20 @@ fuente y de deploy, no de bundle.
 
 - [PENDIENTE] Crear `public-forms/` como carpeta hermana con `package.json`, build, CI y deploy
   propios.
-- [PENDIENTE] Mover `forms/{pb,form,retiro,retiro-v2}` y `frontend/lead-capture/` desde `landing-gerow`.
+- [PENDIENTE] Mover `pb/`, `form/`, `retiro-tecnico-extranjero/` y `frontend/lead-capture/` desde
+  `landing-gerow`, **junto con sus Pages Functions** `functions/{pb,form,retiro-tecnico-extranjero}/[[slug]].js`.
+  Corregido el `2026-08-12`: la carpeta `forms/{pb,form,retiro,retiro-v2}` que este item citaba **no existe en
+  `origin/master`**, que es la rama desde la que se despliega produccion. Solo vive en la rama de trabajo
+  `fix/agenda-url-bug`, sin mergear, aunque `AI_SYNC.md` diera la reorganizacion por hecha el `2026-08-03`.
+  Tomar `forms/` como fuente habria portado una version que produccion no usa.
+  Las Functions no son accesorias: `/pb/<code>` no corresponde a ningun fichero, lo resuelve
+  `functions/pb/[[slug]].js`. Migrar los estaticos sin ellas deja todos los short links en 404.
 - [PENDIENTE] Extraer un unico `shared/form-api-client.js`. Hoy hay cuatro implementaciones
   independientes del normalizador de rutas mas `retiro-v2` que hardcodea rutas legacy.
-- [PENDIENTE] Borrar las copias muertas versionadas (`pb/app.js`, `form/app.js`,
-  `.codex-tmp/deploy-clean/`).
+- [PENDIENTE] Borrar `.codex-tmp/deploy-clean/`, que si es una copia muerta versionada.
+  Corregido el `2026-08-12`: este item listaba tambien `pb/app.js` y `form/app.js` como muertos, y es al
+  reves, **son los que sirven produccion hoy**. El error venia de asumir que `forms/` era la fuente
+  canonica. Borrarlos habria tumbado los dos formularios publicos.
 - [PENDIENTE] Garantizar el aislamiento: `public-forms` excluido de `tsconfig.json` y de la config de
   Vite, sin imports cruzados con `src/`, CI filtrado por `paths`.
 - [PENDIENTE] Arreglar `retiro-v2` antes de desplegarlo: canal invalido, sin idempotencia, y redirige a
@@ -1687,9 +1696,9 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 
 ### Capitulo 13.11 - Correccion de la documentacion normativa (bloque 9)
 
-- [PENDIENTE ESTRUCTURAL] Reescribir `docs/integrations/landing-gerow-cloudflare-context.md`. El protocolo seccion 7 lo
-  declara de lectura obligatoria antes de tocar la integracion, y esta desactualizado en nueve puntos
-  verificables. Un documento obligatorio y falso es peor que no tenerlo.
+- [HECHO] Reescrito `docs/integrations/landing-gerow-cloudflare-context.md` (version 2.0, `2026-08-12`).
+  Los nueve puntos falsos estan corregidos y tabulados en su seccion 2, contra `origin/master` y contra
+  los servicios desplegados. De paso salio el hallazgo que corrige los dos primeros items de 13.5.
 - [PENDIENTE] Actualizar `planespro-form-integration-contract.md`: declara dos canales publicos cuando
   existen cuatro (`general`, `pb`, `retiro`, `form`), y no documenta el protocolo de dos fases
   (`submission_id`, `update_token`, `action_only`) vigente desde el 3 de agosto.

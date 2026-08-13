@@ -25,7 +25,7 @@ Solo lo normativo y lo que las herramientas esperan encontrar ahi:
 | Archivo | Estado |
 |---|---|
 | `planespro-form-integration-contract.md` | **Incompleto.** Declara dos canales publicos cuando existen cuatro (`general`, `pb`, `retiro`, `form`) y no documenta el protocolo de dos fases. Ver roadmap 13.11. |
-| `landing-gerow-cloudflare-context.md` | **Desactualizado en nueve puntos verificables.** El protocolo seccion 7 lo declara de lectura obligatoria antes de tocar la integracion, asi que corregirlo es prioritario: un documento obligatorio y falso es peor que no tenerlo. Ver roadmap 13.11. |
+| `landing-gerow-cloudflare-context.md` | Contexto operativo de `landing-gerow` y Cloudflare. **Version 2.0 del `2026-08-12`**, reescrito y verificado contra `origin/master`. Lectura obligatoria (protocolo seccion 7) antes de tocar la integracion con `planespro.cl`. |
 
 ## docs/auditorias
 

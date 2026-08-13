@@ -1,505 +1,171 @@
-# Contexto Operativo: landing-gerow + Cloudflare ppforms
+# Contexto operativo: landing-gerow y Cloudflare
+
+Version: 2.0
+Fecha de verificacion: 2026-08-12
+Estado: vigente
+
+> **Por que existe la version 2.0.** La version anterior (2026-07-16) describia un mundo que ya no
+> existia: daba a `ppforms` como el motor del formulario, con D1, R2, cron, Google Calendar y panel
+> admin dentro. La auditoria del `2026-08-11` la encontro **desactualizada en nueve puntos
+> verificables**, y el protocolo seccion 7 declara este archivo de lectura obligatoria antes de tocar
+> la integracion. Un documento obligatorio y falso es peor que no tenerlo: planificar una migracion
+> desde un mapa equivocado es como se cometen errores caros.
+>
+> Todo lo que sigue se verifico contra `origin/master` de `landing-gerow` y contra los servicios
+> desplegados, no contra la memoria ni contra la version previa.
 
-Fecha de auditoria: 2026-07-16
-Metodo: Protocolo CONTROL
-Estado: documento operativo para preparar la migracion progresiva a Supabase/LeadSeed
+---
 
-## 1. Objetivo de este documento
+## 1. Que es cada cosa hoy
 
-Este archivo deja trazabilidad clara de como funciona hoy el dominio de captura de leads de `planespro.cl`, tanto en frontend como en backend Cloudflare, para integrarlo despues con `LeadSeed` y con la futura app movil.
+| Pieza | Que hace | Estado |
+|---|---|---|
+| Cloudflare Pages, proyecto `planespro` | sirve todo `planespro.cl` | activo, conectado a GitHub |
+| Worker `ppforms` | **solo responde `/health`** | vaciado, sin bindings |
+| Worker `ppusers` | admin heredado, y **conserva la base de leads legacy** | activo, es el nudo pendiente |
+| Worker `ppcrm` | CRM heredado en `admin.planespro.cl/crm` | activo, sin migrar |
+| Workers `ppblog` y `ppnews` | blog y noticias, con su D1 y R2 | activos, fuera de alcance |
+| Worker `pp-www-redirect` | redireccion de `www` | activo, trivial |
+| Worker `ppcrm-staging` | **sin documentar** | inventariar antes de dar por cerrado el retiro |
 
-La meta arquitectonica confirmada es:
+Supabase es la fuente de verdad de leads, agenda, adjuntos y disponibilidad. Cloudflare quedo como
+hosting estatico, CDN, DNS y WAF, que es el uso correcto y **no se va a retirar**.
 
-- `planespro.cl` sigue siendo el origen del trafico y del formulario publico.
-- `LeadSeed` sera el CRM/app destino para operar esos leads.
-- La migracion del backend sera progresiva desde Cloudflare a Supabase.
-- El primer corte correcto es el dominio `formulario + disponibilidad + agenda + archivos + calendar`, no todo el backend de una sola vez.
+---
 
-## 2. Resumen ejecutivo
+## 2. Correcciones a la version anterior
 
-Hoy el flujo de captura de `planespro.cl` depende principalmente del Worker `ppforms` en Cloudflare.
+Las nueve afirmaciones falsas que traia la 1.0, con lo verificado hoy:
 
-Ese worker resuelve:
+| Decia | Realidad |
+|---|---|
+| `ppforms` resuelve disponibilidad, leads, PDF, Calendar, correos y panel admin | `cloudflare/ppforms/src/index.js` solo expone `/health`. Sin logica de negocio. |
+| ruta publica `POST /api/form/appointments` | no existe |
+| rutas admin dentro de `ppforms` | no existen |
+| modulos internos `advisor-domain`, `calendar-domain`, `leads-domain` | no existen |
+| binding D1 `FORM_DB` en `ppforms` | `ppforms/wrangler.toml` **no tiene ningun binding**. El real se llama `FORMS_DB` y esta en `ppusers`. |
+| binding R2 `FORM_UPLOADS` en `ppforms` | el real es `FORMS_UPLOADS`, tambien en `ppusers` |
+| cron cada 15 minutos en `ppforms` | no tiene `[triggers]`. El unico cron del proyecto es el de `ppnews`. |
+| `wrangler.toml` con correos, origins, Google client id, D1, R2 y cron | tiene tres lineas y ningun `[vars]` |
+| "el siguiente paso no es tocar el frontend" | los pasos 1 a 4 de esa secuencia ya se ejecutaron |
 
-- disponibilidad publica de agenda
-- recepcion de leads del formulario
-- almacenamiento de archivos PDF
-- creacion y sincronizacion de citas con Google Calendar
-- correos automaticos al cliente y al equipo
-- panel admin interno para leads, agenda, perfil de asesor y capture links
+---
 
-La frontera publica real hoy es:
+## 3. Donde viven realmente los formularios
 
-- `GET /api/public/availability`
-- `POST /api/form/leads`
-- `POST /api/form/leads/abandoned`
+**Este punto se corrigio el `2026-08-12` y contradice lo que se venia asumiendo, incluido en el
+propio roadmap de LeadSeed.**
 
-La integracion futura con `LeadSeed` debe respetar ese contrato primero, y luego reemplazar internamente su implementacion en Supabase.
+En `origin/master`, que es la rama desde la que Cloudflare Pages despliega produccion:
 
-## 3. Estado Cloudflare validado
+```
+pb/index.html  pb/app.js  pb/styles.css  pb/partials/
+form/index.html  form/app.js  form/styles.css
+frontend/lead-capture/          <- fuente que construye el sidebar y pb
+functions/pb/[[slug]].js        <- enrutado de /pb/<ref>
+functions/form/[[slug]].js
+functions/retiro-tecnico-extranjero/[[slug]].js
+```
 
-Se verifico el token de Cloudflare entregado.
+**La carpeta `forms/` NO existe en `origin/master`.** Existe solo en la rama de trabajo
+`fix/agenda-url-bug`, sin mergear. `AI_SYNC.md` registro esa reorganizacion como hecha el
+`2026-08-03`, y es cierto que se hizo, pero nunca llego a la rama desplegada.
 
-- Resultado: token valido y activo
-- Estado confirmado: `active`
+Consecuencia para el bloque 4: **la fuente a mover a LeadSeed es `pb/`, `form/` y
+`frontend/lead-capture/`, no `forms/`.** Tomar `forms/` seria portar una version que produccion no
+usa.
 
-Nota CONTROL:
-Solo se valido el token. No se ejecuto ninguna mutacion de infraestructura ni despliegue.
+### El enrutado de los short links no es un archivo estatico
 
-## 4. Frontend actual de landing-gerow
+`planespro.cl/pb/<code>` no corresponde a ningun fichero. Lo resuelve la Pages Function
+`functions/pb/[[slug]].js`, que sirve el contenido de la carpeta base conservando la URL. Esto
+importa por dos motivos:
 
-### 4.1 Entradas principales de captura
+- migrar los formularios sin migrar las Functions deja **todos los short links en 404**
+- la Function debe pedir la carpeta base y **no** `index.html`: pedir `index.html` vuelve a pasar por
+  `_redirects`, dispara la regla `/pb/index.html -> /pb/ 301` y el redirect borra el ref de la URL
 
-Existen dos experiencias principales de formulario:
+Ese segundo punto no es teorico: ocurrio en produccion y se corrigio el `2026-08-12` (ver capitulo
+13.4.d del roadmap). Estuvo perdiendo atribucion de asesor.
 
-- `pb/` o landing dedicada de captura larga
-- formulario lateral/sidebar reutilizable dentro del sitio principal
+---
 
-Ambas hablan con el mismo backend:
+## 4. Contrato publico vigente
 
-- `https://form.planespro.cl`
+Todos los formularios resuelven la base de API desde
+`<meta name="planespro-form-api-base" content="https://form.planespro.cl/api">`. Ninguno llama a
+Supabase directamente, porque la CSP de `_headers` no incluye `*.supabase.co`.
 
-### 4.2 Flujo `pb`
+| Ruta publica | Destino real |
+|---|---|
+| `POST /api/form/leads` | Edge Function `form-leads` |
+| `POST /api/form/leads/abandoned` | `form-lead-abandoned` |
+| `GET /api/public/availability` | `form-public-availability` |
+| `POST /api/form/progress` | `form-progress` |
 
-El frontend de `pb`:
+`form-lead-file` existe pero **no tiene ruta publica**: solo la consume la extension.
 
-- carga disponibilidad desde `GET /api/public/availability`
-- envia el lead a `POST /api/form/leads`
-- soporta atribucion por `ref`
-- soporta agenda si el usuario elige `agendar_reunion`
-- soporta adjunto PDF
-- persiste atribucion en `localStorage`
+### Canales
 
-Campos funcionales relevantes enviados:
+Son **cuatro**, no dos como decia la version anterior: `general`, `pb`, `retiro` y `form`.
 
-- datos personales del lead
-- `capture_ref`
-- `first_touch_ref`
-- `advisor_id`
-- `contacto_preferencia`
-- `cita_fecha_hora`
-- `cita_estado`
-- metadatos de origen, campaña y anti-spam
+Deuda conocida: `resolve_planespro_booking_context` solo acepta `pb`, `general` y `retiro`. Un lead
+de `/form/` sin ref valido cae silenciosamente como `general`.
 
-### 4.3 Flujo sidebar
+---
 
-El sidebar hace lo mismo, pero:
+## 5. Edge Functions: dueño unico desde el 2026-08-12
 
-- agrega persistencia local de progreso del formulario
-- guarda drafts
-- envia abandono via `navigator.sendBeacon` a `POST /api/form/leads/abandoned`
-- usa disponibilidad del mismo worker
-- soporta PDF adjunto
-- incorpora UI modal de agenda y modal de privacidad
+Las doce Edge Functions tienen su source en **LeadSeed**, y `landing-gerow` ya no tiene carpeta
+`supabase/`. Se le agrego un check de CI que falla si reaparece.
 
-### 4.4 Logica de atribucion comercial
+Antes del cierre hubo dos incidentes por propiedad compartida, y conviene recordarlos porque
+explican la regla:
 
-La atribucion comercial ya existe en frontend y backend.
+- `form-leads` llego a existir divergente en ambos repos, 584 lineas contra 690. Desplegar la de
+  LeadSeed habria creado un lead duplicado por cada envio en `/form/` y `/retiro/`.
+- `form-progress` estuvo desplegada desde un arbol de trabajo sin commitear, asi que el codigo en
+  produccion era mas nuevo que el commiteado en su propio repo.
 
-Modelo actual:
+**Regla operativa:** ante cualquier duda sobre que version es la buena, la respuesta es
+`supabase functions download`, no el git de ninguno de los dos repos. Comprobar siempre con
+`npm run check:functions` antes de desplegar.
 
-- `ref` en URL
-- persistencia local del `ref`
-- `first_touch_ref`
-- posibilidad de resolver un `advisor_id`
+---
 
-Esto es importante porque el reparto del lead en Supabase debe mantener exactamente esta frontera para no romper trazabilidad comercial.
+## 6. Lo que sigue pendiente, por orden de importancia
 
-## 5. Backend actual: Worker `ppforms`
+1. **`ppusers` conserva `FORMS_DB` (D1 `ppforms_db`) y `FORMS_UPLOADS` (R2 `ppforms-uploads`).**
+   Mientras siga asi hay **dos fuentes de verdad de leads**, que es lo que la regla 16.2 del
+   protocolo prohibe expresamente. Es el nudo real del retiro, no `ppforms`.
+2. **La rama `fix/reconcile-ppforms-retirement-with-tracking` sigue sin mergear.** Contiene el
+   formulario de retiro y el tracking. Ya provoco una regresion cuando un deploy desde `master` la
+   ignoro.
+3. **La CSP de `_headers` no incluye `*.supabase.co`**, asi que los formularios no pueden saltarse el
+   proxy aunque se quiera.
+4. **`ppcrm-staging` sin inventariar.**
+5. `ppcrm` sin migrar.
 
-### 5.1 Rol del worker
+---
 
-`ppforms` es hoy el dominio aislado de:
+## 7. Como se despliega cada cosa
 
-- captura de leads
-- agenda
-- disponibilidad
-- Google Calendar
-- archivos del formulario
-- notificaciones de correo
-- panel admin minimo para operar este dominio
+| Que | Como | Cuidado |
+|---|---|---|
+| Sitio y formularios | push a `master` de `landing-gerow` | **dispara deploy automatico de todo planespro.cl** |
+| Edge Functions | `supabase functions deploy <slug>` desde **LeadSeed** | comprobar `verify_jwt` en `supabase/config.toml` |
+| Migraciones SQL | desde LeadSeed | ambos repos comparten `schema_migrations` |
 
-No es solo un endpoint de formulario. Es un backend completo especializado.
+Aviso practico, aprendido el `2026-08-12`: el arbol de trabajo de `landing-gerow` suele tener mas de
+mil archivos sin commitear y varios worktrees activos. Para intervenir sin arriesgar trabajo ajeno,
+crear un `git worktree` desde `origin/master`, hacer el cambio ahi y empujar. Se hizo asi dos veces
+ese dia y funciono.
 
-### 5.2 Rutas publicas principales
+---
 
-Rutas publicas confirmadas:
+## 8. Lo que sigue vigente de la version 1.0
 
-- `GET /health`
-- `GET /api/public/availability`
-- `POST /api/form/leads`
-- `POST /api/form/leads/abandoned`
-- `POST /api/form/appointments`
-
-### 5.3 Rutas admin
-
-Rutas admin confirmadas:
-
-- sesion admin
-- perfil de asesor
-- disponibilidad del asesor
-- capture links
-- listado de leads
-- cambios incrementales de leads
-- detalle de lead
-- notas
-- cambio de estado
-- RUT
-- archivar
-- borrar
-- cita
-- test de attendance
-- envio manual de recordatorios
-
-Conclusion CONTROL:
-La futura migracion no debe reducir este dominio a “guardar un lead”. Ya existe una superficie operacional que el CRM consumira.
-
-## 6. Componentes internos del worker
-
-El runtime de `ppforms` esta compuesto por modulos separados:
-
-- `advisor-domain`
-- `availability-domain`
-- `calendar-domain`
-- `capture-links-domain`
-- `leads-domain`
-- `notifications-domain`
-- `admin-manual-leads`
-
-Esto es positivo: el dominio ya esta dividido por responsabilidad. La migracion a Supabase debe respetar esta separacion y no recombinarlo en un monolito nuevo.
-
-## 7. Persistencia actual en Cloudflare
-
-### 7.1 D1
-
-Binding confirmado:
-
-- `FORM_DB`
-- database name: `ppforms_db`
-
-### 7.2 R2
-
-Binding confirmado:
-
-- `FORM_UPLOADS`
-- bucket: `ppforms-uploads`
-
-### 7.3 Cron
-
-Cron confirmado:
-
-- cada 15 minutos
-
-Uso funcional:
-
-- procesamiento de recordatorios de citas
-
-## 8. Modelo de datos funcional actual
-
-El worker usa al menos estas entidades lógicas:
-
-- `advisors`
-- `advisor_calendar_connections`
-- `advisor_availability_rules`
-- `advisor_availability_blocks`
-- `advisor_capture_links`
-- `oauth_states`
-- `form_leads`
-- `lead_notes`
-- `lead_events`
-
-### 8.1 `form_leads`
-
-Es la fuente principal de verdad del dominio actual.
-
-Contiene, entre otros:
-
-- identidad y contacto del lead
-- sistema de salud
-- datos comerciales
-- comentarios
-- `advisor_id`
-- preferencia de contacto
-- estado de cita
-- fecha/hora de cita
-- ids y urls de Google Calendar
-- referencia a archivo PDF
-- payload crudo sanitizado
-
-### 8.2 `lead_events`
-
-Es el historial operativo del lead.
-
-Ejemplos de eventos:
-
-- creacion
-- cambio de estado
-- agendamiento
-- reagendamiento
-- notas
-- recordatorios
-- sync con calendar
-- borrado
-
-Este historial es importante para `LeadSeed`, porque el CRM futuro no deberia perder trazabilidad operacional al migrar.
-
-### 8.3 `advisor_calendar_connections`
-
-Guarda conexion OAuth por asesor, no un calendario global.
-
-Campos funcionales:
-
-- `advisor_id`
-- `provider`
-- `google_email`
-- `calendar_id`
-- `refresh_token`
-- `access_token`
-- `token_scope`
-- `token_expires_at`
-
-### 8.4 `advisor_availability_rules` y `advisor_availability_blocks`
-
-Separan:
-
-- horario base semanal
-- bloqueos o excepciones manuales
-
-Esto es una buena base conceptual para portar a Supabase.
-
-### 8.5 `advisor_capture_links`
-
-Resuelve links comerciales por asesor.
-
-Uso funcional:
-
-- generar URLs `pb/?ref=...`
-- resolver atribucion del lead
-- mantener una frontera limpia entre trafico publico y ownership comercial
-
-## 9. Integraciones externas actuales
-
-### 9.1 Google Calendar
-
-El worker soporta:
-
-- OAuth por asesor
-- lectura de disponibilidad cruzando Calendar
-- creacion de eventos
-- actualizacion de eventos
-- borrado de eventos
-- seguimiento de attendance
-- interpretacion de cancelaciones o rechazos
-
-No usa solo un calendario fijo. El camino actual ya esta alineado con la arquitectura correcta.
-
-### 9.2 Resend
-
-Se usa para:
-
-- correo interno de nuevo lead sin agenda
-- correo de confirmacion al cliente
-- correo de cita agendada
-- correo de cita reagendada
-
-### 9.3 Cloudflare como capa de ejecucion
-
-Cloudflare hoy resuelve:
-
-- Worker serverless
-- D1
-- R2
-- cron
-- secretos de OAuth, Calendar y Resend
-
-## 10. Comportamiento funcional actual del flujo publico
-
-### 10.1 Disponibilidad
-
-`GET /api/public/availability`
-
-Hace:
-
-- identifica asesor por `ref` o `advisorId`
-- carga reglas del asesor
-- carga bloqueos manuales
-- consulta ocupacion por leads ya agendados
-- cruza, si existe, con busy intervals de Google Calendar
-- devuelve `slot_grid` y `slots`
-
-### 10.2 Creacion de lead
-
-`POST /api/form/leads`
-
-Hace:
-
-- valida origen permitido
-- valida anti-spam y rate limits
-- parsea `FormData` o JSON
-- resuelve atribucion comercial
-- crea o asegura asesor
-- inserta en `form_leads`
-- guarda PDF en R2 si existe
-- agenda cita si corresponde
-- crea evento en Google Calendar si corresponde
-- envia notificaciones por correo segun preferencia de contacto
-
-### 10.3 Abandono de lead
-
-`POST /api/form/leads/abandoned`
-
-Hace:
-
-- valida guardas de envio
-- registra lead como `Abandonado`
-- mantiene atribucion
-
-### 10.4 Admin
-
-Permite:
-
-- crear lead manualmente
-- mover citas
-- operar historial y estado del lead
-- actualizar perfil del asesor
-- configurar disponibilidad
-- operar capture links
-
-## 11. Variables y secretos conocidos
-
-En `wrangler.toml` quedan visibles variables no secretas y bindings:
-
-- correos de notificacion
-- origenes permitidos
-- client id de Google OAuth
-- redirect URI
-- D1 binding
-- R2 binding
-- cron
-
-Secretos manejados fuera de git:
-
-- `ADMIN_API_KEY`
-- `GCAL_CALENDAR_ID`
-- `GCAL_SA_EMAIL`
-- `GCAL_SA_PRIVATE_KEY`
-- `GOOGLE_OAUTH_CLIENT_SECRET`
-- `GOOGLE_OAUTH_REFRESH_TOKEN`
-- `RESEND_API_KEY`
-
-Nota CONTROL:
-La migracion a Supabase debe separar claramente:
-
-- secretos tecnicos de backend
-- credenciales OAuth por asesor
-- configuracion publica de frontend
-
-## 12. Frontera correcta para migrar a Supabase
-
-### 12.1 Lo que debe migrarse primero
-
-Primer dominio correcto:
-
-- `public-availability`
-- `lead-submit`
-- `lead-abandoned`
-- archivos PDF
-- agenda / appointments
-- Google Calendar por asesor
-- correos transaccionales
-
-### 12.2 Lo que no conviene mezclar en la primera etapa
-
-No conviene mezclar de inmediato:
-
-- resto del ecosistema Cloudflare
-- blog
-- news
-- otros workers no relacionados
-- CRM historico si todavia vive separado
-
-### 12.3 Compatibilidad deseada
-
-El frontend publico deberia poder seguir usando exactamente:
-
-- `GET /api/public/availability`
-- `POST /api/form/leads`
-
-Aunque por detras ya apunte a Supabase Edge Functions o a un puente transitorio.
-
-Ese contrato estable es la clave para migrar sin romper `planespro.cl`.
-
-## 13. Relacion con `LeadSeed`
-
-Flujo objetivo confirmado:
-
-1. el usuario entra a `planespro.cl`
-2. completa el formulario
-3. el backend en Supabase crea el lead y, si aplica, la cita y el archivo
-4. `LeadSeed` consume ese lead como sistema operativo de trabajo
-5. luego la misma base alimenta extension y app movil
-
-Eso implica que Supabase debe transformarse en la source of truth del dominio `lead capture + agenda`.
-
-`LeadSeed` no deberia seguir dependiendo de Cloudflare para leer leads nuevos una vez hecho el corte.
-
-## 14. Riesgos y observaciones bajo CONTROL
-
-### 14.1 Riesgos reales
-
-- si se migra solo “guardar lead” y no disponibilidad/citas, se crean dos fuentes de verdad
-- si se rompe la atribucion por `ref`, se pierde ownership comercial
-- si se migra agenda sin modelo de advisor/availability, se reintroduce logica paralela
-- si se mezcla `public` de Supabase con tablas existentes sin frontera, se contamina el esquema
-- si se mueve frontend antes del backend, se rompe captura de leads en produccion
-
-### 14.2 Lo que ya esta bien del sistema actual
-
-- dominio ya separado en modulos
-- OAuth por asesor
-- captura con atribucion comercial
-- distincion entre lead con agenda y sin agenda
-- manejo de adjuntos
-- historial de eventos
-
-### 14.3 Lo que debe preservarse
-
-- contrato de rutas publicas
-- semantica de `capture_ref` y `first_touch_ref`
-- asignacion por asesor
-- capacidad de reagendar y sincronizar con Google Calendar
-- correos transaccionales
-
-## 15. Recomendacion operativa para el siguiente paso
-
-El siguiente paso correcto no es tocar aun el frontend de `planespro.cl`.
-
-El siguiente paso correcto es:
-
-1. modelar en Supabase el dominio equivalente a `ppforms`
-2. definir funciones/Edge Functions compatibles con las rutas actuales
-3. mover primero disponibilidad, submit, archivos y appointments
-4. conectar `LeadSeed` a ese nuevo dominio como consumidor nativo
-5. solo despues cambiar el `workerUrl` del frontend publico
-
-## 16. Estado CONTROL
-
-- `hecho`: auditoria de contexto frontend/backend de `landing-gerow`
-- `hecho`: verificacion de token Cloudflare activo
-- `hecho`: identificacion del contrato publico actual del formulario
-- `hecho`: identificacion del modelo de datos funcional de `ppforms`
-- `pendiente estructural`: definir el esquema equivalente en Supabase
-- `pendiente estructural`: definir el contrato exacto de integracion con `LeadSeed`
-- `pendiente de deploy`: reemplazo progresivo de rutas Cloudflare por Supabase
-- `pendiente de validacion real`: smoke test del flujo publico una vez se haga el primer corte
-
-## 17. Decision de arquitectura recomendada
-
-Decision recomendada:
-
-- mantener `planespro.cl` como frontend origen
-- usar Supabase como nuevo backend source of truth del dominio formulario/agenda
-- usar `LeadSeed` como CRM/app para operar ese dominio
-- retirar `ppforms` por etapas, no por parche
-
-Esta es la frontera mas limpia y coherente con el plan actual.
+- La meta arquitectonica: Supabase como fuente de verdad, Cloudflare como capa de entrega.
+- El riesgo principal identificado entonces, "dos fuentes de verdad", que efectivamente se
+  materializo con `ppusers`.
+- El contrato de rutas publicas a preservar mientras el frontend siga apuntando al dominio branded.
