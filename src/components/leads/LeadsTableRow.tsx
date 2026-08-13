@@ -154,16 +154,16 @@ const LeadsTableRow = ({
 
   const actions = (
     <div className="flex gap-1.5 justify-end items-center pr-1 min-w-[64px]">
-      <button onClick={(event) => { event.stopPropagation(); onView(lead); }} title="Ver" className="text-ink-secondary hover:text-ink text-xs p-1">{Icon.View()}</button>
+      <button onClick={(event) => { event.stopPropagation(); onView(lead); }} title="Ver" aria-label={`Ver ${lead.name}`} className="text-ink-secondary hover:text-ink text-xs p-1">{Icon.View()}</button>
       {isTrash ? (
         <>
-          {onRestore && <button onClick={(event) => { event.stopPropagation(); onRestore(lead.id!); }} title="Restaurar" className="text-ink-secondary hover:text-green-600 text-xs p-1">{Icon.Restore()}</button>}
-          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar definitivo" className="text-ink-secondary hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
+          {onRestore && <button onClick={(event) => { event.stopPropagation(); onRestore(lead.id!); }} title="Restaurar" aria-label={`Restaurar ${lead.name}`} className="text-ink-secondary hover:text-green-600 text-xs p-1">{Icon.Restore()}</button>}
+          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar definitivo" aria-label={`Eliminar definitivamente ${lead.name}`} className="text-ink-secondary hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
         </>
       ) : (
         <>
-          <button onClick={(event) => { event.stopPropagation(); onEdit(lead); }} title="Editar" className="text-ink-secondary hover:text-ink text-xs p-1">{Icon.Edit()}</button>
-          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar" className="text-ink-secondary hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
+          <button onClick={(event) => { event.stopPropagation(); onEdit(lead); }} title="Editar" aria-label={`Editar ${lead.name}`} className="text-ink-secondary hover:text-ink text-xs p-1">{Icon.Edit()}</button>
+          {isSelected && <button onClick={(event) => { event.stopPropagation(); onDelete(lead.id!); }} title="Eliminar" aria-label={`Eliminar ${lead.name}`} className="text-ink-secondary hover:text-red-600 text-xs p-1">{Icon.Trash()}</button>}
         </>
       )}
     </div>

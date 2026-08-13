@@ -249,7 +249,7 @@ export default function PipelinePage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setViewLead(lead)} className="text-gray-400 hover:text-blue-500 cursor-pointer p-1" title="Ver detalle"><div className="w-4">{Icon.View()}</div></button>
+                  <button onClick={() => setViewLead(lead)} className="text-gray-400 hover:text-blue-500 cursor-pointer p-1" title="Ver detalle" aria-label={`Ver detalle de ${lead.name}`}><div className="w-4">{Icon.View()}</div></button>
                   <span className="text-[10px] text-gray-400 font-mono tracking-tighter">|||</span>
                 </div>
               </div>

@@ -1788,15 +1788,26 @@ Lo que aparecio al ejecutarlos, que el plan no anticipaba:
 
 Frente nuevo, nunca registrado en este roadmap.
 
-- [PENDIENTE ESTRUCTURAL] Botones icono sin nombre accesible: `LeadsTableRow.tsx:157-166` usa `title`
-  en vez de `aria-label`. Solo 6 apariciones de `aria-label` en todo `src/`. Incumple WCAG 4.1.2. La
-  primitiva correcta ya existe (`IconButton` fuerza `aria-label` por tipos) pero no se usa.
+- [HECHO] (`2026-08-13`) **Ningun boton icono queda sin nombre accesible.** De 6 apariciones de
+  `aria-label` a 20: cuatro llegaron al unificar botones en el bloque 7 (los que pasaron a
+  `IconButton`, que lo exige por tipos) y las diez restantes se agregaron aqui.
+
+  Dos decisiones que conviene dejar escritas:
+
+  - **No se migraron a `IconButton`.** Estos diez viven en filas y tarjetas densas con `p-1` y
+    `text-xs`; la primitiva mide 34px y los agrandaria. Eso es un cambio de apariencia, y la
+    aprobacion que dio el usuario cubria los botones que se le describieron, no estos. El
+    incumplimiento de WCAG 4.1.2 se cierra igual con el atributo, sin tocar nada visual. Migrarlos
+    queda como pendiente aparte, del mismo tipo que `.card-*`.
+  - **La etiqueta nombra el objeto, no solo la accion.** Un `aria-label="Eliminar"` repetido en una
+    tabla de cincuenta leads no le dice a nadie *cual*: son cincuenta botones con el mismo nombre.
+    Se usa `Eliminar ${lead.name}`, `Editar ${task.titulo}`, `Eliminar la lista ${list.name}`. El
+    `title` se conserva porque sigue sirviendo al puntero.
 - [PENDIENTE] Migrar los overlays manuales a `src/design/Modal.tsx`: 17 archivos usan
   `fixed inset-0`, solo 4 manejan `Escape` o `role="dialog"`.
-- [PENDIENTE] Corregir `focus:ring-offset-[#0a0a0a]` en `src/index.css:42`, color literal que no
-  reacciona al tema y degrada el indicador de foco (WCAG 2.4.11).
-- [PENDIENTE] Auditar el contraste de `--ls-text-muted` (`#8c95a6` sobre blanco da ~3.0:1,
-  insuficiente para texto normal segun WCAG 1.4.3).
+- [HECHO] Corregido `focus:ring-offset-[#0a0a0a]` (WCAG 2.4.11) y el contraste de
+  `--ls-text-muted` (WCAG 1.4.3). Ambos se cerraron en el bloque 7; el detalle y las mediciones
+  estan en 13.8.a.
 
 ### Capitulo 13.10 - Higiene de repositorio (bloque 8)
 

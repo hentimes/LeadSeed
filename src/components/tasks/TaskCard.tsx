@@ -54,8 +54,8 @@ export default function TaskCard({
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
-          <button onClick={() => onEdit(task)} className="text-gray-400 hover:text-blue-600 text-xs" title="Editar">{Icon.Edit()}</button>
-          <button onClick={() => onDelete(task.id!)} className="text-gray-400 hover:text-red-600 text-xs" title="Eliminar">{Icon.Trash()}</button>
+          <button onClick={() => onEdit(task)} className="text-gray-400 hover:text-blue-600 text-xs" title="Editar" aria-label={`Editar ${task.titulo}`}>{Icon.Edit()}</button>
+          <button onClick={() => onDelete(task.id!)} className="text-gray-400 hover:text-red-600 text-xs" title="Eliminar" aria-label={`Eliminar ${task.titulo}`}>{Icon.Trash()}</button>
         </div>
       </div>
     </div>

@@ -309,10 +309,10 @@ export default function ListsPage() {
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {insideGroup && (
-               <button onClick={(e) => { e.stopPropagation(); handleRemoveFromGroup(list.id); }} className="text-slate-400 hover:text-orange-500 p-1.5 rounded-md hover:bg-orange-50 text-[11px] font-medium" title="Sacar de la carpeta">Sacar</button>
+               <button onClick={(e) => { e.stopPropagation(); handleRemoveFromGroup(list.id); }} className="text-slate-400 hover:text-orange-500 p-1.5 rounded-md hover:bg-orange-50 text-[11px] font-medium" title="Sacar de la carpeta" aria-label={`Sacar ${list.name} de la carpeta`}>Sacar</button>
             )}
             {!list.isSmart && (
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id as number); }} className="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Eliminar lista">
+              <button onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id as number); }} className="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Eliminar lista" aria-label={`Eliminar la lista ${list.name}`}>
                 {Icon.Trash()}
               </button>
             )}
