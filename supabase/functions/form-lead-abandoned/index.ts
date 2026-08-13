@@ -37,10 +37,20 @@ function firstString(payload: LeadPayload, ...keys: string[]) {
   return ''
 }
 
+/**
+ * Canales publicos que se dejan pasar tal cual al RPC.
+ *
+ * La fuente de verdad es la tabla `form_types` (migracion 093), que hoy tiene
+ * `pb`, `retiro` y `form`; `general` no esta ahi porque no es un tipo de link,
+ * es el caso sin link. Se replica aca como lista estatica para no meter una
+ * consulta por cada envio; si se registra un tipo nuevo en `form_types`, hay
+ * que agregarlo aqui tambien.
+ */
+const CANALES_PUBLICOS = new Set(['general', 'pb', 'retiro', 'form'])
+
 function normalizeSourceChannel(value: string) {
   const normalized = value.trim().toLowerCase()
-  if (normalized === 'pb' || normalized === 'general') return normalized
-  return ''
+  return CANALES_PUBLICOS.has(normalized) ? normalized : ''
 }
 
 function normalizeCaptureRef(value: string) {
@@ -84,10 +94,22 @@ function inferSourceContext(payload: LeadPayload, request: Request) {
   const sourcePath = pathFromPayload || parsedUrl?.pathname || ''
   const sourceHostname = firstString(payload, 'source_hostname', 'hostname', 'host') || parsedUrl?.hostname || ''
 
+  // La ruta manda por encima de "tiene ref", porque un ref existe en los tres
+  // tipos de formulario y por si solo no dice de cual viene. Antes se miraba
+  // primero el ref y por eso un envio desde /retiro-tecnico-extranjero/<ref>
+  // se etiquetaba 'pb'.
+  const channelFromPath = sourcePath.startsWith('/retiro-tecnico-extranjero')
+    ? 'retiro'
+    : sourcePath.startsWith('/pb')
+      ? 'pb'
+      : sourcePath.startsWith('/form')
+        ? 'form'
+        : ''
+
   const inferredChannel =
     explicitChannel ||
+    channelFromPath ||
     (captureRef ? 'pb' : '') ||
-    (sourcePath.startsWith('/pb') ? 'pb' : '') ||
     'general'
 
   return {

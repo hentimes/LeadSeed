@@ -1912,9 +1912,26 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 - [HECHO] Reescrito `docs/integrations/landing-gerow-cloudflare-context.md` (version 2.0, `2026-08-12`).
   Los nueve puntos falsos estan corregidos y tabulados en su seccion 2, contra `origin/master` y contra
   los servicios desplegados. De paso salio el hallazgo que corrige los dos primeros items de 13.5.
-- [PENDIENTE] Actualizar `planespro-form-integration-contract.md`: declara dos canales publicos cuando
-  existen cuatro (`general`, `pb`, `retiro`, `form`), y no documenta el protocolo de dos fases
-  (`submission_id`, `update_token`, `action_only`) vigente desde el 3 de agosto.
+- [HECHO] (`2026-08-13`) Actualizado `planespro-form-integration-contract.md` a version 2.0. Los
+  cuatro canales, el protocolo de dos fases con sus tres RPC y sus reglas de validacion, y el
+  endpoint corregido: publicaba la URL cruda de Supabase cuando los formularios llaman al dominio
+  branded, y no podrian hacer otra cosa porque la CSP de `landing-gerow` no incluye `*.supabase.co`.
+
+  **Al verificarlo aparecio un defecto real en produccion, ya corregido y desplegado.**
+  `normalizeSourceChannel` aceptaba solo `pb` y `general`, y como la funcion sobreescribe
+  `source_channel` en el payload antes de llamar al RPC, un `retiro` declarado se convertia en
+  `general` o en `pb` y el RPC nunca veia el valor original.
+
+  Con ref el resultado final salia bien igual, porque `resolve_planespro_booking_context` adopta el
+  `link_type` del link y corrige. Sin ref no: el lead quedaba etiquetado `general` y, sobre todo, la
+  rama "siempre admin" que la migracion 090 agrego a proposito para `retiro` **era codigo
+  inalcanzable**, porque su condicion es `v_source_channel = 'retiro'` y ese valor no llegaba nunca.
+  El respaldo volvia a depender del correo hardcodeado que esa migracion queria dejar de usar.
+
+  Corregido en `form-leads` y `form-lead-abandoned`, que compartian el codigo: la lista de canales
+  refleja ahora `form_types`, y la deduccion mira la **ruta antes que el ref**, porque un ref existe
+  en los tres tipos de formulario y por si solo no dice de cual viene. Ambas desplegadas y
+  verificadas con preflight.
 - [HECHO] Archivados `HANDOFF_NEXT_SESSION.md` y `pb_form_redesign_handoff.md` en `docs/_revision/`.
   Duplicaban items ya cerrados en 13.10.
 - [PENDIENTE] Decidir el destino de `docs/_revision/implementation_plan.md` (2314 lineas, solapa fuertemente con este
