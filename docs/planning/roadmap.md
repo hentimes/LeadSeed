@@ -1709,21 +1709,46 @@ Son los dos sub-items que 13.1.c autoriza por ser "identico o estrictamente mejo
   no grande, asi que el umbral que aplica es el de 4.5 y no el de 3. Actualizado tambien el respaldo
   en `palette.ts`, que por contrato debe coincidir con `tokens.css`.
 
-### 13.8.b - Los tres sub-items que SI alteran apariencia
+### 13.8.b - Los tres sub-items que alteran apariencia: EJECUTADOS el `2026-08-13`
 
 Se verificaron uno por uno antes de tocarlos, y ninguno resulto ser el cambio neutro que el plan
-suponia. **Quedan a la espera de aprobacion por superficie (13.1.c).**
+suponia. Se mapearon a pantallas concretas, se presentaron asi al usuario y **los aprobo los tres**.
+Ejecutados pantalla por pantalla, con las cuatro puertas en verde tras cada una.
 
-- [BLOQUEADO POR APROBACION] Unificar `.btn*` con la primitiva `Button`. El plan lo daba por
-  neutro. No lo es: son dos sistemas con medidas distintas. `.btn` usa padding `8px 16px`, fuente de
+Lo que aparecio al ejecutarlos, que el plan no anticipaba:
+
+- **Dos variantes faltaban en la primitiva** y se agregaron ahi, no en el consumidor, que es lo que
+  manda el propio sistema. `Button` gana `ghost-danger` (accion destructiva sin peso visual, para
+  tarjetas densas como las de Agenda). `IconButton` gana `variant` y `shape`: el boton de enviar del
+  chat de soporte era redondo por un `rounded-full` puesto encima del `rounded-md` de la primitiva, y
+  eso **solo funcionaba por el orden en que Tailwind emite las utilidades**. Si ese orden cambiara,
+  el boton se habria vuelto cuadrado sin que nadie tocara nada.
+- **La paginacion de Leads no encajaba en la primitiva y se resolvio al reves.** Las flechas usaban
+  `.btn-secondary` (con borde) al lado de numeros que son celdas sin borde, y forzarlas a los 34px de
+  la primitiva las habria descuadrado respecto a los 32px de los numeros. Se igualaron al estilo de
+  celda. De paso su hover pasa de `bg-gray-50`, que no tiene variante oscura y aclaraba sobre fondo
+  oscuro, al token.
+- **Un defecto encontrado al tocarlo:** el campo de mensaje del chat de soporte declaraba la clase
+  `input-standard`, **que no existe en ningun CSS del proyecto**. Estaba sin borde, sin alto y sin
+  padding. Pasa a la primitiva `Input`.
+- Cuatro botones icono ganan `aria-label`, que no tenian (engranaje de Listas, las dos flechas de
+  paginacion, el de enviar del chat). Adelanta parte de 13.9.
+
+- [HECHO] Unificados los **30 botones** de las 8 pantallas con la primitiva `Button`, y retiradas
+  las reglas `.btn*` de `index.css`: cero usos en TSX y cero apariciones en el CSS compilado.
+  El plan lo daba por neutro. No lo era: son dos sistemas con medidas distintas. `.btn` usa padding `8px 16px`, fuente de
   14px y altura libre; `Button` usa altura fija de 34px, padding de 12px y fuente de 13px. Ademas
   `.btn-secondary` pinta el texto con `--ls-text` y `Button secondary` con `--ls-text-secondary`, y
   el hover de `.btn-ghost` es `--ls-surface` mientras que el de `Button ghost` es `--ls-primary-soft`
   con texto violeta. Migrar los 32 usos cambiaria el tamano, el peso visual y el hover de cada boton
   afectado. Es un rediseno, no un refactor.
-- [BLOQUEADO POR APROBACION] Eliminar `PageHeader.tsx` en favor de `PageShell.tsx`. El propio
-  roadmap ya lo decia: 24px contra 17px. Cambia el titulo de cada pagina que lo use.
-- [DESCARTADO EN SU FORMA ACTUAL] "Erradicar 94 colores literales". Al inventariarlos aparece que la
+- [HECHO] Eliminado `PageHeader.tsx`. Al buscar donde dolia aparecio que lo usaba **una sola
+  pagina**, Plantillas, o sea que era la unica de toda la extension con titulo de 24px en negrita:
+  de las 13 paginas, 10 no llevan titulo (la barra superior ya dice en cual estas) y Pipeline tiene
+  uno de 20px. El encabezado pasa a `PageShell`, que ya envolvia a todas pero sin cabecera, mediante
+  un mapa `PAGE_HEADER` junto a los de ancho y alto que ese fichero ya tenia. La descripcion se
+  conserva; el titulo baja a los 17px del sistema.
+- [HECHO, REFORMULADO] "Erradicar 94 colores literales". Al inventariarlos aparece que la
   premisa esta mal: **la mayoria no son estilo, son datos**. Son las paletas de `SMART_LIST_DEFS`,
   `STATUS_COLORS`, `SOURCE_CHANNEL_COLORS` y `BADGE_COLORS`: valores que se guardan, se serializan o
   se le pasan a una API. `BADGE_COLORS` en particular **no puede** ser un token, porque lo consume
@@ -1734,9 +1759,24 @@ suponia. **Quedan a la espera de aprobacion por superficie (13.1.c).**
   Los unicos tokens seguros de sustituir son los que **no** cambian entre temas (`--ls-primary` y
   familia, y los cuatro de estado), y para esos ya existe `palette.ts` como puente.
 
-  Reformulacion propuesta del item: en vez de un barrido de 94 literales, hacer que los ficheros de
-  datos de color consuman `palette.ts` donde el valor coincida con un token invariante, y dejar el
-  resto como esta. Es bastante menos trabajo y bastante mas honesto.
+  Ejecutado asi: se agrega `src/design/colors.ts` con los unicos colores que **no** cambian entre
+  temas, que es justo lo que permite tenerlos como constante sin mentir. Ahi apuntan `palette.ts`,
+  `BADGE_COLORS`, `STATUS_COLORS`, `SOURCE_CHANNEL_COLORS`, las listas inteligentes y el color por
+  defecto de una lista. Antes habia cinco copias sueltas de `#ef4444`.
+
+  No se tocan las paletas de seleccion de color de Listas y Plantillas: son cajas de lapices con
+  nombre propio ("Rojo Claro", "Azul"), y que un hexadecimal coincida con un token no las convierte
+  en el mismo concepto. Tampoco la rampa violeta de `LossReasonsChart`, donde solo 1 de 4 valores
+  coincide y la rampa es una unidad.
+
+  Cambio visual: **ninguno**, verificado valor por valor contra `tokens.css`. La comprobacion queda
+  como test (`colors.test.ts`, 9 casos) en vez de como comentario, y se confirmo que falla si se
+  desincroniza un valor. Uno de los 9 vigila la premisa, no los valores: que ninguno de estos colores
+  pase a redefinirse en modo oscuro, porque ese dia la constante empezaria a mentir.
+
+- [PENDIENTE] Quedan las clases `.card-*` de `index.css`, con 40 usos. Entraban en el mismo item del
+  plan que `.btn*` pero **no se tocaron**: no se le describieron al usuario al pedir la aprobacion, y
+  aprovechar un "si" dado sobre los botones para barrer tambien las tarjetas seria estirar el permiso.
 - [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (709 lineas, ~1034 ocurrencias); `tokens.css` ya resuelve el tema por variables.
 - [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (`bg-white` aparece 185 veces en 82
   archivos): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
