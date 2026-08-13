@@ -1124,13 +1124,41 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   Afloraron 73 errores, todos codigo muerto: 37 imports huerfanos, 34 props y parametros que los
   componentes recibian sin usar, y 5 declaraciones enteras sin consumidor.
 
-- [PENDIENTE] `noUncheckedIndexedAccess` (124 errores) y `exactOptionalPropertyTypes` (68).
-  **Deliberadamente no activadas.** Cada arreglo exige decidir que ocurre cuando falta el indice, y
-  resolverlo en masa seria inventar fallbacks: un `!` o un `?? valorPorDefecto` puestos a ciegas
-  convierten un fallo ruidoso en uno silencioso, que es peor. Es un frente propio, no un ajuste de
-  configuracion.
-- [PENDIENTE] Reducir los ~212 warnings por bloques. No son un objetivo en si: bajan solos al ejecutar
-  13.4, 13.6 y 13.7.
+- [HECHO] (`2026-08-13`) **`noUncheckedIndexedAccess` activada.** Los 124 errores resueltos uno por
+  uno. El criterio: afirmar solo donde el propio codigo prueba que el indice existe (cota del bucle,
+  longitud ya comprobada) y manejar de verdad donde la ausencia es posible. Nunca un `?? valor`
+  inventado, que es lo que la version anterior de este item temia con razon.
+
+  En la mayoria de los casos no hizo falta afirmar nada, solo escribirlo mejor: `entries()` en vez de
+  indice suelto, tomar la referencia una vez en vez de indexar seis veces por fila, guardar el objeto
+  en el `Map` en lugar de su posicion, y claves literales en vez de `Record<string, T>`.
+
+  Tres defectos reales que la regla destapo:
+  - un Excel **sin hojas** pasaba `undefined` a `sheet_to_json` y salia por el catch como "Excel
+    invalido", que no distingue un formato roto de un archivo vacio
+  - un adjunto cuyo data URL no tuviera coma se agregaba al correo con contenido `undefined`
+  - `LeadsTable` y `LeadsPage` reinsertaban el resultado de un `splice` sin comprobar que hubiera
+    sacado algo
+
+- [DESCARTADA] **`exactOptionalPropertyTypes` no se activa**, y esta vez con las pruebas delante en
+  vez de por precaucion: se encendio, se miraron los **70** errores (no 68) y la conclusion es que la
+  regla no compra nada aqui.
+
+  El motivo es concreto. Los mapeadores de fila a dominio escriben `campo: row.columna || undefined`
+  a proposito, unas veinte veces por mapeador. Con la regla activa solo hay dos salidas: declarar
+  `campo?: string | undefined` en cada tipo, que **silencia la regla sin ganar seguridad**, o emitir
+  la clave condicionalmente con spread, que multiplica el ruido para una distincion que este codigo
+  no usa: nada lee esas propiedades comprobando presencia de clave, todas las leen con `||` o `??`.
+
+  Se marca como decision cerrada y no como pendiente, para que nadie la reabra sin argumento nuevo.
+- [PENDIENTE] Reducir los **166** warnings (eran ~212). Composicion real al `2026-08-13`, que cambia
+  como hay que atacarlos: 54 `react-hooks/set-state-in-effect`, 33 `exhaustive-deps`, 33
+  `no-explicit-any`, 13 `react-hooks/refs`, y ~33 repartidos.
+
+  Los 54 primeros no son estilo: `setState` dentro de un efecto provoca un render extra por cada uno,
+  y en varios casos es el sintoma de estado derivado que deberia calcularse durante el render. Son el
+  bloque con mas valor real y el que mas cuidado exige, porque tocarlos cambia el momento en que se
+  actualiza la interfaz.
 
 ### Capitulo 13.4 - Correcciones funcionales (bloque 3)
 
