@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Button } from '../design';
 
 interface Props {
   onSelect: (variable: string) => void;
@@ -27,14 +28,16 @@ export default function VariableDropdown({ onSelect, direction = 'down' }: Props
 
   return (
     <div className="relative inline-block" ref={containerRef}>
-      <button
+      <Button
         type="button"
+        size="sm"
+        className="font-mono"
         onClick={() => setOpen(!open)}
-        className="btn btn-sm font-mono flex items-center text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200"
         title="Insertar variable"
+        aria-label="Insertar variable"
       >
         {'{ }'}
-      </button>
+      </Button>
       {open && (
         <div className={dropdownClass}>
           <div className="px-3 py-1 text-[10px] uppercase font-bold text-gray-400 border-b mb-1">

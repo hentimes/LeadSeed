@@ -9,6 +9,7 @@ import {
   type DuplicateInfo,
 } from '../../utils/importParser';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { Button } from '../../design';
 
 interface Props {
   existingRuts: Set<string>;
@@ -345,19 +346,16 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                 <p className="text-sm text-slate-400 dark:text-slate-500 mr-auto">
                   {selectedCount} de {preview.length} leads seleccionados
                 </p>
-                <button
-                  onClick={handleResetFile}
-                  className="btn btn-secondary"
-                >
+                <Button onClick={handleResetFile}>
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   onClick={handleImport}
                   disabled={selectedCount === 0}
-                  className="btn btn-primary"
                 >
                   Importar {selectedCount} leads
-                </button>
+                </Button>
               </div>
             </div>
           )}
