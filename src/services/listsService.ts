@@ -6,11 +6,12 @@ import {
   type LeadListRow,
   updateLeadList,
 } from '../repositories/listsRepository';
+import { STATE } from '../design/colors';
 
 const mapRowToLeadList = (row: LeadListRow): LeadList => ({
   id: row.id,
   name: row.name,
-  color: row.color || '#3b82f6',
+  color: row.color || STATE.info,
   createdAt: row.created_at,
 });
 

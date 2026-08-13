@@ -1,3 +1,5 @@
+import { STATE } from '../design/colors';
+
 export type LeadStatus = 'nuevo' | 'contactado' | 'interesado' | 'convertido' | 'descartado';
 
 /**
@@ -21,11 +23,14 @@ export const STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<LeadStatus, string> = {
+  // 'nuevo' y 'convertido' no tienen token equivalente: son un gris neutro y un
+  // verde mas frio que --ls-success. Se dejan literales en vez de forzar una
+  // correspondencia que no existe.
   nuevo: '#6b7280',
-  contactado: '#3b82f6',
-  interesado: '#f59e0b',
+  contactado: STATE.info,
+  interesado: STATE.warning,
   convertido: '#10b981',
-  descartado: '#ef4444',
+  descartado: STATE.danger,
 };
 
 /** Canal de captura del lead. 'general' incluye tambien el formulario /form. */
@@ -38,7 +43,7 @@ export const SOURCE_CHANNEL_LABELS: Record<LeadSourceChannel, string> = {
 };
 
 export const SOURCE_CHANNEL_COLORS: Record<LeadSourceChannel, string> = {
-  pb: '#3b82f6',
+  pb: STATE.info,
   general: '#6b7280',
   retiro: '#a855f7',
 };

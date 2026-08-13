@@ -10,11 +10,13 @@
  * el CSS este montado; deben coincidir con tokens.css.
  */
 
+import { BRAND, STATE } from './colors';
+
 const FALLBACK: Record<string, string> = {
-  '--ls-primary': '#6c4cf6',
-  '--ls-primary-hover': '#5b3ce0',
-  '--ls-primary-deep': '#4a2bb5',
-  '--ls-primary-light': '#8f85ff',
+  '--ls-primary': BRAND.primary,
+  '--ls-primary-hover': BRAND.primaryHover,
+  '--ls-primary-deep': BRAND.primaryDeep,
+  '--ls-primary-light': BRAND.primaryLight,
   '--ls-primary-soft': '#f2eeff',
   '--ls-primary-soft-strong': '#e0d4ff',
   '--ls-text': '#161a24',
@@ -22,10 +24,10 @@ const FALLBACK: Record<string, string> = {
   '--ls-text-muted': '#697387',
   '--ls-surface': '#ffffff',
   '--ls-border': '#e6eaf0',
-  '--ls-success': '#22c55e',
-  '--ls-warning': '#f59e0b',
-  '--ls-danger': '#ef4444',
-  '--ls-info': '#3b82f6',
+  '--ls-success': STATE.success,
+  '--ls-warning': STATE.warning,
+  '--ls-danger': STATE.danger,
+  '--ls-info': STATE.info,
 };
 
 const cache = new Map<string, string>();
@@ -35,7 +37,7 @@ export function token(name: keyof typeof FALLBACK | string): string {
   const cached = cache.get(name);
   if (cached) return cached;
 
-  let value = FALLBACK[name] || '#6c4cf6';
+  let value = FALLBACK[name] || BRAND.primary;
   if (typeof window !== 'undefined' && document.documentElement) {
     const computed = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     if (computed) value = computed;

@@ -1,9 +1,10 @@
 import type { Lead } from '../types';
+import { STATE } from '../design/colors';
 
 export const SMART_LIST_DEFS = [
   { id: 'smart_nuevos', name: 'Nuevos', color: '#10b981', category: 'Sistema' },
-  { id: 'smart_sin_gestion', name: 'Sin Gestión', color: '#f59e0b', category: 'Sistema' },
-  { id: 'smart_eliminados', name: 'Eliminados', color: '#ef4444', category: 'Sistema' },
+  { id: 'smart_sin_gestion', name: 'Sin Gestión', color: STATE.warning, category: 'Sistema' },
+  { id: 'smart_eliminados', name: 'Eliminados', color: STATE.danger, category: 'Sistema' },
   
   // Sistema de Salud
   { id: 'smart_isapre', name: 'Isapre (Todas)', color: '#3b82f6', category: 'Sistema de Salud' },

@@ -1,3 +1,5 @@
+import { BRAND, STATE } from '../design/colors';
+
 export type LeadAlertEventKind = 'lead_created';
 
 export interface LeadAlertEvent {
@@ -100,9 +102,9 @@ export const DEFAULT_ALERT_PREFERENCES: AlertPreferences = {
  * senal de que clase de alerta llego sin abrir la extension.
  */
 export const BADGE_COLORS = {
-  critical: '#EF4444',
-  newLeads: '#6C4CF6',
-  messages: '#3B82F6',
+  critical: STATE.danger,
+  newLeads: BRAND.primary,
+  messages: STATE.info,
 } as const;
 
 export type BadgeTone = keyof typeof BADGE_COLORS;
