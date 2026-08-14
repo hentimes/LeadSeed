@@ -136,7 +136,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
           </select>
         </div>
         <div className="h-[210px] w-full">
-          <DynamicAcquisitionChart data={leadSummary.monthlyCounts} type={chartType} />
+          <DynamicAcquisitionChart data={leadSummary.monthlyCounts} byOrigin={leadSummary.monthlyByOrigin} type={chartType} />
         </div>
       </div>
 

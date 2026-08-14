@@ -9,6 +9,24 @@ import { chartColors } from '../../design/palette';
 import { Card } from '../../design';
 import { CardTitle } from '../../design';
 
+/** Como se llama cada origen en pantalla. */
+const ETIQUETAS_ORIGEN: Record<string, string> = {
+  manual: 'Manual',
+  imported: 'Importado',
+  web_form: 'Formulario',
+};
+
+/** Barras del panel de fuentes, de mas a menos peso visual. */
+const BARRAS_FUENTE = ['bg-primary', 'bg-primary-light', 'bg-primary-soft-strong', 'bg-primary-soft'];
+
+/** Etapas del embudo, en el orden en que se recorren. */
+const ETAPAS: Array<{ clave: string; etiqueta: string }> = [
+  { clave: 'nuevo', etiqueta: 'Nuevo' },
+  { clave: 'contactado', etiqueta: 'Contactado' },
+  { clave: 'interesado', etiqueta: 'Interesado' },
+  { clave: 'convertido', etiqueta: 'Convertido' },
+];
+
 interface OverviewTabProps {
   snapshot: DashboardSnapshot;
   settings: AppSettings;
@@ -38,6 +56,39 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
     const percent = Math.round((diff / compare) * 100);
     return { value: `${Math.abs(percent)}%`, label: 'vs ayer', isPositive: percent >= 0 };
   };
+
+  /**
+   * Los tres paneles de abajo estuvieron hasta el `2026-08-14` escritos a mano
+   * en el JSX: Web 100%, "Nuevo 592", "Mejor mes: Julio (596)". Eran las cifras
+   * de una maqueta y no cambiaban con la cuenta que estuviera abierta.
+   *
+   * El dato ya venia en el snapshot; solo faltaba leerlo.
+   */
+  const fuentes = Object.entries(leadSummary.originCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, BARRAS_FUENTE.length)
+    .map(([origen, cantidad]) => ({
+      origen,
+      cantidad,
+      porcentaje: totalLeads > 0 ? Math.round((cantidad / totalLeads) * 100) : 0,
+    }));
+
+  const etapas = ETAPAS.map(({ clave, etiqueta }) => {
+    const cantidad = leadSummary.statusCounts[clave] ?? 0;
+    return {
+      etiqueta,
+      cantidad,
+      porcentaje: totalLeads > 0 ? Math.round((cantidad / totalLeads) * 100) : 0,
+    };
+  });
+
+  const tasaGlobal = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
+
+  const mejorFuente = fuentes[0];
+  const mejorMes = leadSummary.monthlyCounts.reduce<{ name: string; count: number } | null>(
+    (mejor, mes) => (mejor === null || mes.count > mejor.count ? mes : mejor),
+    null
+  );
 
   const tasksTrend = calcTrend(taskSummary.completedToday, 0); // TODO: backend needs compare task data
   const sendTrend = calcTrend(sendSummary.today.total, sendSummary.compare.total);
@@ -157,34 +208,21 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           <div>
             <h3 className="text-[10px] font-bold text-ink mb-2 whitespace-nowrap">Fuentes principales</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-ink-secondary w-14">Web</span>
-                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: '100%' }}></div>
+              {fuentes.length === 0 && <span className="text-ink-muted">Aun no hay leads.</span>}
+              {fuentes.map((fuente, i) => (
+                <div key={fuente.origen} className="flex items-center justify-between gap-1.5">
+                  <span className="text-ink-secondary w-14 truncate">
+                    {ETIQUETAS_ORIGEN[fuente.origen] ?? fuente.origen}
+                  </span>
+                  <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${BARRAS_FUENTE[i] ?? 'bg-primary-soft'}`}
+                      style={{ width: `${fuente.porcentaje}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-ink w-7 text-right">{fuente.porcentaje}%</span>
                 </div>
-                <span className="text-ink w-7 text-right">100%</span>
-              </div>
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-ink-secondary w-14">WhatsApp</span>
-                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary-light rounded-full" style={{ width: '0%' }}></div>
-                </div>
-                <span className="text-ink w-7 text-right">0%</span>
-              </div>
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-ink-secondary w-14">LinkedIn</span>
-                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-[#CFC7FF] rounded-full" style={{ width: '0%' }}></div>
-                </div>
-                <span className="text-ink w-7 text-right">0%</span>
-              </div>
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-ink-secondary w-14">Formulario</span>
-                <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary-soft-strong rounded-full" style={{ width: '0%' }}></div>
-                </div>
-                <span className="text-ink w-7 text-right">0%</span>
-              </div>
+              ))}
             </div>
           </div>
           <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
@@ -198,39 +236,20 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           <div>
             <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Conversión por etapa</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
-              <div className="flex justify-between items-center">
-                <span className="text-ink-secondary">Nuevo</span>
-                <div className="flex gap-1">
-                  <span className="text-ink">592</span>
-                  <span className="text-ink-muted w-7 text-right">(99%)</span>
+              {etapas.map((etapa) => (
+                <div key={etapa.etiqueta} className="flex justify-between items-center">
+                  <span className="text-ink-secondary">{etapa.etiqueta}</span>
+                  <div className="flex gap-1">
+                    <span className="text-ink">{etapa.cantidad}</span>
+                    <span className="text-ink-muted w-7 text-right">({etapa.porcentaje}%)</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-ink-secondary">Contactado</span>
-                <div className="flex gap-1">
-                  <span className="text-ink">2</span>
-                  <span className="text-ink-muted w-7 text-right">(0%)</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-ink-secondary">Interesado</span>
-                <div className="flex gap-1">
-                  <span className="text-ink">2</span>
-                  <span className="text-ink-muted w-7 text-right">(0%)</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-ink-secondary">Convertido</span>
-                <div className="flex gap-1">
-                  <span className="text-ink">0</span>
-                  <span className="text-ink-muted w-7 text-right">(0%)</span>
-                </div>
-              </div>
+              ))}
             </div>
-            
+
             <div className="border-t border-line mt-2 pt-2 flex justify-between items-center leading-none">
               <span className="text-[10px] font-medium text-ink-secondary w-[60%]">Tasa global</span>
-              <span className="text-[12px] font-bold text-ink">0%</span>
+              <span className="text-[12px] font-bold text-ink">{tasaGlobal}%</span>
             </div>
           </div>
           <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
@@ -244,17 +263,21 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           <div>
             <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Hallazgos</h3>
             <ul className="flex flex-col gap-1.5 text-[10px] text-ink-secondary leading-none">
+              {mejorFuente && (
+                <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
+                  <strong className="text-ink font-medium">Mejor fuente: </strong>
+                  {ETIQUETAS_ORIGEN[mejorFuente.origen] ?? mejorFuente.origen} ({mejorFuente.porcentaje}%).
+                </li>
+              )}
+              {mejorMes && mejorMes.count > 0 && (
+                <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
+                  <strong className="text-ink font-medium">Mejor mes: </strong>
+                  {mejorMes.name} ({mejorMes.count}).
+                </li>
+              )}
               <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
-                <strong className="text-ink font-medium">Mejor fuente: </strong>
-                Web (100%).
-              </li>
-              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
-                <strong className="text-ink font-medium">Mejor mes: </strong>
-                Julio (596).
-              </li>
-              <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
-                <strong className="text-ink font-medium">Tip: </strong>
-                Optimiza Web.
+                <strong className="text-ink font-medium">Contactados: </strong>
+                {contacted} de {totalLeads}.
               </li>
             </ul>
           </div>

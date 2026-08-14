@@ -16,7 +16,49 @@ interface MonthlyCount {
 
 interface DynamicAcquisitionChartProps {
   data: MonthlyCount[];
+  /**
+   * Mismos meses que `data`, pero desglosados por origen del lead. Solo lo usa
+   * el modo apilado; el resto de modos grafican el total.
+   */
+  byOrigin: Array<{ name: string; counts: Record<string, number> }>;
   type: ChartVisualType;
+}
+
+/**
+ * Etiquetas de los origenes que el CRM registra hoy. Si aparece uno nuevo se
+ * muestra su clave tal cual en vez de esconderlo: es preferible ver una etiqueta
+ * fea a perder leads del grafico.
+ */
+const ETIQUETAS_ORIGEN: Record<string, string> = {
+  manual: 'Manual',
+  imported: 'Importado',
+  web_form: 'Formulario web',
+};
+
+/**
+ * Colores de las franjas apiladas, en orden de uso.
+ *
+ * Se leen por getter porque `chartColors` resuelve contra tokens.css en tiempo
+ * de ejecucion y cambia al alternar claro/oscuro.
+ */
+function coloresApilado(): string[] {
+  return [chartColors.primary, chartColors.primaryLight, chartColors.soft, chartColors.primaryDeep];
+}
+
+/**
+ * Los origenes presentes en la ventana, del que mas leads aporta al que menos.
+ *
+ * El orden importa: la franja mas grande queda abajo, que es donde el ojo la
+ * lee como base. Ordenar por nombre dejaria barras que saltan de mes a mes.
+ */
+function ordenarOrigenes(byOrigin: Array<{ counts: Record<string, number> }>): string[] {
+  const totales = new Map<string, number>();
+  for (const mes of byOrigin) {
+    for (const [origen, cantidad] of Object.entries(mes.counts)) {
+      totales.set(origen, (totales.get(origen) ?? 0) + cantidad);
+    }
+  }
+  return [...totales.entries()].sort((a, b) => b[1] - a[1]).map(([origen]) => origen);
 }
 
 // Helper to render the label inside the bar
@@ -54,42 +96,46 @@ const renderCustomizedLabel = (props: PropsEtiqueta, textColor: string) => {
   );
 };
 
-export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisitionChartProps) {
-  // Transform data based on type
+export default function DynamicAcquisitionChart({ data, byOrigin, type }: DynamicAcquisitionChartProps) {
+  /**
+   * Origenes presentes, ya ordenados. Hasta el `2026-08-14` el apilado no
+   * miraba ningun origen: repartia el total con porcentajes fijos escritos en
+   * el codigo (38.8% web, 29.8% whatsapp, 21.1% linkedin, el resto formulario),
+   * asi que las cuatro franjas eran siempre el mismo dibujo con otra escala.
+   */
+  const origenes = useMemo(() => ordenarOrigenes(byOrigin), [byOrigin]);
+
   const processedData = useMemo(() => {
     if (data.length === 0) return [];
 
-    // Base data with mocked sources for stacked bars
-    let result = data.map(item => {
-      const web = Math.round(item.count * 0.388);
-      const whatsapp = Math.round(item.count * 0.298);
-      const linkedin = Math.round(item.count * 0.211);
-      const formulario = item.count - web - whatsapp - linkedin;
+    // `byOrigin` trae los mismos meses en el mismo orden, pero se indexa por
+    // nombre para no depender de esa coincidencia.
+    const porMes = new Map(byOrigin.map((mes) => [mes.name, mes.counts]));
 
-      return {
-        name: item.name.substring(0, 3).toUpperCase(),
-        total: item.count,
-        web,
-        whatsapp,
-        linkedin,
-        formulario,
-        webPercent: item.count > 0 ? Math.round((web / item.count) * 100) + '%' : '',
-        whatsappPercent: item.count > 0 ? Math.round((whatsapp / item.count) * 100) + '%' : '',
-        linkedinPercent: item.count > 0 ? Math.round((linkedin / item.count) * 100) + '%' : '',
-        formularioPercent: item.count > 0 ? Math.round((formulario / item.count) * 100) + '%' : '',
-      };
+    let result = data.map((item) => {
+      const nombre = item.name.substring(0, 3).toUpperCase();
+      const counts = porMes.get(item.name) ?? porMes.get(nombre) ?? {};
+
+      const fila: Record<string, string | number> = { name: nombre, total: item.count };
+      for (const origen of origenes) {
+        const cantidad = counts[origen] ?? 0;
+        fila[origen] = cantidad;
+        fila[`${origen}Percent`] =
+          item.count > 0 && cantidad > 0 ? `${Math.round((cantidad / item.count) * 100)}%` : '';
+      }
+      return fila;
     });
 
     if (type === 'cumulative') {
       let accum = 0;
-      result = result.map(item => {
-        accum += item.total;
+      result = result.map((item) => {
+        accum += Number(item.total);
         return { ...item, total: accum };
       });
     }
 
     return result;
-  }, [data, type]);
+  }, [data, byOrigin, origenes, type]);
 
   const renderTooltip = (props: PropsTooltip) => {
     const { active, payload, label } = props;
@@ -184,18 +230,29 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
             <Tooltip content={renderTooltip} cursor={{ fill: chartColors.surface }} />
             <Legend verticalAlign="bottom" height={20} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', color: chartColors.inkSecondary, paddingTop: '15px' }} />
             
-            <Bar dataKey="web" name="Web" stackId="a" fill={chartColors.primary} maxBarSize={40} minPointSize={4}>
-              <LabelList dataKey="webPercent" content={(p) => renderCustomizedLabel(p, '#ffffff')} />
-            </Bar>
-            <Bar dataKey="whatsapp" name="WhatsApp" stackId="a" fill={chartColors.primaryLight} maxBarSize={40}>
-              <LabelList dataKey="whatsappPercent" content={(p) => renderCustomizedLabel(p, '#ffffff')} />
-            </Bar>
-            <Bar dataKey="linkedin" name="LinkedIn" stackId="a" fill={chartColors.primaryLight} maxBarSize={40}>
-              <LabelList dataKey="linkedinPercent" content={(p) => renderCustomizedLabel(p, '#5B42F3')} />
-            </Bar>
-            <Bar dataKey="formulario" name="Formulario" stackId="a" fill={chartColors.soft} maxBarSize={40}>
-              <LabelList dataKey="formularioPercent" content={(p) => renderCustomizedLabel(p, '#5B42F3')} />
-            </Bar>
+            {origenes.map((origen, i) => {
+              const paleta = coloresApilado();
+              const fondo = paleta[i % paleta.length] ?? chartColors.primary;
+              // Las dos primeras franjas son oscuras y las siguientes claras,
+              // asi que el texto del porcentaje invierte para seguir leyendose.
+              const textoEncima = i < 2 ? '#ffffff' : chartColors.primaryDeep;
+              return (
+                <Bar
+                  key={origen}
+                  dataKey={origen}
+                  name={ETIQUETAS_ORIGEN[origen] ?? origen}
+                  stackId="a"
+                  fill={fondo}
+                  maxBarSize={40}
+                  {...(i === 0 ? { minPointSize: 4 } : {})}
+                >
+                  <LabelList
+                    dataKey={`${origen}Percent`}
+                    content={(p) => renderCustomizedLabel(p, textoEncima)}
+                  />
+                </Bar>
+              );
+            })}
           </BarChart>
         );
 

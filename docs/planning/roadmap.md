@@ -2139,39 +2139,48 @@ comerciales mirando numeros que no salen de ningun lado.
   - **El motivo se limpia si el lead sale de `descartado`**, para que no quede contradiciendo al
     estado ni contaminando el conteo.
 
-  Pendiente de este mismo frente: el arrastre en el pipeline y la edicion de ficha tambien pueden
-  descartar, y todavia no preguntan. El controlador ya expone la logica separada del dialogo
-  (`applyBulkStatus`), asi que engancharlos es directo.
+- [HECHO] (`2026-08-14`) Los tres restantes, **sin capturar nada nuevo**: el dato ya estaba en
+  `leads` y nadie lo estaba agregando. La migracion **102** suma tres cortes al snapshot y los tres
+  componentes pasan a leerlos.
 
-- [CORREGIDO] Los tres restantes: **dos de ellos si se pueden derivar de lo que ya hay**, al reves de
-  lo que decia la version anterior de este item. `leads` guarda `created_at`, `first_contacted_at`,
-  `closed_at`, `status` y `metadata.origin`, y con eso salen:
+  | Componente | Campo nuevo | Se calcula con |
+  |---|---|---|
+  | `QualityMatrix` | `originQuality` | volumen, convertidos y ciclo por `metadata.origin` |
+  | `DynamicAcquisitionChart` (apilado) | `monthlyByOrigin` | el conteo mensual desglosado por origen |
+  | `TimeInStageChart` | `stageDurations` | `first_contacted_at - created_at` y `closed_at - first_contacted_at` |
 
-  | Componente | Se puede calcular con |
-  |---|---|
-  | `QualityMatrix` | volumen y tasa de conversion por origen, y ciclo como `closed_at - created_at` |
-  | `DynamicAcquisitionChart` (apilado) | el conteo mensual por origen |
-  | `TimeInStageChart` | **solo dos tramos** de los cuatro: nuevo->contactado y contactado->cierre |
+  Tres decisiones que no se leen del codigo:
 
-  Ninguno necesita capturar nada nuevo; falta agregarlos en el snapshot y reescribir los tres
-  componentes. `TimeInStageChart` es el unico que sigue mostrando de mas: cuatro etapas cuando el
-  dato solo da dos.
+  - **El ciclo de venta promedia solo los convertidos.** Incluir los que siguen abiertos daria un
+    numero que *baja* cuando entran leads nuevos, que es justo lo contrario de lo que la metrica
+    quiere decir.
+  - **`TimeInStageChart` ahora muestra dos barras, no cuatro.** `leads` no registra cuando el lead
+    paso a "interesado", asi que dos de los cuatro tramos no existen. El grafico se ve mas vacio y
+    esta bien: dos tramos ciertos valen mas que cuatro inventados. Para los otros dos haria falta un
+    historial de cambios de estado, que es un frente propio.
+  - **Las franjas del apilado son dinamicas.** Se ordenan por volumen total de la ventana, no por
+    nombre, para que la franja grande quede abajo y no salte de mes a mes. Un origen desconocido se
+    pinta con su clave cruda en vez de esconderse.
 
-  | Componente | Que le falta |
-  |---|---|
-  | `QualityMatrix` | win rate y ciclo de venta por fuente; no se registra la conversion por canal |
-  | `TimeInStageChart` | marcas de tiempo por etapa; solo hay `first_contacted_at` y `closed_at` |
-  | `DynamicAcquisitionChart` (apilado) | el mismo reparto por fuente, pero por mes |
+  Los promedios pueden venir nulos si todavia no hay ningun caso; el frontend los muestra como `—`,
+  nunca como `0d`, porque un cero se leeria como "cierra el mismo dia".
 
-  Para cada uno hay tres salidas y la eleccion es del usuario, porque cambia lo que ve: **capturar el
-  dato que falta** (implica tocar el flujo de trabajo, por ejemplo pedir motivo al descartar),
-  **marcarlo visiblemente como ejemplo**, o **retirarlo**. Mientras tanto siguen mostrando constantes.
+- [HECHO] (`2026-08-14`) `OverviewTab`: los **tres paneles de abajo** estaban escritos en el JSX, no
+  solo "Fuentes principales". Tambien "Conversion por etapa" (Nuevo 592, Contactado 2, tasa global
+  0%) y "Hallazgos" (Mejor mes: Julio (596)). Ninguno necesitaba backend nuevo: salen de
+  `originCounts`, `statusCounts` y `monthlyCounts`, que ya venian en el snapshot.
 
-- [PENDIENTE] `OverviewTab` tiene ademas un bloque "Fuentes principales" **escrito directamente en el
-  JSX**: las barras y los porcentajes son literales (`width: '100%'`, `100%`). Es el mismo problema y
-  se arregla igual, reusando `originCounts`, pero cambia esa tarjeta del panel principal.
+  El tercer hallazgo era un consejo redactado a mano ("Optimiza Web") que no dependia de ningun
+  dato; se cambio por contactados sobre total, que si se mide.
+
 - [PENDIENTE] `OverviewTab`: las dos tendencias falsas necesitan que el backend devuelva el dato de
   comparacion. Mientras no exista, mostrar "0% vs ayer" con flecha verde es peor que no mostrar nada.
+  La tarjeta "Respuestas" es un caso aparte: su valor esta fijo en `0` porque **no se registran las
+  respuestas entrantes en ningun lado**. No es un numero inventado, pero tampoco es una medicion.
+
+- [PENDIENTE] El arrastre en el pipeline y la edicion de ficha tambien pueden descartar, y todavia no
+  preguntan el motivo. El controlador ya expone la logica separada del dialogo (`applyBulkStatus`),
+  asi que engancharlos es directo.
 
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 

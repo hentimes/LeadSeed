@@ -8130,3 +8130,54 @@ aislado de la Function.
 - Sigue pendiente (ver entrada anterior) el calculo de cupos por tipo vs.
   limite global en LeadSeed si se abre un segundo tipo no-admin-only a
   futuro.
+
+### 2026-08-14 CLT - Claude - LeadSeed / panel analitico deja de fabricar datos
+
+- Tipo: correccion de datos mostrados / CONTROL 15.1 (queries permanentes)
+- Rol: Implementadora
+- Estado: aplicado en produccion y en el repo
+
+**Que estaba mal.** Seis componentes del panel presentaban constantes escritas
+en el codigo como si fueran analitica: `QualityMatrix` (LinkedIn 126 / 15.2% /
+12d), `LossReasonsChart`, `TimeInStageChart`, el modo apilado de
+`DynamicAcquisitionChart`, `SourceBreakdownChart`, y los tres paneles inferiores
+de `OverviewTab`. Llevaban porcentajes, flechas y unidades junto a metricas que
+si eran reales, asi que no habia forma de distinguirlos mirando la pantalla.
+
+**Migraciones aplicadas** (todas reemplazan `get_my_dashboard_snapshot`
+conservando firma y todo lo que ya devolvia):
+
+- **099** `originCounts` + `channelCounts`
+- **100** columna `leads.discard_reason` + indice parcial
+- **101** `lossReasons`
+- **102** `originQuality`, `monthlyByOrigin`, `stageDurations`
+
+La 101 y la 102 se generaron **derivandolas del texto de la migracion anterior**
+con inserciones verificadas por asercion, no reescribiendo la funcion a mano: un
+primer intento manual (en la 098) habia truncado silenciosamente un `ORDER BY`.
+
+**Decisiones que no se leen del codigo:**
+
+- El **motivo de descarte es opcional**, con boton "Sin motivo" explicito.
+  Obligarlo convertiria descartar en un tramite y la gente elegiria cualquier
+  cosa, que ensucia el dato mas que dejarlo vacio.
+- Los descartados **anteriores** cuentan como "Sin motivo", no se reparten entre
+  categorias: repartirlos seria inventar otra vez justo el dato que el grafico
+  existia para mostrar.
+- El **ciclo de venta promedia solo los convertidos**. Incluir los abiertos daria
+  un numero que baja cuando entran leads nuevos.
+- `TimeInStageChart` pasa de **cuatro barras a dos**. `leads` no registra cuando
+  el lead paso a "interesado", asi que dos tramos no existen. Se ve mas vacio y
+  esta bien.
+- Los promedios nulos se pintan como guion, nunca como `0d`: un cero se leeria
+  como "cierra el mismo dia".
+
+**Sigue pendiente.** Las dos tendencias de `OverviewTab` ("0% vs ayer") necesitan
+que el backend devuelva comparacion. La tarjeta "Respuestas" muestra `0` fijo
+porque las respuestas entrantes no se registran en ningun lado - no es un numero
+inventado, pero tampoco es una medicion. El arrastre en el pipeline y la edicion
+de ficha tambien descartan y todavia no preguntan el motivo.
+
+**Validacion:** `typecheck`, `lint` (0 errores, 116 avisos preexistentes),
+`test` (20 archivos / 270 casos), `build` y `check:classes` (6443 clases) en
+verde. Sin verificacion visual: eso queda del lado del usuario.

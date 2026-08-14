@@ -158,7 +158,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <div className="text-ink-muted"><Icon.Help /></div>
           </div>
           <div className="flex-1">
-            <TimeInStageChart />
+            <TimeInStageChart data={leadSummary.stageDurations} />
           </div>
         </Card>
 
@@ -169,7 +169,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <div className="text-ink-muted"><Icon.Help /></div>
           </div>
           <div className="flex-1 overflow-auto">
-            <QualityMatrix />
+            <QualityMatrix data={leadSummary.originQuality} />
           </div>
         </Card>
       </div>

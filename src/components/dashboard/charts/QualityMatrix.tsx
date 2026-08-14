@@ -1,19 +1,41 @@
-import { chartColors } from '../../../design/palette';
+interface QualityMatrixProps {
+  /** Una fila por origen, ya ordenada de mas a menos volumen por el RPC. */
+  data: Array<{
+    origin: string;
+    leads: number;
+    converted: number;
+    /** Nulo si ese origen todavia no ha convertido ninguno. */
+    avgCycleDays: number | null;
+  }>;
+}
 
-const LinkedinIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>;
-const WhatsAppIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
-const EnvelopeIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M2 4l10 8 10-8"></path></svg>;
-const PhoneIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>;
-const DatabaseIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>;
+/**
+ * Calidad de los leads segun como entraron al CRM.
+ *
+ * Hasta el `2026-08-14` esta tabla tenia sus cinco filas **escritas a mano**
+ * (LinkedIn 126 / 15.2% / 12d, WhatsApp 178 / 12% / 5d...). Ni los numeros ni
+ * las fuentes eran reales: LinkedIn y WhatsApp son canales de envio, no
+ * origenes de lead, y el CRM nunca los ha registrado como procedencia.
+ *
+ * Ahora sale de `originQuality`, que cuenta sobre `metadata.origin`. El ciclo
+ * promedia solo los convertidos: incluir los abiertos daria un numero que baja
+ * cuando entran leads nuevos, al reves de lo que la metrica quiere decir.
+ */
 
-export default function QualityMatrix() {
-  const sources = [
-    { id: 'linkedin', name: 'LinkedIn', leads: 126, winRate: 15.2, cycle: 12, icon: <LinkedinIcon />, color: chartColors.primaryLight },
-    { id: 'whatsapp', name: 'WhatsApp', leads: 178, winRate: 12.0, cycle: 5, icon: <WhatsAppIcon />, color: chartColors.primaryLight },
-    { id: 'email', name: 'Email', leads: 142, winRate: 10.3, cycle: 7, icon: <EnvelopeIcon />, color: chartColors.primaryLight },
-    { id: 'llamado', name: 'Llamado', leads: 96, winRate: 8.1, cycle: 9, icon: <PhoneIcon />, color: chartColors.primaryLight },
-    { id: 'database', name: 'Base de datos', leads: 88, winRate: 6.4, cycle: 11, icon: <DatabaseIcon />, color: chartColors.primaryLight },
-  ];
+const ETIQUETAS: Record<string, string> = {
+  manual: 'Manual',
+  imported: 'Importado',
+  web_form: 'Formulario web',
+};
+
+export default function QualityMatrix({ data }: QualityMatrixProps) {
+  if (data.length === 0) {
+    return (
+      <p className="py-6 text-center text-[11px] text-ink-muted">
+        Todavia no hay leads que analizar.
+      </p>
+    );
+  }
 
   return (
     <div className="w-full pt-1">
@@ -27,23 +49,32 @@ export default function QualityMatrix() {
           </tr>
         </thead>
         <tbody>
-          {sources.map((source, _idx) => (
-            <tr key={source.id} className="border-b border-line last:border-0 hover:bg-surface-muted transition-colors">
-              <td className="py-2.5 flex items-center gap-2">
-                <div className="w-4 h-4 flex items-center justify-center" style={{ color: source.color }}>
-                  {source.icon}
-                </div>
-                <span className="text-[12px] font-semibold text-ink">{source.name}</span>
-              </td>
-              <td className="py-2.5 text-right text-[12px] text-ink-secondary">{source.leads}</td>
-              <td className="py-2.5 text-right">
-                <span className="text-[12px] font-bold text-state-success bg-[#E6F9F0] px-1.5 py-0.5 rounded-[4px]">
-                  {source.winRate}%
-                </span>
-              </td>
-              <td className="py-2.5 text-right text-[12px] text-ink font-medium">{source.cycle}d</td>
-            </tr>
-          ))}
+          {data.map((fila) => {
+            const winRate = fila.leads > 0 ? Math.round((fila.converted / fila.leads) * 1000) / 10 : 0;
+            return (
+              <tr
+                key={fila.origin}
+                className="border-b border-line last:border-0 hover:bg-surface-muted transition-colors"
+              >
+                <td className="py-2.5">
+                  <span className="text-[12px] font-semibold text-ink">
+                    {ETIQUETAS[fila.origin] ?? fila.origin}
+                  </span>
+                </td>
+                <td className="py-2.5 text-right text-[12px] text-ink-secondary">{fila.leads}</td>
+                <td className="py-2.5 text-right">
+                  <span className="text-[12px] font-bold text-state-success bg-state-success-soft px-1.5 py-0.5 rounded-[4px]">
+                    {winRate}%
+                  </span>
+                </td>
+                <td className="py-2.5 text-right text-[12px] text-ink font-medium">
+                  {/* Un guion, no un cero: sin convertidos no hay ciclo que medir,
+                      y un 0d se leeria como "cierra el mismo dia". */}
+                  {fila.avgCycleDays === null ? '—' : `${fila.avgCycleDays}d`}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

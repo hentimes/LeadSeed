@@ -12,6 +12,9 @@ export interface DashboardSnapshotRow {
     originCounts?: Record<string, number>;
     channelCounts?: Record<string, number>;
     lossReasons?: Array<{ name: string; value: number }>;
+    originQuality?: Array<{ origin: string; leads: number; converted: number; avgCycleDays: number | null }>;
+    monthlyByOrigin?: Array<{ name: string; counts: Record<string, number> }>;
+    stageDurations?: { nuevoAContactado: number | null; contactadoACierre: number | null };
   };
   sendSummary?: {
     today?: {

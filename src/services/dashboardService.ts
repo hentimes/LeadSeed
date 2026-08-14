@@ -15,6 +15,15 @@ export interface DashboardSnapshot {
     channelCounts: Record<string, number>;
     /** Motivos de descarte contados. Los que nadie declaro salen como 'Sin motivo'. */
     lossReasons: Array<{ name: string; value: number }>;
+    /** Por origen: volumen, convertidos y ciclo medio en dias. Ciclo nulo si no hay convertidos. */
+    originQuality: Array<{ origin: string; leads: number; converted: number; avgCycleDays: number | null }>;
+    /** Adquisicion mensual desglosada por origen, para las barras apiladas. */
+    monthlyByOrigin: Array<{ name: string; counts: Record<string, number> }>;
+    /**
+     * Dias promedio entre etapas. Solo hay dos tramos porque `leads` no guarda
+     * cuando el lead paso a "interesado". Nulo si aun no hay ningun caso.
+     */
+    stageDurations: { nuevoAContactado: number | null; contactadoACierre: number | null };
   };
   sendSummary: {
     today: {
@@ -52,6 +61,9 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       originCounts: row.leadSummary?.originCounts ?? {},
       channelCounts: row.leadSummary?.channelCounts ?? {},
       lossReasons: row.leadSummary?.lossReasons ?? [],
+      originQuality: row.leadSummary?.originQuality ?? [],
+      monthlyByOrigin: row.leadSummary?.monthlyByOrigin ?? [],
+      stageDurations: row.leadSummary?.stageDurations ?? { nuevoAContactado: null, contactadoACierre: null },
     },
     sendSummary: {
       today: {
