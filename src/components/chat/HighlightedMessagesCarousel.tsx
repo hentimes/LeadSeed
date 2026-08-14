@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toPlainText } from '../../utils/mentionParser';
 import type { ChatHighlightedMessage } from '../../services/chatModerationService';
 
@@ -18,9 +18,12 @@ export default function HighlightedMessagesCarousel({
 }: HighlightedMessagesCarouselProps) {
   const [index, setIndex] = useState(0);
 
-  useEffect(() => {
-    if (index >= highlights.length) setIndex(0);
-  }, [highlights.length, index]);
+  // El indice se acota durante el render, no desde un efecto. Antes un efecto
+  // detectaba que se habia salido de rango y llamaba a setIndex(0), lo que
+  // obliga a React a pintar dos veces: una con el indice invalido y otra ya
+  // corregido. Calcularlo aqui da el valor bueno en la primera pasada.
+  const indiceVisible = index >= highlights.length ? 0 : index;
+
 
   if (highlights.length === 0) {
     return <p className="text-sm text-ink-muted">Nadie destacó ningún mensaje todavía.</p>;
@@ -30,7 +33,7 @@ export default function HighlightedMessagesCarousel({
   // y el efecto lo devuelve a cero; por eso el respaldo al primero. Y el guard
   // no es defensivo por si acaso: es lo que le demuestra al compilador que a
   // esta altura ya se descarto la lista vacia.
-  const current = highlights[index] ?? highlights[0];
+  const current = highlights[indiceVisible];
   if (!current) return null;
 
   const hasMultiple = highlights.length > 1;
@@ -45,7 +48,7 @@ export default function HighlightedMessagesCarousel({
             </span>
             {hasMultiple && (
               <span className="text-[10px] text-ink-muted flex-shrink-0">
-                {index + 1}/{highlights.length}
+                {indiceVisible + 1}/{highlights.length}
               </span>
             )}
           </div>

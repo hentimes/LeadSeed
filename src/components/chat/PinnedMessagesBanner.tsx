@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toPlainText } from '../../utils/mentionParser';
 import type { ChatPinnedMessage } from '../../types';
 
@@ -21,14 +21,16 @@ const PinIcon = () => (
 export default function PinnedMessagesBanner({ pinned, canUnpin, onUnpin }: PinnedMessagesBannerProps) {
   const [index, setIndex] = useState(0);
 
-  // Si se fija o vence uno y el indice queda fuera de rango, volver al primero.
-  useEffect(() => {
-    if (index >= pinned.length) setIndex(0);
-  }, [pinned.length, index]);
+  // El indice se acota durante el render, no desde un efecto. Antes un efecto
+  // detectaba que se habia salido de rango y llamaba a setIndex(0), lo que
+  // obliga a React a pintar dos veces: una con el indice invalido y otra ya
+  // corregido. Calcularlo aqui da el valor bueno en la primera pasada.
+  const indiceVisible = index >= pinned.length ? 0 : index;
+
 
   if (pinned.length === 0) return null;
 
-  const current = pinned[index] ?? pinned[0];
+  const current = pinned[indiceVisible];
   if (!current) return null;
 
   const hasMultiple = pinned.length > 1;
@@ -46,7 +48,7 @@ export default function PinnedMessagesBanner({ pinned, canUnpin, onUnpin }: Pinn
           </span>
           {hasMultiple && (
             <span className="text-[10px] text-amber-600/70 dark:text-amber-400/70">
-              {index + 1}/{pinned.length}
+              {indiceVisible + 1}/{pinned.length}
             </span>
           )}
         </div>
