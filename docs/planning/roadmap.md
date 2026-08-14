@@ -1482,32 +1482,63 @@ bloque 4.
   `2026-08-12`: se mantiene como pendiente para que todo quede dentro del estandar, con prioridad
   baja. Si alguna superficie futura pasa a usar `fetch` contra este endpoint, sube de prioridad.
 
-### Capitulo 13.5 - Consolidacion de formularios en LeadSeed (bloque 4)
+### Capitulo 13.5 - Consolidacion de formularios (bloque 4) - CERRADO el `2026-08-14`
 
-Principio: la extension y los formularios publicos no comparten runtime. La consolidacion es de codigo
-fuente y de deploy, no de bundle.
+**El traslado de los formularios a LeadSeed se descarta.** El bloque se cierra como decision, no como
+trabajo pendiente.
 
-- [PENDIENTE] Crear `public-forms/` como carpeta hermana con `package.json`, build, CI y deploy
-  propios.
-- [PENDIENTE] Mover `pb/`, `form/`, `retiro-tecnico-extranjero/` y `frontend/lead-capture/` desde
-  `landing-gerow`, **junto con sus Pages Functions** `functions/{pb,form,retiro-tecnico-extranjero}/[[slug]].js`.
-  Corregido el `2026-08-12`: la carpeta `forms/{pb,form,retiro,retiro-v2}` que este item citaba **no existe en
-  `origin/master`**, que es la rama desde la que se despliega produccion. Solo vive en la rama de trabajo
-  `fix/agenda-url-bug`, sin mergear, aunque `AI_SYNC.md` diera la reorganizacion por hecha el `2026-08-03`.
-  Tomar `forms/` como fuente habria portado una version que produccion no usa.
-  Las Functions no son accesorias: `/pb/<code>` no corresponde a ningun fichero, lo resuelve
-  `functions/pb/[[slug]].js`. Migrar los estaticos sin ellas deja todos los short links en 404.
-- [PENDIENTE] Extraer un unico `shared/form-api-client.js`. Hoy hay cuatro implementaciones
-  independientes del normalizador de rutas mas `retiro-v2` que hardcodea rutas legacy.
-- [PENDIENTE] Borrar `.codex-tmp/deploy-clean/`, que si es una copia muerta versionada.
-  Corregido el `2026-08-12`: este item listaba tambien `pb/app.js` y `form/app.js` como muertos, y es al
-  reves, **son los que sirven produccion hoy**. El error venia de asumir que `forms/` era la fuente
-  canonica. Borrarlos habria tumbado los dos formularios publicos.
-- [PENDIENTE] Garantizar el aislamiento: `public-forms` excluido de `tsconfig.json` y de la config de
-  Vite, sin imports cruzados con `src/`, CI filtrado por `paths`.
-- [PENDIENTE] Arreglar `retiro-v2` antes de desplegarlo: canal invalido, sin idempotencia, y redirige a
-  Hotmart tanto si el lead se guardo como si fallo.
-- [PENDIENTE] No mover las Edge Functions a `public-forms/`: sirven tambien a la extension.
+#### Por que
+
+Un proyecto de Cloudflare Pages se conecta a **un** repositorio. El reconocimiento del `2026-08-12`
+(capitulo 13.4.c) confirmo que existe **un solo** proyecto Pages, `planespro`, conectado a
+`landing-gerow`, y de el se sirve todo `planespro.cl`.
+
+Entonces mover los formularios a LeadSeed exige una de tres cosas, y ninguna sale bien:
+
+1. **Crear un segundo proyecto Pages** mas un Worker que reparta el trafico por ruta. Es lo que
+   pedia el item 1 de este bloque. El usuario decidio explicitamente no crear nada nuevo en
+   Cloudflare mientras se cierra el resto.
+2. **Mover el codigo sin mover el deploy.** Es la peor: produccion seguiria sirviendo la copia de
+   `landing-gerow` y LeadSeed tendria una copia que no se despliega. Eso es exactamente la doble
+   fuente de verdad que costo dos incidentes este mes (`form-leads` divergente entre repos,
+   `form-progress` desplegada desde un arbol sin commitear), y esta vez sobre la captacion de leads.
+3. **Sincronizar por CI** de LeadSeed a `landing-gerow`. Sigue habiendo dos copias; solo se agrega
+   una tuberia que puede fallar en silencio. La deriva ya es el modo de fallo dominante de este
+   proyecto: no conviene construirle una via mas rapida.
+
+#### Lo que el bloque mezclaba
+
+Al abrirlo aparece que juntaba dos cosas distintas: **arreglar problemas reales de los formularios** y
+**cambiarlos de repositorio**. Solo la segunda esta bloqueada. Los problemas reales se arreglan igual
+de bien donde estan, y se conservan abajo reescritos con ese alcance.
+
+#### Que queda, ya sin el traslado
+
+- [PENDIENTE, en `landing-gerow`] Unificar el normalizador de rutas de la API. Verificado el
+  `2026-08-14` contra `origin/master`: `pb/app.js` y `frontend/lead-capture/js/app.js` tienen su
+  propia copia, `form/app.js` una tercera, y `retiro-tecnico-extranjero/app.js` no usa ninguna. Son
+  cuatro criterios distintos para construir la misma URL.
+- [PENDIENTE, en `landing-gerow`] Arreglar `retiro-v2` antes de desplegarlo: canal invalido, sin
+  idempotencia, y redirige a Hotmart tanto si el lead se guardo como si fallo. Hoy no esta
+  desplegado, asi que no corre prisa, pero tampoco debe desplegarse asi.
+- [PENDIENTE, en `landing-gerow`] Borrar `.codex-tmp/deploy-clean/`, copia muerta versionada.
+- [PENDIENTE] Decidir el destino de la reorganizacion a `forms/`, rescatada en
+  `wip/rescate-arbol-sucio-2026-08-14`. Esta a medias y **no se puede desplegar tal cual**: las Pages
+  Functions ya apuntan a `/forms/pb/` y esa carpeta no esta completa, asi que `/pb/` daria 404. O se
+  termina en `landing-gerow` o se abandona; dejarla a medias en un arbol sucio es lo que ya paso.
+
+#### Decisiones que se conservan de la version anterior
+
+- **Las Edge Functions no se mueven a los formularios**: sirven tambien a la extension. Ya se cerro
+  al contrario, trayendolas todas a LeadSeed (capitulo 15.5 del protocolo).
+- El reparto de propiedad queda asi: **LeadSeed posee las Edge Functions y las migraciones SQL;
+  `landing-gerow` posee los formularios publicos y el sitio.** Es la frontera que ya funciona.
+
+#### Como reabrirlo
+
+Si algun dia se acepta crear un segundo proyecto Pages, el traslado vuelve a ser viable y este
+capitulo se reabre con el item 1 primero. La decision no es tecnica sino de infraestructura, y esta
+tomada solo mientras se mantenga la restriccion de no crear recursos nuevos en Cloudflare.
 
 ### Capitulo 13.6 - Preparacion para app movil (bloque 5)
 

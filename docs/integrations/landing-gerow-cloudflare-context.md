@@ -71,8 +71,14 @@ functions/retiro-tecnico-extranjero/[[slug]].js
 `fix/agenda-url-bug`, sin mergear. `AI_SYNC.md` registro esa reorganizacion como hecha el
 `2026-08-03`, y es cierto que se hizo, pero nunca llego a la rama desplegada.
 
-Consecuencia para el bloque 4: **la fuente a mover a LeadSeed es `pb/`, `form/` y
-`frontend/lead-capture/`, no `forms/`.** Tomar `forms/` seria portar una version que produccion no
+Actualizacion del `2026-08-14`: **el bloque 4 se cerro y los formularios NO se mueven a LeadSeed.**
+Un proyecto Pages se conecta a un repositorio, hay uno solo y esta conectado a `landing-gerow`, asi
+que trasladar el codigo sin el deploy crearia otra doble fuente de verdad. El reparto de propiedad
+queda: LeadSeed posee las Edge Functions y el SQL; este repo posee los formularios y el sitio. Ver
+roadmap 13.5.
+
+Lo que sigue siendo cierto de este apartado es donde vive cada cosa: la fuente real es `pb/`, `form/`
+y `frontend/lead-capture/`, **no `forms/`.** Tomar `forms/` seria portar una version que produccion no
 usa.
 
 ### El enrutado de los short links no es un archivo estatico
