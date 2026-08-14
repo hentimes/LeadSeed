@@ -1,4 +1,12 @@
 import React from 'react';
+import type { Trend } from './trend';
+
+/** Sin cambios no es ni bueno ni malo: no debe pintarse de verde. */
+const COLOR_TENDENCIA: Record<Trend['direction'], string> = {
+  up: 'text-state-success',
+  down: 'text-state-danger',
+  flat: 'text-ink-muted',
+};
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -7,11 +15,7 @@ interface MetricCardProps {
   title: string;
   value: string | number;
   subtitle?: React.ReactNode;
-  trend?: {
-    value: number | string;
-    label: string;
-    isPositive: boolean;
-  };
+  trend?: Trend;
   onClick?: () => void;
 }
 
@@ -42,9 +46,11 @@ export default function MetricCard({
         {(trend || subtitle) && (
           <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium whitespace-nowrap">
             {trend && (
-              <span className={`flex items-center gap-1 ${trend.isPositive ? 'text-state-success' : 'text-state-danger'}`}>
-                {trend.isPositive ? '↑' : '↓'} {trend.value}
-                <span className="text-ink-muted text-[11px] font-normal">vs ayer</span>
+              <span className={`flex items-center gap-1 ${COLOR_TENDENCIA[trend.direction]}`}>
+                {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : ''} {trend.value}
+                {/* La etiqueta viene del periodo elegido en ajustes. Estaba fija
+                    en "vs ayer", asi que mentia con cualquier otro periodo. */}
+                <span className="text-ink-muted text-[11px] font-normal">{trend.label}</span>
               </span>
             )}
             {subtitle && !trend && <span className="text-ink-secondary">{subtitle}</span>}

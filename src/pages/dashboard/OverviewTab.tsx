@@ -8,6 +8,7 @@ import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
 import { Card } from '../../design';
 import { CardTitle } from '../../design';
+import { calcularTendencia } from '../../components/dashboard/trend';
 
 /** Como se llama cada origen en pantalla. */
 const ETIQUETAS_ORIGEN: Record<string, string> = {
@@ -41,21 +42,19 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
   const emailToday = sendSummary.today.email;
   const callToday = sendSummary.today.call;
 
-  const waDiff = waToday - sendSummary.compare.whatsapp;
-  const emailDiff = emailToday - sendSummary.compare.email;
-  const callDiff = callToday - sendSummary.compare.call;
+  /**
+   * Los anillos de metas pasaban `waToday - compare` con un `%` pegado detras,
+   * asi que cinco mensajes mas que ayer se mostraban como "5%". Ahora es el
+   * mismo calculo que el resto del panel.
+   */
+  const waTrend = calcularTendencia(waToday, sendSummary.compare.whatsapp, compareLabel);
+  const emailTrend = calcularTendencia(emailToday, sendSummary.compare.email, compareLabel);
+  const callTrend = calcularTendencia(callToday, sendSummary.compare.call, compareLabel);
 
   const totalLeads = leadSummary.total;
   const contacted = leadSummary.contacted;
   const converted = leadSummary.converted;
   const forgottenCount = leadSummary.forgotten;
-
-  const calcTrend = (current: number, compare: number) => {
-    if (compare === 0) return { value: '0%', label: 'vs ayer', isPositive: true };
-    const diff = current - compare;
-    const percent = Math.round((diff / compare) * 100);
-    return { value: `${Math.abs(percent)}%`, label: 'vs ayer', isPositive: percent >= 0 };
-  };
 
   /**
    * Los tres paneles de abajo estuvieron hasta el `2026-08-14` escritos a mano
@@ -90,9 +89,9 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
     null
   );
 
-  const tasksTrend = calcTrend(taskSummary.completedToday, 0); // TODO: backend needs compare task data
-  const sendTrend = calcTrend(sendSummary.today.total, sendSummary.compare.total);
-  const repliesTrend = calcTrend(0, 0); // TODO: backend needs replies data
+  const tasksTrend = calcularTendencia(taskSummary.completedToday, taskSummary.completedCompare, compareLabel);
+  const sendTrend = calcularTendencia(sendSummary.today.total, sendSummary.compare.total, compareLabel);
+  const leadsTrend = calcularTendencia(leadSummary.createdToday, leadSummary.createdCompare, compareLabel);
 
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
@@ -113,7 +112,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             current={waToday}
             target={settings.dailyGoalWhatsApp}
             unit="Mensajes"
-            trend={{ value: `${Math.abs(waDiff)}%`, isPositive: waDiff >= 0 }}
+            trend={waTrend}
             color={chartColors.primaryLight}
             tooltipText={`${waToday} de ${settings.dailyGoalWhatsApp} mensajes enviados hoy.`}
           />
@@ -124,7 +123,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             current={emailToday}
             target={settings.dailyGoalEmail}
             unit="Correos"
-            trend={{ value: `${Math.abs(emailDiff)}%`, isPositive: emailDiff >= 0 }}
+            trend={emailTrend}
             color={chartColors.primary}
             tooltipText={`${emailToday} de ${settings.dailyGoalEmail} correos enviados hoy.`}
           />
@@ -135,7 +134,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             current={callToday}
             target={settings.dailyGoalCalls}
             unit="Llamadas"
-            trend={{ value: `${Math.abs(callDiff)}%`, isPositive: callDiff >= 0 }}
+            trend={callTrend}
             color={chartColors.primaryLight}
             tooltipText={`${callToday} de ${settings.dailyGoalCalls} llamadas registradas.`}
           />
@@ -173,13 +172,20 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             trend={sendTrend}
             onClick={() => onNavigate?.('history')}
           />
+          {/*
+            Aqui habia una tarjeta "Respuestas" con el valor fijo en 0. No era un
+            numero inventado, pero tampoco una medicion: el CRM no registra las
+            respuestas de un lead en ninguna tabla, asi que ese cero no podia
+            cambiar nunca. Se cambio por leads entrados, que si se mide y encaja
+            en la misma lectura de "que paso hoy".
+          */}
           <MetricCard
-            icon={<Icon.MessagesOutline />}
+            icon={<Icon.LeadsOutline />}
             iconColor="text-ink"
-            title="Respuestas"
-            value={0}
-            trend={repliesTrend}
-            onClick={() => onNavigate?.('chat')}
+            title="Leads nuevos"
+            value={leadSummary.createdToday}
+            trend={leadsTrend}
+            onClick={() => onNavigate?.('leads')}
           />
         </div>
       </Card>

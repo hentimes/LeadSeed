@@ -8,6 +8,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
+import DiscardReasonModal from '../components/leads/DiscardReasonModal';
 import { createFollowUpTaskForLead } from '../services/tasksService';
 import { Button } from '../design';
 import { Card } from '../design';
@@ -32,6 +33,15 @@ export default function PipelinePage() {
   const [taskTime, setTaskTime] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
   
+  /**
+   * Lead arrastrado a "descartado" a la espera de que se responda por que.
+   *
+   * El arrastre era el tercer camino que descartaba sin preguntar, despues de la
+   * accion masiva. Mientras no se responda no se guarda nada: si se cancela, el
+   * lead se queda donde estaba.
+   */
+  const [pendingDiscard, setPendingDiscard] = useState<Lead | null>(null);
+
   const draggingRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -73,26 +83,39 @@ export default function PipelinePage() {
     draggingRef.current = null;
   };
 
+  const applyStatus = async (lead: Lead, status: LeadStatus, discardReason?: string) => {
+    await saveLead({ ...lead, status, ...(discardReason ? { discardReason } : {}) });
+
+    if (status !== 'nuevo') {
+      setTaskPrompt({ leadId: lead.id!, leadName: lead.name, lead, newStatus: status });
+      setTaskTitle(`Seguimiento para ${lead.name}`);
+      setTaskDate('');
+      setTaskTime('');
+    }
+  };
+
   const handleDrop = async (status: LeadStatus) => {
     setDragOver(null);
     const leadId = draggingRef.current;
     if (leadId == null) return;
     draggingRef.current = null;
-    
+
     const lead = leads.find((l) => l.id === leadId);
-    if (lead) {
-      // Guardar en Supabase
-      await saveLead({ ...lead, status });
-      
-      if (status !== 'nuevo') {
-        setTaskPrompt({ leadId: lead.id!, leadName: lead.name, lead, newStatus: status });
-        setTaskTitle(`Seguimiento para ${lead.name}`);
-        setTaskDate('');
-        setTaskTime('');
-      }
+    if (!lead) return;
+
+    if (status === 'descartado') {
+      setPendingDiscard(lead);
+      return;
     }
+
+    await applyStatus(lead, status);
   };
 
+  const confirmDiscard = async (motivo: string) => {
+    const lead = pendingDiscard;
+    setPendingDiscard(null);
+    if (lead) await applyStatus(lead, 'descartado', motivo || undefined);
+  };
   const createTask = async () => {
     if (!taskPrompt || !taskTitle.trim() || !user) return;
     const dueDate = taskDate && taskTime
@@ -309,6 +332,14 @@ export default function PipelinePage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {pendingDiscard && (
+        <DiscardReasonModal
+          cantidad={1}
+          onConfirm={confirmDiscard}
+          onCancel={() => setPendingDiscard(null)}
+        />
       )}
 
       {viewLead && (

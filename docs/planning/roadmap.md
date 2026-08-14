@@ -2173,14 +2173,45 @@ comerciales mirando numeros que no salen de ningun lado.
   El tercer hallazgo era un consejo redactado a mano ("Optimiza Web") que no dependia de ningun
   dato; se cambio por contactados sobre total, que si se mide.
 
-- [PENDIENTE] `OverviewTab`: las dos tendencias falsas necesitan que el backend devuelva el dato de
-  comparacion. Mientras no exista, mostrar "0% vs ayer" con flecha verde es peor que no mostrar nada.
-  La tarjeta "Respuestas" es un caso aparte: su valor esta fijo en `0` porque **no se registran las
-  respuestas entrantes en ningun lado**. No es un numero inventado, pero tampoco es una medicion.
+- [HECHO] (`2026-08-14`) Las tres tarjetas de "Rendimiento hoy" y los tres anillos de metas.
+  Habia **cuatro** problemas distintos, no uno:
 
-- [PENDIENTE] El arrastre en el pipeline y la edicion de ficha tambien pueden descartar, y todavia no
-  preguntan el motivo. El controlador ya expone la logica separada del dialogo (`applyBulkStatus`),
-  asi que engancharlos es directo.
+  1. `completedToday` filtraba por `created_at`, asi que contaba tareas *creadas* hoy que
+     estuvieran completadas. Una tarea creada el lunes y terminada hoy no aparecia. Migracion
+     **103**: columna `tasks.completed_at` con trigger, porque una tarea se completa desde tres
+     pantallas y si el sello lo pusiera cada una, bastaba con que a una se le olvidara para que el
+     conteo volviera a mentir en silencio.
+  2. La tendencia de tareas se calculaba contra un cero fijo (`calcTrend(x, 0)`), asi que siempre
+     decia "0% vs ayer" con flecha verde. Migracion **104**: `completedCompare`.
+  3. `MetricCard` y `GoalRingCard` tenian **"vs ayer" escrito en el JSX** e ignoraban el `label` que
+     recibian. Con el periodo puesto en "mes pasado", la comparacion era mensual y el texto seguia
+     diciendo "vs ayer".
+  4. Los anillos pasaban la diferencia en unidades con un `%` pegado detras: cinco mensajes mas que
+     ayer se mostraban como **"5%"**.
+
+  Los cuatro se cierran con `calcularTendencia` (`src/components/dashboard/trend.ts`, 8 casos de
+  prueba), que ademas distingue tres direcciones en vez de dos: **sin cambios ya no es verde**, y
+  cuando no hay periodo anterior con que comparar muestra la diferencia absoluta (`+12`) en vez de
+  inventar un porcentaje.
+
+- [HECHO] (`2026-08-14`) La tarjeta **"Respuestas" se retiro**. Su valor estaba fijo en `0` y no
+  podia cambiar: se reviso el esquema completo de la base (46 tablas) y **las respuestas de un lead
+  no se registran en ninguna parte**. No era un numero inventado, pero tampoco una medicion, y
+  ocupaba el sitio de algo que si se puede medir.
+
+  En su lugar va **"Leads nuevos"** (`createdToday` / `createdCompare`, migracion 104). No es un
+  rodeo para estimar respuestas: son leads entrados y se etiquetan asi.
+
+  Capturar respuestas de verdad exige o un canal entrante (webhook de WhatsApp, buzon IMAP) o pedir
+  al usuario que las marque a mano. Las dos cosas son un frente propio.
+
+- [HECHO] (`2026-08-14`) El arrastre en el pipeline ya pregunta el motivo al soltar en "descartado",
+  reusando el mismo dialogo de la accion masiva. Si se cancela **no se guarda nada** y el lead se
+  queda donde estaba.
+
+  Correccion a lo que decia este capitulo: **la edicion de ficha no descartaba**. `LeadForm` guarda
+  el estado que ya tenia el lead pero no ofrece cambiarlo, asi que los caminos que descartan eran
+  dos, no tres, y ahora los dos preguntan.
 
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 

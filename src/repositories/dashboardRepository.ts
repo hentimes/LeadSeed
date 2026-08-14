@@ -7,6 +7,8 @@ export interface DashboardSnapshotRow {
     contacted?: number;
     converted?: number;
     forgotten?: number;
+    createdToday?: number;
+    createdCompare?: number;
     statusCounts?: Record<string, number>;
     monthlyCounts?: Array<{ name: string; count: number }>;
     originCounts?: Record<string, number>;
@@ -35,6 +37,7 @@ export interface DashboardSnapshotRow {
     overdue?: number;
     today?: number;
     completedToday?: number;
+    completedCompare?: number;
     completedTotal?: number;
     total?: number;
   };

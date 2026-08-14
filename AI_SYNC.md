@@ -8181,3 +8181,64 @@ de ficha tambien descartan y todavia no preguntan el motivo.
 **Validacion:** `typecheck`, `lint` (0 errores, 116 avisos preexistentes),
 `test` (20 archivos / 270 casos), `build` y `check:classes` (6443 clases) en
 verde. Sin verificacion visual: eso queda del lado del usuario.
+
+### 2026-08-14 CLT - Claude - LeadSeed / las metricas de hoy miden lo que dicen medir
+
+- Tipo: correccion de metricas + captura de dato / CONTROL 15.1
+- Rol: Implementadora
+- Estado: codigo en el repo; **migraciones 103 y 104 sin aplicar** (ver al final)
+
+Continuacion de la entrada anterior. Cerrado el resto del capitulo 13.14.
+
+**Cuatro errores distintos en la misma fila de tarjetas:**
+
+1. "Tareas hechas hoy" filtraba por `created_at`: contaba tareas *creadas* hoy
+   que estuvieran completadas. Salia de la base, pero medía otra cosa distinta
+   de la que anunciaba.
+2. Su tendencia se calculaba contra un cero fijo, asi que siempre decia
+   "0% vs ayer" con flecha verde.
+3. `MetricCard` y `GoalRingCard` tenian **"vs ayer" escrito en el JSX** e
+   ignoraban la etiqueta que recibian. Con el periodo en "mes pasado" la
+   comparacion era mensual y el texto seguia diciendo "vs ayer".
+4. Los anillos de metas pasaban la diferencia en unidades con un `%` detras:
+   cinco mensajes mas que ayer aparecian como "5%".
+
+**Migraciones (generadas, no aplicadas):**
+
+- **103** `tasks.completed_at` + trigger `tasks_set_completed_at` + indice
+  parcial. Trigger y no escritura desde la aplicacion porque una tarea se
+  completa desde tres pantallas: si el sello lo pusiera cada una, con que a una
+  se le olvidara el conteo volvia a mentir en silencio. El trigger tambien
+  limpia el sello si la tarea se reabre.
+- **104** `completedToday` corregida, mas `completedCompare`, `createdToday` y
+  `createdCompare`. Derivada del texto de la 102 con dos inserciones
+  verificadas; el diff se reviso linea a linea y solo contiene esas dos.
+
+Las tareas ya completadas quedan sin sello y no se rellenan: usar `created_at`
+como sustituto seria fabricar el dato otra vez.
+
+**La tarjeta "Respuestas" se retiro.** Se reviso el esquema completo de la base
+(46 tablas): las respuestas de un lead no se registran en ninguna parte, y ese
+`0` no podia cambiar nunca. En su sitio va "Leads nuevos", que si se mide.
+Capturar respuestas exigiria un canal entrante (webhook de WhatsApp, buzon IMAP)
+o marcado manual; es un frente propio.
+
+**Nuevo helper** `src/components/dashboard/trend.ts` con 8 casos de prueba. Tres
+direcciones en vez de dos: sin cambios ya no se pinta de verde. Sin periodo
+anterior muestra la diferencia absoluta (`+12`) en vez de inventar un
+porcentaje.
+
+**Motivo de descarte:** el arrastre en el pipeline ya pregunta, reusando el
+dialogo de la accion masiva; si se cancela no se guarda nada. Correccion a la
+entrada anterior: `LeadForm` **no descartaba** (guarda el estado que ya tenia
+pero no ofrece cambiarlo), asi que los caminos eran dos y ahora los dos
+preguntan.
+
+**Validacion:** typecheck, lint (0 errores, 116 avisos preexistentes), test
+(21 archivos / 278 casos), build y check:classes en verde.
+
+**Pendiente y bloqueado:** `npx supabase db push --linked` lo rechazo el
+clasificador de permisos. Sin eso, 103 y 104 no estan en produccion: el codigo
+degrada sin romperse (los campos nuevos caen a 0 y las tendencias dicen "sin
+cambios"), pero "tareas hechas hoy" sigue contando por `created_at` hasta que se
+aplique.

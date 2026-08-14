@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { chartColors } from '../../design/palette';
+import type { Trend } from './trend';
 
 function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: string; size?: number }) {
   const strokeWidth = 5;
@@ -96,6 +97,13 @@ function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: 
   );
 }
 
+/** Sin cambios no es ni bueno ni malo: no debe pintarse de verde. */
+const COLOR_TENDENCIA: Record<Trend['direction'], string> = {
+  up: 'text-state-success',
+  down: 'text-state-danger',
+  flat: 'text-ink-muted',
+};
+
 interface GoalRingCardProps {
   icon: React.ReactNode;
   iconBgColor?: string;
@@ -104,10 +112,7 @@ interface GoalRingCardProps {
   current: number;
   target: number;
   unit: string;
-  trend?: {
-    value: number | string;
-    isPositive: boolean;
-  };
+  trend?: Trend;
   color: string;
   tooltipText: string;
 }
@@ -152,9 +157,9 @@ export default function GoalRingCard({
           <span className="text-[12px] text-ink-secondary font-normal leading-none mb-2">{unit}</span>
           
           {trend && (
-            <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${trend.isPositive ? 'text-state-success' : 'text-state-danger'}`}>
-              {trend.isPositive ? '↑' : '↓'} {trend.value}
-              <span className="text-ink-muted text-[11px] font-normal">vs ayer</span>
+            <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${COLOR_TENDENCIA[trend.direction]}`}>
+              {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : ''} {trend.value}
+              <span className="text-ink-muted text-[11px] font-normal">{trend.label}</span>
             </span>
           )}
         </div>

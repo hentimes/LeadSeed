@@ -7,6 +7,9 @@ export interface DashboardSnapshot {
     contacted: number;
     converted: number;
     forgotten: number;
+    /** Leads entrados hoy y en el periodo de comparacion. */
+    createdToday: number;
+    createdCompare: number;
     statusCounts: Record<string, number>;
     monthlyCounts: Array<{ name: string; count: number }>;
     /** Como entro el lead: manual, imported, web_form. */
@@ -43,7 +46,13 @@ export interface DashboardSnapshot {
     pending: number;
     overdue: number;
     today: number;
+    /**
+     * Tareas completadas hoy, por `completed_at`. Las completadas antes de la
+     * migracion 103 no tienen sello y no se cuentan aqui.
+     */
     completedToday: number;
+    /** Las mismas, en el periodo de comparacion. */
+    completedCompare: number;
     completedTotal: number;
     total: number;
   };
@@ -56,6 +65,8 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       contacted: row.leadSummary?.contacted ?? 0,
       converted: row.leadSummary?.converted ?? 0,
       forgotten: row.leadSummary?.forgotten ?? 0,
+      createdToday: row.leadSummary?.createdToday ?? 0,
+      createdCompare: row.leadSummary?.createdCompare ?? 0,
       statusCounts: row.leadSummary?.statusCounts ?? {},
       monthlyCounts: row.leadSummary?.monthlyCounts ?? [],
       originCounts: row.leadSummary?.originCounts ?? {},
@@ -84,6 +95,7 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       overdue: row.taskSummary?.overdue ?? 0,
       today: row.taskSummary?.today ?? 0,
       completedToday: row.taskSummary?.completedToday ?? 0,
+      completedCompare: row.taskSummary?.completedCompare ?? 0,
       completedTotal: row.taskSummary?.completedTotal ?? 0,
       total: row.taskSummary?.total ?? 0,
     },
