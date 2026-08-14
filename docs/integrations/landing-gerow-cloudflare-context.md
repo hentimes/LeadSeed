@@ -133,6 +133,51 @@ explican la regla:
 
 ---
 
+## 5.b El arbol de trabajo de landing-gerow, y que se rescato (`2026-08-14`)
+
+Ese repositorio tiene **1368 archivos sin commitear**, 26 worktrees y esta parado en la rama
+`fix/agenda-url-bug`, no en `master`. De esos 1368, **1167 son de `biblioteca/`** y no tienen nada
+que ver con LeadSeed.
+
+Lo que si nos toca estaba sin respaldo y se rescato.
+
+### Que habia sin commitear, de lo nuestro
+
+El arbol contenia **la reorganizacion de los formularios a `forms/`, a medio hacer**:
+
+- `functions/pb/[[slug]].js` y `functions/form/[[slug]].js` reescritas para mapear `/pb/*` a
+  `/forms/pb/*`
+- `pb/index.html`, `pb/styles.css` y `pb/partials/*` **borrados** del arbol
+- `forms/retiro-v2/`, 61 archivos sin trackear
+- `frontend/lead-capture/js/app.js` con mas de mil lineas nuevas
+
+En total **74 archivos y 6923 inserciones** que no estaban en ningun commit de ninguna rama. Un
+`git checkout .` se habria llevado la parte trackeada sin dejar rastro.
+
+### Donde esta ahora
+
+Rama `wip/rescate-arbol-sucio-2026-08-14`, publicada en el remoto.
+
+Se construyo con `git stash create` mas un indice temporal para los archivos sin trackear, **sin
+tocar el arbol de trabajo**: sigue con sus 1368 archivos exactamente como estaba, y con cero
+archivos en stage. El rescate es una copia, no una intervencion.
+
+### Lo que NO se hizo, y por que
+
+**No se limpio el arbol.** Con 1368 archivos sin commitear y trabajo ajeno en curso, borrar o
+commitear ahi no es ordenar, es arriesgar. El rescate quita la urgencia: ya no hay nada que se pueda
+perder por accidente.
+
+**Esa rama no se despliega.** Las Functions rescatadas ya apuntan a `/forms/pb/`, pero esa carpeta
+no esta completa ni desplegada: subir eso a `master` dejaria `/pb/` en 404.
+
+### Un dato que cierra una duda vieja
+
+La copia sin commitear de `supabase/functions/form-progress/index.ts` se comparo linea a linea contra
+la de LeadSeed: **el codigo es identico**. La de LeadSeed tiene ademas 26 lineas de cabecera que
+explican su procedencia. Es decir, el rescate confirma que no se perdio nada al adoptar la version
+descargada de produccion, que era la duda que quedaba abierta desde el `2026-08-12`.
+
 ## 6. Lo que sigue pendiente, por orden de importancia
 
 1. **`ppusers` conserva `FORMS_DB` (D1 `ppforms_db`) y `FORMS_UPLOADS` (R2 `ppforms-uploads`).**
