@@ -1985,10 +1985,13 @@ Lo que aparecio al ejecutarlos, que el plan no anticipaba:
   `scripts/tokenize-fixed-colors.py` (aplica el mapa). **Aviso sobre el primero: se queda corto.**
   Solo mira dentro de `className`, y por eso no vio la fila de `LeadsTableRow`, cuya clase vive en una
   variable. Que marque cero no demuestra que no queden.
-- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (**180 veces en 82 archivos** al
-  `2026-08-13`; eran 185): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
+- [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada. **82 usos de `bg-white` en 44
+  archivos** al `2026-08-14`; eran 185 al abrir el bloque. La mayor parte cayo con la tokenizacion del
+  modo oscuro, que era el mismo problema visto desde otro lado. Lo que queda son sobre todo elementos
+  que si deben ser blancos en ambos temas (globos de chat sobre color, iconos sobre fondo tenido) mas
+  un resto por revisar uno por uno; ya no hay un barrido mecanico que aplicar: `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
   `PipelinePage.tsx:137`.
-- [PENDIENTE] Reducir los 132 anchos fijos en px y grids de columnas fijas en 68 archivos, criticos
+- [PENDIENTE] Reducir los **131** anchos fijos en px y grids de columnas fijas en 68 archivos, criticos
   para sidebar angosto y movil.
 
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
