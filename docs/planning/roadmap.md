@@ -1096,11 +1096,29 @@ retraso.
   `2026-08-12` por descuido de bookkeeping. Se deja constancia porque es la misma deriva documental
   que la auditoria senalo como hallazgo estructural; el roadmap solo sirve si refleja el estado real.
 
-- [PENDIENTE] Coordinar el merge de `fix/reconcile-ppforms-retirement-with-tracking` a `master` en
-  `landing-gerow`. **Sigue abierto y ya causo un incidente en produccion** (ver 13.4.d): la
-  regresion del ref se arreglo con un parche minimo de dos lineas, no mergeando esa rama, que ademas
-  contiene el formulario de retiro y el tracking. Mientras siga sin mergear, el mismo accidente
-  puede repetirse.
+- [RESUELTO DE OTRA FORMA] (`2026-08-14`) **Esa rama no debe mergearse**, y el item la daba por
+  pendiente de merge sin haber mirado su contenido.
+
+  Al abrirla: lleva **8 dias parada**, master la adelanto por **63 commits**, y de sus 48 archivos la
+  mayoria son versiones viejas de cosas que master ya tiene mas nuevas. Peor: **reintroduce
+  `supabase/functions/form-progress/`**, que master retiro a proposito el 12 de agosto y que ahora
+  haria fallar el check `no-supabase-functions.yml` del bloque 0. Su fix de las Pages Functions ya
+  esta en master, aplicado directamente durante el incidente del ref.
+
+  Lo unico suyo que produccion no tiene resulto ser concreto y pequeño: **el formulario `/pb` no
+  reporta nada a `form-progress`**. Master no tiene ni una llamada, asi que el embudo de ese canal
+  esta ciego. El de retiro si reporta.
+
+  Recuperado en `feat/pb-visit-tracking` (ya publicada en `landing-gerow`): 2 archivos, 81
+  inserciones, **cero eliminaciones**. Solo `pb/app.js` y un smoke test que pasa.
+
+  No se trajo el segundo test de la rama: espera una regla en `_redirects` que ella misma anadia, y
+  se comprobo contra produccion que no hace falta. `/pb/:ref`, `/form/:ref` y
+  `/retiro-tecnico-extranjero/:ref` devuelven **200 con cero redirecciones y el ref intacto** solo con
+  el arreglo de la Function. Incluirlo habria dejado un test en rojo permanente.
+
+  **Queda pendiente de tu decision el merge de `feat/pb-visit-tracking` a `master`**, porque un push
+  a esa rama despliega automaticamente todo `planespro.cl`.
 
 ### Capitulo 13.3 - Red de seguridad (bloque 2, prerrequisito)
 
