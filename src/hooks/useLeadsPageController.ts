@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDismissibleToast } from './useDismissibleToast';
 import { useLeads } from './useLeads';
 import { useLists } from './useLists';
 import { useLeadFilters } from './useLeadFilters';
@@ -12,6 +13,12 @@ import type { LeadPageQuery, LeadSortField } from '../repositories/leadsReposito
 import { isActiveAppointment } from '../utils/appointmentStatus';
 import { getPlatform } from '../platform/registry';
 import { useLeadsSelection } from './useLeadsSelection';
+
+/** Cuanto dura en pantalla un aviso antes de apagarse solo. */
+const TOAST_DURACION_MS = 6000;
+
+/** El de anclado es mas corto: confirma una accion trivial y reversible. */
+const PIN_TOAST_DURACION_MS = 3000;
 
 const PAGE_SIZE = 50;
 
@@ -43,8 +50,10 @@ export function useLeadsPageController() {
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [viewing, setViewing] = useState<Lead | null>(null);
-  const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
-  const [newLeadToast, setNewLeadToast] = useState<{ id: string; name: string } | null>(null);
+  // Los tres avisos usan el mismo hook: apagarse solos, cancelar el anterior y
+  // limpiarse al desmontar. Antes cada uno repetia ese patron a mano.
+  const deleteToast = useDismissibleToast<{ id: string; name: string }>(TOAST_DURACION_MS);
+  const newLeadToast = useDismissibleToast<{ id: string; name: string }>(TOAST_DURACION_MS);
   // Momento en que se abrio la seccion. Solo se avisa de leads creados despues
   // de este instante: comparar contra los ids de la pagina anterior daba falsos
   // positivos al cambiar de pagina y al reordenarse la lista.
@@ -60,7 +69,7 @@ export function useLeadsPageController() {
       current.map((item) => (item.id === lead.id ? { ...item, isUnread: false } : item)),
     );
   }, []);
-  const [pinToast, setPinToast] = useState<{ name: string; isPinned: boolean } | null>(null);
+  const pinToast = useDismissibleToast<{ name: string; isPinned: boolean }>(PIN_TOAST_DURACION_MS);
   const [showTrash, setShowTrash] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
   const [sort, setSort] = useState<{ field: LeadSortField; dir: 'asc' | 'desc' }>({ field: 'createdAt', dir: 'desc' });
@@ -245,10 +254,7 @@ export function useLeadsPageController() {
         const newestLead = incomingNewLeads.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
 
         if (newestLead?.id) {
-          setNewLeadToast({ id: newestLead.id, name: newestLead.name });
-          setTimeout(() => {
-            setNewLeadToast((current) => (current?.id === newestLead.id ? null : current));
-          }, 6000);
+          newLeadToast.show({ id: newestLead.id, name: newestLead.name });
         }
       }
 
@@ -326,10 +332,7 @@ export function useLeadsPageController() {
 
   const handleTogglePin = async (lead: Lead, isPinned: boolean) => {
     await save({ ...lead, isPinned });
-    setPinToast({ name: lead.name, isPinned });
-    setTimeout(() => {
-      setPinToast(null);
-    }, 3000);
+    pinToast.show({ name: lead.name, isPinned });
     await loadLeads();
   };
 
@@ -365,8 +368,7 @@ export function useLeadsPageController() {
       }
       await remove(id);
       if (lead) {
-        setToast({ id, name: lead.name });
-        setTimeout(() => setToast((prev) => (prev?.id === id ? null : prev)), 6000);
+        deleteToast.show({ id, name: lead.name });
       }
     }
     selection.remove(id);
@@ -375,7 +377,7 @@ export function useLeadsPageController() {
 
   const handleUndoDelete = async (id: string) => {
     await restore(id);
-    setToast(null);
+    deleteToast.dismiss();
     await loadLeads();
   };
 
@@ -487,11 +489,11 @@ export function useLeadsPageController() {
     viewing,
     setViewing,
     viewLead,
-    toast,
-    setToast,
-    newLeadToast,
-    setNewLeadToast,
-    pinToast,
+    toast: deleteToast.toast,
+    dismissToast: deleteToast.dismiss,
+    newLeadToast: newLeadToast.toast,
+    dismissNewLeadToast: newLeadToast.dismiss,
+    pinToast: pinToast.toast,
     showTrash,
     setShowTrash,
     exportFormat,

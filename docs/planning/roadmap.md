@@ -1723,6 +1723,26 @@ de componente.
   explicitamente el fallo que se evita: sin `await`, la negacion de una Promise nunca corta y la
   accion destructiva se ejecutaria aunque el usuario cancele.
 
+- [HECHO] (`2026-08-13`) `useDismissibleToast` fuera de `useLeadsPageController`. 8 tests.
+
+  La unidad no se eligio por tamaño sino porque el mismo patron estaba escrito **tres veces**:
+  mostrar un aviso, programar un `setTimeout` para apagarlo y, en dos de los tres, comprobar dentro
+  del temporizador que el aviso siguiera siendo el mismo antes de borrarlo.
+
+  Esa comprobacion era el sintoma. Existia porque **los temporizadores no se cancelaban**: si
+  aparecia un segundo aviso antes de que venciera el primero, el temporizador viejo apagaba el nuevo.
+  El tercer caso, el de anclar un lead, **no llevaba esa defensa**, asi que anclar dos leads seguidos
+  hacia desaparecer el segundo aviso antes de tiempo. Es un bug real que el hook cierra por
+  construccion, no por añadir otra comprobacion.
+
+  Ninguno de los tres se limpiaba al desmontar: salir de la bandeja con un aviso abierto dejaba un
+  temporizador vivo intentando escribir estado en un componente que ya no existia.
+
+  **El archivo paso de 539 a 541 lineas**, o sea que crecio. Se deja escrito para no aparentar lo
+  contrario: las dos lineas de mas son las constantes de duracion con su comentario, y la ganancia no
+  esta en el contador sino en que las tres copias del patron son ahora una sola con test propio.
+  Contar lineas como medida de exito es justo lo que 13.1.c advierte que no hay que hacer.
+
 Estado de los dos monolitos: `ChatRoom.tsx` de 1097 a 1069 lineas,
 `useLeadsPageController.ts` de 572 a 538.
 

@@ -201,15 +201,15 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
       <LeadsPageToasts
         toast={p.toast}
         onUndoDelete={p.handleUndoDelete}
-        onDismissToast={() => p.setToast(null)}
+        onDismissToast={p.dismissToast}
         pinToast={p.pinToast}
         newLeadToast={p.newLeadToast}
         onViewNewLead={() => {
           const lead = p.leads.find((item) => item.id === p.newLeadToast?.id);
           if (lead) p.setViewing(lead);
-          p.setNewLeadToast(null);
+          p.dismissNewLeadToast();
         }}
-        onDismissNewLeadToast={() => p.setNewLeadToast(null)}
+        onDismissNewLeadToast={p.dismissNewLeadToast}
       />
     </div>
   );
