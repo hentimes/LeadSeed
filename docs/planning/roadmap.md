@@ -1197,19 +1197,37 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
   no usa: nada lee esas propiedades comprobando presencia de clave, todas las leen con `||` o `??`.
 
   Se marca como decision cerrada y no como pendiente, para que nadie la reabra sin argumento nuevo.
-- [PENDIENTE] Reducir los **166** warnings (eran ~212). Composicion real al `2026-08-13`, que cambia
-  como hay que atacarlos: 54 `react-hooks/set-state-in-effect`, 33 `exhaustive-deps`, 33
-  `no-explicit-any`, 13 `react-hooks/refs`, y ~33 repartidos.
+- [PARCIAL] Reducir los warnings. **De ~212 a 116** al `2026-08-14`.
 
-  Los 54 primeros no son estilo: `setState` dentro de un efecto provoca un render extra por cada uno,
-  y en varios casos es el sintoma de estado derivado que deberia calcularse durante el render. Son el
-  bloque con mas valor real y el que mas cuidado exige, porque tocarlos cambia el momento en que se
-  actualiza la interfaz.
+  Cerrados por completo: los 20 mecanicos (ternarios usados como sentencia, dobles aserciones no
+  nulas, variables con un valor inicial que nadie lee) y **22 de los 27 `no-explicit-any`**. Ninguno
+  era ruido: los `catch (err: any)` con `err.message` no leian los errores de supabase-js, que son
+  objetos planos; el icono del cajon de navegacion estaba tipado como dato cuando es una funcion que
+  devuelve el nodo; y al tipar los callbacks de Recharts salio que tres graficos leian `payload[0]`
+  sin comprobar que existiera.
 
-  Avance del `2026-08-13`: de 166 a **160**. Se cerraron seis `no-explicit-any` en `TemplatesPage` y
-  `useSort`, y no fue cosmetico: al tipar la pagina salio que el id de una plantilla es
-  `string | number` y se pasaba a funciones que esperan `number` con un `!` por medio, seis veces.
-  Ahora se convierte en un solo sitio y una plantilla sin id no se puede seleccionar ni borrar.
+  Tambien los dos casos del patron "corregir un indice fuera de rango desde un efecto", que se
+  calcula durante el render y ahorra un repintado en cada cambio de lista.
+
+  **Los 116 que quedan son casi todos de `react-hooks`, y no se pueden cerrar con este bloque.**
+  Clasificados los 52 `set-state-in-effect` uno por uno:
+
+  | Familia | Cuantos | Que haria falta |
+  |---|---|---|
+  | Carga de datos asincrona | 11 | una capa de estado servidor; es el item de TanStack Query de 13.6 |
+  | Sincronizar con una prop | 7 | un `key` en el padre o derivar; toca los componentes padre |
+  | Estado derivable | 19 | caso por caso, cambiando logica de render |
+  | Otros | 15 | mezcla |
+
+  Los 11 de la primera familia **no tienen arreglo dentro de este bloque**: `setState` despues de un
+  `fetch` dentro de un efecto es el patron correcto mientras no haya cache de estado servidor. La
+  version anterior de este item ya lo intuia al decir que los warnings "bajan solos al ejecutar 13.4,
+  13.6 y 13.7"; ahora esta medido.
+
+  Los otros 41 si son arreglables, pero cambian **cuando** se actualiza la interfaz, en 45 archivos.
+  Hacerlos sin poder ver la aplicacion es el mismo riesgo que ya costo caro dos veces esta semana. Se
+  dejan para cuando se ejecute 13.6, que ademas se lleva por delante los 11 de la primera familia.
+
 
 ### Capitulo 13.4 - Correcciones funcionales (bloque 3)
 
