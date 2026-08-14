@@ -1514,14 +1514,33 @@ de bien donde estan, y se conservan abajo reescritos con ese alcance.
 
 #### Que queda, ya sin el traslado
 
-- [PENDIENTE, en `landing-gerow`] Unificar el normalizador de rutas de la API. Verificado el
-  `2026-08-14` contra `origin/master`: `pb/app.js` y `frontend/lead-capture/js/app.js` tienen su
-  propia copia, `form/app.js` una tercera, y `retiro-tecnico-extranjero/app.js` no usa ninguna. Son
-  cuatro criterios distintos para construir la misma URL.
-- [PENDIENTE, en `landing-gerow`] Arreglar `retiro-v2` antes de desplegarlo: canal invalido, sin
-  idempotencia, y redirige a Hotmart tanto si el lead se guardo como si fallo. Hoy no esta
-  desplegado, asi que no corre prisa, pero tampoco debe desplegarse asi.
-- [PENDIENTE, en `landing-gerow`] Borrar `.codex-tmp/deploy-clean/`, copia muerta versionada.
+- [HECHO] (`2026-08-14`) Alineada la traduccion de rutas de la API. Rama
+  `fix/unificar-form-api-client` en `landing-gerow`, pendiente de merge.
+
+  **El item exageraba el problema y conviene dejarlo escrito.** Decia "cuatro implementaciones
+  independientes". Verificado contra `origin/master`, son **dos**: `pb/app.js` no es una tercera,
+  porque `build.js` lo copia de `frontend/lead-capture/js/app.js` (es un artefacto de build, no
+  codigo fuente), y `retiro-tecnico-extranjero/app.js` no traduce nada porque usa las rutas finales
+  directamente, que es correcto por construccion.
+
+  **Tampoco habia bug vivo.** La version de `/form/` cubria dos de las cuatro traducciones: justo las
+  dos que ese formulario usa. La que faltaba, la de abandono, nunca se ejecutaba porque `/form/` no
+  llama a ese endpoint. Era una trampa, no un fallo: el dia que alguien anadiera ahi esa llamada, la
+  URL habria salido mal y el servidor habria devuelto 404 a una ruta inventada, sin aviso.
+
+  Se completo la de `/form/` para que ambas den el mismo resultado, y se agrego
+  `tests/form-api-path-parity-smoke.mjs`, que las compara sobre 16 entradas: las traducciones, las
+  rutas ya normalizadas (que no deben traducirse dos veces), las desconocidas y los prefijos
+  parciales. Comprobado que falla si se rompe la paridad a proposito. Es el arreglo real para un
+  problema de deriva: mientras sean dos copias, el test las mantiene honestas.
+- [PENDIENTE, sin urgencia] Arreglar `retiro-v2` antes de desplegarlo: canal invalido, sin
+  idempotencia, y redirige a Hotmart tanto si el lead se guardo como si fallo. Verificado el
+  `2026-08-14`: **no esta en `origin/master`**, o sea que no esta desplegado ni puede desplegarse por
+  accidente. Solo existe en `wip/rescate-arbol-sucio-2026-08-14`. No corre ninguna prisa; lo que no
+  puede pasar es que se despliegue en el estado en que esta.
+- [DESCARTADO] Borrar `.codex-tmp/deploy-clean/`. Verificado el `2026-08-14`: **no existe en
+  `origin/master`**, asi que no hay nada versionado que borrar. Solo vive en el arbol de trabajo
+  local de `landing-gerow`, que no es de este roadmap.
 - [PENDIENTE] Decidir el destino de la reorganizacion a `forms/`, rescatada en
   `wip/rescate-arbol-sucio-2026-08-14`. Esta a medias y **no se puede desplegar tal cual**: las Pages
   Functions ya apuntan a `/forms/pb/` y esa carpeta no esta completa, asi que `/pb/` daria 404. O se
