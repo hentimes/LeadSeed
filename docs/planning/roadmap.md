@@ -2114,10 +2114,31 @@ de verdad y de que lo escrito coincida con lo real. Un panel que presenta consta
 es la misma clase de problema, pero apuntando al usuario en vez de al equipo: se toman decisiones
 comerciales mirando numeros que no salen de ningun lado.
 
-- [PENDIENTE] Decidir, componente por componente, entre tres salidas: conectarlo a datos reales,
-  marcarlo visiblemente como ejemplo, o retirarlo. La tercera es legitima: `source_channel` ya existe
-  y da un desglose real por `pb`/`general`/`retiro`/`form`, que es mas util que un reparto inventado
-  entre LinkedIn y WhatsApp, canales que este CRM ni siquiera registra como origen.
+- [HECHO] (`2026-08-14`) `SourceBreakdownChart` conectado a datos reales. La migracion **099** agrega
+  dos cortes a `get_my_dashboard_snapshot`: `originCounts` (manual, imported, web_form) y
+  `channelCounts` (pb, general, retiro, form). **No son el mismo dato con otro nombre**: un lead
+  cargado a mano tiene origen y no tiene canal, asi que sus totales no coinciden a proposito.
+  `channelCounts` queda disponible aunque todavia no se pinte en ningun sitio.
+
+  Un origen desconocido se muestra con su clave cruda en vez de descartarse: si aparece uno nuevo,
+  conviene verlo.
+
+- [PENDIENTE, requiere decision] Los otros cuatro **no se pueden conectar: el dato no existe**.
+
+  | Componente | Que le falta |
+  |---|---|
+  | `QualityMatrix` | win rate y ciclo de venta por fuente; no se registra la conversion por canal |
+  | `LossReasonsChart` | motivo de descarte; el CRM no lo pide al descartar un lead |
+  | `TimeInStageChart` | marcas de tiempo por etapa; solo hay `first_contacted_at` y `closed_at` |
+  | `DynamicAcquisitionChart` (apilado) | el mismo reparto por fuente, pero por mes |
+
+  Para cada uno hay tres salidas y la eleccion es del usuario, porque cambia lo que ve: **capturar el
+  dato que falta** (implica tocar el flujo de trabajo, por ejemplo pedir motivo al descartar),
+  **marcarlo visiblemente como ejemplo**, o **retirarlo**. Mientras tanto siguen mostrando constantes.
+
+- [PENDIENTE] `OverviewTab` tiene ademas un bloque "Fuentes principales" **escrito directamente en el
+  JSX**: las barras y los porcentajes son literales (`width: '100%'`, `100%`). Es el mismo problema y
+  se arregla igual, reusando `originCounts`, pero cambia esa tarjeta del panel principal.
 - [PENDIENTE] `OverviewTab`: las dos tendencias falsas necesitan que el backend devuelva el dato de
   comparacion. Mientras no exista, mostrar "0% vs ayer" con flecha verde es peor que no mostrar nada.
 
