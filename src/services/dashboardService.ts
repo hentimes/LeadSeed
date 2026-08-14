@@ -9,6 +9,10 @@ export interface DashboardSnapshot {
     forgotten: number;
     statusCounts: Record<string, number>;
     monthlyCounts: Array<{ name: string; count: number }>;
+    /** Como entro el lead: manual, imported, web_form. */
+    originCounts: Record<string, number>;
+    /** De que formulario publico vino, si vino de uno: pb, general, retiro, form. */
+    channelCounts: Record<string, number>;
   };
   sendSummary: {
     today: {
@@ -43,6 +47,8 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       forgotten: row.leadSummary?.forgotten ?? 0,
       statusCounts: row.leadSummary?.statusCounts ?? {},
       monthlyCounts: row.leadSummary?.monthlyCounts ?? [],
+      originCounts: row.leadSummary?.originCounts ?? {},
+      channelCounts: row.leadSummary?.channelCounts ?? {},
     },
     sendSummary: {
       today: {

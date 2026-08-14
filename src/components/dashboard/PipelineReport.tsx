@@ -147,7 +147,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
           <div className="mb-1">
             <h3 className="text-[13px] font-bold text-ink">Desglose por fuente</h3>
           </div>
-          <SourceBreakdownChart totalLeads={acquired} />
+          <SourceBreakdownChart originCounts={leadSummary.originCounts} />
         </div>
 
         {/* Conversión por etapa */}

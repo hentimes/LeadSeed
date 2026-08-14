@@ -9,6 +9,8 @@ export interface DashboardSnapshotRow {
     forgotten?: number;
     statusCounts?: Record<string, number>;
     monthlyCounts?: Array<{ name: string; count: number }>;
+    originCounts?: Record<string, number>;
+    channelCounts?: Record<string, number>;
   };
   sendSummary?: {
     today?: {
