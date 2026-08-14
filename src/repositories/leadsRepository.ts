@@ -92,6 +92,7 @@ export interface LeadRow {
   assigned_at: string | null;
   first_contacted_at: string | null;
   closed_at: string | null;
+  discard_reason: string | null;
   estimated_value: number | null;
   metadata: Lead['metadata'];
   created_at: string;
@@ -117,7 +118,7 @@ export interface LeadIdentityRow {
 }
 
 export const LEAD_SELECT =
-  'id, user_id, name, phone, email, company, rut, status, score, lista_ids, notes, scheduled_at, utm_source, utm_medium, utm_campaign, utm_term, utm_content, assigned_at, first_contacted_at, closed_at, estimated_value, metadata, created_at, updated_at, deleted_at';
+  'id, user_id, name, phone, email, company, rut, status, score, lista_ids, notes, scheduled_at, utm_source, utm_medium, utm_campaign, utm_term, utm_content, assigned_at, first_contacted_at, closed_at, discard_reason, estimated_value, metadata, created_at, updated_at, deleted_at';
 
 export const CROSS_EXEC_EVENT_SELECT =
   'id, lead_id, related_lead_id, event_kind, counterpart_captured_at, matched_by, is_read, created_at';

@@ -13,6 +13,8 @@ export interface DashboardSnapshot {
     originCounts: Record<string, number>;
     /** De que formulario publico vino, si vino de uno: pb, general, retiro, form. */
     channelCounts: Record<string, number>;
+    /** Motivos de descarte contados. Los que nadie declaro salen como 'Sin motivo'. */
+    lossReasons: Array<{ name: string; value: number }>;
   };
   sendSummary: {
     today: {
@@ -49,6 +51,7 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       monthlyCounts: row.leadSummary?.monthlyCounts ?? [],
       originCounts: row.leadSummary?.originCounts ?? {},
       channelCounts: row.leadSummary?.channelCounts ?? {},
+      lossReasons: row.leadSummary?.lossReasons ?? [],
     },
     sendSummary: {
       today: {

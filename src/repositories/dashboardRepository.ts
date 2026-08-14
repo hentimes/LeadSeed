@@ -11,6 +11,7 @@ export interface DashboardSnapshotRow {
     monthlyCounts?: Array<{ name: string; count: number }>;
     originCounts?: Record<string, number>;
     channelCounts?: Record<string, number>;
+    lossReasons?: Array<{ name: string; value: number }>;
   };
   sendSummary?: {
     today?: {

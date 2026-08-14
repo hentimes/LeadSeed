@@ -9,6 +9,7 @@ import type { ColumnDef } from '../types';
 import { Icon } from '../utils/icons';
 import { useLeadsPageController } from '../hooks/useLeadsPageController';
 import { Modal } from '../design/Modal';
+import DiscardReasonModal from '../components/leads/DiscardReasonModal';
 
 interface LeadsPageProps {
   compactMode: boolean;
@@ -195,6 +196,14 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
             p.setShowForm(true);
           }}
           onNavigate={onNavigate}
+        />
+      )}
+
+      {p.pendingDiscard !== null && (
+        <DiscardReasonModal
+          cantidad={p.pendingDiscard}
+          onConfirm={p.confirmBulkDiscard}
+          onCancel={p.cancelBulkDiscard}
         />
       )}
 

@@ -431,11 +431,37 @@ export function useLeadsPageController() {
     await loadLeads();
   };
 
-  const handleBulkStatusChange = async (status: LeadStatus) => {
-    if (selection.selectedIds.size === 0) return;
-    for (const id of selection.selectedIds) await save({ id, status } as Lead);
+  /**
+   * Descartar pregunta el motivo; los demas estados no.
+   *
+   * Se guarda el estado pedido y se deja que la vista muestre el dialogo. Que
+   * el controlador no sepa nada de modales es lo que permite que esta misma
+   * logica sirva luego al arrastre del pipeline.
+   */
+  const [pendingDiscard, setPendingDiscard] = useState<number | null>(null);
+
+  const applyBulkStatus = async (status: LeadStatus, discardReason?: string) => {
+    for (const id of selection.selectedIds) {
+      await save({ id, status, ...(discardReason ? { discardReason } : {}) } as Lead);
+    }
     await loadLeads();
   };
+
+  const handleBulkStatusChange = async (status: LeadStatus) => {
+    if (selection.selectedIds.size === 0) return;
+    if (status === 'descartado') {
+      setPendingDiscard(selection.selectedIds.size);
+      return;
+    }
+    await applyBulkStatus(status);
+  };
+
+  const confirmBulkDiscard = async (motivo: string) => {
+    setPendingDiscard(null);
+    await applyBulkStatus('descartado', motivo || undefined);
+  };
+
+  const cancelBulkDiscard = () => setPendingDiscard(null);
 
   const handleAddToList = async (listaId: number) => {
     for (const id of selection.selectedIds) await addToList(id, listaId);
@@ -533,6 +559,9 @@ export function useLeadsPageController() {
     handleBulkDelete,
     handleBulkRestore,
     handleBulkStatusChange,
+    pendingDiscard,
+    confirmBulkDiscard,
+    cancelBulkDiscard,
     handleAddToList,
     handleImport,
     handleNewLeadClick,

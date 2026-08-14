@@ -143,7 +143,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <div className="text-ink-muted"><Icon.Help /></div>
           </div>
           <div className="flex-1 min-h-[140px]">
-            <LossReasonsChart />
+            <LossReasonsChart data={leadSummary.lossReasons} />
           </div>
         </Card>
       </div>

@@ -71,6 +71,7 @@ export const mapLeadRowToDomain = (row: LeadRow): Lead => ({
   assignedAt: row.assigned_at || undefined,
   firstContactedAt: row.first_contacted_at || undefined,
   closedAt: row.closed_at || undefined,
+  discardReason: row.discard_reason || undefined,
   estimatedValue: row.estimated_value || undefined,
   metadata: row.metadata || {},
   isPinned: row.metadata?.isPinned === true,
@@ -233,6 +234,13 @@ export async function saveLeadForUser(userId: string, lead: Lead): Promise<strin
       notes: patch.notes !== undefined ? patch.notes : (existing.notes || ''),
       lista_ids: patch.listaIds !== undefined ? patch.listaIds : (existing.lista_ids || []),
       scheduled_at: patch.scheduledAt !== undefined ? patch.scheduledAt : existing.scheduled_at,
+      // El motivo solo tiene sentido mientras el lead siga descartado. Si vuelve
+      // a otro estado se limpia, para que no quede un motivo colgado
+      // contradiciendo el estado y contaminando el grafico de descartes.
+      discard_reason:
+        (patch.status ?? existing.status) === 'descartado'
+          ? (patch.discardReason !== undefined ? patch.discardReason : existing.discard_reason) || null
+          : null,
       metadata: {
         ...(existing.metadata || {}),
         ...(patch.metadata || {}),

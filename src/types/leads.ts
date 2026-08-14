@@ -150,6 +150,8 @@ export interface Lead {
   assignedAt?: string;
   firstContactedAt?: string;
   closedAt?: string;
+  /** Motivo por el que se descarto. Solo tiene sentido con status 'descartado'. */
+  discardReason?: string;
   estimatedValue?: number;
 
   // Datos variables (JSONB)

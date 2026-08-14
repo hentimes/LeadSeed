@@ -1,20 +1,37 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import type { PropsTooltip } from '../rechartsProps';
 
-export default function LossReasonsChart() {
-  const data = [
-    { name: 'Precio alto', value: 42 },
-    { name: 'No responde', value: 28 },
-    { name: 'Competencia', value: 18 },
-    { name: 'Fuera de zona', value: 12 },
-  ];
+interface LossReasonsChartProps {
+  /** Motivos contados por `get_my_dashboard_snapshot`, de mas a menos frecuente. */
+  data: Array<{ name: string; value: number }>;
+}
 
+/**
+ * Reparto de los leads descartados por motivo.
+ *
+ * Hasta el `2026-08-14` este grafico mostraba cuatro constantes escritas aqui
+ * mismo (Precio alto 42, No responde 28...). No podian ser otra cosa: **el CRM
+ * nunca preguntaba por que se descartaba un lead**. Ahora existe el campo y
+ * esto cuenta lo que hay.
+ *
+ * Al principio casi todo caera en "Sin motivo", porque a los descartados
+ * anteriores nadie les pregunto. Esa barra es el estado real y se encoge sola.
+ */
+export default function LossReasonsChart({ data }: LossReasonsChartProps) {
   const COLORS = ['#7B5CFF', '#8F85FF', '#BCAFFF', '#EBE5FF'];
 
   const CustomTooltip = ({ active, payload }: PropsTooltip) => {
     const entrada = payload?.[0];
     if (active && entrada) {
-      return (
+      if (data.length === 0) {
+    return (
+      <p className="py-8 text-center text-[11px] text-ink-muted">
+        Todavia no hay leads descartados.
+      </p>
+    );
+  }
+
+  return (
         <div className="bg-ink rounded-[6px] p-2 shadow-lg">
           <p className="text-[11px] text-white">
             <span className="font-bold">{entrada.name}:</span> {entrada.value}%

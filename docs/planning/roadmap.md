@@ -2123,12 +2123,43 @@ comerciales mirando numeros que no salen de ningun lado.
   Un origen desconocido se muestra con su clave cruda en vez de descartarse: si aparece uno nuevo,
   conviene verlo.
 
-- [PENDIENTE, requiere decision] Los otros cuatro **no se pueden conectar: el dato no existe**.
+- [HECHO] (`2026-08-14`) `LossReasonsChart` conectado, **capturando el dato que faltaba**. Migracion
+  **100** (columna `leads.discard_reason` con indice parcial) y **101** (`lossReasons` en el
+  snapshot), mas un dialogo que pregunta el motivo al descartar desde la accion masiva.
+
+  Tres decisiones que conviene dejar escritas:
+
+  - **El motivo es opcional.** Obligar a rellenarlo convertiria descartar en un tramite y la gente
+    elegiria cualquier cosa para salir del paso, que ensucia el dato mas que dejarlo vacio. Hay un
+    boton "Sin motivo" explicito.
+  - **Los descartados anteriores quedan en nulo y se cuentan como "Sin motivo".** No se reparten
+    entre categorias: nadie les pregunto, y repartirlos seria inventar otra vez el dato que este
+    grafico existia para mostrar. Al principio esa barra sera casi todo, y esta bien: es el estado
+    real y se encoge sola.
+  - **El motivo se limpia si el lead sale de `descartado`**, para que no quede contradiciendo al
+    estado ni contaminando el conteo.
+
+  Pendiente de este mismo frente: el arrastre en el pipeline y la edicion de ficha tambien pueden
+  descartar, y todavia no preguntan. El controlador ya expone la logica separada del dialogo
+  (`applyBulkStatus`), asi que engancharlos es directo.
+
+- [CORREGIDO] Los tres restantes: **dos de ellos si se pueden derivar de lo que ya hay**, al reves de
+  lo que decia la version anterior de este item. `leads` guarda `created_at`, `first_contacted_at`,
+  `closed_at`, `status` y `metadata.origin`, y con eso salen:
+
+  | Componente | Se puede calcular con |
+  |---|---|
+  | `QualityMatrix` | volumen y tasa de conversion por origen, y ciclo como `closed_at - created_at` |
+  | `DynamicAcquisitionChart` (apilado) | el conteo mensual por origen |
+  | `TimeInStageChart` | **solo dos tramos** de los cuatro: nuevo->contactado y contactado->cierre |
+
+  Ninguno necesita capturar nada nuevo; falta agregarlos en el snapshot y reescribir los tres
+  componentes. `TimeInStageChart` es el unico que sigue mostrando de mas: cuatro etapas cuando el
+  dato solo da dos.
 
   | Componente | Que le falta |
   |---|---|
   | `QualityMatrix` | win rate y ciclo de venta por fuente; no se registra la conversion por canal |
-  | `LossReasonsChart` | motivo de descarte; el CRM no lo pide al descartar un lead |
   | `TimeInStageChart` | marcas de tiempo por etapa; solo hay `first_contacted_at` y `closed_at` |
   | `DynamicAcquisitionChart` (apilado) | el mismo reparto por fuente, pero por mes |
 
