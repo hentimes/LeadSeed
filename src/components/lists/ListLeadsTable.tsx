@@ -1,5 +1,6 @@
 import type { Lead } from '../../types';
 import { useSendCounts } from '../../hooks/useSendCounts';
+import type { SortConfig, SortField } from '../../hooks/useSort';
 
 interface Props {
   leads: Lead[];
@@ -7,8 +8,8 @@ interface Props {
   onToggleLead: (id: string) => void;
   onSelectAll: () => void;
   onRemoveLead: (id: string) => void;
-  sort: { field: string; dir: 'asc' | 'desc' };
-  onSort: (field: any) => void;
+  sort: SortConfig;
+  onSort: (field: SortField) => void;
 }
 
 function shortName(full: string): string {

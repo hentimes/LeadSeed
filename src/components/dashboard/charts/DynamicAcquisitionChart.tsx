@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { chartColors } from '../../../design/palette';
 import type { PropsEtiqueta, PropsTooltip } from '../rechartsProps';
+import type { PropsPunto } from '../rechartsProps';
 
 export type ChartVisualType = 'area' | 'line' | 'bar' | 'stacked' | 'cumulative';
 
@@ -124,12 +125,12 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
     return null;
   };
 
-  const renderDot = (props: any) => {
+  const renderDot = (props: PropsPunto<{ total: number }>) => {
     const { cx, cy, index, payload } = props;
     const isLast = index === processedData.length - 1;
     
     // Only pulse if there's actually a value
-    if (isLast && payload.total > 0) {
+    if (isLast && payload && payload.total > 0) {
       return (
         <g key={`dot-${index}`} className="animate-fade-in" style={{ animationDelay: '1.2s', animationFillMode: 'both' }}>
           <circle cx={cx} cy={cy} r="4" fill={chartColors.primary}>

@@ -16,6 +16,7 @@ import AdminSupportChat from '../../components/admin/AdminSupportChat';
 import AdminUserHelperStats from '../../components/admin/AdminUserHelperStats';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { useAuth } from '../../contexts/AuthContext';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 type AdminTab = 'licencias' | 'telemetria' | 'inventario' | 'base' | 'agenda' | 'heatmap' | 'soporte' | 'helper';
 
@@ -203,8 +204,8 @@ export default function AdminUsersPage() {
         await bulkSetUsersAsHelper(selectedUserIds, isHelper);
         setProfiles(profiles.map(p => selectedUserIds.includes(p.id) ? { ...p, is_helper: isHelper } : p));
         alert(`Rol de helper actualizado para ${selectedUserIds.length} usuarios.`);
-      } catch (error: any) {
-        alert('Error: ' + (error?.message || 'Error desconocido'));
+      } catch (error) {
+        alert('Error: ' + getErrorMessage(error, 'Error desconocido'));
       }
     } else {
       alert(`Acción "${action}" seleccionada para ${selectedUserIds.length} usuarios. (Implementación futura)`);

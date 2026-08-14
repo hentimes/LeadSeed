@@ -88,7 +88,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
     }
   ];
 
-  const chartData = leadSummary.monthlyCounts.map((m: any) => ({
+  const chartData = leadSummary.monthlyCounts.map((m) => ({
     name: m.name.substring(0, 3).toUpperCase(),
     value: m.count
   }));

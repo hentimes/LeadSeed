@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { changeAvatar, saveProfileFields } from '../../services/profileService';
 import { Icon } from '../../utils/icons';
 import { Modal } from '../../design';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface Props {
   isOpen: boolean;
@@ -32,9 +33,9 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
 
       await refreshProfile();
       setSuccess('Foto de perfil actualizada');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError('Error al subir imagen: ' + (err.message || 'Error desconocido'));
+      setError('Error al subir imagen: ' + getErrorMessage(err, 'Error desconocido'));
     } finally {
       setLoading(false);
     }
@@ -58,9 +59,9 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
         setSuccess('');
         onClose();
       }, 1500);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError('Error al guardar: ' + (err.message || 'Error desconocido'));
+      setError('Error al guardar: ' + getErrorMessage(err, 'Error desconocido'));
     } finally {
       setLoading(false);
     }

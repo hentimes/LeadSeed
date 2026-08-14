@@ -66,8 +66,10 @@ export interface PropsEtiqueta {
 }
 
 /** Lo que recibe el renderizador de un punto de una linea. */
-export interface PropsPunto {
+export interface PropsPunto<T = unknown> {
   cx?: number;
   cy?: number;
   index?: number;
+  /** Fila original del punto; se usa para decidir si vale la pena animarlo. */
+  payload?: T;
 }

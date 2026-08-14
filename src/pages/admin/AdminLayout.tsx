@@ -6,6 +6,7 @@ import AdminRolesPage from './AdminRolesPage';
 import AdminFeaturesPage from './AdminFeaturesPage';
 import AdminRequirementsPage from './AdminRequirementsPage';
 import { loadOpenRequirementsCount, subscribeOpenRequirementsCount } from '../../services/adminService';
+import type { ReactNode } from 'react';
 
 type AdminTab = 'users' | 'roles' | 'features' | 'support';
 
@@ -47,7 +48,7 @@ export default function AdminLayout() {
     { id: 'roles', label: 'Perfiles y Planes', icon: Icon.Settings, show: isAdmin },
     { id: 'features', label: 'Funcionalidades', icon: Icon.Dashboard, show: isAdmin },
     { id: 'support', label: 'Soporte', icon: Icon.Inbox, show: isAdmin || isHelper },
-  ].filter(t => t.show) as { id: AdminTab; label: string; icon: any }[];
+  ].filter(t => t.show) as { id: AdminTab; label: string; icon: () => ReactNode }[];
 
   return (
     <div className="h-full flex flex-col bg-surface rounded-xl shadow-sm border border-line overflow-hidden">

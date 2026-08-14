@@ -4,6 +4,7 @@ import { primaryRoutes, secondaryRoutes, RouteDef } from '../../config/routes';
 import type { Page } from '../../types';
 import { Icon } from '../../utils/icons';
 import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
+import type { ReactNode } from 'react';
 
 interface Props {
   isOpen: boolean;
@@ -70,7 +71,7 @@ export default function NavigationDrawer({
   const renderNavButton = (
     page: Page,
     label: string,
-    icon: any,
+    icon: (() => ReactNode) | null,
     badge?: number,
     isSubItem = false,
     hash?: string,
@@ -90,7 +91,7 @@ export default function NavigationDrawer({
             : 'text-ink-muted dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-ink dark:hover:text-slate-200'
         } ${isSubItem ? 'pl-9 text-[13px]' : ''}`}
       >
-        {!isSubItem && (
+        {!isSubItem && icon && (
           <span className={`w-5 h-5 flex items-center justify-center ${isActive ? 'text-primary' : 'text-slate-400'}`}>
             {icon()}
           </span>
@@ -139,7 +140,7 @@ export default function NavigationDrawer({
       )
     );
 
-  const renderSubmenu = (id: string, label: string, icon: any, items: {page: Page, label: string, hash?: string}[]) => {
+  const renderSubmenu = (id: string, label: string, icon: () => ReactNode, items: {page: Page, label: string, hash?: string}[]) => {
     const isOpen = openSubmenus[id];
     const isAnyActive = items.some(item => currentPage === item.page && (!item.hash || window.location.hash === item.hash));
     

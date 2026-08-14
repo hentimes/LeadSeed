@@ -106,8 +106,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
         }
 
         channels
-          .filter((channel: any) => channel.isActive)
-          .forEach((channel: any) => {
+          .filter((channel) => channel.isActive)
+          .forEach((channel) => {
             options.push({
               id: channel.id,
               provider: 'resend',
