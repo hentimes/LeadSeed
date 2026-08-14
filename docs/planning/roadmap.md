@@ -2086,6 +2086,41 @@ Lo que aparecio al ejecutarlos, que el plan no anticipaba:
 - [PENDIENTE] Reducir los **131** anchos fijos en px y grids de columnas fijas en 68 archivos, criticos
   para sidebar angosto y movil.
 
+### Capitulo 13.14 - Datos fabricados en el panel analitico (auditoria del `2026-08-14`)
+
+**Frente nuevo. No estaba en el roadmap ni en la auditoria del `2026-08-11`.**
+
+Varios componentes del panel analitico **muestran numeros inventados con apariencia de datos
+reales**. No son placeholders visibles: llevan porcentajes, flechas de tendencia y unidades, y se
+presentan junto a metricas que si son reales, lo que los hace indistinguibles.
+
+Verificado leyendo cada componente:
+
+| Componente | Que muestra | De donde sale |
+|---|---|---|
+| `QualityMatrix` | "Calidad de Leads por Fuente": volumen, win rate y ciclo | **literal en el codigo**: LinkedIn 126 / 15.2% / 12d, WhatsApp 178 / 12% / 5d... |
+| `SourceBreakdownChart` | "Desglose por fuente" | el total real repartido por porcentajes **fijos**: 38.8 / 29.8 / 21.1 / 10.3 |
+| `LossReasonsChart` | "Razones de descarte" | literal: Precio alto 42, No responde 28, Competencia 18 |
+| `TimeInStageChart` | "Tiempo promedio por etapa" | literal: Nuevo 1.2d, Contactado 2.5d... |
+| `DynamicAcquisitionChart` (modo apilado) | reparto por fuente de cada mes | el mismo reparto por porcentajes fijos; el comentario lo llama "mocked sources" |
+| `OverviewTab` | "0% vs ayer" en tareas y respuestas | `calcTrend(x, 0)` y `calcTrend(0, 0)`, con un TODO al lado |
+
+El caso mas claro esta en las capturas que el usuario mando el `2026-08-14`: el desglose mostraba
+Web 749 (38.8%), WhatsApp 575 (29.8%), LinkedIn 407 (21.1%), Formulario 199 (10.3%). Son exactamente
+esas constantes aplicadas a sus 1930 leads.
+
+**Por que importa mas que un bug visual.** El resto de este roadmap trata de que no haya dos fuentes
+de verdad y de que lo escrito coincida con lo real. Un panel que presenta constantes como analitica
+es la misma clase de problema, pero apuntando al usuario en vez de al equipo: se toman decisiones
+comerciales mirando numeros que no salen de ningun lado.
+
+- [PENDIENTE] Decidir, componente por componente, entre tres salidas: conectarlo a datos reales,
+  marcarlo visiblemente como ejemplo, o retirarlo. La tercera es legitima: `source_channel` ya existe
+  y da un desglose real por `pb`/`general`/`retiro`/`form`, que es mas util que un reparto inventado
+  entre LinkedIn y WhatsApp, canales que este CRM ni siquiera registra como origen.
+- [PENDIENTE] `OverviewTab`: las dos tendencias falsas necesitan que el backend devuelva el dato de
+  comparacion. Mientras no exista, mostrar "0% vs ayer" con flecha verde es peor que no mostrar nada.
+
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
 Frente nuevo, nunca registrado en este roadmap.
