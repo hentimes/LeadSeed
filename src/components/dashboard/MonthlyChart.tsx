@@ -10,8 +10,8 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
     if (active && payload && payload.length) {
       const currentIndex = data.findIndex(d => d.name === label);
       const currentVal = payload[0].value;
-      let trendEl = null;
-      
+      let trendEl;
+
       const prevData = data[currentIndex - 1];
       if (prevData) {
         const prevVal = prevData.value;

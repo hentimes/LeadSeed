@@ -11,7 +11,7 @@ function downloadFile(data: Blob | string, filename: string) {
 }
 
 export function exportToJSON(leads: Lead[]) {
-  const clean = leads.map(({ id, listaIds, updatedAt, ...rest }) => rest);
+  const clean = leads.map(({ id: _id, listaIds: _listaIds, updatedAt: _updatedAt, ...rest }) => rest);
   const json = JSON.stringify(clean, null, 2);
   const ts = new Date().toISOString().slice(0, 10);
   downloadFile(json, `leads-${ts}.json`);

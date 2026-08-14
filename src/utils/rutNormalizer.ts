@@ -28,13 +28,14 @@ export function normalizeRut(rutStr: string, dvStr?: string): string | null {
 
   // Limpiar: eliminar todo excepto dígitos, K/k, y guiones
   // Pero preservar el último guion como separador de DV
-  let clean = combined.replace(/[^0-9kK-]/g, '');
+  const clean = combined.replace(/[^0-9kK-]/g, '');
 
   if (!clean) return null;
 
-  // Si no hay guion, el último carácter es el DV si hay más de 8 dígitos
-  let body = '';
-  let dv = '';
+  // Si no hay guion, el último carácter es el DV si hay más de 8 dígitos.
+  // Sin valor inicial: las dos ramas de abajo los asignan siempre.
+  let body: string;
+  let dv: string;
 
   const dashIndex = clean.lastIndexOf('-');
   if (dashIndex !== -1) {

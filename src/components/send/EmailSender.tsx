@@ -161,10 +161,12 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   }, [recipients, previewLead]);
 
   const toggleLead = (id: string) => {
-    setSelectedLeadIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSelectedLeadIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
+      else n.add(id); return n; });
   };
   const toggleList = (id: number) => {
-    setSelectedListIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSelectedListIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
+      else n.add(id); return n; });
   };
 
   const clearRecipients = () => {

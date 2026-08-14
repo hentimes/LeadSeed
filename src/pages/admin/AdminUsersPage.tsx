@@ -164,7 +164,7 @@ export default function AdminUsersPage() {
         if (!cancelled) {
           setLeadAlertCounts((current) => ({ ...current, [observedUserId]: 0 }));
         }
-      } catch (_error) {
+      } catch {
         // noop: si falla la marca de visto no se bloquea la vista
       }
     }

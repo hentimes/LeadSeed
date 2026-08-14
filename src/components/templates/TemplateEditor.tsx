@@ -263,7 +263,8 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                 type="button"
                 onClick={() => {
                   const n = new Set(selectedCategories);
-                  n.has(c.id) ? n.delete(c.id) : n.add(c.id);
+                  if (n.has(c.id)) n.delete(c.id);
+                  else n.add(c.id);
                   setSelectedCategories(n);
                 }}
                 className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-ink-secondary border-line-strong'}`}

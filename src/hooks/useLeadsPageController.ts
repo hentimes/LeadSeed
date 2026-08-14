@@ -187,8 +187,10 @@ export function useLeadsPageController() {
     };
 
     let data: Lead[] = [];
-    let nextFilteredCount = 0;
-    let nextTotalCount = 0;
+    // Sin valor inicial a proposito: las tres ramas de abajo los asignan antes
+    // de leerlos, y poner un 0 aqui haria pensar que existe un caso por defecto.
+    let nextFilteredCount: number;
+    let nextTotalCount: number;
 
     setIsLoadingPage(true);
 

@@ -261,13 +261,13 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
               <button
                 key={list.id!}
                 type="button"
-                onClick={() => toggleList(list.id!!)}
+                onClick={() => toggleList(list.id!)}
                 className={`rounded-[6px] border px-2 py-1 text-[11px] font-semibold transition-all ${
-                  listaIds.includes(list.id!!)
+                  listaIds.includes(list.id!)
                     ? 'border-transparent text-white shadow-sm'
                     : 'border-line bg-surface text-ink-secondary hover:border-line-strong'
                 }`}
-                style={listaIds.includes(list.id!!) ? { backgroundColor: list.color } : {}}
+                style={listaIds.includes(list.id!) ? { backgroundColor: list.color } : {}}
               >
                 {list.name}
               </button>
