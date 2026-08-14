@@ -968,11 +968,16 @@ entrypoint_path: .../landing-gerow/supabase/functions/form-leads/index.ts
   el HEAD commiteado de ese repo tenia una version vieja que, al redesplegarse, habria desactivado en
   silencio el tracking de `retiro-v2` y de seis tipos de evento. **Las doce Edge Functions viven ahora
   en este repo.**
-- [BLOQUEADO] Eliminar `supabase/functions/` y `supabase/migrations/` de `landing-gerow`. Ese repo
-  tiene al `2026-08-12` **1368 archivos sin commitear**, esta parado en la rama `fix/agenda-url-bug`
-  (no `master`), y tiene tres worktrees activos. Borrar ahi en ese estado es inseguro. Requiere una
-  pasada de ordenamiento propia de `landing-gerow` antes.
-- [PENDIENTE] Anadir un check de CI en `landing-gerow` que falle si reaparece `supabase/functions/`.
+- [HECHO] Eliminados `supabase/functions/` y `supabase/migrations/` de `landing-gerow`. **Verificado
+  el `2026-08-14` contra `origin/master`: la carpeta no existe.** El item seguia marcado como
+  bloqueado por el estado del arbol de trabajo de ese repo, pero el borrado se hizo desde un
+  `git worktree` limpio sobre `origin/master`, que es justo la via que ese bloqueo describia como
+  necesaria. El desorden del arbol principal sigue ahi y sigue siendo un problema, pero no impedia
+  esto.
+- [HECHO] Check de CI puesto: `.github/workflows/no-supabase-functions.yml` en `origin/master` de
+  `landing-gerow`. Falla el build si reaparece la carpeta, en push a `master` y en cualquier pull
+  request, y el mensaje de error apunta a donde viven de verdad las funciones. Verificado leyendo el
+  fichero en `origin/master`, no asumido.
 
 Validacion ejecutada: `npm run build` en verde (14.03s). Conteo de migraciones consistente: 98 en
 `sql/migrations/` y 98 en `supabase/migrations/`.
