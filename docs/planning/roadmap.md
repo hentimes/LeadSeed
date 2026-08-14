@@ -1446,9 +1446,10 @@ Metodo, por si se repite: se trabajo en un `git worktree` aislado creado desde `
 tocar la copia de trabajo de `landing-gerow`, que tiene 1368 archivos sin commitear y tres worktrees
 activos. Es la forma de intervenir ese repo sin arriesgar trabajo ajeno.
 
-- [PENDIENTE] Sigue sin mergear `fix/reconcile-ppforms-retirement-with-tracking`, que ademas del fix
-  de routing contiene el formulario de retiro y el tracking. Se aplico solo la correccion minima, no
-  la rama entera. Esa rama sigue siendo deuda abierta.
+- [RESUELTO DE OTRA FORMA] (`2026-08-14`) Esa rama **no se mergea**: se abrio y resulto estar 8 dias
+  parada, adelantada por master en 63 commits, y reintroduciendo `supabase/functions/`, que master
+  retiro a proposito. Su fix de routing ya estaba en master. Lo unico suyo que faltaba en produccion
+  era el tracking de visita de `/pb`, recuperado en `feat/pb-visit-tracking`. Detalle en 13.2.
 - [PENDIENTE] Cuantificar el impacto: cuantos leads entraron mal atribuidos mientras duro la
   regresion. El commit desplegado roto era `c3315ed7`; su fecha acota la ventana.
 
