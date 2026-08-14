@@ -160,11 +160,11 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
                 style={{ backgroundColor: WHATSAPP_CANVAS }}
               >
                 {previewLead ? (
-                  <div className="inline-block max-w-[90%] whitespace-pre-wrap rounded-lg bg-white p-2 text-micro text-slate-900 shadow-sm">
+                  <div className="inline-block max-w-[90%] whitespace-pre-wrap rounded-lg bg-surface p-2 text-micro text-slate-900 shadow-sm">
                     {replaceVariables(customBody, previewLead)}
                   </div>
                 ) : (
-                  <p className="py-3 text-center text-micro text-slate-500">
+                  <p className="py-3 text-center text-micro text-ink-secondary">
                     Elegí un destinatario para ver el mensaje.
                   </p>
                 )}

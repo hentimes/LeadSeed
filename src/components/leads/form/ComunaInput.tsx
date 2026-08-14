@@ -94,7 +94,7 @@ export function ComunaInput({ comuna, region, onComunaChange, onRegionChange }: 
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="relative" ref={wrapperRef}>
-        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Comuna</label>
+        <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Comuna</label>
         <input
           type="text"
           value={inputValue}
@@ -104,11 +104,11 @@ export function ComunaInput({ comuna, region, onComunaChange, onRegionChange }: 
             if (suggestions.length > 0) setShowSuggestions(true);
           }}
           placeholder="Escribe la comuna..."
-          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+          className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface-muted focus:bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-ink-muted"
           autoComplete="off"
         />
         {showSuggestions && (
-          <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-[6px] shadow-lg max-h-48 overflow-y-auto">
+          <ul className="absolute z-10 w-full mt-1 bg-surface border border-line rounded-[6px] shadow-lg max-h-48 overflow-y-auto">
             {suggestions.map((s) => (
               <li
                 key={s}
@@ -116,7 +116,7 @@ export function ComunaInput({ comuna, region, onComunaChange, onRegionChange }: 
                   e.preventDefault();
                   handleSelect(s);
                 }}
-                className="px-3 py-1.5 text-[12px] text-slate-700 cursor-pointer hover:bg-slate-50 font-medium"
+                className="px-3 py-1.5 text-[12px] text-ink cursor-pointer hover:bg-surface-muted font-medium"
               >
                 {s}
               </li>
@@ -125,8 +125,8 @@ export function ComunaInput({ comuna, region, onComunaChange, onRegionChange }: 
         )}
       </div>
       <div>
-        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Región</label>
-        <div className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500 font-medium bg-slate-100 outline-none select-none cursor-not-allowed">
+        <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Región</label>
+        <div className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink-secondary font-medium bg-surface-hover outline-none select-none cursor-not-allowed">
           {region || 'Se autocompleta'}
         </div>
       </div>

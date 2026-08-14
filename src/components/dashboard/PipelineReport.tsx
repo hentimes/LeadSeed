@@ -54,7 +54,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
       {/* KPIs Grid */}
       <div className="grid grid-cols-4 gap-3 mb-3">
         {/* Leads adquiridos */}
-        <div className="bg-white border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
+        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">
             <div className="text-primary flex items-center justify-center shrink-0">
               <Icon.Users />
@@ -71,7 +71,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         </div>
 
         {/* Leads convertidos */}
-        <div className="bg-white border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
+        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">
             <div className="text-primary flex items-center justify-center shrink-0">
               <Icon.CheckCircle />
@@ -88,7 +88,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         </div>
 
         {/* Tasa de conversión */}
-        <div className="bg-white border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
+        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">
             <div className="text-primary flex items-center justify-center shrink-0">
               <Icon.ChartPie />
@@ -105,7 +105,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         </div>
 
         {/* Crecimiento mensual */}
-        <div className="bg-white border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
+        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5">
             <div className="text-primary flex items-center justify-center shrink-0">
               <Icon.TrendUp />
@@ -122,11 +122,11 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
       </div>
 
       {/* Main dynamic chart placeholder */}
-      <div className="bg-white border border-line rounded-[8px] p-4 mb-3">
+      <div className="bg-surface border border-line rounded-[8px] p-4 mb-3">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-[15px] font-bold text-ink">Adquisición mensual</h3>
           <select 
-            className="text-[12px] border border-line rounded-[6px] px-2 py-1 text-ink bg-white cursor-pointer hover:border-primary outline-none"
+            className="text-[12px] border border-line rounded-[6px] px-2 py-1 text-ink bg-surface cursor-pointer hover:border-primary outline-none"
             value={chartType}
             onChange={(e) => setChartType(e.target.value as ChartVisualType)}
           >
@@ -143,7 +143,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
       {/* Bottom Grid */}
       <div className="grid grid-cols-2 gap-2 mb-2">
         {/* Desglose por fuente */}
-        <div className="bg-white border border-line rounded-[8px] p-3 flex flex-col h-full">
+        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col h-full">
           <div className="mb-1">
             <h3 className="text-[13px] font-bold text-ink">Desglose por fuente</h3>
           </div>
@@ -151,7 +151,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         </div>
 
         {/* Conversión por etapa */}
-        <div className="bg-white border border-line rounded-[8px] p-3 flex flex-col h-full">
+        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col h-full">
           <div className="mb-0">
             <h3 className="text-[13px] font-bold text-ink">Conversión por etapa</h3>
           </div>
@@ -163,7 +163,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
 
       {/* Action footer */}
       <div className="flex gap-3">
-        <button className="flex-1 py-2 bg-white border border-primary rounded-[8px] text-primary font-medium text-[13px] hover:bg-primary-soft transition-colors flex items-center justify-center gap-2">
+        <button className="flex-1 py-2 bg-surface border border-primary rounded-[8px] text-primary font-medium text-[13px] hover:bg-primary-soft transition-colors flex items-center justify-center gap-2">
           <Icon.Download /> Exportar PDF
         </button>
         <button className="flex-1 py-2 bg-primary border border-transparent rounded-[8px] text-white font-medium text-[13px] hover:bg-[#5249EC] transition-colors flex items-center justify-center gap-2">

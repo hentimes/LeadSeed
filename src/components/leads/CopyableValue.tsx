@@ -27,7 +27,7 @@ export default function CopyableValue({ value, children }: { value: string; chil
         type="button"
         onClick={copy}
         title={copied ? 'Copiado' : 'Copiar'}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-[3px] bg-white shadow-[-6px_0_6px_-2px_rgba(255,255,255,0.95)] transition-opacity ${
+        className={`absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-[3px] bg-surface shadow-[-6px_0_6px_-2px_rgba(255,255,255,0.95)] transition-opacity ${
           copied ? 'opacity-100 text-emerald-600' : 'opacity-0 group-hover/copy:opacity-100 text-ink-secondary hover:text-primary'
         }`}
       >

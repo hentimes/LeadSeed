@@ -29,24 +29,24 @@ export default function LeadDetailContact({ phone, email, onCopy }: Props) {
       {phone && (
         <div className="flex-1 flex gap-1 min-w-0">
           <div
-            className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] cursor-pointer hover:bg-slate-100 transition-colors group min-w-0"
+            className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-surface-muted border border-line rounded-[6px] cursor-pointer hover:bg-surface-hover transition-colors group min-w-0"
             title="Doble clic para copiar"
             onDoubleClick={() => onCopy(phone)}
           >
-            <span className="text-slate-400 shrink-0">{Icon.Phone()}</span>
-            <span className="text-[11px] font-semibold text-slate-700 truncate">{phone}</span>
-            <span className="ml-auto text-slate-300 group-hover:text-slate-500 shrink-0">{Icon.Copy()}</span>
+            <span className="text-ink-muted shrink-0">{Icon.Phone()}</span>
+            <span className="text-[11px] font-semibold text-ink truncate">{phone}</span>
+            <span className="ml-auto text-slate-300 group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
           </div>
           <button
             onClick={() => openWhatsApp(phone, '')}
-            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-slate-200"
+            className="w-8 h-8 flex shrink-0 items-center justify-center bg-surface-muted text-ink rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-line"
             title="WhatsApp"
           >
             <WhatsAppGlyph />
           </button>
           <a
             href={`tel:${phone.replace(/[^+\d]/g, '')}`}
-            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-slate-200"
+            className="w-8 h-8 flex shrink-0 items-center justify-center bg-surface-muted text-ink rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-line"
             title="Llamar"
           >
             {Icon.Phone()}
@@ -56,17 +56,17 @@ export default function LeadDetailContact({ phone, email, onCopy }: Props) {
       {email && (
         <div className="flex-1 flex gap-1 min-w-0">
           <div
-            className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] cursor-pointer hover:bg-slate-100 transition-colors group min-w-0"
+            className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-surface-muted border border-line rounded-[6px] cursor-pointer hover:bg-surface-hover transition-colors group min-w-0"
             title="Doble clic para copiar"
             onDoubleClick={() => onCopy(email)}
           >
-            <span className="text-slate-400 shrink-0">{Icon.Email()}</span>
-            <span className="text-[11px] font-semibold text-slate-700 truncate">{email}</span>
-            <span className="ml-auto text-slate-300 group-hover:text-slate-500 shrink-0">{Icon.Copy()}</span>
+            <span className="text-ink-muted shrink-0">{Icon.Email()}</span>
+            <span className="text-[11px] font-semibold text-ink truncate">{email}</span>
+            <span className="ml-auto text-slate-300 group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
           </div>
           <a
             href={`mailto:${email}`}
-            className="w-8 h-8 flex shrink-0 items-center justify-center bg-slate-50 text-slate-700 rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-slate-200"
+            className="w-8 h-8 flex shrink-0 items-center justify-center bg-surface-muted text-ink rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-line"
             title="Enviar correo"
           >
             {Icon.Email()}

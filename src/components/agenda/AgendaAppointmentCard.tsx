@@ -63,16 +63,16 @@ export default function AgendaAppointmentCard({
         <button
           type="button"
           onClick={() => onOpenLead(appointment.leadId)}
-          className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate hover:text-blue-700 text-left"
+          className="text-sm font-semibold text-ink truncate hover:text-blue-700 text-left"
         >
           {appointment.leadName}
         </button>
         <div className="flex items-center gap-1">
-          {isFocused && <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Seleccionada</span>}
+          {isFocused && <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-hover text-ink-secondary">Seleccionada</span>}
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">{appointment.status}</span>
         </div>
       </div>
-      <p className="text-[11px] text-slate-400">
+      <p className="text-[11px] text-ink-muted">
         {formatDateTime(appointment.startsAt)} - {appointment.sourceChannel}
       </p>
 
@@ -129,10 +129,10 @@ export default function AgendaAppointmentCard({
 
       <div className="mt-2">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={onToggleParticipants} className="text-[11px] font-semibold text-slate-500 hover:text-blue-700">
+          <button type="button" onClick={onToggleParticipants} className="text-[11px] font-semibold text-ink-secondary hover:text-blue-700">
             Participantes ({participants.length})
           </button>
-          <button type="button" onClick={onToggleHistory} className="text-[11px] font-semibold text-slate-500 hover:text-blue-700">
+          <button type="button" onClick={onToggleHistory} className="text-[11px] font-semibold text-ink-secondary hover:text-blue-700">
             Historial ({auditEvents.length})
           </button>
         </div>
@@ -148,12 +148,12 @@ export default function AgendaAppointmentCard({
                     title={participant.googleSyncError || participant.invitationStatus}
                   >
                     <span>{participant.name || participant.email}</span>
-                    <span className="text-[9px] uppercase tracking-wide text-slate-400">{participant.invitationStatus}</span>
+                    <span className="text-[9px] uppercase tracking-wide text-ink-muted">{participant.invitationStatus}</span>
                     <button
                       type="button"
                       onClick={() => onDeleteParticipant(participant.id)}
                       disabled={participantActionId === participant.id}
-                      className="text-slate-400 hover:text-red-600 disabled:opacity-40"
+                      className="text-ink-muted hover:text-red-600 disabled:opacity-40"
                       title="Quitar participante"
                     >
                       <Icon.Close />
@@ -185,18 +185,18 @@ export default function AgendaAppointmentCard({
         {historyOpen && (
           <div className="mt-2 border-t border-line pt-2">
             {auditEvents.length === 0 ? (
-              <p className="text-[11px] text-slate-400">Sin cambios registrados todavia.</p>
+              <p className="text-[11px] text-ink-muted">Sin cambios registrados todavia.</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {auditEvents.map((event) => (
                   <div key={event.id} className="border-l-2 border-l-slate-200 pl-2">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-secondary">
                         {EVENT_TYPE_LABELS[event.eventType]}
                       </span>
-                      <span className="text-[10px] text-slate-400">{formatDateTime(event.createdAt)}</span>
+                      <span className="text-[10px] text-ink-muted">{formatDateTime(event.createdAt)}</span>
                     </div>
-                    <p className="text-[11px] text-slate-600">{formatAuditEventSummary(event)}</p>
+                    <p className="text-[11px] text-ink-secondary">{formatAuditEventSummary(event)}</p>
                   </div>
                 ))}
               </div>

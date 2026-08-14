@@ -227,7 +227,7 @@ export default function SupportFloatingChat() {
       )}
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 h-96 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-purple-100">
+        <div className="fixed bottom-6 right-6 w-80 h-96 bg-surface rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-purple-100">
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 text-white flex justify-between items-center">
             <h3 className="font-bold text-sm">Soporte</h3>
             <button onClick={handleClose} className="text-white/80 hover:text-white transition-colors">
@@ -235,7 +235,7 @@ export default function SupportFloatingChat() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-slate-50 dark:bg-slate-900/50">
+          <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-surface-muted">
             {messages.map((message, index) => {
               const previous = index > 0 ? messages[index - 1] : null;
               const showDate = !previous || formatMessageDate(previous.created_at) !== formatMessageDate(message.created_at);
@@ -245,16 +245,16 @@ export default function SupportFloatingChat() {
                 <div key={message.id}>
                   {showDate && (
                     <div className="flex justify-center mb-3">
-                      <span className="bg-gray-200/60 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      <span className="bg-gray-200/60 text-ink-muted text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                         {formatMessageDate(message.created_at)}
                       </span>
                     </div>
                   )}
                   <div className={`flex flex-col max-w-[85%] ${isMine ? 'self-end items-end ml-auto' : 'self-start items-start'}`}>
-                    <div className={`px-3 pt-2 pb-1.5 rounded-2xl text-[13px] shadow-sm leading-relaxed ${isMine ? 'bg-purple-600 text-white rounded-br-sm' : 'bg-white border border-gray-100 text-slate-700 rounded-bl-sm'}`}>
+                    <div className={`px-3 pt-2 pb-1.5 rounded-2xl text-[13px] shadow-sm leading-relaxed ${isMine ? 'bg-purple-600 text-white rounded-br-sm' : 'bg-surface border border-line text-ink rounded-bl-sm'}`}>
                       {!isMine && <div className="text-[10px] font-bold text-purple-600 mb-0.5">Soporte LeadSeed</div>}
                       <div className="break-all whitespace-pre-wrap">{message.message}</div>
-                      <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMine ? 'text-purple-200' : 'text-gray-400'}`}>
+                      <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${isMine ? 'text-purple-200' : 'text-ink-muted'}`}>
                         {formatMessageTime(message.created_at)}
                       </div>
                     </div>
@@ -265,20 +265,20 @@ export default function SupportFloatingChat() {
 
             {isAdminTyping && (
               <div className="flex justify-start mb-2">
-                <div className="bg-white border border-gray-100 text-slate-400 rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm text-[10px] italic">
+                <div className="bg-surface border border-line text-ink-muted rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm text-[10px] italic">
                   Escribiendo...
                 </div>
               </div>
             )}
 
             {pendingRatingRequirement && (
-              <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm text-center">
-                <p className="text-[11px] font-bold text-slate-700 mb-1">Soporte marco el ticket como resuelto.</p>
+              <div className="bg-surface border border-line rounded-xl p-3 shadow-sm text-center">
+                <p className="text-[11px] font-bold text-ink mb-1">Soporte marco el ticket como resuelto.</p>
                 {activeClaimId === pendingRatingRequirement.id ? (
                   <div className="flex flex-col gap-2">
-                    <textarea value={claimReason} onChange={(event) => setClaimReason(event.target.value)} placeholder="Motivo del reclamo..." className="w-full text-xs p-2 border border-red-200 rounded-lg outline-none resize-none bg-slate-50" rows={2} />
+                    <textarea value={claimReason} onChange={(event) => setClaimReason(event.target.value)} placeholder="Motivo del reclamo..." className="w-full text-xs p-2 border border-red-200 rounded-lg outline-none resize-none bg-surface-muted" rows={2} />
                     <div className="flex gap-2 justify-end mt-1">
-                      <button onClick={() => setActiveClaimId(null)} className="text-[10px] text-slate-400 px-2 font-medium">Cancelar</button>
+                      <button onClick={() => setActiveClaimId(null)} className="text-[10px] text-ink-muted px-2 font-medium">Cancelar</button>
                       <button onClick={() => handleSubmitClaim(pendingRatingRequirement.id)} className="bg-red-500 text-white text-[10px] px-3 py-1.5 rounded-lg font-bold">Enviar Reclamo</button>
                     </div>
                   </div>
@@ -303,9 +303,9 @@ export default function SupportFloatingChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSend} className="p-3 border-t border-gray-100 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md">
+          <form onSubmit={handleSend} className="p-3 border-t border-line bg-surface">
             <div className="flex gap-2 items-center">
-              <input type="text" value={newMessage} onChange={handleTyping} placeholder="Escribe aqui..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-xs outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-slate-600" />
+              <input type="text" value={newMessage} onChange={handleTyping} placeholder="Escribe aqui..." className="flex-1 bg-surface-muted border border-line rounded-full px-4 py-2 text-xs outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-ink-secondary" />
               <button type="submit" disabled={!newMessage.trim()} className="bg-purple-600 hover:bg-purple-700 text-white w-8 h-8 rounded-full flex justify-center items-center disabled:opacity-50 transition-colors shrink-0">
                 <Icon.Send />
               </button>

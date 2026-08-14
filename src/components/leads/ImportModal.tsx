@@ -143,11 +143,11 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
             <h2 className="text-section-title font-semibold text-ink tracking-tight">Importar Leads</h2>
             <button
               onClick={() => setShowColInfo(!showColInfo)}
-              className="text-gray-400 hover:text-blue-600 text-lg leading-none"
+              className="text-ink-muted hover:text-blue-600 text-lg leading-none"
               title="Formato de columnas aceptado"
             >?</button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-slate-500 dark:text-slate-400 text-xl">
+          <button onClick={onClose} className="text-ink-muted hover:text-ink-secondary text-xl">
             x
           </button>
         </div>
@@ -167,7 +167,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                   ['Estado', 'estado, status'],
                   ['Notas', 'notas, notes, comentarios (u otras columnas)'],
                 ].map(([label, cols]) => (
-                  <div key={label}><span className="font-medium">{label}:</span> <span className="text-slate-500 dark:text-slate-400">{cols}</span></div>
+                  <div key={label}><span className="font-medium">{label}:</span> <span className="text-ink-secondary">{cols}</span></div>
                 ))}
               </div>
             </div>
@@ -176,12 +176,12 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
             <div
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="border-2 border-dashed border-slate-300 dark:border-slate-600/50 rounded-lg p-12 text-center hover:border-blue-400 transition-colors"
+              className="border-2 border-dashed border-line-strong rounded-lg p-12 text-center hover:border-blue-400 transition-colors"
             >
-              <p className="text-slate-400 dark:text-slate-500 mb-4">
+              <p className="text-ink-muted mb-4">
                 Arrastra un archivo JSON o Excel aquí
               </p>
-              <p className="text-gray-400 text-sm mb-4">o</p>
+              <p className="text-ink-muted text-sm mb-4">o</p>
               <label className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium cursor-pointer hover:bg-blue-700">
                 Seleccionar archivo
                 <input
@@ -191,7 +191,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                   className="hidden"
                 />
               </label>
-              {loading && <p className="mt-4 text-slate-400 dark:text-slate-500">Procesando...</p>}
+              {loading && <p className="mt-4 text-ink-muted">Procesando...</p>}
               {error && <p className="mt-4 text-red-500 text-sm">{error}</p>}
             </div>
           )}
@@ -201,7 +201,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
               {/* Header with stats and actions */}
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-ink-secondary">
                     <strong>{fileName}</strong> — {preview.length} registros
                   </p>
                   <div className="flex gap-4 mt-1">
@@ -221,13 +221,13 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                 <div className="flex gap-2 flex-wrap justify-end">
                   <button
                     onClick={selectAll}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                    className="text-xs bg-surface-hover hover:bg-gray-200 px-2 py-1 rounded"
                   >
                     Seleccionar todo
                   </button>
                   <button
                     onClick={deselectAll}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                    className="text-xs bg-surface-hover hover:bg-gray-200 px-2 py-1 rounded"
                   >
                     Deseleccionar todo
                   </button>
@@ -248,13 +248,13 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
               {/* Column mapping info */}
               <details className="mb-4">
-                <summary className="text-xs text-slate-400 dark:text-slate-500 cursor-pointer hover:text-slate-600 dark:text-slate-300">
+                <summary className="text-xs text-ink-muted cursor-pointer hover:text-ink-secondary">
                   Ver mapeo de columnas ({columns.length} columnas detectadas)
                 </summary>
-                <div className="mt-2 p-2 bg-slate-50 dark:bg-slate-900 rounded text-xs grid grid-cols-2 gap-1">
+                <div className="mt-2 p-2 bg-surface-muted rounded text-xs grid grid-cols-2 gap-1">
                   {detectedMapping.map((col) => (
                     <div key={col.original} className="flex items-center gap-1">
-                      <span className="text-gray-400 truncate max-w-[140px]" title={col.original}>
+                      <span className="text-ink-muted truncate max-w-[140px]" title={col.original}>
                         "{col.original}"
                       </span>
                       <span className="text-gray-300">→</span>
@@ -269,7 +269,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
               {/* Table */}
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0">
+                  <thead className="bg-surface-muted sticky top-0">
                     <tr>
                       <th className="w-8 px-2 py-2">
                         <input
@@ -297,7 +297,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                         <tr
                           key={i}
                           className={`border-t ${
-                            isDup ? 'bg-red-50' : isSelected ? 'bg-blue-50' : 'hover:bg-slate-50 dark:bg-slate-900'
+                            isDup ? 'bg-red-50' : isSelected ? 'bg-blue-50' : 'hover:bg-surface-muted'
                           }`}
                         >
                           <td className="px-2 py-1.5">
@@ -308,7 +308,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                               className="rounded"
                             />
                           </td>
-                          <td className="px-2 py-1.5 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-2 py-1.5 text-ink-muted text-xs">{i + 1}</td>
                           <td className="px-2 py-1.5 font-medium">{row.name}</td>
                           <td className={`px-2 py-1.5 ${isDup && dupes!.some((d) => d.reason.includes('Teléfono')) ? 'text-red-600 font-medium' : ''}`}>
                             {row.phone}
@@ -342,7 +342,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
               {/* Bottom actions */}
               <div className="flex gap-2 justify-end mt-4 items-center">
-                <p className="text-sm text-slate-400 dark:text-slate-500 mr-auto">
+                <p className="text-sm text-ink-muted mr-auto">
                   {selectedCount} de {preview.length} leads seleccionados
                 </p>
                 <Button onClick={handleResetFile}>

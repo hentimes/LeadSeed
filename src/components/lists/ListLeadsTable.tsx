@@ -20,34 +20,34 @@ function shortName(full: string): string {
 export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSelectAll, onRemoveLead, sort, onSort }: Props) {
   const sendCounts = useSendCounts();
   if (leads.length === 0) {
-    return <p className="text-sm text-gray-400 text-center py-6 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border rounded-lg">Sin leads en esta lista.</p>;
+    return <p className="text-sm text-ink-muted text-center py-6 bg-surface border rounded-lg">Sin leads en esta lista.</p>;
   }
 
   const isAllSelected = selectedIds.size > 0 && selectedIds.size === leads.length;
 
   return (
-    <div className="border rounded-lg overflow-hidden bg-white dark:bg-slate-800/80 dark:backdrop-blur-md shadow-sm">
+    <div className="border rounded-lg overflow-hidden bg-surface shadow-sm">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50 dark:bg-slate-900 border-b">
+        <thead className="bg-surface-muted border-b">
           <tr>
             <th className="w-8 px-3 py-2.5">
               <input
                 type="checkbox"
                 onChange={onSelectAll}
                 checked={isAllSelected}
-                className="rounded border-slate-300 dark:border-slate-600/50 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
             </th>
             <th
               onClick={() => onSort('name')}
-              className="text-left px-3 py-2.5 font-semibold text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-gray-100 transition-colors"
+              className="text-left px-3 py-2.5 font-semibold text-ink-secondary cursor-pointer hover:bg-surface-hover transition-colors"
             >
               Nombre {sort.field === 'name' ? (sort.dir === 'asc' ? '↑' : '↓') : ''}
             </th>
-            <th className="text-left px-3 py-2.5 font-semibold text-slate-500 dark:text-slate-400">Teléfono</th>
+            <th className="text-left px-3 py-2.5 font-semibold text-ink-secondary">Teléfono</th>
             <th
               onClick={() => onSort('rut')}
-              className="text-left px-3 py-2.5 font-semibold text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-gray-100 transition-colors"
+              className="text-left px-3 py-2.5 font-semibold text-ink-secondary cursor-pointer hover:bg-surface-hover transition-colors"
             >
               RUT {sort.field === 'rut' ? (sort.dir === 'asc' ? '↑' : '↓') : ''}
             </th>
@@ -61,17 +61,17 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
             return (
               <tr
                 key={lead.id}
-                className={`transition-colors hover:bg-slate-50 dark:bg-slate-900 ${isSelected ? 'bg-blue-50/50' : ''}`}
+                className={`transition-colors hover:bg-surface-muted ${isSelected ? 'bg-blue-50/50' : ''}`}
               >
                 <td className="px-3 py-2 text-center">
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => onToggleLead(lead.id!)}
-                    className="rounded border-slate-300 dark:border-slate-600/50 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </td>
-                <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-200">
+                <td className="px-3 py-2 font-medium text-ink">
                   <div className="flex items-center gap-1.5">
                     {shortName(lead.name)}
                     {(enviosDelLead?.whatsapp ?? 0) > 0 && (
@@ -86,12 +86,12 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
                     )}
                   </div>
                 </td>
-                <td className="px-3 py-2 text-slate-500 dark:text-slate-400">{lead.phone}</td>
-                <td className="px-3 py-2 font-mono text-slate-400 dark:text-slate-500 text-xs">{lead.rut || '-'}</td>
+                <td className="px-3 py-2 text-ink-secondary">{lead.phone}</td>
+                <td className="px-3 py-2 font-mono text-ink-muted text-xs">{lead.rut || '-'}</td>
                 <td className="px-3 py-2 text-center">
                   <button
                     onClick={() => onRemoveLead(lead.id!)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
+                    className="text-ink-muted hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50"
                     title="Quitar de la lista"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

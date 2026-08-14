@@ -67,10 +67,10 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
           {/* Journey Section (Resumen siempre visible) */}
           {!!(detail.isPlanesproLead || detail.journey) && (
             <div>
-              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Revisión PlanesPro</h3>
+              <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-widest mb-2">Revisión PlanesPro</h3>
 
               {!!detail.journey && (
-                <div className="bg-slate-50 rounded-[8px] p-3 border border-slate-200 mb-3">
+                <div className="bg-surface-muted rounded-[8px] p-3 border border-line mb-3">
                   {!!detail.journey.resumen && (
                     <div className="bg-primary-soft rounded-[6px] p-3 border border-primary-soft-strong mb-2">
                       <div className="flex items-center gap-1.5 mb-1 text-primary">
@@ -90,10 +90,10 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                     </summary>
                     <div className="mt-3 flex gap-2 w-full">
                       {!!detail.journey.motivo && (
-                        <div className="flex-1 bg-white p-1.5 rounded-[6px] border border-slate-200 shadow-sm min-w-0">
-                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">Motivo</p>
+                        <div className="flex-1 bg-surface p-1.5 rounded-[6px] border border-line shadow-sm min-w-0">
+                          <p className="text-[9px] uppercase font-bold text-ink-muted tracking-wider truncate">Motivo</p>
                           <p
-                            className="text-[10px] font-semibold text-slate-700 leading-tight mt-0.5 line-clamp-2"
+                            className="text-[10px] font-semibold text-ink leading-tight mt-0.5 line-clamp-2"
                             title={toJourneyLabel(`${detail.journey.motivo || ''}`, detail.journeyLabels.motivo)}
                           >
                             {toJourneyLabel(`${detail.journey.motivo || ''}`, detail.journeyLabels.motivo)}
@@ -102,12 +102,12 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                       )}
 
                       {!!detail.journey.necesidad && (
-                        <div className="flex-1 bg-white p-1.5 rounded-[6px] border border-slate-200 shadow-sm min-w-0">
-                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">
+                        <div className="flex-1 bg-surface p-1.5 rounded-[6px] border border-line shadow-sm min-w-0">
+                          <p className="text-[9px] uppercase font-bold text-ink-muted tracking-wider truncate">
                             Necesidad
                           </p>
                           <p
-                            className="text-[10px] font-semibold text-slate-700 leading-tight mt-0.5 line-clamp-2"
+                            className="text-[10px] font-semibold text-ink leading-tight mt-0.5 line-clamp-2"
                             title={toJourneyLabel(`${detail.journey.necesidad || ''}`, detail.journeyLabels.necesidad)}
                           >
                             {toJourneyLabel(`${detail.journey.necesidad || ''}`, detail.journeyLabels.necesidad)}
@@ -116,12 +116,12 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                       )}
 
                       {!!detail.journey.objetivo && (
-                        <div className="flex-1 bg-white p-1.5 rounded-[6px] border border-slate-200 shadow-sm min-w-0">
-                          <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate">
+                        <div className="flex-1 bg-surface p-1.5 rounded-[6px] border border-line shadow-sm min-w-0">
+                          <p className="text-[9px] uppercase font-bold text-ink-muted tracking-wider truncate">
                             Objetivo
                           </p>
                           <p
-                            className="text-[10px] font-semibold text-slate-700 leading-tight mt-0.5 line-clamp-2"
+                            className="text-[10px] font-semibold text-ink leading-tight mt-0.5 line-clamp-2"
                             title={toJourneyLabel(`${detail.journey.objetivo || ''}`, detail.journeyLabels.objetivo)}
                           >
                             {toJourneyLabel(`${detail.journey.objetivo || ''}`, detail.journeyLabels.objetivo)}
@@ -136,80 +136,80 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
           )}
 
           {/* Datos del Lead (Desplegable con Grid Completo) */}
-          <details className="group bg-slate-50 border border-slate-200 rounded-[8px] overflow-hidden" open>
-            <summary className="text-[11px] font-bold text-slate-600 uppercase tracking-widest cursor-pointer hover:bg-slate-100 p-3 list-none flex items-center justify-between select-none transition-colors">
+          <details className="group bg-surface-muted border border-line rounded-[8px] overflow-hidden" open>
+            <summary className="text-[11px] font-bold text-ink-secondary uppercase tracking-widest cursor-pointer hover:bg-surface-hover p-3 list-none flex items-center justify-between select-none transition-colors">
               <div className="flex items-center gap-2">
                 <span className="group-open:rotate-90 transition-transform text-primary">{Icon.ChevronRight()}</span>
                 Detalles y Perfil
               </div>
-              <span className="text-[11px] font-semibold text-slate-400 tracking-normal normal-case">
+              <span className="text-[11px] font-semibold text-ink-muted tracking-normal normal-case">
                 {new Date(lead.createdAt).toLocaleDateString('es-CL')}
               </span>
             </summary>
 
-            <div className="p-3 pt-0 border-t border-slate-100 mt-1">
+            <div className="p-3 pt-0 border-t border-line mt-1">
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {!!((lead as unknown as { source?: string }).source || detail.rawPayload.origen || detail.rawPayload.source) && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Origen</p>
-                    <p className="text-[12px] font-semibold text-slate-700 truncate">
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Origen</p>
+                    <p className="text-[12px] font-semibold text-ink truncate">
                       {`${(lead as unknown as { source?: string }).source || detail.rawPayload.origen || detail.rawPayload.source || ''}`}
                     </p>
                   </div>
                 )}
 
                 {!!detail.planesproDetails.rangoEdad && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Edad</p>
-                    <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.rangoEdad}</p>
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Edad</p>
+                    <p className="text-[12px] font-semibold text-ink">{detail.planesproDetails.rangoEdad}</p>
                   </div>
                 )}
 
                 {!!(detail.planesproDetails.rangoRenta || detail.rawPayload.renta || detail.rawPayload.renta_liquida) && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Renta</p>
-                    <p className="text-[12px] font-semibold text-slate-700">
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Renta</p>
+                    <p className="text-[12px] font-semibold text-ink">
                       {`${detail.planesproDetails.rangoRenta || detail.rawPayload.renta || detail.rawPayload.renta_liquida || ''}`}
                     </p>
                   </div>
                 )}
 
                 {!!(detail.planesproDetails.sistema && String(detail.planesproDetails.sistema).toLowerCase() === 'fonasa') && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Sistema</p>
-                    <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.sistema}</p>
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Sistema</p>
+                    <p className="text-[12px] font-semibold text-ink">{detail.planesproDetails.sistema}</p>
                   </div>
                 )}
                 {!!detail.planesproDetails.isapre && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Isapre</p>
-                    <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.isapre}</p>
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Isapre</p>
+                    <p className="text-[12px] font-semibold text-ink">{detail.planesproDetails.isapre}</p>
                   </div>
                 )}
 
                 {!!detail.planesproDetails.comuna && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Comuna</p>
-                    <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.comuna}</p>
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Comuna</p>
+                    <p className="text-[12px] font-semibold text-ink">{detail.planesproDetails.comuna}</p>
                   </div>
                 )}
                 {!!detail.planesproDetails.region && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Región</p>
-                    <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.region}</p>
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm">
+                    <p className="text-[10px] text-ink-muted font-bold uppercase tracking-wide">Región</p>
+                    <p className="text-[12px] font-semibold text-ink">{detail.planesproDetails.region}</p>
                   </div>
                 )}
 
                 {!!(detail.planesproDetails.numeroCargas && detail.planesproDetails.numeroCargas !== '0') && (
-                  <div className="bg-white p-2 rounded-[6px] border border-slate-100 shadow-sm col-span-2 flex justify-between items-center">
+                  <div className="bg-surface p-2 rounded-[6px] border border-line shadow-sm col-span-2 flex justify-between items-center">
                     <div>
                       <p className="text-[10px] text-primary font-bold uppercase tracking-wide">Cargas Familiares</p>
-                      <p className="text-[12px] font-semibold text-slate-700">{detail.planesproDetails.numeroCargas} carga(s)</p>
+                      <p className="text-[12px] font-semibold text-ink">{detail.planesproDetails.numeroCargas} carga(s)</p>
                     </div>
                     {!!(detail.planesproDetails.edadesCargas && detail.planesproDetails.edadesCargas.length > 0) && (
                       <div className="text-right">
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Edades</p>
-                        <p className="text-[11px] font-semibold text-slate-600">
+                        <p className="text-[9px] text-ink-muted font-bold uppercase tracking-wide">Edades</p>
+                        <p className="text-[11px] font-semibold text-ink-secondary">
                           {detail.planesproDetails.edadesCargas.join(', ')}
                         </p>
                       </div>
@@ -226,7 +226,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
               <p className="text-[10px] text-primary font-bold uppercase tracking-wide mb-1 flex items-center gap-1">
                 {Icon.Messages()} Comentario del cliente
               </p>
-              <p className="text-[12px] text-slate-800 font-medium whitespace-pre-wrap">
+              <p className="text-[12px] text-ink font-medium whitespace-pre-wrap">
                 {detail.planesproDetails.comentario}
               </p>
             </div>
@@ -234,12 +234,12 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
 
           {/* PDF Adjunto si existe */}
           {!!(detail.planesproMetadata.pdf_path || detail.pdfLoading || detail.pdfError) && (
-            <div className="mt-2 bg-slate-50 p-3 rounded-[6px] border border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-700">
+            <div className="mt-2 bg-surface-muted p-3 rounded-[6px] border border-line flex items-center justify-between">
+              <div className="flex items-center gap-2 text-ink">
                 <span className="text-primary">{Icon.Layers()}</span>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wide">Documento PDF</p>
-                  <p className="text-[10px] text-slate-500">{detail.pdfFileName}</p>
+                  <p className="text-[10px] text-ink-secondary">{detail.pdfFileName}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                       onClick={() => {
                         void detail.submitPdfRequest(false);
                       }}
-                      className="px-2.5 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-600 hover:bg-slate-100 bg-white shadow-sm transition-colors"
+                      className="px-2.5 py-1.5 border border-line rounded-[4px] text-[11px] font-medium text-ink-secondary hover:bg-surface-hover bg-surface shadow-sm transition-colors"
                     >
                       Ver
                     </button>
@@ -257,13 +257,13 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                       onClick={() => {
                         void detail.submitPdfRequest(true);
                       }}
-                      className="px-2.5 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-600 hover:bg-slate-100 bg-white shadow-sm transition-colors"
+                      className="px-2.5 py-1.5 border border-line rounded-[4px] text-[11px] font-medium text-ink-secondary hover:bg-surface-hover bg-surface shadow-sm transition-colors"
                     >
                       Descargar
                     </button>
                   </>
                 ) : (
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-ink-secondary">
                     {detail.pdfLoading ? 'Cargando...' : detail.pdfError || 'Sin acceso'}
                   </span>
                 )}
@@ -273,15 +273,15 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
 
           {/* Agenda Compacta */}
           <div>
-            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cita / Agenda</h3>
+            <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-widest mb-2">Cita / Agenda</h3>
             {!detail.canCreateAppointment ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-[6px] p-2.5 space-y-2">
+              <div className="bg-surface-muted border border-line rounded-[6px] p-2.5 space-y-2">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">
+                    <p className="text-[11px] text-ink-secondary font-bold uppercase tracking-wide">
                       {`${detail.visibleAppointmentStatus || ''}`}
                     </p>
-                    <p className="text-[12px] font-semibold text-slate-800">
+                    <p className="text-[12px] font-semibold text-ink">
                       {formatAppointmentDate(`${detail.visibleAppointmentAt || ''}`)}
                     </p>
                   </div>
@@ -301,7 +301,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                           onClose();
                           onNavigate('agenda');
                         }}
-                        className="px-3 py-1.5 bg-white border border-slate-200 rounded-[4px] text-[11px] font-bold text-slate-700 shadow-sm hover:bg-slate-100 transition-colors"
+                        className="px-3 py-1.5 bg-surface border border-line rounded-[4px] text-[11px] font-bold text-ink shadow-sm hover:bg-surface-hover transition-colors"
                       >
                         Ver cita
                       </button>
@@ -320,19 +320,19 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                 )}
               </div>
             ) : (
-              <div className="bg-white border border-slate-200 rounded-[6px] p-2.5 shadow-sm space-y-2">
+              <div className="bg-surface border border-line rounded-[6px] p-2.5 shadow-sm space-y-2">
                 <div className="flex gap-2">
                   <input
                     type="date"
                     value={detail.appointmentDate}
                     onChange={(e) => detail.setAppointmentDate(e.target.value)}
-                    className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-primary"
+                    className="w-1/2 px-2 py-1.5 border border-line rounded-[4px] text-[11px] font-medium text-ink focus:outline-none focus:border-primary"
                   />
                   <input
                     type="time"
                     value={detail.appointmentTime}
                     onChange={(e) => detail.setAppointmentTime(e.target.value)}
-                    className="w-1/2 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] font-medium text-slate-700 focus:outline-none focus:border-primary"
+                    className="w-1/2 px-2 py-1.5 border border-line rounded-[4px] text-[11px] font-medium text-ink focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -341,7 +341,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                     value={detail.appointmentNote}
                     onChange={(e) => detail.setAppointmentNote(e.target.value)}
                     placeholder="Nota (opcional)"
-                    className="flex-1 px-2 py-1.5 border border-slate-200 rounded-[4px] text-[11px] text-slate-700 focus:outline-none focus:border-primary"
+                    className="flex-1 px-2 py-1.5 border border-line rounded-[4px] text-[11px] text-ink focus:outline-none focus:border-primary"
                   />
                   <button
                     onClick={() => {

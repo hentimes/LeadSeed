@@ -180,26 +180,26 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="grid grid-cols-[2fr_1fr] gap-3">
         <div>
-          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nombre *</label>
+          <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Nombre *</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface-muted focus:bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-ink-muted"
             placeholder="Ej. Juan Pérez"
             required
             autoFocus
           />
         </div>
         <div>
-          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">RUT</label>
+          <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">RUT</label>
           <input
             type="text"
             value={rut}
             onChange={(e) => handleRutChange(e.target.value)}
             onBlur={handleRutBlur}
             placeholder="12.345.678-9"
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface-muted focus:bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-ink-muted"
           />
         </div>
       </div>
@@ -207,13 +207,13 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <PhoneInput value={phone} onChange={setPhone} />
         <div>
-          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Email</label>
+          <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="correo@ejemplo.com"
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400"
+            className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface-muted focus:bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-ink-muted"
           />
         </div>
       </div>
@@ -243,19 +243,19 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
 
 
       <div>
-        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Notas</label>
+        <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Notas</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           placeholder="Escribe algún comentario o nota importante..."
-          className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-slate-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-slate-400 resize-none"
+          className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface-muted focus:bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-ink-muted resize-none"
         />
       </div>
 
       {lists.length > 0 && (
         <div>
-          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Listas</label>
+          <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Listas</label>
           <div className="flex flex-wrap gap-2">
             {lists.map((list) => (
               <button
@@ -265,7 +265,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
                 className={`rounded-[6px] border px-2 py-1 text-[11px] font-semibold transition-all ${
                   listaIds.includes(list.id!!)
                     ? 'border-transparent text-white shadow-sm'
-                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                    : 'border-line bg-surface text-ink-secondary hover:border-line-strong'
                 }`}
                 style={listaIds.includes(list.id!!) ? { backgroundColor: list.color } : {}}
               >

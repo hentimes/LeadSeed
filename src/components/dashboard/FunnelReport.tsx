@@ -49,7 +49,7 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         </div>
         
         <select 
-          className="text-[11px] border border-line rounded-[6px] px-2 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none"
+          className="text-[11px] border border-line rounded-[6px] px-2 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none"
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
         >

@@ -47,7 +47,7 @@ export default function FunnelRow({
             {!isLast && (
               <div className="absolute top-[50%] left-[50%] -translate-x-1/2 w-[1px] h-[46px] bg-line z-0" />
             )}
-            <div className={`w-8 h-8 rounded-full border border-line flex items-center justify-center shrink-0 z-10 bg-white ${percentTotal > 0 ? 'text-ink' : 'text-ink-muted'}`}>
+            <div className={`w-8 h-8 rounded-full border border-line flex items-center justify-center shrink-0 z-10 bg-surface ${percentTotal > 0 ? 'text-ink' : 'text-ink-muted'}`}>
               {getIcon()}
             </div>
           </div>

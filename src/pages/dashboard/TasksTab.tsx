@@ -115,9 +115,9 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
       />
 
       {/* Eficiencia histórica */}
-      <div className="bg-white border border-line rounded-[6px] p-6 flex gap-6">
+      <div className="bg-surface border border-line rounded-[6px] p-6 flex gap-6">
         {/* Icon */}
-        <div className="w-[52px] h-[52px] rounded-full border border-line flex items-center justify-center shrink-0 bg-white text-ink">
+        <div className="w-[52px] h-[52px] rounded-full border border-line flex items-center justify-center shrink-0 bg-surface text-ink">
            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
              <polyline points="17 6 23 6 23 12"></polyline>
@@ -129,7 +129,7 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
            {/* Title & Dropdown */}
            <div className="flex items-center justify-between mb-4">
              <h3 className="text-[15px] font-medium text-ink">Eficiencia histórica</h3>
-             <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
+             <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none">
                <option value="30d">Últimos 30 días</option>
                <option value="7d">Últimos 7 días</option>
                <option value="90d">Últimos 90 días</option>

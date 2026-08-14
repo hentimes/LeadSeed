@@ -35,7 +35,7 @@ export default function BulkActionBar({
       <button
         onClick={onExport}
         title={`Exportar seleccionados como ${exportFormat.toUpperCase()}`}
-        className="text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-[12px] font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        className="text-ink-secondary px-2 py-1 rounded text-[12px] font-medium hover:bg-surface-hover transition-colors"
       >
         Exportar
       </button>
@@ -57,7 +57,7 @@ export default function BulkActionBar({
         <>
           <select
             onChange={(e) => { if (e.target.value) onStatusChange(e.target.value as LeadStatus); e.target.value = ''; }}
-            className="rounded px-1.5 py-1 text-[12px] text-slate-600 hover:bg-slate-100 outline-none cursor-pointer border-none bg-transparent font-medium"
+            className="rounded px-1.5 py-1 text-[12px] text-ink-secondary hover:bg-surface-hover outline-none cursor-pointer border-none bg-transparent font-medium"
             defaultValue=""
           >
             <option value="" disabled>Estado...</option>
@@ -67,7 +67,7 @@ export default function BulkActionBar({
           </select>
           <select
             onChange={(e) => { if (e.target.value) onAddToList(Number(e.target.value)); e.target.value = ''; }}
-            className="rounded px-1.5 py-1 text-[12px] text-slate-600 hover:bg-slate-100 outline-none cursor-pointer border-none bg-transparent font-medium"
+            className="rounded px-1.5 py-1 text-[12px] text-ink-secondary hover:bg-surface-hover outline-none cursor-pointer border-none bg-transparent font-medium"
             defaultValue=""
           >
             <option value="" disabled>Lista...</option>

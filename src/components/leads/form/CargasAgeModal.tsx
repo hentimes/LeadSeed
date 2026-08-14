@@ -89,17 +89,17 @@ export function CargasAgeModal({ numeroCargas, edadCargas, onChange }: Props) {
       </button>
 
       {isOpen && (
-        <div ref={modalRef} className="absolute z-20 top-full right-0 mt-1 w-56 bg-white rounded-[8px] shadow-lg border border-slate-200 overflow-hidden">
-          <div className="bg-slate-50 px-3 py-2 border-b border-slate-100 flex items-center justify-between">
-            <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Edades</h4>
-            <button type="button" onClick={handleSave} className="text-slate-400 hover:text-slate-600 font-bold">
+        <div ref={modalRef} className="absolute z-20 top-full right-0 mt-1 w-56 bg-surface rounded-[8px] shadow-lg border border-line overflow-hidden">
+          <div className="bg-surface-muted px-3 py-2 border-b border-line flex items-center justify-between">
+            <h4 className="text-[11px] font-bold text-ink uppercase tracking-wide">Edades</h4>
+            <button type="button" onClick={handleSave} className="text-ink-muted hover:text-ink-secondary font-bold">
                &times;
             </button>
           </div>
           <div className="p-3 space-y-2">
             {ages.map((age, i) => (
               <div key={i} className="flex items-center gap-2">
-                <label className="text-[11px] font-medium text-slate-600 w-12">Carga {i + 1}</label>
+                <label className="text-[11px] font-medium text-ink-secondary w-12">Carga {i + 1}</label>
                 <input
                   type="number"
                   min="0"
@@ -107,7 +107,7 @@ export function CargasAgeModal({ numeroCargas, edadCargas, onChange }: Props) {
                   value={age}
                   onChange={(e) => handleAgeChange(i, e.target.value)}
                   placeholder="Ej: 5"
-                  className="flex-1 rounded-[6px] border border-slate-200 px-2 py-1 text-[12px] font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  className="flex-1 rounded-[6px] border border-line px-2 py-1 text-[12px] font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </div>
             ))}

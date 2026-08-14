@@ -54,7 +54,7 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
             no es una clase que exista. Resultado: blanco opaco con un icono
             blanco encima, o sea un cuadrado en blanco. */}
         <div className="relative flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-white">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/20 shadow-inner backdrop-blur-md">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-surface/20 shadow-inner backdrop-blur-md">
             <Icon.Messages />
           </div>
           <div className="min-w-0">
@@ -74,18 +74,18 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
           <div className="p-8 text-center text-green-600">
             <div className="text-4xl mb-2"><Icon.Check /></div>
             <p className="font-bold">¡Requerimiento enviado!</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">El Superadmin lo revisará pronto.</p>
+            <p className="text-sm text-ink-muted mt-1">El Superadmin lo revisará pronto.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-semibold text-ink-secondary mb-1.5">
                 Tipo de problema
               </label>
               <select 
                 value={category} 
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer"
+                className="w-full bg-surface-muted border border-line rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer"
                 required
               >
                 <option value="">Selecciona una opción...</option>
@@ -98,10 +98,10 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-sm font-semibold text-slate-600 dark:text-slate-300">
+                <label className="block text-sm font-semibold text-ink-secondary">
                   Descripción
                 </label>
-                <span className={`text-xs font-mono ${description.length > 255 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                <span className={`text-xs font-mono ${description.length > 255 ? 'text-red-500 font-bold' : 'text-ink-muted'}`}>
                   {description.length}/255
                 </span>
               </div>
@@ -109,7 +109,7 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value.slice(0, 255))}
                 placeholder="Describe tu problema brevemente..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none h-24"
+                className="w-full bg-surface-muted border border-line rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none h-24"
                 maxLength={255}
                 required
               />

@@ -206,7 +206,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
         {/* Category filter */}
         <select value={filterCatId ?? ''} onChange={(e) => setFilterCatId(e.target.value ? Number(e.target.value) : null)}
-          className="border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none bg-white">
+          className="border border-line rounded-[6px] px-3 py-1.5 text-[13px] outline-none bg-surface">
           <option value="">Todas las categorías</option>
           {tplLists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
@@ -225,27 +225,27 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
           </Button>
         )}
 
-        <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">{templates.length} plantillas</span>
+        <span className="text-xs text-ink-muted ml-auto">{templates.length} plantillas</span>
       </div>
 
       {/* Category manager */}
       {showCatManager && (
-        <div className="card-standard p-4 mb-4 bg-slate-50">
-          <h3 className="text-[14px] font-semibold text-slate-800 mb-3">Categorías</h3>
+        <div className="card-standard p-4 mb-4 bg-surface-muted">
+          <h3 className="text-[14px] font-semibold text-ink mb-3">Categorías</h3>
           <form onSubmit={handleCreateCategory} className="flex gap-2 mb-4">
             <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)}
-              placeholder="Nueva categoría" className="flex-1 border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none focus:border-primary focus:ring-1 focus:ring-primary" required />
-            <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border border-slate-200 rounded-[6px] px-3 py-1.5 text-[13px] outline-none">
+              placeholder="Nueva categoría" className="flex-1 border border-line rounded-[6px] px-3 py-1.5 text-[13px] outline-none focus:border-primary focus:ring-1 focus:ring-primary" required />
+            <select value={catColor} onChange={(e) => setCatColor(e.target.value)} className="border border-line rounded-[6px] px-3 py-1.5 text-[13px] outline-none">
               {COLORS.map((c) => <option key={c.value} value={c.value}>{c.name}</option>)}
             </select>
             <Button type="submit" variant="primary">Crear</Button>
           </form>
           <div className="flex flex-wrap gap-2">
             {tplLists.map((l) => (
-              <span key={l.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[13px] border bg-white" style={{ borderColor: l.color }}>
+              <span key={l.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[13px] border bg-surface" style={{ borderColor: l.color }}>
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
                 {l.name}
-                <button onClick={() => handleDeleteCategory(l.id!)} className="text-slate-400 hover:text-red-500 ml-1 transition-colors"><Icon.Trash /></button>
+                <button onClick={() => handleDeleteCategory(l.id!)} className="text-ink-muted hover:text-red-500 ml-1 transition-colors"><Icon.Trash /></button>
               </span>
             ))}
           </div>
@@ -255,9 +255,9 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
       {/* Template editor */}
       {editing && (
         <div className="card-standard p-5 mb-4">
-          <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-            <h3 className="text-[16px] font-semibold text-slate-800">{editing.id ? 'Editar' : 'Nueva'} Plantilla</h3>
-            <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 transition-colors"><Icon.Close /></button>
+          <div className="flex justify-between items-center mb-4 border-b border-line pb-3">
+            <h3 className="text-[16px] font-semibold text-ink">{editing.id ? 'Editar' : 'Nueva'} Plantilla</h3>
+            <button onClick={() => setEditing(null)} className="text-ink-muted hover:text-ink-secondary transition-colors"><Icon.Close /></button>
           </div>
 
           <TemplateEditor
@@ -274,15 +274,15 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
       <div className="grid gap-3">
         {filtered.map((t) => (
           <div key={t.id}>
-            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${idNumerico(t) !== null && selectedIds.has(idNumerico(t)!) ? 'border-primary bg-primary-soft/30' : 'hover:border-slate-300'}`}>
-              <input type="checkbox" checked={idNumerico(t) !== null && selectedIds.has(idNumerico(t)!)} onChange={() => { const id = idNumerico(t); if (id !== null) toggleSel(id); }} className="rounded mt-1 border-slate-300 text-primary focus:ring-primary" />
+            <div className={`card-standard p-4 flex items-start gap-3 transition-colors ${idNumerico(t) !== null && selectedIds.has(idNumerico(t)!) ? 'border-primary bg-primary-soft/30' : 'hover:border-line-strong'}`}>
+              <input type="checkbox" checked={idNumerico(t) !== null && selectedIds.has(idNumerico(t)!)} onChange={() => { const id = idNumerico(t); if (id !== null) toggleSel(id); }} className="rounded mt-1 border-line-strong text-primary focus:ring-primary" />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <button onClick={() => { setEditing(aEditable(t)); }} className="text-left flex-1 min-w-0">
-                    <div className="text-[15px] font-semibold text-slate-800 truncate mb-1">{t.nombre || '(sin nombre)'}</div>
-                    <div className="text-[13px] text-slate-500 truncate">{t.contenido?.substring(0, 80) || '...'}</div>
+                    <div className="text-[15px] font-semibold text-ink truncate mb-1">{t.nombre || '(sin nombre)'}</div>
+                    <div className="text-[13px] text-ink-secondary truncate">{t.contenido?.substring(0, 80) || '...'}</div>
                   </button>
-                  <button onClick={() => { const id = idNumerico(t); if (id !== null) handleDelete(id); }} className="text-slate-400 hover:text-red-500 transition-colors ml-2 shrink-0 p-1"><Icon.Trash /></button>
+                  <button onClick={() => { const id = idNumerico(t); if (id !== null) handleDelete(id); }} className="text-ink-muted hover:text-red-500 transition-colors ml-2 shrink-0 p-1"><Icon.Trash /></button>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {(t.templateListIds || []).map((lid: number) => {
@@ -292,7 +292,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
                     ) : null;
                   })}
                   <button onClick={() => { const id = idNumerico(t); if (id !== null) handleShowLog(id); }}
-                    className="text-xs text-gray-400 hover:text-blue-600 ml-auto">
+                    className="text-xs text-ink-muted hover:text-blue-600 ml-auto">
                     {showLog === t.id ? 'Ocultar log' : 'Ver envíos'}
                   </button>
                 </div>
@@ -301,16 +301,16 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
             {/* Send log for this template */}
             {showLog === t.id && (
-              <div className="ml-6 border rounded p-2 mb-1 bg-slate-50 dark:bg-slate-900 text-xs">
-                <h4 className="font-medium text-slate-500 dark:text-slate-400 mb-1">Historial de envíos</h4>
+              <div className="ml-6 border rounded p-2 mb-1 bg-surface-muted text-xs">
+                <h4 className="font-medium text-ink-secondary mb-1">Historial de envíos</h4>
                 {sendLogs.length === 0 ? (
-                  <p className="text-gray-400">No se ha enviado este mensaje aún.</p>
+                  <p className="text-ink-muted">No se ha enviado este mensaje aún.</p>
                 ) : (
                   <div className="max-h-32 overflow-y-auto space-y-0.5">
                     {sendLogs.map((log) => (
                       <div key={log.id} className="flex justify-between text-xs border-b py-0.5">
-                        <span>{log.leadName} <span className="text-gray-400">{log.leadPhone}</span></span>
-                        <span className="text-gray-400">{new Date(log.sentAt).toLocaleString('es-CL')}</span>
+                        <span>{log.leadName} <span className="text-ink-muted">{log.leadPhone}</span></span>
+                        <span className="text-ink-muted">{new Date(log.sentAt).toLocaleString('es-CL')}</span>
                       </div>
                     ))}
                   </div>
@@ -320,7 +320,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
           </div>
         ))}
         {filtered.length === 0 && (
-          <p className="text-xs text-gray-400 text-center py-6">No hay plantillas. Crea la primera con "+ Nueva plantilla".</p>
+          <p className="text-xs text-ink-muted text-center py-6">No hay plantillas. Crea la primera con "+ Nueva plantilla".</p>
         )}
       </div>
     </div>

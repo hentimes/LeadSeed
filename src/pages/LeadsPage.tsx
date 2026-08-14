@@ -31,14 +31,14 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
           label={p.editing ? 'Editar lead' : 'Nuevo lead'}
         >
           <>
-            <div className="flex items-center justify-between p-4 pb-3 border-b border-slate-100 shrink-0">
-              <h2 className="text-[15px] font-bold text-slate-800 leading-tight">{p.editing ? 'Editar Lead' : 'Nuevo Lead'}</h2>
+            <div className="flex items-center justify-between p-4 pb-3 border-b border-line shrink-0">
+              <h2 className="text-[15px] font-bold text-ink leading-tight">{p.editing ? 'Editar Lead' : 'Nuevo Lead'}</h2>
               <button
                 onClick={() => {
                   p.setShowForm(false);
                   p.setEditing(null);
                 }}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-ink-muted hover:text-ink-secondary transition-colors"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -107,7 +107,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
                 p.setShowTrash(!p.showTrash);
                 p.clearSelection();
               }}
-              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-white text-ink-secondary border-line hover:bg-gray-50'}`}
+              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-surface text-ink-secondary border-line hover:bg-surface-hover'}`}
               title={p.showTrash ? 'Volver a leads' : 'Papelera'}
             >
               {p.showTrash ? 'Salir de papelera' : <div className="w-[14px] h-[14px] flex items-center justify-center scale-90 opacity-80">{Icon.Trash()}</div>}

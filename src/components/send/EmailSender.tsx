@@ -337,7 +337,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
               <iframe
                 srcDoc={replaceVariables(customBody, previewLead)}
                 title="Vista previa del correo"
-                className="h-[50vh] w-full rounded-md border border-line bg-white"
+                className="h-[50vh] w-full rounded-md border border-line bg-surface"
                 sandbox="allow-same-origin"
               />
             ) : (

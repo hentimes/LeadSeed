@@ -27,7 +27,7 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
       }
 
       return (
-        <div className="bg-white border border-line rounded-[8px] p-2 shadow-[0_4px_12px_rgba(28,38,75,0.08)] min-w-[100px] outline-none">
+        <div className="bg-surface border border-line rounded-[8px] p-2 shadow-[0_4px_12px_rgba(28,38,75,0.08)] min-w-[100px] outline-none">
           <div className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">{label}</div>
           <div className="text-[14px] font-bold text-ink mt-0.5">{currentVal} leads</div>
           {trendEl}

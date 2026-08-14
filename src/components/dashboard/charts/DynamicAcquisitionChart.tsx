@@ -104,7 +104,7 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
       const val = payload[0].value;
       const title = type === 'cumulative' ? 'Acumulado' : 'Leads';
       return (
-        <div className="bg-white border border-line rounded-[8px] p-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+        <div className="bg-surface border border-line rounded-[8px] p-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
           <p className="text-[12px] font-bold text-ink">{label}</p>
           <p className="text-[13px] text-primary font-bold mt-1">{val} <span className="font-normal text-ink-secondary text-[11px]">{title}</span></p>
         </div>

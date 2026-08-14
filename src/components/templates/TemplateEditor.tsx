@@ -105,13 +105,13 @@ export default function TemplateEditor({ template, type, categories = [], onSave
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Nombre de plantilla *</label>
+        <label className="block text-sm font-medium text-ink-secondary mb-1">Nombre de plantilla *</label>
         <input
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Ej: Mensaje de bienvenida"
-          className="w-full border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           required
         />
       </div>
@@ -120,7 +120,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
         <>
           <div>
             <div className="flex justify-between items-end mb-1">
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">Asunto *</label>
+              <label className="block text-sm font-medium text-ink-secondary">Asunto *</label>
               <VariableDropdown onSelect={(val: string) => insertTextAtCursor(asuntoRef, asunto, val, setAsunto)} />
             </div>
             <div className="flex gap-2">
@@ -130,7 +130,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                 value={asunto}
                 onChange={(e) => setAsunto(e.target.value)}
                 placeholder="Ej: Hola {nombre}, sobre tu plan de salud..."
-                className="flex-1 border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 border border-line-strong rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -168,7 +168,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
 
       <div>
         <div className="flex-1 flex flex-col mt-4">
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+          <label className="block text-sm font-medium text-ink-secondary mb-1">
             Contenido *
           </label>
           <div className="flex gap-1">
@@ -178,7 +178,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
-                  showPreview ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 hover:bg-gray-200'
+                  showPreview ? 'bg-blue-100 text-blue-700' : 'bg-surface-hover hover:bg-gray-200'
                 }`}
               >
                  Vista Previa
@@ -195,7 +195,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
               onChange={(e) => setContenido(e.target.value)}
               rows={showPreview ? 12 : 8}
               placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  <h1>Hola {nombre}</h1>\n  <p>Te escribo para...</p>\n</body>\n</html>'}
-              className="w-full border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           ) : (
@@ -209,7 +209,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                   ? 'Hola {nombre} , te escribo de...'
                   : 'Hola {nombre},\n\nTe escribo para...'
               }
-              className="w-full border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           )}
@@ -217,7 +217,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
           {/* Preview panel */}
           {showPreview && isHtml && (
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-slate-50 dark:bg-slate-900 px-2 py-1 border-b text-xs text-slate-400 dark:text-slate-500 font-medium">
+              <div className="bg-surface-muted px-2 py-1 border-b text-xs text-ink-muted font-medium">
                 Vista previa
               </div>
               <div className="p-3 overflow-y-auto max-h-[300px] text-sm">
@@ -234,15 +234,15 @@ export default function TemplateEditor({ template, type, categories = [], onSave
           {/* WhatsApp preview Modal */}
           {showPreview && type === 'whatsapp' && contenido && (
             <Modal onClose={() => setShowPreview(false)} maxWidth="320px" label="Vista previa del mensaje">
-                <div className="bg-slate-50 px-4 py-3 border-b flex items-center justify-between">
+                <div className="bg-surface-muted px-4 py-3 border-b flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-[#25D366]"><Icon.Messages /></span> 
-                    <span className="text-sm font-semibold text-slate-700">Vista previa</span>
+                    <span className="text-sm font-semibold text-ink">Vista previa</span>
                   </div>
-                  <button type="button" onClick={() => setShowPreview(false)} className="text-slate-400 hover:text-slate-600 transition-colors p-1"><Icon.Close /></button>
+                  <button type="button" onClick={() => setShowPreview(false)} className="text-ink-muted hover:text-ink-secondary transition-colors p-1"><Icon.Close /></button>
                 </div>
                 <div className="p-4 flex-1 overflow-y-auto relative min-h-[300px]" style={{ backgroundColor: '#E5DDD5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }}>
-                  <div className="bg-white text-[#111B21] text-[12.5px] leading-relaxed p-2 px-3 rounded-lg rounded-tr-none shadow-sm max-w-[90%] float-right relative whitespace-pre-wrap">
+                  <div className="bg-surface text-[#111B21] text-[12.5px] leading-relaxed p-2 px-3 rounded-lg rounded-tr-none shadow-sm max-w-[90%] float-right relative whitespace-pre-wrap">
                     {replaceVars(contenido)}
                   </div>
                   <div className="clear-both"></div>
@@ -253,7 +253,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       </div>
 
       <div className="pt-2">
-        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Categorías</label>
+        <label className="block text-sm font-medium text-ink-secondary mb-1">Categorías</label>
         <div className="flex flex-wrap gap-1">
           {categories.map((c) => {
             const on = selectedCategories.has(c.id);
@@ -266,14 +266,14 @@ export default function TemplateEditor({ template, type, categories = [], onSave
                   n.has(c.id) ? n.delete(c.id) : n.add(c.id);
                   setSelectedCategories(n);
                 }}
-                className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600/50'}`}
+                className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-ink-secondary border-line-strong'}`}
                 style={on ? { backgroundColor: c.color } : {}}
               >
                 {c.name}
               </button>
             );
           })}
-          {categories.length === 0 && <span className="text-xs text-gray-400">No hay categorías disponibles. Créalas afuera.</span>}
+          {categories.length === 0 && <span className="text-xs text-ink-muted">No hay categorías disponibles. Créalas afuera.</span>}
         </div>
       </div>
 

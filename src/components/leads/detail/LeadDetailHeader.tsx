@@ -10,31 +10,31 @@ interface Props {
 
 export default function LeadDetailHeader({ lead, documentId, onEdit, onClose }: Props) {
   return (
-    <div className="flex items-start justify-between p-4 pb-3 border-b border-slate-100 shrink-0 min-w-0">
+    <div className="flex items-start justify-between p-4 pb-3 border-b border-line shrink-0 min-w-0">
       <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
         <div className="w-10 h-10 rounded-[6px] bg-gradient-to-br from-primary-soft to-primary-soft-strong text-primary flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
           {lead.name.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-[15px] font-bold text-slate-800 leading-tight truncate w-full" title={lead.name}>
+          <h2 className="text-[15px] font-bold text-ink leading-tight truncate w-full" title={lead.name}>
             {lead.name}
           </h2>
           {!!documentId && (
-            <p className="text-[11px] font-medium text-slate-500 mt-0.5 truncate">RUT: {documentId}</p>
+            <p className="text-[11px] font-medium text-ink-secondary mt-0.5 truncate">RUT: {documentId}</p>
           )}
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onEdit}
-          className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary-soft rounded-[6px] transition-colors"
+          className="p-1.5 text-ink-muted hover:text-primary hover:bg-primary-soft rounded-[6px] transition-colors"
           title="Editar"
         >
           {Icon.Edit()}
         </button>
         <button
           onClick={onClose}
-          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-[6px] transition-colors"
+          className="p-1.5 text-ink-muted hover:text-ink hover:bg-surface-hover rounded-[6px] transition-colors"
           title="Cerrar"
         >
           {Icon.Close()}

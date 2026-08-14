@@ -15,7 +15,7 @@ export default function LeadAlertToast({ alerts, onDismiss, onOpenLead }: Props)
       {alerts.map((alert) => (
         <div
           key={alert.id}
-          className="pointer-events-auto w-full max-w-[420px] bg-white border border-primary-soft-strong rounded-[8px] shadow-xl p-3 flex items-start gap-3 animate-toast-in"
+          className="pointer-events-auto w-full max-w-[420px] bg-surface border border-primary-soft-strong rounded-[8px] shadow-xl p-3 flex items-start gap-3 animate-toast-in"
         >
           <div className="w-8 h-8 rounded-[6px] bg-primary-soft text-primary flex items-center justify-center shrink-0">
             {Icon.Leads()}
@@ -23,8 +23,8 @@ export default function LeadAlertToast({ alerts, onDismiss, onOpenLead }: Props)
 
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-wide text-primary">Nuevo lead</p>
-            <p className="text-[13px] font-semibold text-slate-800 truncate">{alert.leadName}</p>
-            {!!alert.leadPhone && <p className="text-[11px] text-slate-500 truncate">{alert.leadPhone}</p>}
+            <p className="text-[13px] font-semibold text-ink truncate">{alert.leadName}</p>
+            {!!alert.leadPhone && <p className="text-[11px] text-ink-secondary truncate">{alert.leadPhone}</p>}
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
@@ -39,7 +39,7 @@ export default function LeadAlertToast({ alerts, onDismiss, onOpenLead }: Props)
             </button>
             <button
               onClick={() => onDismiss(alert.id)}
-              className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+              className="p-1.5 text-ink-muted hover:text-ink transition-colors"
               title="Descartar"
             >
               {Icon.Close()}

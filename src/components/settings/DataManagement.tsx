@@ -84,13 +84,13 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
     <div className="animate-fade-in pt-2 flex flex-col gap-6">
       {/* Exportar */}
       <div>
-        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-2">Exportación y Respaldo</h3>
+        <h3 className="text-sm font-bold text-ink mb-4 border-b border-line pb-2">Exportación y Respaldo</h3>
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Formato de Exportación por defecto</label>
+          <label className="block text-sm font-medium text-ink-secondary mb-1">Formato de Exportación por defecto</label>
           <select
             value={exportFormat}
             onChange={handleExportFormatChange}
-            className="border-slate-300 dark:border-slate-600/50 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm outline-none"
+            className="border-line-strong rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm outline-none"
           >
             <option value="json">JSON (Para desarrolladores / migraciones)</option>
             <option value="excel">Excel (.xlsx) (Para uso general)</option>
@@ -98,14 +98,14 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
         </div>
 
         <div className="mt-6">
-          <h4 className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Respaldo Completo</h4>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+          <h4 className="text-sm font-medium text-ink-secondary mb-1">Respaldo Completo</h4>
+          <p className="text-xs text-ink-muted mb-3">
             Descarga o restaura una copia exacta de toda tu base de datos (leads, listas, plantillas, historiales).
           </p>
           <div className="flex gap-3 items-center flex-wrap">
             <button
               onClick={exportBackup}
-              className="bg-gray-100 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/50 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm flex items-center gap-2"
+              className="bg-surface-hover text-ink-secondary border border-line px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm flex items-center gap-2"
             >
               <Icon.Download /> Descargar Respaldo
             </button>
@@ -129,8 +129,8 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
 
       {/* Importar y Exportar Leads */}
       <div>
-        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-2">Importar y Exportar Leads</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+        <h3 className="text-sm font-bold text-ink mb-4 border-b border-line pb-2">Importar y Exportar Leads</h3>
+        <p className="text-sm text-ink-secondary mb-4">
           Añade nuevos leads desde un archivo Excel/CSV o exporta tu lista actual de contactos de forma individual.
         </p>
         <div className="flex gap-3 items-center flex-wrap">
@@ -160,8 +160,8 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
 
       {/* Importar */}
       <div>
-        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-2">Gestión de Duplicados</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+        <h3 className="text-sm font-bold text-ink mb-4 border-b border-line pb-2">Gestión de Duplicados</h3>
+        <p className="text-sm text-ink-secondary mb-4">
           Nuestra herramienta busca leads que compartan el mismo RUT o Número de Teléfono para fusionarlos y mantener tu base de datos limpia.
         </p>
         <button 
@@ -176,20 +176,20 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
         {duplicates.length > 0 && (
           <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
             {duplicates.map((d, i) => (
-              <div key={i} className="border border-slate-200 dark:border-slate-700/50 rounded-lg p-3 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div key={i} className="border border-line rounded-lg p-3 bg-surface-muted flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="text-sm">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">{d.lead1.name}</span>
-                    <span className="bg-gray-200 text-slate-500 dark:text-slate-400 px-1.5 rounded text-xs">Principal</span>
+                    <span className="font-semibold text-ink">{d.lead1.name}</span>
+                    <span className="bg-gray-200 text-ink-secondary px-1.5 rounded text-xs">Principal</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-500 dark:text-slate-400">{d.lead2.name}</span>
+                    <span className="font-medium text-ink-secondary">{d.lead2.name}</span>
                     <span className="text-blue-600 text-xs font-medium">({d.reason})</span>
                   </div>
                 </div>
                 <button 
                   onClick={() => { if (confirm(`Unir los datos de ${d.lead2.name} en ${d.lead1.name}?`)) mergeLeads(d.lead1, d.lead2); }}
-                  className="bg-white dark:bg-slate-800/80 dark:backdrop-blur-md border border-slate-300 dark:border-slate-600/50 text-slate-600 dark:text-slate-300 px-4 py-1.5 rounded shadow-sm text-sm font-medium hover:bg-slate-50 dark:bg-slate-900 transition-colors shrink-0"
+                  className="bg-surface border border-line-strong text-ink-secondary px-4 py-1.5 rounded shadow-sm text-sm font-medium hover:bg-surface-muted transition-colors shrink-0"
                 >
                   Unir leads
                 </button>
@@ -199,7 +199,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
         )}
         
         {duplicates.length === 0 && mergeMsg && (
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 bg-slate-50 dark:bg-slate-900 rounded-lg">No se encontraron más duplicados.</p>
+          <p className="text-sm text-ink-muted italic text-center py-4 bg-surface-muted rounded-lg">No se encontraron más duplicados.</p>
         )}
       </div>
     </div>

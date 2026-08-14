@@ -44,11 +44,11 @@ export function HealthSystemSection({
     <div className="space-y-3">
       <div className="grid grid-cols-[120px_1fr_1fr] gap-3">
         <div>
-          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Edad</label>
+          <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Edad</label>
           <select
             value={rangoEdad}
             onChange={(e) => onRangoEdadChange(e.target.value)}
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+            className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
           >
             <option value="">Exacta o Rango...</option>
             <option value="Menor a 30">Menor a 30</option>
@@ -60,7 +60,7 @@ export function HealthSystemSection({
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sistema</label>
+          <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Sistema</label>
           <select
             value={sistema}
             onChange={(e) => {
@@ -70,7 +70,7 @@ export function HealthSystemSection({
               // onNumeroCargasChange('');
               // onEdadCargasChange('');
             }}
-            className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+            className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
           >
             <option value="Fonasa">Fonasa</option>
             <option value="Isapre">Isapre</option>
@@ -79,11 +79,11 @@ export function HealthSystemSection({
 
         {isFonasa && (
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Renta Liquida (aprox)</label>
+            <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Renta Liquida (aprox)</label>
             <select
               value={rangoRenta}
               onChange={(e) => onRangoRentaChange(e.target.value)}
-              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+              className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
             >
               <option value="">Seleccione...</option>
               {RENTAS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -93,11 +93,11 @@ export function HealthSystemSection({
 
         {isIsapre && (
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Isapre Actual</label>
+            <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Isapre Actual</label>
             <select
               value={isapre}
               onChange={(e) => onIsapreChange(e.target.value)}
-              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+              className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
             >
               <option value="">Seleccione...</option>
               {ISAPRES.map(i => <option key={i} value={i}>{i}</option>)}
@@ -114,11 +114,11 @@ export function HealthSystemSection({
       {isIsapre && (
         <div className="grid grid-cols-2 gap-3 items-end">
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Número de Cargas</label>
+            <label className="mb-1 block text-[10px] font-bold text-ink-secondary uppercase tracking-wide">Número de Cargas</label>
             <select
               value={numeroCargas}
               onChange={(e) => onNumeroCargasChange(e.target.value)}
-              className="w-full rounded-[6px] border border-slate-200 px-3 py-1.5 text-[13px] text-slate-800 font-medium bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+              className="w-full rounded-[6px] border border-line px-3 py-1.5 text-[13px] text-ink font-medium bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
             >
               <option value="">Seleccione...</option>
               {CARGAS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}

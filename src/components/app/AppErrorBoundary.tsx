@@ -37,11 +37,11 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
     }
 
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 p-6 flex items-center justify-center">
-        <div className="w-full max-w-sm border border-red-200 bg-white rounded-xl shadow-sm p-5 space-y-3">
+      <div className="min-h-screen bg-surface-muted text-ink p-6 flex items-center justify-center">
+        <div className="w-full max-w-sm border border-red-200 bg-surface rounded-xl shadow-sm p-5 space-y-3">
           <div>
             <h1 className="text-base font-bold text-red-700">La extension encontro un error</h1>
-            <p className="text-sm text-slate-600 mt-1">{this.state.message}</p>
+            <p className="text-sm text-ink-secondary mt-1">{this.state.message}</p>
           </div>
           <button
             type="button"

@@ -204,7 +204,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-400 dark:text-slate-500">Cargando historial de chat...</div>;
+    return <div className="p-8 text-center text-ink-muted">Cargando historial de chat...</div>;
   }
 
   return (
@@ -212,8 +212,8 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
       <Card className="w-full h-full flex flex-col overflow-hidden">
         <div className="bg-[var(--color-surface)] border-b border-line p-4 flex items-center justify-between">
           <div>
-            <h2 className="font-bold text-lg text-slate-800 dark:text-slate-200">Chat Maestro</h2>
-            <p className="text-xs text-slate-500">En vivo con {selectedUser.full_name || selectedUser.email}</p>
+            <h2 className="font-bold text-lg text-ink">Chat Maestro</h2>
+            <p className="text-xs text-ink-secondary">En vivo con {selectedUser.full_name || selectedUser.email}</p>
           </div>
           <Button variant="danger" onClick={closeUserChat}>
             Cerrar Chat al Usuario
@@ -240,16 +240,16 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
               <div key={message.id}>
                 {showDate && (
                   <div className="flex justify-center mb-4 mt-2">
-                    <span className="bg-white text-slate-400 text-[11px] font-bold px-3 py-1 rounded-lg uppercase shadow-sm">
+                    <span className="bg-surface text-ink-muted text-[11px] font-bold px-3 py-1 rounded-lg uppercase shadow-sm">
                       {formatMessageDate(message.created_at)}
                     </span>
                   </div>
                 )}
                 <div className={`flex flex-col max-w-[80%] ${isMine ? 'self-end items-end ml-auto' : 'self-start items-start'}`}>
-                  <div className={`px-3 pt-2 pb-1.5 rounded-xl text-[14px] shadow-sm leading-relaxed ${isMine ? 'bg-[#dcf8c6] text-slate-800 rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none border border-gray-100'}`}>
+                  <div className={`px-3 pt-2 pb-1.5 rounded-xl text-[14px] shadow-sm leading-relaxed ${isMine ? 'bg-[#dcf8c6] text-ink rounded-tr-none' : 'bg-surface text-ink rounded-tl-none border border-line'}`}>
                     {!isMine && <div className="text-xs font-bold text-indigo-500 mb-1">{selectedUser.full_name || selectedUser.email.split('@')[0]}</div>}
                     <div className="break-all whitespace-pre-wrap">{message.message}</div>
-                    <div className="text-[10px] mt-1 flex items-center justify-end gap-1 text-slate-400">
+                    <div className="text-[10px] mt-1 flex items-center justify-end gap-1 text-ink-muted">
                       {formatMessageTime(message.created_at)}
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
 
           {isUserTyping && (
             <div className="flex justify-start mb-4">
-              <div className="bg-white border border-gray-100 text-slate-400 rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm text-xs italic">
+              <div className="bg-surface border border-line text-ink-muted rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm text-xs italic">
                 Escribiendo...
               </div>
             </div>

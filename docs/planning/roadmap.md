@@ -1951,8 +1951,40 @@ Lo que aparecio al ejecutarlos, que el plan no anticipaba:
   - Los 4 titulos inline de `FunnelReport` (`text-card-title font-medium text-ink`). Podrian usar
     `CardTitle`, pero la primitiva es `font-semibold` y estos son `font-medium`: **cambia el peso
     visual**. Requiere aprobacion.
-- [PENDIENTE] Eliminar los usos de `dark:*` ad-hoc (**1022 ocurrencias** al `2026-08-13`; eran ~1034);
-  `tokens.css` ya resuelve el tema por variables. Es el item mas grande que queda del bloque 7.
+- [HECHO] (`2026-08-14`) `dark:*` de **1022 a 796**, y las brechas de modo oscuro de **122 a 0**.
+
+  **El item estaba planteado al reves y eso importa.** Decia "eliminar los `dark:*` ad-hoc porque
+  `tokens.css` ya resuelve el tema", como si sobraran clases. Al ver la aplicacion en oscuro por
+  primera vez, gracias a capturas del usuario, aparecio lo contrario: habia **122 bloques con un
+  color claro fijo y ninguna clase `dark:`**. Como los tokens de texto si cambian con el tema, el
+  resultado era **texto claro sobre fondo blanco**.
+
+  Lo peor estaba en la pantalla principal. `LeadsTableRow` pintaba las filas con
+  `bg-white hover:bg-gray-50` y el texto con `text-ink`, que en oscuro es casi blanco: **las filas de
+  leads ya leidos eran ilegibles**. Igual la cabecera de la tabla, la columna fija de acciones, la
+  casilla sin marcar, los selectores de periodo del Pipeline y las tarjetas de Overview.
+
+  La transformacion correcta resulto tener dos pasos, y el segundo es el que le da sentido al
+  enunciado original: la clase base pasa a su token, y **entonces** el `dark:` de esa misma propiedad
+  sobra y se retira, porque dejarlo haria que el ad-hoc pisara al token justo en oscuro. De ahi salen
+  las 226 clases `dark:` retiradas: no se borraron porque si, se borraron porque su base dejo de
+  necesitarlas.
+
+  Equivalencias medidas antes de aplicarlas, no elegidas a ojo. `bg-white` a `bg-surface` es
+  **identico** en claro (`--ls-surface` vale `#ffffff`). Las de fondo desvian entre 1 y 5 unidades de
+  RGB. Las de texto se movieron mas y a mejor: `text-slate-400`, con 14 usos solo en el detalle de
+  lead, daba **2.56:1 sobre blanco**, muy por debajo del minimo de 4.5; con `text-ink-muted` da 4.77.
+  `text-slate-700` pasa de 10.35 a 17.39.
+
+  Aparecio ademas un residuo del barrido roto de la vez anterior: 21 `dark:backdrop-blur-md`
+  huerfanos, que acompañaban a un `dark:bg-slate-800/80` retirado al tokenizar. Un desenfoque solo en
+  oscuro sobre tarjetas opacas, que no hace nada. Se quitaron solo donde ya no quedaba ningun
+  `dark:bg-` en el mismo bloque.
+
+  Metodo conservado en `scripts/audit-dark-gaps.py` (encuentra las brechas) y
+  `scripts/tokenize-fixed-colors.py` (aplica el mapa). **Aviso sobre el primero: se queda corto.**
+  Solo mira dentro de `className`, y por eso no vio la fila de `LeadsTableRow`, cuya clase vive en una
+  variable. Que marque cero no demuestra que no queden.
 - [PENDIENTE] Barrer el patron prohibido de caja blanca redondeada (**180 veces en 82 archivos** al
   `2026-08-13`; eran 185): `ListsPage.tsx:427,446`, `TemplateEditor.tsx:242`, `TemplatesPage.tsx:189,222`,
   `PipelinePage.tsx:137`.
