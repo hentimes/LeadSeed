@@ -11,6 +11,7 @@ import {
   loadRequirementsWithProfiles,
   subscribeRequirementsFeed,
 } from '../../services/adminService';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 export default function AdminRequirementsPage() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -27,9 +28,9 @@ export default function AdminRequirementsPage() {
     setLoading(true);
     try {
       setRequirements(await loadRequirementsWithProfiles());
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching requirements:', error);
-      alert('Error cargando requerimientos: ' + (error?.message || 'Error desconocido'));
+      alert('Error cargando requerimientos: ' + getErrorMessage(error, 'Error desconocido'));
     }
     setLoading(false);
   };
@@ -50,8 +51,8 @@ export default function AdminRequirementsPage() {
       await closeRequirement(req.id);
       setSelectedReq(null);
       await fetchRequirements();
-    } catch (error: any) {
-      alert('Error cerrando requerimiento: ' + (error?.message || 'Error desconocido'));
+    } catch (error) {
+      alert('Error cerrando requerimiento: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 
@@ -61,8 +62,8 @@ export default function AdminRequirementsPage() {
       await archiveRequirement(req.id);
       setSelectedReq(null);
       await fetchRequirements();
-    } catch (error: any) {
-      alert('Error archivando requerimiento: ' + (error?.message || 'Error desconocido'));
+    } catch (error) {
+      alert('Error archivando requerimiento: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 
@@ -73,8 +74,8 @@ export default function AdminRequirementsPage() {
       await assignRequirementToHelper(req.id, currentUserId);
       setSelectedReq({ ...req, helper_id: currentUserId, status: 'in_progress', helper_profile: profile || undefined });
       await fetchRequirements();
-    } catch (error: any) {
-      alert('Error tomando el caso: ' + (error?.message || 'Error desconocido'));
+    } catch (error) {
+      alert('Error tomando el caso: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 
@@ -82,8 +83,8 @@ export default function AdminRequirementsPage() {
     try {
       await assignRequirementToHelper(reqId, helperId);
       await fetchRequirements();
-    } catch (error: any) {
-      alert('Error asignando el caso: ' + (error?.message || 'Error desconocido'));
+    } catch (error) {
+      alert('Error asignando el caso: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 

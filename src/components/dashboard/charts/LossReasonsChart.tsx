@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import type { PropsTooltip } from '../rechartsProps';
 
 export default function LossReasonsChart() {
   const data = [
@@ -10,12 +11,13 @@ export default function LossReasonsChart() {
 
   const COLORS = ['#7B5CFF', '#8F85FF', '#BCAFFF', '#EBE5FF'];
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload }: PropsTooltip) => {
+    const entrada = payload?.[0];
+    if (active && entrada) {
       return (
         <div className="bg-ink rounded-[6px] p-2 shadow-lg">
           <p className="text-[11px] text-white">
-            <span className="font-bold">{payload[0].name}:</span> {payload[0].value}%
+            <span className="font-bold">{entrada.name}:</span> {entrada.value}%
           </p>
         </div>
       );

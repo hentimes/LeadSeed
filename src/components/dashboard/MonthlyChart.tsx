@@ -1,15 +1,20 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { chartColors } from '../../design/palette';
+import type { PropsPunto, PropsTooltip } from './rechartsProps';
 
 interface MonthlyChartProps {
   data: { name: string; value: number }[];
 }
 
 export default function MonthlyChart({ data }: MonthlyChartProps) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload, label }: PropsTooltip) => {
+    const entrada = payload?.[0];
+    // `value` puede llegar como texto si el grafico lo formatea; aqui la serie
+    // es numerica, y comprobarlo evita comparar un texto contra un numero mas
+    // abajo, que en JavaScript no falla, solo da un resultado raro.
+    const currentVal = typeof entrada?.value === 'number' ? entrada.value : null;
+    if (active && currentVal !== null) {
       const currentIndex = data.findIndex(d => d.name === label);
-      const currentVal = payload[0].value;
       let trendEl;
 
       const prevData = data[currentIndex - 1];
@@ -37,7 +42,7 @@ export default function MonthlyChart({ data }: MonthlyChartProps) {
     return null;
   };
 
-  const renderDot = (props: any) => {
+  const renderDot = (props: PropsPunto) => {
     const { cx, cy, index } = props;
     const isLast = index === data.length - 1;
     

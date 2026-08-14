@@ -4,6 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, Legend, LabelList
 } from 'recharts';
 import { chartColors } from '../../../design/palette';
+import type { PropsEtiqueta, PropsTooltip } from '../rechartsProps';
 
 export type ChartVisualType = 'area' | 'line' | 'bar' | 'stacked' | 'cumulative';
 
@@ -18,10 +19,20 @@ interface DynamicAcquisitionChartProps {
 }
 
 // Helper to render the label inside the bar
-const renderCustomizedLabel = (props: any, textColor: string) => {
+const renderCustomizedLabel = (props: PropsEtiqueta, textColor: string) => {
   const { x, y, width, height, value } = props;
   
-  if (x == null || y == null || width == null || height == null) return null;
+  // Recharts declara la geometria como `string | number` porque admite unidades
+  // SVG en texto. Aqui hay que calcular con ella, asi que se comprueba que sean
+  // numeros en vez de darlo por hecho.
+  if (
+    typeof x !== 'number' ||
+    typeof y !== 'number' ||
+    typeof width !== 'number' ||
+    typeof height !== 'number'
+  ) {
+    return null;
+  }
   if (!value || value === '0%' || value === 'NaN%') return null;
 
   // Siempre mostrar el porcentaje, incluso si el bloque es pequeño,
@@ -79,7 +90,7 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
     return result;
   }, [data, type]);
 
-  const renderTooltip = (props: any) => {
+  const renderTooltip = (props: PropsTooltip) => {
     const { active, payload, label } = props;
     if (active && payload && payload.length) {
       if (type === 'stacked') {
@@ -87,7 +98,7 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
           <div className="bg-ink rounded-[6px] p-2 shadow-lg min-w-[110px]">
             <p className="text-[10px] font-bold text-white mb-1.5 border-b border-[#2A3449] pb-1">{label}</p>
             <div className="flex flex-col gap-1">
-              {[...payload].reverse().map((entry: any, index: number) => (
+              {[...payload].reverse().map((entry, index) => (
                 <div key={index} className="flex items-center justify-between text-[10px]">
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -101,7 +112,7 @@ export default function DynamicAcquisitionChart({ data, type }: DynamicAcquisiti
         );
       }
       
-      const val = payload[0].value;
+      const val = payload[0]?.value;
       const title = type === 'cumulative' ? 'Acumulado' : 'Leads';
       return (
         <div className="bg-surface border border-line rounded-[8px] p-2 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
