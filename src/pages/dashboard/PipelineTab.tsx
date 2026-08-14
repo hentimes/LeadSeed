@@ -113,7 +113,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="card-header">
           <CardTitle as="h2">Embudo de ventas</CardTitle>
           
-          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
+          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none">
             <option>Hoy</option>
             <option>Últimos 7 días</option>
             <option>Últimos 30 días</option>
@@ -167,7 +167,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="card-header">
           <CardTitle as="h2">Adquisición mensual</CardTitle>
           
-          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-white cursor-pointer hover:border-primary transition-colors outline-none">
+          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none">
             <option>Últimos 6 meses</option>
             <option>Este año</option>
           </select>

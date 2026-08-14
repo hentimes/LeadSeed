@@ -68,7 +68,7 @@ const LeadsTableRow = ({
     ? 'bg-primary-soft-strong hover:bg-primary-soft-strong'
     : lead.isUnread
       ? 'bg-surface-unread hover:bg-surface-unread-hover'
-      : 'bg-white hover:bg-gray-50';
+      : 'bg-surface hover:bg-surface-hover';
 
   const trClass = `border-b border-line transition-colors cursor-pointer ${rowBackground} ${
     lead.isPinned ? 'cursor-grab active:cursor-grabbing active:opacity-50' : ''

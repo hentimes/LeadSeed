@@ -65,13 +65,13 @@ export default function ConversionBar({
   }, [contactRate, conversionRate]);
 
   return (
-    <div className="bg-white border border-line rounded-[6px] py-2 px-4 flex flex-col gap-2">
+    <div className="bg-surface border border-line rounded-[6px] py-2 px-4 flex flex-col gap-2">
       <div className="flex justify-between items-center mb-1">
         <h2 className="text-[15px] font-medium text-ink">Conversión global</h2>
         
         {onPeriodChange && (
           <select 
-            className="text-[13px] border border-surface-muted rounded-[8px] px-3 py-1.5 text-ink font-medium bg-surface-muted outline-none hover:bg-gray-100 transition-all cursor-pointer"
+            className="text-[13px] border border-surface-muted rounded-[8px] px-3 py-1.5 text-ink font-medium bg-surface-muted outline-none hover:bg-surface-hover transition-all cursor-pointer"
             onChange={onPeriodChange}
             value={periodLabel.toLowerCase()}
           >

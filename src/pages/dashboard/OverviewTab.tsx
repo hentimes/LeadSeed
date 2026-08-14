@@ -153,7 +153,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       {/* Panel inferior: 3 Columnas */}
       <div className="grid grid-cols-3 gap-4 mt-2">
         {/* Fuentes principales */}
-        <div className="bg-white border border-line rounded-[6px] p-2 flex flex-col justify-between">
+        <div className="bg-surface border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
             <h3 className="text-[10px] font-bold text-ink mb-2 whitespace-nowrap">Fuentes principales</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
@@ -194,7 +194,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
         </div>
 
         {/* Conversión por etapa */}
-        <div className="bg-white border border-line rounded-[6px] p-2 flex flex-col justify-between">
+        <div className="bg-surface border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
             <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Conversión por etapa</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
@@ -240,7 +240,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
         </div>
 
         {/* Hallazgos */}
-        <div className="bg-white border border-line rounded-[6px] p-2 flex flex-col justify-between">
+        <div className="bg-surface border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
             <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Hallazgos</h3>
             <ul className="flex flex-col gap-1.5 text-[10px] text-ink-secondary leading-none">

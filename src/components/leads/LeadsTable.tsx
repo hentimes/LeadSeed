@@ -236,11 +236,11 @@ export default function LeadsTable({
 
       <Card ref={containerRef} className="overflow-x-auto w-full min-w-0">
         <table className="w-full table-fixed text-[13px] text-ink">
-          <thead className="border-b border-line text-ink-secondary bg-white">
+          <thead className="border-b border-line text-ink-secondary bg-surface">
             <tr>
               <th className={`w-8 ${headPad}`}>
                 <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${allSelected ? 'bg-primary border-primary' : 'border-line bg-white'}`}
+                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${allSelected ? 'bg-primary border-primary' : 'border-line bg-surface'}`}
                   onClick={onSelectAll}
                 >
                   <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
@@ -281,7 +281,7 @@ export default function LeadsTable({
                     onClick={sortField ? () => onSort(sortField) : undefined}
                     style={{ width: definition?.width, maxWidth: definition?.width }}
                     className={`text-left align-middle ${headPad} font-medium select-none whitespace-nowrap ${
-                      sortField ? 'cursor-pointer hover:bg-gray-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-50'
+                      sortField ? 'cursor-pointer hover:bg-surface-hover' : 'cursor-grab active:cursor-grabbing hover:bg-surface-hover'
                     } ${isDragTarget ? 'bg-primary-soft border-l-2 border-l-primary' : ''} ${dragColKey === column.key ? 'opacity-40' : ''}`}
                     title={definition?.fixed ? undefined : 'Arrastra para reordenar'}
                   >
@@ -293,7 +293,7 @@ export default function LeadsTable({
                 );
               })}
 
-              <th className={`w-[92px] ${headPad} sticky right-0 bg-white shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal`}>
+              <th className={`w-[92px] ${headPad} sticky right-0 bg-surface shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)] z-10 font-normal`}>
                 <div className="flex items-center justify-end gap-0.5">
                   {(canScrollBack || canScrollForward) ? (
                     <>
