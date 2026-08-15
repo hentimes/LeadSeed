@@ -18,7 +18,6 @@ Solo lo normativo y lo que las herramientas esperan encontrar ahi:
 | Archivo | Que es |
 |---|---|
 | `roadmap.md` | Fuente de verdad de planeacion. Secciones 12 y 13 son las tareas abiertas. |
-| `ux-ui-checklist.md` | Checklist visual por fases. Pendiente de fusionar dentro del roadmap. |
 
 ## docs/integrations - vigente con reservas
 

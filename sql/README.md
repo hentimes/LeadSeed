@@ -6,6 +6,11 @@ Este directorio es la fuente autorizada de SQL del proyecto.
 
 - `migrations/`: cambios permanentes de esquema, RLS, RPC, realtime o storage.
 - `seeds/`: datos base del producto que pueden reaplicarse con seguridad.
+- `data-repairs/`: correcciones de filas existentes tras un incidente. **No son migraciones**: sobre
+  una base nueva no hay nada que reparar, asi que no forman parte del historial reproducible. Ver
+  `data-repairs/README.md`, que explica ademas por que las dos historicas (`036`, `037`) se quedan en
+  `migrations/`.
+- `diagnostics/`: consultas de solo lectura para investigar un incidente. No escriben nunca.
 
 ## Nomenclatura
 

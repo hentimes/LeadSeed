@@ -881,6 +881,23 @@ Base: commits `22e1a3a`, `e4e3f5a`, `cd70955`.
 
 Base: commits `9e60aae`, `f04729f`, `a351b59`.
 
+- [PENDIENTE] (hallado el `2026-08-15` al cuantificar 13.4.d) **El canal `general` no atribuye a
+  nadie, y nunca lo ha hecho.** Contados los leads con `origin = web_form` y su link de captura:
+
+  | canal | leads | con link |
+  |---|---|---|
+  | `general` (/form) | 78 | **0** |
+  | `pb` | 60 | 51 (84%) |
+  | `retiro` | 6 | 6 (100%) |
+
+  Cero, no pocos, y en los tres tramos: antes, durante y despues de la ventana de la regresion del
+  ref. Asi que **no es secuela de aquel incidente**, es propio del formulario `/form`, y llevaba ahi
+  desde el principio sin que nadie lo notara porque el panel no mostraba atribucion real.
+
+  Antes de arreglarlo hay que decidir una cosa que no es tecnica: si `/form` **debe** atribuir. Es el
+  formulario general, y puede que su diseño sea justamente no pertenecer a ningun asesor. Si es asi,
+  el pendiente no es el codigo sino dejarlo escrito, porque hoy se lee como un fallo.
+
 - [EN REVISION] Canal `retiro` con `source_channel` y funnel de visitas, paso 1 y paso 2.
 - [EN REVISION] Registro generico de tipos de formulario (`form_types`) que admite `form`.
 - [EN REVISION] Dejar de usar `Referer` como fallback de `ref` en disponibilidad publica.
@@ -1468,8 +1485,45 @@ activos. Es la forma de intervenir ese repo sin arriesgar trabajo ajeno.
   parada, adelantada por master en 63 commits, y reintroduciendo `supabase/functions/`, que master
   retiro a proposito. Su fix de routing ya estaba en master. Lo unico suyo que faltaba en produccion
   era el tracking de visita de `/pb`, recuperado en `feat/pb-visit-tracking`. Detalle en 13.2.
-- [PENDIENTE] Cuantificar el impacto: cuantos leads entraron mal atribuidos mientras duro la
-  regresion. El commit desplegado roto era `c3315ed7`; su fecha acota la ventana.
+- [HECHO] (`2026-08-15`) Cuantificado con `sql/diagnostics/001_leads_afectados_por_regresion_ref.sql`,
+  que ya estaba escrito para esto y define la firma correcta: lead que **viene de `/pb` o `/form`
+  segun `source_url`/`source_path` pero quedo sin `capture_link_id`**.
+
+  **Un solo lead vivo afectado**, del `2026-08-04`. Otros 49 comparten la firma pero estan borrados:
+  son envios de prueba.
+
+  La ventana real es mas larga de lo que decia este item. El commit roto no es `c3315ed7` sino
+  `bcf6ca43` (`2026-08-03 15:07 -0400`), que es cuando **nacieron** las Functions de `pb` y `form`
+  pidiendo `index.html` explicito; `c3315ed7` solo era lo que estaba desplegado el dia de la
+  deteccion. El fix es `9e91f2a4` (`2026-08-12 13:47 -0400`): nueve dias, no uno.
+
+  **Pero los datos no encajan con esa ventana, y eso es lo interesante.** Los leads con la firma
+  empiezan el `2026-07-31`, tres dias **antes** de que el commit culpable existiera, y se cortan el
+  `2026-08-06`, seis dias **antes** del fix:
+
+  | dia | vivos | borrados |
+  |---|---|---|
+  | 2026-07-31 | 0 | 3 |
+  | 2026-08-01 | 0 | 5 |
+  | 2026-08-02 | 0 | 8 |
+  | 2026-08-03 | 0 | 23 |
+  | 2026-08-04 | **1** | 6 |
+  | 2026-08-05 | 0 | 1 |
+  | 2026-08-06 | 0 | 3 |
+
+  Si la regresion fuera la causa, el rastro empezaria el 3 de agosto y llegaria hasta el 12. Empieza
+  antes y termina antes, asi que **lo que se esta viendo es una tanda de pruebas, no una sangria
+  comercial**: el rastro sigue al trafico de prueba, no a la ventana del bug.
+
+  Conclusion: el impacto comercial medible es **un lead**, y ni siquiera se le puede atribuir con
+  seguridad a la regresion, porque el patron ya existia antes de que la regresion pudiera producirlo.
+  No se reasigna nada, en linea con lo que el propio diagnostico advierte: el ref se perdio en el
+  navegador antes de llegar al backend, asi que **no hay forma automatica y fiable de saber a que
+  asesor pertenecia cada lead**. El dato no llego nunca.
+
+  Hallazgo lateral que si vale la pena, y que no es de la regresion: el canal `general` (el
+  formulario `/form`) **no ha atribuido nunca**. 78 leads en total, 0 con link de captura, antes,
+  durante y despues de la ventana. `pb` atribuye el 84% y `retiro` el 100%. Anotado en 12.2.
 
 Nota para la migracion: el estado correcto de `_redirects`, `_routes.json` y las Pages Functions es
 exactamente lo que hay que llevarse al proyecto nuevo. Arreglar esto no es un desvio, es preparar el
@@ -1772,10 +1826,16 @@ que la regla no veia: `ResizeObserver`, `FileReader` e `Image`, que se usaban si
 pasaban limpios. Es la misma clase de error que la auditoria senalo: la regla cubria menos de lo que
 yo creia. Ahora estan incluidos.
 
-- [PENDIENTE] Las 2 marcas restantes, ambas de `FileReader` en `importParser.ts`. No se resuelven con
-  un puerto: esa funcion ya es web-only por otra razon independiente, depende de `xlsx`, que tampoco
-  cruza a React Native. Portar la importacion de archivos es un frente propio del bloque movil, no
-  una frontera pendiente.
+- [CERRADO POR DECISION] (`2026-08-15`) Las 2 marcas restantes, ambas de `FileReader` en
+  `importParser.ts`. **No son deuda: estaban mal clasificadas.**
+
+  Un puerto de plataforma existe para que la capa de dominio no toque el navegador. Aqui no hay nada
+  que aislar: la funcion entera es web-only por una razon anterior e independiente, que es su
+  dependencia de `xlsx`, que tampoco cruza a React Native. Un puerto para `FileReader` dejaria la
+  frontera igual de rota y con una indireccion mas.
+
+  Portar la importacion de archivos es un frente del bloque movil, cuando exista. Se cierra aqui para
+  que deje de contarse como pendiente de portabilidad, que es lo que no es.
 
 ### Capitulo 13.7 - Division de archivos grandes (bloque 6)
 
@@ -2260,6 +2320,45 @@ enchufamos**. Un detector que nadie ejecuta es documentacion, no una guarda.
   proyecto: se listaron los 13 configurados y no esta. El comando para ponerlo lo rechazo el
   clasificador.
 
+### Capitulo 13.16 - Checklist visual por pantalla (absorbido de `ux-ui-checklist.md` el `2026-08-15`)
+
+Venia de un documento aparte con **76 casillas, ninguna marcada**, aunque parte del trabajo estaba
+hecho. Aqui queda contrastado contra el estado real del codigo.
+
+**Fase 1, sistema visual base.** Cerrada casi entera por el bloque 7 (capitulo 13.8):
+
+| Casilla original | Estado real |
+|---|---|
+| Unificar alturas de botones, inputs y selects | hecho, primitiva `Button` en 30 botones |
+| Unificar radios de bordes por nivel | hecho, tokens |
+| Unificar jerarquia tipografica | hecho, `CardTitle` y escalas de texto |
+| Unificar colores semanticos | hecho, `src/design/colors.ts` con test contra `tokens.css` |
+| Patron estable para headers de seccion | hecho, `PageHeader` eliminado y unificado |
+| Contraste, hover, focus y disabled | hecho, incluido el fallo WCAG de `--ls-text-muted` |
+| Unificar espaciado vertical entre secciones | **pendiente**, ligado a los 131 anchos fijos |
+| Patron estable para toolbars y filtros | **pendiente** |
+| Patron estable para cards, tablas y bloques | **pendiente**, es el item de tarjetas de 13.8 |
+
+Las tres pendientes de la fase 1 **ya estan en 13.8** y no se duplican aqui: se siguen desde alli.
+
+**Fases 2 a 10, por pantalla.** Son 67 casillas de rediseño (Leads, Pipeline, Enviar, Tareas,
+Mensajes, Historial, Dashboard, Listas, Ajustes) mas una validacion final. Ninguna es deuda tecnica:
+todas cambian apariencia, y por 13.1.c ninguna se ejecuta sin que el usuario mire el resultado.
+
+Se conservan como estaban, sin marcar, porque describen un rediseño que no se ha emprendido:
+
+- Fase 2 Leads (10), Fase 3 Pipeline (6), Fase 4 Enviar (8), Fase 5 Tareas (7), Fase 6 Mensajes (6),
+  Fase 7 Historial (5), Fase 8 Dashboard (6), Fase 9 Listas (4), Fase 10 Ajustes (6)
+- Validacion final (5): consistencia entre pantallas, build de produccion, densidad en el panel
+  lateral, estados vacios, mensajes de confirmacion y error
+
+El detalle casilla por casilla esta en el historial de git de `docs/planning/ux-ui-checklist.md`. No
+se reproduce entero aqui a proposito: copiar 67 lineas de "rediseñar cabecera de X" a este documento
+lo alargaria sin decir nada que el titulo de la fase no diga ya.
+
+**Lo que si conviene retener:** el rediseño por pantalla es un frente propio, posterior al cierre de
+13.8, y depende por completo de poder ver la aplicacion.
+
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
 Frente nuevo, nunca registrado en este roadmap.
@@ -2386,8 +2485,13 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
   Duplicaban items ya cerrados en 13.10.
 - [HECHO] Eliminado `implementation_plan.md` junto con el resto de `docs/_revision/`. Detalle y
   cambio normativo asociado en 13.10.
-- [PENDIENTE] Fusionar `docs/planning/ux-ui-checklist.md` dentro de este roadmap. La ruta citada
-  antes (`UX_UI_CHECKLIST.md` en la raiz) quedo obsoleta tras la reorganizacion.
+- [HECHO] (`2026-08-15`) Fusionado `docs/planning/ux-ui-checklist.md`: su contenido vive ahora en el
+  capitulo 13.16 y el archivo se elimino, junto con su fila en `docs/README.md`.
+
+  Al absorberlo aparecio por que llevaba tanto sin tocarse: **sus 10 fases tenian las 76 casillas sin
+  marcar**, incluidas nueve que el bloque 7 ya habia cerrado. Un checklist que no refleja lo hecho no
+  se consulta, y uno que no se consulta se queda atras: era una tercera lista de trabajo compitiendo
+  con este roadmap y con el protocolo.
 - [HECHO] Documentacion reorganizada en `docs/`. Duplicaba el item ya cerrado en 13.10.
 
 ### Capitulo 13.12 - Deuda de datos y rendimiento
@@ -2449,8 +2553,24 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
   consulta y **ninguna** fija `user_id` y `lead_id` y ademas filtra por `template_type`, asi que esa
   tercera columna no la aprovechaba nadie. La migracion lleva la tabla de que consulta va a que
   indice y su bloque de reversion.
-- [PENDIENTE] Separar los scripts de reparacion de datos (`_recovery`, `repair_historical_`) de las
-  migraciones de esquema. Cierra otro pendiente del capitulo 2.3.
+- [HECHO] (`2026-08-15`) Separados los scripts de reparacion de datos de las migraciones de esquema.
+  Creado `sql/data-repairs/` con la regla escrita, y `sql/README.md` documenta ya los cuatro
+  directorios (`migrations`, `seeds`, `data-repairs`, `diagnostics`).
+
+  **Los dos historicos no se mueven, y conviene entender por que.** `036_planespro_capture_ref_recovery`
+  y `037_repair_historical_pb_owner_assignments` estan aplicados en produccion y espejados en
+  `supabase/migrations/` como `20260601000037` y `20260601000038`, que es el libro de registro que lee
+  el CLI. Renombrarlos o sacarlos de ahi desincroniza ese registro con el remoto. Ordenar dos archivos
+  historicos no compensa tocar el unico sitio donde consta que se aplicaron: la regla es **hacia
+  adelante**.
+
+  El criterio que separa una cosa de la otra, que era lo que faltaba: una migracion de esquema debe
+  aplicarse sobre una base vacia y una reparacion de datos no tiene nada que hacer ahi. Mezcladas, el
+  historial deja de ser reproducible, porque quien levante el proyecto desde cero arrastra
+  correcciones de incidentes que en su base nunca ocurrieron.
+
+  Matiz sobre la `036`: define `resolve_planespro_capture_ref_from_payload`, que es esquema de verdad
+  y sigue en uso, **y ademas** repara filas. Es mitad y mitad; hoy se escribiria en dos archivos.
 - [HECHO] (`2026-08-12`) `AbortController` con timeout en las llamadas a Resend y Google, via
   `supabase/functions/_shared/http.ts`. **18 puntos de llamada** en ocho funciones, mas de los 12 que
   estimaba la auditoria.
@@ -2487,8 +2607,21 @@ eso invalida cualquier clon existente. Se ordenaron, no se purgaron.
 - [PENDIENTE ESTRUCTURAL] Migrar `ppusers` fuera de `FORMS_DB` (D1 `ppforms_db`) y `FORMS_UPLOADS`
   (R2 `ppforms-uploads`). Mientras siga montado ahi hay dos fuentes de verdad de leads, que es
   exactamente lo que la regla 16.2 del protocolo prohibe.
-- [PENDIENTE] Anadir `*.supabase.co` a `connect-src` en `_headers` de `landing-gerow`. Sin eso los
-  formularios no pueden saltarse el proxy.
+- [APLAZADO CON MOTIVO] (`2026-08-15`) Anadir `*.supabase.co` a `connect-src` en `_headers` de
+  `landing-gerow`. **No se hace ahora, y es deliberado.**
+
+  Verificado en `origin/master`: `_headers` no menciona supabase, y los formularios funcionan porque
+  van contra `https://form.planespro.cl`, que si esta permitido. Esta entrada de CSP no arregla nada
+  hoy: es un prerrequisito de un cambio que todavia no se ha decidido, que los formularios dejen de
+  pasar por el proxy.
+
+  Abrir un destino en la politica de seguridad para algo que nadie usa todavia amplia la superficie
+  sin ninguna contrapartida, y ademas se olvidaria de retirar si el corte del proxy no llega a
+  hacerse. Va **en el mismo cambio** que apague el proxy, no antes.
+
+  Se llego a preparar el arbol de trabajo aislado para hacerlo y se descarto al ver esto; se deshizo
+  sin dejar rama ni worktree. `landing-gerow` ya acumula dos ramas sin mergear, y una tercera
+  huerfana que nadie va a desplegar es coste, no avance.
 - [PENDIENTE] Migrar `ppcrm` (`admin.planespro.cl/crm`).
 - [HECHO] (`2026-08-13`) Retirada la ruta `POST /api/form/appointments` de la documentacion. Se
   comprobo que sigue devolviendo **404** en produccion y que **no queda ninguna referencia a ella en

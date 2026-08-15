@@ -8287,3 +8287,78 @@ Corregido con `!scripts/*.py`.
 - `npx supabase secrets set ALLOWED_EXTENSION_IDS=blphejkibijeolonnebffpclhlghofnn`
   mas el redespliegue de `form-lead-file`. Confirmado que el secreto no existe:
   se listaron los 13 configurados y no esta.
+
+### 2026-08-15 CLT - Claude - LeadSeed / cierre de los pendientes que no dependen de mirar la pantalla
+
+- Tipo: cierre de auditoria / CONTROL
+- Rol: Implementadora
+- Estado: cinco pendientes cerrados; ninguno toca la interfaz
+
+Peticion del usuario: terminar la fase en vez de seguir iterando. Se cerro todo
+lo que no exigia verificacion visual ni permisos bloqueados.
+
+**13.4.d, impacto de la regresion del ref: cuantificado.** Se ejecuto
+`sql/diagnostics/001_leads_afectados_por_regresion_ref.sql`, que ya estaba
+escrito y define la firma correcta (viene de `/pb` o `/form` pero quedo sin
+`capture_link_id`), en vez del criterio improvisado con el que se habia
+empezado.
+
+Resultado: **un solo lead vivo afectado**, del `2026-08-04`. Otros 49 con la
+misma firma estan borrados: son envios de prueba.
+
+Dos correcciones a lo que este capitulo afirmaba:
+
+- El commit culpable no era `c3315ed7` sino `bcf6ca43` (`2026-08-03 15:07`),
+  cuando nacieron las Functions pidiendo `index.html` explicito. `c3315ed7` era
+  solo lo desplegado el dia de la deteccion. La ventana son nueve dias, no uno.
+- **Los datos no encajan con esa ventana.** El rastro empieza el `2026-07-31`,
+  tres dias antes de que el commit culpable existiera, y se corta el
+  `2026-08-06`, seis dias antes del fix. Si la regresion fuera la causa, el
+  rastro iria del 3 al 12 de agosto. Sigue al trafico de prueba, no al bug.
+
+No se reasigna nada, como el propio diagnostico advierte: el ref se perdio en el
+navegador antes de llegar al backend, asi que no hay forma fiable de saber a que
+asesor pertenecia cada lead.
+
+**Hallazgo lateral, mas grande que el incidente:** el canal `general` (`/form`)
+**no ha atribuido nunca**. 78 leads, 0 con link, antes, durante y despues de la
+ventana. `pb` atribuye 84%, `retiro` 100%. No es secuela de la regresion; es
+propio de `/form` y llevaba ahi desde el principio, invisible porque el panel no
+mostraba atribucion real hasta esta semana. Anotado en 12.2, con la pregunta que
+hay que responder antes de tocar codigo: si `/form` **debe** atribuir, siendo el
+formulario general.
+
+**13.11, checklist UX fusionado.** `docs/planning/ux-ui-checklist.md` absorbido
+en el capitulo 13.16 y eliminado. Al fusionarlo se vio por que llevaba sin
+tocarse: sus **76 casillas estaban todas sin marcar**, incluidas nueve que el
+bloque 7 ya habia cerrado. Era una tercera lista compitiendo con el roadmap y el
+protocolo.
+
+**13.12, reparaciones de datos separadas del esquema.** Creado
+`sql/data-repairs/` con la regla escrita. Los dos historicos (`036`, `037`) **no
+se mueven**: estan espejados en `supabase/migrations/` como `20260601000037/38`,
+que es el libro de registro que lee el CLI, y renombrarlos lo desincroniza con el
+remoto. La regla es hacia adelante. El criterio que faltaba: una migracion de
+esquema debe aplicarse sobre una base vacia y una reparacion no tiene nada que
+hacer ahi.
+
+**13.6.c, cerrado por decision.** Las 2 marcas de `FileReader` en
+`importParser.ts` estaban mal clasificadas como deuda de portabilidad. Esa
+funcion ya es web-only por su dependencia de `xlsx`; un puerto para `FileReader`
+dejaria la frontera igual de rota con una indireccion mas.
+
+**13.13, CSP aplazado con motivo.** Verificado que `_headers` de `origin/master`
+no menciona supabase y que los formularios funcionan porque van contra
+`form.planespro.cl`, que si esta permitido. Esa entrada no arregla nada hoy: es
+prerrequisito de apagar el proxy, decision que no se ha tomado. Abrir un destino
+en la politica de seguridad para algo que nadie usa amplia la superficie sin
+contrapartida. Va en el mismo cambio que apague el proxy.
+
+Se llego a crear el worktree aislado para hacerlo y se deshizo al ver esto, sin
+dejar rama ni worktree. `landing-gerow` ya tiene dos ramas sin mergear y 34
+worktrees, con sesiones activas hoy mismo; una tercera rama huerfana es coste.
+
+**Balance de los capitulos 13.x:** de 16 pendientes a 11. Los 11 que quedan son
+tres visuales (necesitan al usuario delante), cuatro frentes propios (TanStack
+Query, `ppcrm`, paginacion por cursor, division de archivos grandes), dos
+bloqueados por permisos y dos decisiones del usuario.
