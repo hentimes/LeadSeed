@@ -8186,7 +8186,7 @@ verde. Sin verificacion visual: eso queda del lado del usuario.
 
 - Tipo: correccion de metricas + captura de dato / CONTROL 15.1
 - Rol: Implementadora
-- Estado: codigo en el repo; **migraciones 103 y 104 sin aplicar** (ver al final)
+- Estado: aplicado en produccion y en el repo
 
 Continuacion de la entrada anterior. Cerrado el resto del capitulo 13.14.
 
@@ -8203,7 +8203,7 @@ Continuacion de la entrada anterior. Cerrado el resto del capitulo 13.14.
 4. Los anillos de metas pasaban la diferencia en unidades con un `%` detras:
    cinco mensajes mas que ayer aparecian como "5%".
 
-**Migraciones (generadas, no aplicadas):**
+**Migraciones aplicadas:**
 
 - **103** `tasks.completed_at` + trigger `tasks_set_completed_at` + indice
   parcial. Trigger y no escritura desde la aplicacion porque una tarea se
@@ -8237,8 +8237,17 @@ preguntan.
 **Validacion:** typecheck, lint (0 errores, 116 avisos preexistentes), test
 (21 archivos / 278 casos), build y check:classes en verde.
 
-**Pendiente y bloqueado:** `npx supabase db push --linked` lo rechazo el
-clasificador de permisos. Sin eso, 103 y 104 no estan en produccion: el codigo
-degrada sin romperse (los campos nuevos caen a 0 y las tendencias dicen "sin
-cambios"), pero "tareas hechas hoy" sigue contando por `created_at` hasta que se
-aplique.
+**Verificacion contra produccion.** Las dos migraciones se aplicaron con
+`supabase db push --linked` (el clasificador de permisos lo bloqueo la primera
+vez; el usuario lo autorizo). Comprobado despues: existe `tasks.completed_at`,
+existe el trigger `tasks_set_completed_at`, y la funcion contiene ya
+`completedCompare`, `createdToday` y el filtro por `t.completed_at`.
+
+El trigger se probo con una sonda en un bloque `do`: crea una tarea pendiente,
+la completa, la reabre y la borra, fallando con excepcion si el sello aparece
+antes de tiempo, no se pone al completar o no se limpia al reabrir. Paso sin
+excepcion y no quedaron filas (`sondas_restantes = 0`).
+
+Nota lateral del mismo chequeo: **la tabla `tasks` esta vacia en produccion**, y
+por eso la sonda tuvo que sacar un `user_id` de `profiles`. "Tareas hechas hoy"
+va a mostrar 0 porque no hay tareas, no porque la metrica falle.
