@@ -3,7 +3,13 @@
 # scripts y archivos temporales de trabajo
 # secretos y artefactos de build
 *.log
+# `*.py` ignora los scripts sueltos de un solo uso, que es lo que se queria.
+# Pero tambien se estaba tragando `scripts/`, donde vive el detector de huecos
+# de modo oscuro: el `2026-08-15` se anadio al CI y el paso habria fallado en el
+# acto, porque el archivo no existe en el repo. Los scripts versionados son
+# parte del proyecto y se excluyen de la regla.
 *.py
+!scripts/*.py
 *.rar
 .DS_Store
 .env

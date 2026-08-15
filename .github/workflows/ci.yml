@@ -38,6 +38,18 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Modo oscuro sin contraparte
+        # Detecta colores claros fijos (`bg-white`, `bg-gray-50`...) sin un
+        # `dark:` al lado en el mismo className. En oscuro eso pinta blanco de
+        # verdad, con el texto ya en claro encima: ilegible.
+        #
+        # Se llego a cero el `2026-08-14` partiendo de 122 bloques, ninguno de
+        # ellos detectado por lint ni por tipos. Sin esta guarda, el primero que
+        # vuelva pasa igual de desapercibido que los 122.
+        # `python3` y no `python`: en el runner de Ubuntu el alias sin version
+        # no esta garantizado, `python3` si.
+        run: python3 scripts/audit-dark-gaps.py
+
       - name: Tests y umbral de cobertura
         # `test:coverage` y no `test`: el umbral de trinquete de
         # vitest.config.ts solo se evalua al medir cobertura. Corriendo `test`
@@ -65,3 +77,14 @@ jobs:
         # en el modal de soporte durante quien sabe cuanto, porque Tailwind
         # descarta en silencio lo que no entiende.
         run: npm run check:classes
+
+      - name: Propiedad de Edge Functions
+        # LeadSeed y landing-gerow comparten proyecto Supabase, asi que un
+        # deploy desde el repo equivocado sobrescribe produccion sin avisar. Ya
+        # paso con `form-leads` y con `form-progress`.
+        #
+        # Sin credenciales enlazadas sale con codigo 0 y un aviso, asi que aqui
+        # comprueba lo que puede sin credenciales y no rompe el CI por algo que
+        # no esta en su mano verificar. El valor completo se obtiene corriendolo
+        # en local antes de un deploy.
+        run: npm run check:functions

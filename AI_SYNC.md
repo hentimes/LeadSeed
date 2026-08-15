@@ -8251,3 +8251,39 @@ excepcion y no quedaron filas (`sondas_restantes = 0`).
 Nota lateral del mismo chequeo: **la tabla `tasks` esta vacia en produccion**, y
 por eso la sonda tuvo que sacar un `user_id` de `profiles`. "Tareas hechas hoy"
 va a mostrar 0 porque no hay tareas, no porque la metrica falle.
+
+### 2026-08-15 CLT - Claude - LeadSeed / guardas que existian y no se ejecutaban
+
+- Tipo: infraestructura de verificacion / CONTROL
+- Rol: Implementadora
+- Estado: dos de cuatro hechos; dos bloqueados por el clasificador de permisos
+
+Patron detectado al auditar que seguia pendiente: **hay detectores escritos que
+nadie ejecuta**. Un detector fuera del CI es documentacion, no una guarda.
+
+- `audit-dark-gaps.py` salia **siempre con codigo 0**, tuviera hallazgos o no.
+  Habria dejado pasar los 122 bloques rotos exactamente igual que si no
+  existiera. Ahora sale con 1 y esta en el workflow. Probado en los dos
+  sentidos: arbol limpio -> 0; con un `bg-white` sin contraparte metido a
+  proposito en un archivo de sonda -> 1, y lo senala con archivo y linea.
+  Probar solo el caso verde habria validado un detector incapaz de fallar.
+- `check:functions` llevaba en `package.json` desde que se escribio y nunca se
+  anadio al workflow. Ya esta. Sin credenciales sale con 0 y un aviso.
+- Trinquete de cobertura: seguia en 11 / 15 / 6 / 10 con la cobertura real ya en
+  12.69 / 16.7 / 6.83 / 11.8. Subido a 12 / 16 / 6.5 / 11 y verificado que
+  `test:coverage` sale con 0.
+
+**El detector ni siquiera estaba versionado.** `.gitignore` tenia `*.py` para
+descartar scripts sueltos de un solo uso y de paso se tragaba `scripts/`. El
+paso de CI recien anadido habria fallado en el acto por archivo inexistente. Lo
+delato `git status` al no listar un archivo que si se habia modificado.
+Corregido con `!scripts/*.py`.
+
+**Bloqueado por el clasificador de permisos, queda del lado del usuario:**
+
+- Avance rapido de `master` y `design` a `develop` (79 commits atras, 0
+  adelante; sin conflictos posibles). Rechazados tanto `git branch -f` como el
+  push.
+- `npx supabase secrets set ALLOWED_EXTENSION_IDS=blphejkibijeolonnebffpclhlghofnn`
+  mas el redespliegue de `form-lead-file`. Confirmado que el secreto no existe:
+  se listaron los 13 configurados y no esta.

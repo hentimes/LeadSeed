@@ -22,9 +22,14 @@ export default defineConfig({
 
       // Umbral de trinquete, no objetivo.
       //
-      // Se fija apenas por debajo de la cobertura real del momento (11.67% de
-      // sentencias) para que **no pueda bajar**. No es una meta de calidad: es
-      // que la cobertura solo se mueva hacia arriba.
+      // Se fija apenas por debajo de la cobertura real del momento para que
+      // **no pueda bajar**. No es una meta de calidad: es que la cobertura solo
+      // se mueva hacia arriba.
+      //
+      // Ultimo ajuste el `2026-08-15`: la cobertura real habia subido a 12.69 /
+      // 16.7 / 6.83 / 11.8 y el umbral seguia en el de 11.67, asi que se podia
+      // perder un punto entero sin que el CI dijera nada. Un trinquete que no se
+      // aprieta deja de ser un trinquete.
       //
       // Poner aqui el 80% que recomienda la teoria dejaria el CI rojo desde el
       // primer dia, y un CI rojo permanente no se lee, se ignora. Vale mas un
@@ -32,10 +37,10 @@ export default defineConfig({
       //
       // Al subir la cobertura, subir tambien estos numeros en el mismo commit.
       thresholds: {
-        statements: 11,
-        branches: 15,
-        functions: 6,
-        lines: 10,
+        statements: 12,
+        branches: 16,
+        functions: 6.5,
+        lines: 11,
       },
     },
   },

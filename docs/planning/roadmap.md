@@ -2213,6 +2213,53 @@ comerciales mirando numeros que no salen de ningun lado.
   el estado que ya tenia el lead pero no ofrece cambiarlo, asi que los caminos que descartan eran
   dos, no tres, y ahora los dos preguntan.
 
+### Capitulo 13.15 - Guardas que existian y no se ejecutaban (`2026-08-15`)
+
+Frente pequeno pero con un patron que conviene nombrar: **escribimos detectores y no los
+enchufamos**. Un detector que nadie ejecuta es documentacion, no una guarda.
+
+- [HECHO] (`2026-08-15`) `audit-dark-gaps.py` **salia siempre con codigo 0**, incluso con hallazgos:
+  solo imprimia. Habria pasado por CI con los 122 bloques rotos igual que sin el. Ahora sale con 1 si
+  encuentra algo, y esta en el workflow.
+
+  Verificado en los dos sentidos, que es lo que da valor al cambio: con el arbol limpio sale 0, y con
+  un `bg-white` sin contraparte metido a proposito en un archivo de sonda sale 1 y lo senala. Probar
+  solo el caso verde habria dejado pasar un detector que nunca falla.
+
+- [HECHO] (`2026-08-15`) `check:functions` estaba en `package.json` desde que se escribio y **nunca
+  se anadio al workflow**. Ya esta. Sin credenciales enlazadas sale con 0 y un aviso, asi que en CI
+  comprueba lo que puede sin romperse; el valor completo sigue siendo correrlo en local antes de un
+  deploy.
+
+- [HECHO] (`2026-08-15`) Trinquete de cobertura apretado. Estaba en 11 / 15 / 6 / 10 desde que la
+  cobertura real era 11.67, y ya iba por **12.69 / 16.7 / 6.83 / 11.8**: se podia perder mas de un
+  punto entero sin que el CI dijera nada. Subido a 12 / 16 / 6.5 / 11.
+
+  Un trinquete que no se aprieta cuando sube la cobertura deja de ser un trinquete, y eso no se nota
+  nunca, porque falla por omision.
+
+- [HECHO] (`2026-08-15`) **El detector ni siquiera estaba en el repo.** `.gitignore` tenia `*.py` para
+  descartar scripts sueltos de un solo uso, y de paso se tragaba `scripts/`. El paso de CI recien
+  anadido habria fallado en el acto por archivo inexistente.
+
+  Lo encontro `git status` al no listar un archivo que si se habia modificado. Es el mismo patron que
+  el resto de este capitulo: la guarda existia en la maquina de quien la escribio y en ningun otro
+  sitio. Corregido con `!scripts/*.py`; entran al repo `audit-dark-gaps.py` y
+  `tokenize-fixed-colors.py`.
+
+- [BLOQUEADO] Alinear `master` y `design` con `develop`. Estan **79 commits atras y 0 adelante**, asi
+  que es un avance rapido sin conflictos posibles. El clasificador de permisos rechazo tanto
+  `git branch -f` como el push. Queda del lado del usuario:
+
+  ```
+  git branch -f master develop && git branch -f design develop
+  git push origin master design
+  ```
+
+- [BLOQUEADO] `ALLOWED_EXTENSION_IDS` (capitulo 13.4.e). Confirmado que **el secreto no existe** en el
+  proyecto: se listaron los 13 configurados y no esta. El comando para ponerlo lo rechazo el
+  clasificador.
+
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
 Frente nuevo, nunca registrado en este roadmap.
