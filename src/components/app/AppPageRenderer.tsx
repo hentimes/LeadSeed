@@ -55,12 +55,16 @@ const PAGE_WIDTH: Partial<Record<Page, 'full' | 'md' | 'lg'>> = {
  * unica con un titulo grande en toda la extension. Se elimino ese componente y
  * el encabezado pasa por PageShell, que es el que ya envuelve a todas.
  */
-const PAGE_HEADER: Partial<Record<Page, { title: string; description?: string }>> = {
-  templates: {
-    title: 'Plantillas',
-    description: 'Gestiona tus plantillas de mensajes y respuestas rapidas.',
-  },
-};
+/**
+ * Vacio a proposito desde el `2026-08-16`.
+ *
+ * Plantillas era su unica entrada, y repetia lo que la barra superior ya dice
+ * ("Plantillas de Mensaje"): dos titulos para la misma pagina, 44px de alto en
+ * una columna donde solo caben tres plantillas. El mecanismo se conserva para
+ * la pagina que algun dia necesite un encabezado propio; `hasHeader` en
+ * PageShell ya contempla que no haya ninguno.
+ */
+const PAGE_HEADER: Partial<Record<Page, { title: string; description?: string }>> = {};
 
 /**
  * El chat y la comunidad necesitan una altura fija (ver PageShell.fillHeight)

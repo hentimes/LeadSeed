@@ -59,6 +59,7 @@ export default {
         surface: {
           DEFAULT: conAlfa('--ls-surface'),
           hover: conAlfa('--ls-surface-hover'),
+          sunken: conAlfa('--ls-surface-sunken'),
           muted: conAlfa('--ls-bg'),
           unread: conAlfa('--ls-surface-unread'),
           'unread-hover': conAlfa('--ls-surface-unread-hover'),
@@ -66,6 +67,7 @@ export default {
         line: {
           DEFAULT: conAlfa('--ls-border'),
           strong: conAlfa('--ls-border-strong'),
+          soft: conAlfa('--ls-line-soft'),
         },
         state: {
           success: conAlfa('--ls-success'),

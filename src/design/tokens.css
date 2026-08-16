@@ -59,6 +59,17 @@
   --ls-surface-unread-hover: #efe9ff;
   --ls-border-strong: #d5dae3;
 
+  /* Pozo: contenido hundido DENTRO de una tarjeta (una lista con scroll, una
+     vista previa, un ejemplo). No sirve --ls-bg para esto: sobre una tarjeta
+     blanca casi no se distingue, y en oscuro es mas claro que la tarjeta, o
+     sea que hunde en un tema y eleva en el otro. */
+  --ls-surface-sunken: #f1f3f8;
+
+  /* Separador entre filas repetidas. --ls-border repetido veinte veces
+     construye una reja que compite con el contenido; se reserva para el
+     perimetro de los contenedores. */
+  --ls-line-soft: #eef1f6;
+
   /* ---------------------------------------------------------------
    * ESTADO
    * --------------------------------------------------------------- */
@@ -143,6 +154,9 @@
   --ls-surface-unread: rgba(108, 76, 246, 0.10);
   --ls-surface-unread-hover: rgba(108, 76, 246, 0.16);
   --ls-border-strong: rgba(255, 255, 255, 0.16);
+  /* En oscuro un pozo se hunde quitando luz, no agregandola. */
+  --ls-surface-sunken: rgba(0, 0, 0, 0.24);
+  --ls-line-soft: rgba(255, 255, 255, 0.055);
 
   --ls-primary-soft: rgba(108, 76, 246, 0.16);
   --ls-primary-soft-strong: rgba(108, 76, 246, 0.28);
