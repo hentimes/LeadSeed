@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
-import { replaceVariables, openWhatsAppForLeads } from '../../utils/waHelper';
+import { replaceVariables, buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { getCurrentSession } from '../../services/authService';
@@ -102,9 +102,13 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     const userId = session?.user?.id;
     if (!userId) return;
 
-    setSentLog(await logWhatsAppSend(userId, selectedTemplate.id!, recipients));
+    // Se resuelve una sola vez: lo que se guarda en el historial y lo que se
+    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones.
+    const mensajes = buildLeadMessages(recipients, customBody);
 
-    openWhatsAppForLeads(recipients, customBody);
+    setSentLog(await logWhatsAppSend(userId, selectedTemplate.id!, mensajes, selectedTemplate.nombre));
+
+    openWhatsAppMessages(mensajes);
   };
 
   return (

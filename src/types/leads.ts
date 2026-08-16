@@ -181,6 +181,17 @@ export interface SendLog {
   leadPhone: string;
   sentAt: string;
   scheduledFor?: string;
+  /**
+   * Lo que realmente se envio, guardado en el momento del envio.
+   *
+   * Sin esto el historial reconstruia el mensaje buscando la plantilla por id,
+   * asi que perdia el texto al borrarla y mostraba el texto nuevo al editarla.
+   * Queda indefinido en los envios anteriores a la migracion 106.
+   */
+  templateName?: string;
+  content?: string;
+  subject?: string;
+  isHtml?: boolean;
 }
 
 export interface AdminObservedLeadAlert {

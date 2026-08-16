@@ -34,6 +34,10 @@ function mapSendLogRowToDomain(row: SendLogRow): SendLog {
     leadPhone: row.lead_phone || '',
     sentAt: row.sent_at,
     scheduledFor: row.scheduled_for || undefined,
+    templateName: row.template_name || undefined,
+    content: row.content || undefined,
+    subject: row.subject || undefined,
+    isHtml: row.is_html ?? undefined,
   };
 }
 

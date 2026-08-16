@@ -69,7 +69,10 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
         return;
       }
 
-      await logCallSend(userId, selectedTemplate.id!, selectedLead);
+      await logCallSend(userId, selectedTemplate.id!, selectedLead, {
+        nombre: selectedTemplate.nombre,
+        contenido: selectedTemplate.contenido,
+      });
       setMessage('Llamada registrada con exito');
     } catch {
       setMessage('Error al registrar llamada');

@@ -70,12 +70,34 @@ export async function openWhatsApp(phone: string, message: string = ''): Promise
   getPlatform().deeplink.openExternal(buildWhatsAppUrl(phone, message, pref));
 }
 
+/** Un destinatario con el texto ya resuelto para el. */
+export interface LeadMessage {
+  lead: Lead;
+  message: string;
+}
+
+/**
+ * Resuelve el texto una vez por destinatario.
+ *
+ * Existe para que el mensaje que se abre y el que se guarda en el historial
+ * sean **el mismo objeto**, no dos resoluciones paralelas del mismo texto. Si
+ * cada uno lo resolviera por su cuenta, bastaria con que uno cambiara para que
+ * el historial empezara a mentir sin que nada fallara.
+ */
+export function buildLeadMessages(leads: Lead[], template: string): LeadMessage[] {
+  return leads.map((lead) => ({ lead, message: replaceVariables(template, lead) }));
+}
+
+/** Abre WhatsApp con textos ya resueltos. */
+export function openWhatsAppMessages(mensajes: LeadMessage[]): void {
+  for (const { lead, message } of mensajes) {
+    openWhatsApp(lead.phone, message);
+  }
+}
+
 export function openWhatsAppForLeads(
   leads: Lead[],
   template: string
 ): void {
-  for (const lead of leads) {
-    const msg = replaceVariables(template, lead);
-    openWhatsApp(lead.phone, msg);
-  }
+  openWhatsAppMessages(buildLeadMessages(leads, template));
 }

@@ -188,7 +188,14 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
     if (schedule && scheduledDate && scheduledTime) {
       const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
-      setSentLog(await scheduleEmailSend(userId, selectedTemplate.id!, recipients, scheduledFor));
+      setSentLog(
+        await scheduleEmailSend(userId, selectedTemplate.id!, recipients, scheduledFor, {
+          nombre: selectedTemplate.nombre,
+          asunto: customSubject,
+          contenido: customBody,
+          isHtml: selectedTemplate.isHtml,
+        })
+      );
       void getPlatform().storage.local.set({ hasScheduledEmails: true });
       setSchedule(false);
       setScheduledDate('');
@@ -212,6 +219,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             channelId: selectedChannel?.provider === 'resend' ? selectedChannelId : undefined,
           }
         : undefined,
+      selectedTemplate.nombre,
     );
     setResult(sendResult);
     setSentLog(updatedLog);

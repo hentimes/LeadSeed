@@ -1,5 +1,6 @@
 import type { LeadNote, SendLog } from '../../../types';
 import { Icon } from '../../../utils/icons';
+import { Modal } from '../../../design';
 
 interface Props {
   notes: LeadNote[];
@@ -14,7 +15,7 @@ interface Props {
   onToggleLogs: () => void;
   expandedLogId: number | null;
   onToggleExpandedLog: (id: number) => void;
-  getTemplateName: (templateId: string | number, type: string) => string;
+  getTemplateName: (log: SendLog) => string;
   getTemplateContent: (log: SendLog) => string;
   isEmailTemplateHtml: (log: SendLog) => boolean;
 }
@@ -98,10 +99,14 @@ export default function LeadDetailHistory({
           {showLogs && (
             <div className="space-y-1">
               {sendLogs.map((log) => {
-                const templateName = getTemplateName(log.templateId, log.templateType);
-                const hasContent = templateName !== '?';
-                const isExpanded = expandedLogId === log.id;
+                const templateName = getTemplateName(log);
                 const templateContent = getTemplateContent(log);
+                // Se puede abrir si hay texto que mostrar. Antes esto miraba el
+                // nombre, asi que una plantilla borrada bloqueaba la fila aunque
+                // el mensaje siguiera guardado.
+                const hasContent = templateContent.length > 0;
+                const isExpanded = expandedLogId === log.id;
+                const esCorreoConFormato = isEmailTemplateHtml(log);
 
                 return (
                   <div key={log.id}>
@@ -122,13 +127,33 @@ export default function LeadDetailHistory({
                       </button>
                       <span className="text-ink-muted ml-auto">{new Date(log.sentAt).toLocaleString('es-CL')}</span>
                     </div>
-                    {isExpanded && templateContent && (
+    {/* Un correo con formato no cabe en la tira de 128px que sirve para
+                        el texto plano: se abre en un dialogo con sitio para leerlo. */}
+                    {isExpanded && templateContent && esCorreoConFormato && (
+                      <Modal
+                        onClose={() => log.id != null && onToggleExpandedLog(log.id)}
+                        maxWidth="560px"
+                        label={`Mensaje enviado: ${templateName}`}
+                      >
+                        <div className="flex flex-col gap-3 p-4">
+                          <div>
+                            <h2 className="text-card-title font-semibold text-ink">{templateName}</h2>
+                            <p className="mt-0.5 text-micro text-ink-secondary">
+                              {log.subject ? `${log.subject} - ` : ''}
+                              {new Date(log.sentAt).toLocaleString('es-CL')}
+                            </p>
+                          </div>
+                          <div
+                            className="max-h-[60vh] overflow-y-auto rounded-[6px] border border-line bg-surface-muted p-3 text-body text-ink"
+                            dangerouslySetInnerHTML={{ __html: templateContent }}
+                          />
+                        </div>
+                      </Modal>
+                    )}
+
+                    {isExpanded && templateContent && !esCorreoConFormato && (
                       <div className="mt-1 mb-2 p-2 bg-surface-muted border border-line rounded-[6px] text-[11px] max-h-32 overflow-y-auto text-ink">
-                        {isEmailTemplateHtml(log) ? (
-                          <div dangerouslySetInnerHTML={{ __html: templateContent }} />
-                        ) : (
-                          <div className="whitespace-pre-wrap">{templateContent}</div>
-                        )}
+                        <div className="whitespace-pre-wrap">{templateContent}</div>
                       </div>
                     )}
                   </div>

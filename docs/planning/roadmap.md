@@ -2425,6 +2425,93 @@ visitas distintas en cada fila y el mismo numero de leads.
   eventos con `form_slug = 'pb'` tienen `capture_ref` nulo, asi que no hay nada que enlazar. Queda
   anotado por si resulta que el formulario `pb` no esta mandando el ref, que seria un problema propio.
 
+### Capitulo 14 - Flujos de mensajes y variables de catalogo (abierto el `2026-08-16`)
+
+Frente nuevo, pedido por el usuario: secuencias de mensajes con seguimiento por lead, y una variable
+`{motivo}` con catalogo propio.
+
+Se reviso con tres agentes antes de construir (infraestructura y datos, arquitectura frontend, UX y
+accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la discusion esta en
+`AI_SYNC.md` de esta fecha.
+
+**Restricciones de dominio que condicionan todo el diseño.** No son opinables:
+
+- WhatsApp se envia **abriendo una URL**. La aplicacion no sabe si el mensaje salio, llego o se leyo.
+  `send_logs` registra la intencion en el clic.
+- **No existe canal entrante.** Las respuestas de un lead no se registran en ninguna tabla. Por eso un
+  paso no puede avanzar "cuando el lead responda", y por eso no habra ramificacion condicional.
+- El correo si se envia de verdad, pero **no hay webhook de Resend**: "enviado" significa que la
+  llamada a la API no fallo, no que llego al buzon.
+
+**Decisiones del usuario (`2026-08-16`):**
+
+- Un lead puede estar en varios flujos a la vez **pero no dos del mismo canal**. Los flujos son por
+  canal, no multicanal: un flujo de llamado, uno de correo, uno de WhatsApp. La inscripcion activa es
+  unica por lead y canal.
+- El historial guarda copia del mensaje enviado, muestra el nombre del flujo, y debe seguir siendo
+  legible aunque la plantilla se borre.
+- En pantalla se dira **"Abierto en WhatsApp"**, nunca "Enviado". El correo si dice "Enviado".
+
+- [HECHO] (`2026-08-16`) Migracion **106**: `send_logs` guarda `template_name`, `content`, `subject` e
+  `is_html`.
+
+  **El historial no guardaba nada**: reconstruia el mensaje buscando la plantilla por id en la lista
+  viva. Dos consecuencias que nadie habia notado:
+
+  1. Al borrar la plantilla, el mensaje desaparecia del historial. El nombre pasaba a `'?'` y, como
+     `LeadDetailHistory` decidia si la fila se podia desplegar con `templateName !== '?'`, el registro
+     quedaba sin poder abrirse.
+  2. Al **editar** la plantilla, el historial mostraba el texto nuevo como si fuera el enviado. Este es
+     el peor de los dos porque no se nota: un mensaje de julio se ve con el texto de agosto y parece
+     correcto.
+
+  Se guarda el mensaje **ya resuelto**, con las variables sustituidas y con la edicion temporal del
+  compositor incluida. No es el texto de la plantilla: dos leads del mismo envio reciben textos
+  distintos, asi que el registro pertenece al envio, no a la plantilla.
+
+  Detalle que evita un fallo silencioso futuro: `buildLeadMessages` resuelve el texto **una sola vez**
+  y el mismo objeto alimenta el registro y la apertura de WhatsApp. Si cada uno resolviera por su
+  cuenta, bastaria con que uno cambiara para que el historial empezara a mentir sin que nada fallara.
+  Hay cuatro casos de prueba sobre eso.
+
+  Los envios anteriores quedan sin copia y **no se rellenan**: reconstruirlos desde la plantilla actual
+  seria escribir como texto enviado algo que quiza no lo es, que es justo el defecto que se corrige. El
+  frontend cae a la plantilla viva solo cuando no hay copia.
+
+  Correccion a lo que el usuario recordaba: el contador de envios por lead y el historial desplegable
+  en la ficha **no se habian perdido**, funcionan desde antes. Lo que fallaba era el caso de la
+  plantilla borrada o editada.
+
+- [HECHO] (`2026-08-16`) El correo con formato se abre en un dialogo en vez de en la tira de 128 px que
+  sirve para el texto plano. Pedido explicito del usuario.
+
+- [PENDIENTE] Catalogo de variables (`{motivo}`). Decidido: **catalogo generico, no una tabla de
+  motivos**, porque el propio ejemplo del usuario ya anticipa `{ciudad}` y `{plan_actual}`. El valor
+  **no se ata a la plantilla**: las plantillas son reutilizables y dos flujos que compartan una
+  quedarian forzados al mismo motivo, con lo que dejaria de ser una variable. Version 1: catalogo mas
+  eleccion al momento de enviar.
+
+  Ojo con el vocabulario: `leads.discard_reason` ya se llama "motivo" en pantalla (el dialogo de
+  descarte). Hay que separar "motivo de descarte" de "motivo del mensaje" en el texto antes de
+  construir.
+
+- [PENDIENTE] Tablas de flujos, pasos e inscripciones, con progreso por paso. El progreso **no se
+  deduce de `send_logs`**: esa tabla no tiene referencia al flujo, asi que un envio manual de la misma
+  plantilla contaria como paso completado, y ademas no hay donde expresar cuando toca el siguiente
+  paso, que es justo lo que el usuario pide ver. La fila de progreso no copia lo enviado: apunta a
+  `send_logs`.
+
+- [PENDIENTE] Las tablas hijas necesitan `user_id` propio y un trigger que lo copie del padre. Una FK
+  no impide insertar un paso apuntando al flujo de otro usuario: se pasa la RLS con el `user_id`
+  propio mientras el `flow_id` es ajeno.
+
+- [PENDIENTE] Vista "Hoy" como pantalla de entrada, no la lista de flujos. La pregunta del usuario
+  ("que me falta enviar hoy") es transversal a todos los flujos.
+
+- [HALLAZGO] (`2026-08-16`) El lint de fronteras **no impide que un componente importe un
+  repositorio**. Solo bloquea `lib/supabaseClient`, `platform/web` y la creacion del cliente. La
+  separacion de capas se sostiene por convencion, no por la guarda. Frente propio.
+
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
 Frente nuevo, nunca registrado en este roadmap.

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildWhatsAppUrl, normalizePhone, replaceVariables } from './waHelper';
+import { buildLeadMessages, buildWhatsAppUrl, normalizePhone, replaceVariables } from './waHelper';
 import type { Lead } from '../types';
 
 describe('normalizePhone', () => {
@@ -102,5 +102,41 @@ describe('replaceVariables', () => {
     expect(replaceVariables('{telefono} {correo} {rut} {notas}', lead)).toBe(
       '+56912345678 ana@ejemplo.cl 12345678-5 prefiere tardes',
     );
+  });
+});
+
+describe('buildLeadMessages', () => {
+  const leads = [
+    { name: 'Ana Perez', phone: '+56911111111', company: 'Acme' },
+    { name: 'Luis Soto', phone: '+56922222222', company: 'Beta' },
+  ] as Lead[];
+
+  test('resuelve el texto una vez por destinatario', () => {
+    const mensajes = buildLeadMessages(leads, 'Hola {nombre} de {empresa}');
+
+    expect(mensajes).toHaveLength(2);
+    expect(mensajes[0]?.message).toBe('Hola Ana Perez de Acme');
+    expect(mensajes[1]?.message).toBe('Hola Luis Soto de Beta');
+  });
+
+  test('conserva el lead junto a su mensaje, para poder registrarlos juntos', () => {
+    const mensajes = buildLeadMessages(leads, 'Hola {nombre}');
+
+    expect(mensajes[0]?.lead).toBe(leads[0]);
+    expect(mensajes[1]?.lead).toBe(leads[1]);
+  });
+
+  test('da el mismo texto que replaceVariables, que es lo que hace que el historial no mienta', () => {
+    // Si estas dos resoluciones se separaran, el historial guardaria un texto y
+    // WhatsApp abriria otro, sin que nada fallara.
+    const plantilla = 'Hola {nombre}, {telefono}';
+
+    for (const { lead, message } of buildLeadMessages(leads, plantilla)) {
+      expect(message).toBe(replaceVariables(plantilla, lead));
+    }
+  });
+
+  test('devuelve lista vacia sin destinatarios', () => {
+    expect(buildLeadMessages([], 'Hola {nombre}')).toEqual([]);
   });
 });

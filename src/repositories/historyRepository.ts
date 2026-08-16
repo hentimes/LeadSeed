@@ -9,6 +9,15 @@ export interface SendLogRow {
   lead_phone: string | null;
   sent_at: string;
   scheduled_for: string | null;
+  /**
+   * Copia de lo que se envio, escrita en el momento del envio (migracion 106).
+   * Nula en los registros anteriores; entonces el historial cae a la plantilla
+   * viva, que es como funcionaba antes.
+   */
+  template_name: string | null;
+  content: string | null;
+  subject: string | null;
+  is_html: boolean | null;
 }
 
 export interface LeadNoteRow {

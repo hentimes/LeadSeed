@@ -8407,3 +8407,45 @@ Verificado: los 7 links devuelven una fila cada uno; `3fn2er` 218 visitas,
    `origin/master`. Es el segundo caso de "produccion no es origin/master" en ese
    repo, despues del Worker `ppforms`. Anotado en la auditoria de superficie
    compartida.
+
+### 2026-08-16 CLT - Claude - LeadSeed / el historial de mensajes deja de reconstruirse
+
+- Tipo: correccion de defecto + captura de dato / CONTROL 15.1
+- Rol: Implementadora
+- Estado: migracion 106 aplicada y verificada; gates en verde
+
+Primer paso del frente de flujos de mensajes (capitulo 14 del roadmap), abierto
+tras revisarlo con tres agentes.
+
+**El defecto.** El historial de mensajes de un lead no guardaba nada: buscaba la
+plantilla por id en la lista viva. Al borrarla, el mensaje desaparecia y la fila
+ni siquiera se dejaba desplegar (`hasContent` miraba `templateName !== '?'`). Al
+editarla, mostraba el texto nuevo como si fuera el enviado, sin avisar. El
+segundo es el grave: no se nota.
+
+**Migracion 106.** `send_logs` gana `template_name`, `content`, `subject` e
+`is_html`. Se guarda el mensaje ya resuelto, no la plantilla, porque dos leads
+del mismo envio reciben textos distintos: el registro pertenece al envio.
+
+**Lo que evita un fallo futuro:** `buildLeadMessages` resuelve el texto una sola
+vez y el mismo objeto alimenta el registro y la apertura de WhatsApp. Antes cada
+uno lo habria resuelto por su cuenta, y bastaba con que uno cambiara para que el
+historial empezara a mentir sin que nada fallara. Cuatro casos de prueba.
+
+Los envios anteriores quedan sin copia y no se rellenan. El frontend cae a la
+plantilla viva solo cuando no hay copia, asi que el historial viejo se sigue
+viendo igual.
+
+**Correccion a lo que el usuario recordaba:** el contador de envios por lead y el
+historial desplegable no se habian perdido, funcionan desde antes. Lo que fallaba
+era el caso de la plantilla borrada o editada. Verificado en
+`LeadsTableRow.tsx:121` y `LeadDetailHistory.tsx`.
+
+**Decisiones del usuario para el resto del frente:** flujos por canal (un lead
+puede estar en varios a la vez pero no dos del mismo canal); el historial muestra
+el nombre del flujo; en pantalla se dice "Abierto en WhatsApp", nunca "Enviado".
+
+**Hallazgo lateral:** el lint de fronteras no impide que un componente importe un
+repositorio. Solo bloquea `lib/supabaseClient`, `platform/web` y la creacion del
+cliente. La separacion de capas se sostiene por convencion. Anotado como frente
+propio.

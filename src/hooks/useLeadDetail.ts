@@ -376,12 +376,25 @@ export function useLeadDetail(lead: Lead) {
     }
   };
 
-  const getTemplateName = (templateId: string | number, type: string) => {
-    if (type === 'whatsapp') return waTemplates.find((template) => template.id === templateId)?.nombre || '?';
-    return emailTemplates.find((template) => template.id === templateId)?.nombre || '?';
+  /**
+   * Los tres lectores del historial prefieren lo que se guardo al enviar y solo
+   * caen a la plantilla viva si no hay nada guardado.
+   *
+   * Antes solo existia la segunda mitad, y por eso el historial perdia el
+   * mensaje al borrar la plantilla y mostraba el texto nuevo al editarla. El
+   * respaldo se queda para los envios anteriores a la migracion 106, que no
+   * tienen copia y nunca la van a tener.
+   */
+  const getTemplateName = (log: SendLog) => {
+    if (log.templateName) return log.templateName;
+    if (log.templateType === 'whatsapp') {
+      return waTemplates.find((template) => template.id === log.templateId)?.nombre || 'Plantilla eliminada';
+    }
+    return emailTemplates.find((template) => template.id === log.templateId)?.nombre || 'Plantilla eliminada';
   };
 
   const getTemplateContent = (log: SendLog) => {
+    if (log.content) return log.content;
     if (log.templateType === 'whatsapp') {
       return waTemplates.find((template) => template.id === log.templateId)?.contenido || '';
     }
@@ -391,6 +404,7 @@ export function useLeadDetail(lead: Lead) {
 
   const isEmailTemplateHtml = (log: SendLog) => {
     if (log.templateType !== 'email') return false;
+    if (log.isHtml !== undefined) return log.isHtml;
     return !!emailTemplates.find((template) => template.id === log.templateId)?.isHtml;
   };
 
