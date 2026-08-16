@@ -13,6 +13,9 @@ import EmailEditor from './EmailEditor';
 import EmailScheduler from './EmailScheduler';
 import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../../services/sendService';
+import { applyReason } from '../../utils/waHelper';
+import { useMessageReasons } from '../../hooks/useMessageReasons';
+import type { MessageReason } from '../../services/messageReasonsService';
 import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { listChannels } from '../../services/emailChannelsService';
@@ -38,6 +41,11 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   // Edición dinámica
   const [customSubject, setCustomSubject] = useState('');
   const [customBody, setCustomBody] = useState('');
+
+  // Motivo del mensaje: uno por envio, aplicado al asunto y al cuerpo.
+  const motivos = useMessageReasons();
+  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const [motivoId, setMotivoId] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
@@ -69,13 +77,25 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       setCustomSubject(selectedTemplate.asunto || '');
       setCustomBody(selectedTemplate.contenido || '');
       setAttachments([]);
+      setMotivoId(selectedTemplate.defaultReasonId ?? null);
     } else {
       setSentLog([]);
       setCustomSubject('');
       setCustomBody('');
       setAttachments([]);
+      setMotivoId(null);
     }
   }, [selectedTemplate]);
+
+  useEffect(() => {
+    motivos.getAll().then(setReasons);
+  }, [motivos.refreshKey]);
+
+  const usaMotivo = /\{motivo\}/i.test(customBody) || /\{motivo\}/i.test(customSubject);
+  const motivoTexto = reasons.find((reason) => reason.id === motivoId)?.text;
+  // El motivo se resuelve una sola vez y de ahi salen envio y vista previa.
+  const asuntoResuelto = applyReason(customSubject, motivoTexto);
+  const cuerpoResuelto = applyReason(customBody, motivoTexto);
 
   useEffect(() => {
     let active = true;
@@ -191,8 +211,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       setSentLog(
         await scheduleEmailSend(userId, selectedTemplate.id!, recipients, scheduledFor, {
           nombre: selectedTemplate.nombre,
-          asunto: customSubject,
-          contenido: customBody,
+          asunto: asuntoResuelto,
+          contenido: cuerpoResuelto,
           isHtml: selectedTemplate.isHtml,
         })
       );
@@ -209,8 +229,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       userId,
       selectedTemplate.id!,
       recipients,
-      customSubject,
-      customBody,
+      asuntoResuelto,
+      cuerpoResuelto,
       selectedTemplate.isHtml,
       attachments,
       selectedChannelId
@@ -256,6 +276,29 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       </SendStep>
 
       <SendStep step={2} title="Mensaje" disabled={!selectedTemplate}>
+        {selectedTemplate && usaMotivo && (
+          <div className="mb-2.5">
+            <Field
+              label="Motivo del mensaje"
+              hint={
+                reasons.length === 0
+                  ? 'No hay motivos todavia. Crealos en Plantillas, con "Gestionar motivos".'
+                  : 'Sustituye a {motivo} en el asunto y en el cuerpo. Es el mismo para todo este envio.'
+              }
+            >
+              <Select
+                value={motivoId === null ? '' : String(motivoId)}
+                onChange={(e) => setMotivoId(e.target.value ? Number(e.target.value) : null)}
+                aria-label="Motivo del mensaje"
+              >
+                <option value="">Sin motivo</option>
+                {reasons.map((reason) => (
+                  <option key={reason.id} value={reason.id}>{reason.text}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        )}
         {selectedTemplate ? (
           <EmailEditor
             selectedTemplate={selectedTemplate}
@@ -336,7 +379,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
                 </p>
                 <p className="truncate text-ink-muted">
                   Asunto:{' '}
-                  <span className="font-medium text-ink">{replaceVariables(customSubject, previewLead)}</span>
+                  <span className="font-medium text-ink">{replaceVariables(asuntoResuelto, previewLead)}</span>
                 </p>
               </div>
             )}
@@ -345,7 +388,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           <div className="bg-surface-muted p-3">
             {previewLead ? (
               <iframe
-                srcDoc={replaceVariables(customBody, previewLead)}
+                srcDoc={replaceVariables(cuerpoResuelto, previewLead)}
                 title="Vista previa del correo"
                 className="h-[50vh] w-full rounded-md border border-line bg-surface"
                 sandbox="allow-same-origin"

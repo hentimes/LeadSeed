@@ -20,7 +20,10 @@ export default function VariableDropdown({ onSelect, direction = 'down' }: Props
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const variables = ['nombre', 'telefono', 'email', 'empresa', 'notas', 'rut'];
+  // 'motivo' no sale del lead: se elige de un catalogo al enviar. Va en la
+  // misma lista porque para quien escribe la plantilla es un hueco igual que
+  // los demas.
+  const variables = ['nombre', 'telefono', 'email', 'empresa', 'notas', 'rut', 'motivo'];
 
   const dropdownClass = direction === 'up' 
     ? "absolute right-0 bottom-full mb-1 w-32 card-standard z-50 py-1 text-xs"

@@ -12,6 +12,13 @@ import { fetchSendLogsForTemplate } from '../services/historyService';
 import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
 import { Icon } from '../utils/icons';
 import { Button } from '../design';
+import { useMessageReasons } from '../hooks/useMessageReasons';
+import {
+  isDuplicateReason,
+  normalizeReasonText,
+  MAX_REASON_LENGTH,
+  type MessageReason,
+} from '../services/messageReasonsService';
 
 type Tab = 'whatsapp' | 'email' | 'call';
 
@@ -33,6 +40,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const waT = useWhatsAppTemplates(); const waL = useWhatsAppTemplateLists();
   const emT = useEmailTemplates(); const emL = useEmailTemplateLists();
   const caT = useCallTemplates(); const caL = useCallTemplateLists();
+  const motivos = useMessageReasons();
 
   // Los tres canales comparten la forma de WhatsAppTemplate; lo que cambia es
   // de que hook vienen, no el tipo.
@@ -54,6 +62,41 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const [filterCatId, setFilterCatId] = useState<number | null>(null);
   const [showCatManager, setShowCatManager] = useState(false);
 
+  // Catalogo de motivos: alimenta la variable {motivo} de las plantillas. Se
+  // administra aqui y no en Ajustes porque es contenido de mensajes, no una
+  // preferencia de la cuenta.
+  const [showReasonManager, setShowReasonManager] = useState(false);
+  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const [reasonText, setReasonText] = useState('');
+  const [reasonError, setReasonError] = useState('');
+
+  const loadReasons = async () => setReasons(await motivos.getAll());
+
+  const handleCreateReason = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = normalizeReasonText(reasonText);
+    if (text === null) {
+      setReasonError(`Escribe un motivo de hasta ${MAX_REASON_LENGTH} caracteres.`);
+      return;
+    }
+    if (isDuplicateReason(text, reasons)) {
+      setReasonError('Ese motivo ya esta en la lista.');
+      return;
+    }
+    setReasonError('');
+    await motivos.save({ text, createdAt: '' });
+    setReasonText('');
+    await loadReasons();
+  };
+
+  const handleDeleteReason = async (id: number) => {
+    // Las plantillas que lo tuvieran como valor por defecto lo pierden, pero no
+    // se rompen: la columna es `on delete set null`.
+    if (!confirm('¿Eliminar este motivo? Las plantillas que lo usaran por defecto quedaran sin motivo.')) return;
+    await motivos.remove(id);
+    await loadReasons();
+  };
+
   const load = async () => {
     if (tab === 'whatsapp') {
       setTemplates(await waT.getAll());
@@ -68,6 +111,10 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   };
 
   useEffect(() => { load(); setEditing(null); setSelectedIds(new Set()); setShowLog(null); }, [tab]);
+
+  // Los motivos no dependen de la pestaña: el catalogo es uno solo para los tres
+  // canales. Se recarga cuando cambian desde otra pestaña del navegador.
+  useEffect(() => { loadReasons(); }, [motivos.refreshKey]);
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +134,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     load();
   };
 
-  const handleSave = async (data: { id?: number; nombre: string; contenido: string; asunto?: string; isHtml?: boolean; templateListIds?: number[] }) => {
+  const handleSave = async (data: { id?: number; nombre: string; contenido: string; asunto?: string; isHtml?: boolean; templateListIds?: number[]; defaultReasonId?: number | null }) => {
     if (saving) return; // prevent double submit
     setSaving(true);
     const existing = templates.find((t) => t.id === data.id);
@@ -220,6 +267,14 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
           Gestionar categorías
         </Button>
 
+        <Button
+          variant={showReasonManager ? 'primary' : 'secondary'}
+          aria-expanded={showReasonManager}
+          onClick={() => setShowReasonManager(!showReasonManager)}
+        >
+          Gestionar motivos
+        </Button>
+
         {selectedIds.size > 0 && (
           <Button variant="danger" onClick={handleBulkDelete}>
             Eliminar ({selectedIds.size})
@@ -253,6 +308,54 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
         </div>
       )}
 
+      {showReasonManager && (
+        <div className="card-standard p-4 mb-4 bg-surface-muted">
+          <h3 className="text-[14px] font-semibold text-ink mb-1">Motivos del mensaje</h3>
+          <p className="text-[12px] text-ink-secondary mb-3">
+            Sustituyen a <code className="font-mono">{'{motivo}'}</code> en tus plantillas. Eliges cual
+            usar en cada envio.
+          </p>
+          <form onSubmit={handleCreateReason} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={reasonText}
+              onChange={(e) => { setReasonText(e.target.value); setReasonError(''); }}
+              placeholder="vi que tu empresa tiene convenio"
+              maxLength={MAX_REASON_LENGTH}
+              className="flex-1 border border-line rounded-[6px] px-3 py-1.5 text-[13px] outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              required
+            />
+            <Button type="submit" variant="primary">Crear</Button>
+          </form>
+          {reasonError && (
+            <p role="alert" className="text-[12px] text-state-danger mb-2">{reasonError}</p>
+          )}
+          {reasons.length === 0 ? (
+            <p className="text-[12px] text-ink-muted">
+              Todavia no hay motivos. Crea el primero y apareceran al escribir y al enviar.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {reasons.map((reason) => (
+                <li
+                  key={reason.id}
+                  className="flex items-center gap-2 rounded-[6px] border border-line bg-surface px-2.5 py-1.5 text-[13px] text-ink"
+                >
+                  <span className="flex-1">{reason.text}</span>
+                  <button
+                    onClick={() => handleDeleteReason(reason.id!)}
+                    className="text-ink-muted hover:text-state-danger transition-colors"
+                    aria-label={`Eliminar el motivo ${reason.text}`}
+                  >
+                    <Icon.Trash />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {/* Template editor */}
       {editing && (
         <div className="card-standard p-5 mb-4">
@@ -265,6 +368,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
             template={editing}
             type={tab}
             categories={categoriasConId}
+            reasons={reasons.filter((r): r is MessageReason & { id: number } => r.id != null)}
             onSave={handleSave}
             onCancel={() => setEditing(null)}
           />

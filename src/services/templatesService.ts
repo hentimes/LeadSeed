@@ -23,6 +23,7 @@ export const mapTemplateRowToFrontend = (row: TemplateRow) => ({
   templateListIds: row.template_list_ids || [],
   leadIds: row.lead_ids || [],
   leadListIds: row.lead_list_ids || [],
+  defaultReasonId: row.default_reason_id,
   createdAt: row.created_at,
 });
 
@@ -36,6 +37,7 @@ export const mapTemplateToDb = (template: GenericTemplate, type: TemplateType, u
   template_list_ids: template.templateListIds || [],
   lead_ids: template.leadIds || [],
   lead_list_ids: template.leadListIds || [],
+  default_reason_id: template.defaultReasonId ?? null,
   updated_at: new Date().toISOString(),
 });
 

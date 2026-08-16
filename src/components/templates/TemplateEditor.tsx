@@ -9,6 +9,8 @@ interface Props {
   template?: EditableTemplate | null;
   type: 'whatsapp' | 'email' | 'call';
   categories?: { id: number; name: string; color: string }[];
+  /** Catalogo de motivos, para el desplegable de valor por defecto. */
+  reasons?: { id: number; text: string }[];
   onSave: (data: {
     id?: number;
     nombre: string;
@@ -16,6 +18,7 @@ interface Props {
     asunto?: string;
     isHtml?: boolean;
     templateListIds?: number[];
+    defaultReasonId?: number | null;
   }) => void;
   onCancel: () => void;
 }
@@ -30,12 +33,13 @@ const SAMPLE_LEAD = {
   notes: 'Cliente VIP',
 };
 
-export default function TemplateEditor({ template, type, categories = [], onSave, onCancel }: Props) {
+export default function TemplateEditor({ template, type, categories = [], reasons = [], onSave, onCancel }: Props) {
   const [nombre, setNombre] = useState('');
   const [contenido, setContenido] = useState('');
   const [asunto, setAsunto] = useState('');
   const [isHtml, setIsHtml] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set());
+  const [defaultReasonId, setDefaultReasonId] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -49,14 +53,19 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       setAsunto(template.asunto || '');
       setIsHtml(template.isHtml || false);
       setSelectedCategories(new Set(template.templateListIds || []));
+      setDefaultReasonId(template.defaultReasonId ?? null);
     } else {
       setNombre('');
       setContenido('');
       setAsunto('');
       setIsHtml(false);
       setSelectedCategories(new Set());
+      setDefaultReasonId(null);
     }
   }, [template]);
+
+  // El asunto tambien cuenta: un correo puede llevar el motivo en el titulo.
+  const usaMotivo = /\{motivo\}/i.test(contenido) || /\{motivo\}/i.test(asunto);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +78,7 @@ export default function TemplateEditor({ template, type, categories = [], onSave
       asunto: type === 'email' ? asunto.trim() : undefined,
       isHtml: type === 'email' ? isHtml : undefined,
       templateListIds: Array.from(selectedCategories),
+      defaultReasonId,
     });
   };
 
@@ -251,6 +261,32 @@ export default function TemplateEditor({ template, type, categories = [], onSave
           )}
         </div>
       </div>
+
+      {/* Solo se muestra si la plantilla usa {motivo}: un control que no hace
+          nada confunde mas de lo que ayuda. */}
+      {usaMotivo && (
+        <div className="pt-2">
+          <label htmlFor="motivo-defecto" className="block text-sm font-medium text-ink-secondary mb-1">
+            Motivo del mensaje por defecto
+          </label>
+          <select
+            id="motivo-defecto"
+            value={defaultReasonId ?? ''}
+            onChange={(e) => setDefaultReasonId(e.target.value ? Number(e.target.value) : null)}
+            className="w-full border border-line rounded-[6px] px-3 py-1.5 text-[13px] text-ink bg-surface outline-none focus:border-primary"
+          >
+            <option value="">Sin motivo por defecto</option>
+            {reasons.map((reason) => (
+              <option key={reason.id} value={reason.id}>{reason.text}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-ink-muted">
+            {reasons.length === 0
+              ? 'Todavia no hay motivos. Crealos con "Gestionar motivos".'
+              : 'Viene puesto al enviar y se puede cambiar en cada envio.'}
+          </p>
+        </div>
+      )}
 
       <div className="pt-2">
         <label className="block text-sm font-medium text-ink-secondary mb-1">Categorías</label>

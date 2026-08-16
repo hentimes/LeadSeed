@@ -12,6 +12,7 @@ export interface TemplateRow {
   template_list_ids: number[] | null;
   lead_ids: string[] | null;
   lead_list_ids: number[] | null;
+  default_reason_id: number | null;
   created_at: string;
 }
 
@@ -21,7 +22,7 @@ export interface AssignedLeadRow {
 }
 
 const TEMPLATE_SELECT =
-  'id, name, content, subject, is_html, template_list_ids, lead_ids, lead_list_ids, created_at';
+  'id, name, content, subject, is_html, template_list_ids, lead_ids, lead_list_ids, default_reason_id, created_at';
 
 export async function fetchTemplateRowsByType(type: TemplateType): Promise<TemplateRow[]> {
   const { data, error } = await supabase.from('templates').select(TEMPLATE_SELECT).eq('type', type).order('name');

@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../../types';
 import { getAssignedLeads } from '../../hooks/useTemplates';
 import { Icon } from '../../utils/icons';
 import { getCurrentSession } from '../../services/authService';
 import { logCallSend } from '../../services/sendService';
+import { applyReason } from '../../utils/waHelper';
+import { useMessageReasons } from '../../hooks/useMessageReasons';
+import type { MessageReason } from '../../services/messageReasonsService';
 import { Field, Panel, Select } from '../../design';
 import { SendStep } from './SendStep';
 import { TemplatePicker } from './TemplatePicker';
@@ -24,6 +27,15 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
   const [logging, setLogging] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Motivo del mensaje: aqui alimenta el guion que se lee al llamar.
+  const motivos = useMessageReasons();
+  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const [motivoId, setMotivoId] = useState<number | null>(null);
+
+  useEffect(() => {
+    motivos.getAll().then(setReasons);
+  }, [motivos.refreshKey]);
+
   const findTemplateById = (value: string) =>
     templates.find((template) => String(template.id ?? '') === value) || null;
 
@@ -33,8 +45,11 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
     if (!value) {
       setAssignedLeadIds([]);
       setSelectedLeadId('');
+      setMotivoId(null);
       return;
     }
+
+    setMotivoId(template?.defaultReasonId ?? null);
 
     if (template) {
       const session = await getCurrentSession();
@@ -55,6 +70,10 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
   }, [leads, assignedLeadIds, selectedTemplateId]);
 
   const selectedTemplate = findTemplateById(selectedTemplateId);
+  const usaMotivo = /\{motivo\}/i.test(selectedTemplate?.contenido || '');
+  const motivoTexto = reasons.find((reason) => reason.id === motivoId)?.text;
+  // El guion que se lee y el que se registra son el mismo texto.
+  const guionResuelto = applyReason(selectedTemplate?.contenido || '', motivoTexto);
   const selectedLead = validLeads.find((lead) => lead.id === selectedLeadId);
 
   const handleLogCall = async () => {
@@ -71,7 +90,7 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
 
       await logCallSend(userId, selectedTemplate.id!, selectedLead, {
         nombre: selectedTemplate.nombre,
-        contenido: selectedTemplate.contenido,
+        contenido: guionResuelto,
       });
       setMessage('Llamada registrada con exito');
     } catch {
@@ -102,9 +121,32 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
       </SendStep>
 
       <SendStep step={2} title="Script" disabled={!selectedTemplate}>
+        {selectedTemplate && usaMotivo && (
+          <div className="mb-2.5">
+            <Field
+              label="Motivo del mensaje"
+              hint={
+                reasons.length === 0
+                  ? 'No hay motivos todavia. Crealos en Plantillas, con "Gestionar motivos".'
+                  : 'Sustituye a {motivo} en el guion.'
+              }
+            >
+              <Select
+                value={motivoId === null ? '' : String(motivoId)}
+                onChange={(e) => setMotivoId(e.target.value ? Number(e.target.value) : null)}
+                aria-label="Motivo del mensaje"
+              >
+                <option value="">Sin motivo</option>
+                {reasons.map((reason) => (
+                  <option key={reason.id} value={reason.id}>{reason.text}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        )}
         {selectedTemplate ? (
           <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-surface-muted p-2.5 text-body text-ink">
-            {selectedTemplate.contenido}
+            {guionResuelto}
           </p>
         ) : (
           <p className="text-micro text-ink-muted">Elegí un guion para ver el script.</p>

@@ -70,6 +70,18 @@ export async function openWhatsApp(phone: string, message: string = ''): Promise
   getPlatform().deeplink.openExternal(buildWhatsAppUrl(phone, message, pref));
 }
 
+/**
+ * Sustituye `{motivo}` por el texto elegido en el envio.
+ *
+ * A diferencia del resto de variables, esta no sale del lead: sale de un
+ * catalogo y es la misma para todos los destinatarios de un envio. Si no se
+ * eligio ninguno, el token se deja intacto, que es lo que ya hace
+ * `replaceVariables` con cualquier variable que no sabe resolver.
+ */
+export function applyReason(text: string, motivo?: string): string {
+  return motivo ? text.replace(/\{motivo\}/gi, motivo) : text;
+}
+
 /** Un destinatario con el texto ya resuelto para el. */
 export interface LeadMessage {
   lead: Lead;
@@ -84,8 +96,15 @@ export interface LeadMessage {
  * cada uno lo resolviera por su cuenta, bastaria con que uno cambiara para que
  * el historial empezara a mentir sin que nada fallara.
  */
-export function buildLeadMessages(leads: Lead[], template: string): LeadMessage[] {
-  return leads.map((lead) => ({ lead, message: replaceVariables(template, lead) }));
+export function buildLeadMessages(
+  leads: Lead[],
+  template: string,
+  motivo?: string
+): LeadMessage[] {
+  // El motivo se resuelve antes que las variables del lead y es igual para
+  // todos: se elige una vez por envio, no por destinatario.
+  const base = applyReason(template, motivo);
+  return leads.map((lead) => ({ lead, message: replaceVariables(base, lead) }));
 }
 
 /** Abre WhatsApp con textos ya resueltos. */

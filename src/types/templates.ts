@@ -3,6 +3,13 @@ export interface WhatsAppTemplate {
   templateListIds: number[];   // N:M - múltiples categorías
   nombre: string;
   contenido: string;
+  /**
+   * Motivo que viene prellenado al enviar. Es un valor por defecto, no una
+   * atadura: se puede cambiar en cada envio. Nulo si la plantilla no usa
+   * `{motivo}` o si no se eligio ninguno.
+   */
+  defaultReasonId?: number | null;
+
   leadIds: string[];            // leads asignados directamente
   leadListIds: number[];        // listas de leads asignadas
   createdAt: string;
@@ -22,6 +29,13 @@ export interface EmailTemplate {
   asunto: string;
   contenido: string;
   isHtml: boolean;
+  /**
+   * Motivo que viene prellenado al enviar. Es un valor por defecto, no una
+   * atadura: se puede cambiar en cada envio. Nulo si la plantilla no usa
+   * `{motivo}` o si no se eligio ninguno.
+   */
+  defaultReasonId?: number | null;
+
   leadIds: string[];            // leads asignados directamente
   leadListIds: number[];        // listas de leads asignadas
   createdAt: string;
@@ -39,6 +53,13 @@ export interface CallTemplate {
   templateListIds: number[];   // N:M - múltiples categorías
   nombre: string;
   contenido: string;            // el script de la llamada
+  /**
+   * Motivo que viene prellenado al enviar. Es un valor por defecto, no una
+   * atadura: se puede cambiar en cada envio. Nulo si la plantilla no usa
+   * `{motivo}` o si no se eligio ninguno.
+   */
+  defaultReasonId?: number | null;
+
   leadIds: string[];            // leads asignados directamente
   leadListIds: number[];        // listas de leads asignadas
   createdAt: string;
@@ -79,4 +100,5 @@ export interface EditableTemplate {
   asunto?: string;
   isHtml?: boolean;
   templateListIds?: number[];
+  defaultReasonId?: number | null;
 }

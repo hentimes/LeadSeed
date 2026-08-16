@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildLeadMessages, buildWhatsAppUrl, normalizePhone, replaceVariables } from './waHelper';
+import { applyReason, buildLeadMessages, buildWhatsAppUrl, normalizePhone, replaceVariables } from './waHelper';
 import type { Lead } from '../types';
 
 describe('normalizePhone', () => {
@@ -138,5 +138,48 @@ describe('buildLeadMessages', () => {
 
   test('devuelve lista vacia sin destinatarios', () => {
     expect(buildLeadMessages([], 'Hola {nombre}')).toEqual([]);
+  });
+});
+
+describe('applyReason', () => {
+  test('sustituye el motivo elegido', () => {
+    expect(applyReason('Te escribo porque {motivo}.', 'vi tu convenio')).toBe(
+      'Te escribo porque vi tu convenio.'
+    );
+  });
+
+  test('sustituye todas las apariciones', () => {
+    expect(applyReason('{motivo} y {motivo}', 'x')).toBe('x y x');
+  });
+
+  test('no distingue mayusculas, igual que el resto de variables', () => {
+    expect(applyReason('{MOTIVO} {Motivo}', 'x')).toBe('x x');
+  });
+
+  test('sin motivo elegido deja el token intacto en vez de borrarlo', () => {
+    // Borrarlo dejaria la frase coja ("Te escribo porque .") y nadie se daria
+    // cuenta. Dejarlo visible avisa de que falta elegirlo.
+    expect(applyReason('Te escribo porque {motivo}.', undefined)).toBe('Te escribo porque {motivo}.');
+  });
+
+  test('no toca las variables del lead', () => {
+    expect(applyReason('Hola {nombre}, {motivo}', 'x')).toBe('Hola {nombre}, x');
+  });
+});
+
+describe('buildLeadMessages con motivo', () => {
+  const leads = [{ name: 'Ana', phone: '+56911111111' }] as Lead[];
+
+  test('resuelve el motivo y las variables del lead en el mismo texto', () => {
+    const [primero] = buildLeadMessages(leads, 'Hola {nombre}, te escribo porque {motivo}.', 'vi tu convenio');
+
+    expect(primero?.message).toBe('Hola Ana, te escribo porque vi tu convenio.');
+  });
+
+  test('el motivo es el mismo para todos los destinatarios del envio', () => {
+    const varios = [{ name: 'Ana' }, { name: 'Luis' }] as Lead[];
+    const mensajes = buildLeadMessages(varios, '{nombre}: {motivo}', 'oferta');
+
+    expect(mensajes.map((m) => m.message)).toEqual(['Ana: oferta', 'Luis: oferta']);
   });
 });

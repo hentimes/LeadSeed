@@ -8449,3 +8449,47 @@ el nombre del flujo; en pantalla se dice "Abierto en WhatsApp", nunca "Enviado".
 repositorio. Solo bloquea `lib/supabaseClient`, `platform/web` y la creacion del
 cliente. La separacion de capas se sostiene por convencion. Anotado como frente
 propio.
+
+### 2026-08-16 CLT - Claude - LeadSeed / catalogo de motivos y variable {motivo}
+
+- Tipo: capacidad nueva / CONTROL 15.1
+- Rol: Implementadora
+- Estado: migracion 107 aplicada; gates en verde
+
+Segundo paso del frente de flujos. El usuario pregunto donde se crean los
+motivos y como se eligen desde la plantilla; al responder quedo claro que lo
+habia descrito en presente y se leia como si ya existiera. Construido.
+
+**Urgencia que no se habia visto:** en la captura del usuario aparece una
+plantilla suya, "WS Cold #1", que **ya usa `{motivo}`**. Ese texto salia con las
+llaves puestas al enviarlo, porque la variable no existia.
+
+**La decision de diseño.** El valor no se ata a la plantilla: si lo hiciera, cada
+motivo exigiria su propia plantilla y la variable dejaria de ahorrar nada. Lo que
+guarda la plantilla es un valor **por defecto**, prellenado al enviar y
+cambiable. Eso responde que si a la pregunta del usuario sin perder que una
+plantilla sirva para muchos motivos.
+
+Se elige **una vez por envio, no por lead**: treinta destinatarios son una
+decision, no treinta. El selector solo aparece si la plantilla usa el token, en
+el cuerpo o en el asunto.
+
+Sin motivo elegido el token se deja intacto. Borrarlo dejaria la frase coja ("Te
+escribo porque .") sin que nadie se entere.
+
+**Diferencia con lo que recomendo el agente de datos.** Propuso un catalogo
+generico de variables desde el principio, anticipando `{ciudad}` y
+`{plan_actual}`. Se hizo especifico (`message_reasons`) porque hoy hay **una**
+variable de catalogo y generalizar sin el segundo caso es diseñar a ciegas. La
+migracion a generico queda aditiva y anotada en el roadmap.
+
+**Vocabulario:** en pantalla es "motivo del mensaje", para no chocar con el
+"motivo" del dialogo de descarte, que responde a otra pregunta.
+
+`applyReason` en `waHelper` es el unico sitio donde se sustituye, asi que la
+vista previa y lo enviado no pueden separarse. Once casos de prueba nuevos, 289
+en total.
+
+**Deuda que genera:** los avisos de lint pasan de 116 a 121, cinco efectos de
+carga asincrona. Es la familia que 13.3 dio por no resoluble sin capa de estado
+servidor. Anotado para que no parezca descuido.

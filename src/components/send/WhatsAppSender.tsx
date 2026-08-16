@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
-import { replaceVariables, buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
+import { buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
+import { useMessageReasons } from '../../hooks/useMessageReasons';
+import type { MessageReason } from '../../services/messageReasonsService';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { getCurrentSession } from '../../services/authService';
@@ -48,15 +50,30 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // Motivo del mensaje: se elige una vez por envio, no por destinatario.
+  const motivos = useMessageReasons();
+  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const [motivoId, setMotivoId] = useState<number | null>(null);
+
+  useEffect(() => {
+    motivos.getAll().then(setReasons);
+  }, [motivos.refreshKey]);
+
   useEffect(() => {
     if (selectedTemplate) {
       loadTemplateSendLog(selectedTemplate.id!).then(setSentLog);
       setCustomBody(selectedTemplate.contenido || '');
+      // El motivo por defecto de la plantilla viene puesto; se puede cambiar.
+      setMotivoId(selectedTemplate.defaultReasonId ?? null);
     } else {
       setSentLog([]);
       setCustomBody('');
+      setMotivoId(null);
     }
   }, [selectedTemplate]);
+
+  const usaMotivo = /\{motivo\}/i.test(customBody);
+  const motivoTexto = reasons.find((reason) => reason.id === motivoId)?.text;
 
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
@@ -104,7 +121,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
     // Se resuelve una sola vez: lo que se guarda en el historial y lo que se
     // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones.
-    const mensajes = buildLeadMessages(recipients, customBody);
+    const mensajes = buildLeadMessages(recipients, customBody, motivoTexto);
 
     setSentLog(await logWhatsAppSend(userId, selectedTemplate.id!, mensajes, selectedTemplate.nombre));
 
@@ -127,6 +144,28 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       <SendStep step={2} title="Mensaje" disabled={!selectedTemplate}>
         {selectedTemplate ? (
           <div className="flex flex-col gap-2.5">
+            {usaMotivo && (
+              <Field
+                label="Motivo del mensaje"
+                hint={
+                  reasons.length === 0
+                    ? 'No hay motivos todavia. Crealos en Plantillas, con "Gestionar motivos".'
+                    : 'Sustituye a {motivo}. Es el mismo para todo este envio.'
+                }
+              >
+                <Select
+                  value={motivoId === null ? '' : String(motivoId)}
+                  onChange={(e) => setMotivoId(e.target.value ? Number(e.target.value) : null)}
+                  aria-label="Motivo del mensaje"
+                >
+                  <option value="">Sin motivo</option>
+                  {reasons.map((reason) => (
+                    <option key={reason.id} value={reason.id}>{reason.text}</option>
+                  ))}
+                </Select>
+              </Field>
+            )}
+
             <Field
               label="Contenido (edición temporal)"
               hint="Los cambios aplican solo a este envío, la plantilla no se modifica."
@@ -167,7 +206,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
               >
                 {previewLead ? (
                   <div className="inline-block max-w-[90%] whitespace-pre-wrap rounded-lg bg-surface p-2 text-micro text-slate-900 shadow-sm">
-                    {replaceVariables(customBody, previewLead)}
+                    {buildLeadMessages([previewLead], customBody, motivoTexto)[0]?.message}
                   </div>
                 ) : (
                   <p className="py-3 text-center text-micro text-ink-secondary">

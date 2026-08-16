@@ -2485,15 +2485,44 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
 - [HECHO] (`2026-08-16`) El correo con formato se abre en un dialogo en vez de en la tira de 128 px que
   sirve para el texto plano. Pedido explicito del usuario.
 
-- [PENDIENTE] Catalogo de variables (`{motivo}`). Decidido: **catalogo generico, no una tabla de
-  motivos**, porque el propio ejemplo del usuario ya anticipa `{ciudad}` y `{plan_actual}`. El valor
-  **no se ata a la plantilla**: las plantillas son reutilizables y dos flujos que compartan una
-  quedarian forzados al mismo motivo, con lo que dejaria de ser una variable. Version 1: catalogo mas
-  eleccion al momento de enviar.
+- [HECHO] (`2026-08-16`) Catalogo de motivos y variable `{motivo}`. Migracion **107**:
+  `message_reasons` con RLS propia, y `templates.default_reason_id`.
 
-  Ojo con el vocabulario: `leads.discard_reason` ya se llama "motivo" en pantalla (el dialogo de
-  descarte). Hay que separar "motivo de descarte" de "motivo del mensaje" en el texto antes de
-  construir.
+  Habia urgencia real y no se habia notado: el usuario **ya tenia una plantilla usando `{motivo}`**
+  ("WS Cold #1"), y ese texto salia con las llaves puestas al enviarlo, porque la variable no existia.
+
+  **El valor no se ata a la plantilla.** La tentacion era una columna con el motivo, pero entonces
+  cada motivo exige su propia plantilla y `{motivo}` deja de ahorrar nada: seria escribir el texto
+  directo con un rodeo. Lo que si guarda la plantilla es un **valor por defecto**, que viene
+  prellenado al enviar y se puede cambiar en cada envio. Asi se responde que si a "¿puedo elegir el
+  motivo al crear la plantilla?" sin perder que una plantilla sirva para muchos motivos.
+
+  **Se elige una vez por envio, no por lead.** Mandar a treinta personas es una decision, no treinta.
+  Para motivos distintos, se separa el envio en dos tandas con el selector de destinatarios.
+
+  **El selector solo aparece si la plantilla usa `{motivo}`.** Un control que no hace nada confunde
+  mas de lo que ayuda. Se mira el cuerpo y tambien el asunto, porque un correo puede llevarlo en el
+  titulo.
+
+  **Sin motivo elegido, el token se deja intacto.** Borrarlo dejaria la frase coja ("Te escribo porque
+  .") sin que nadie se entere; dejarlo visible avisa de que falta elegirlo. Es la misma regla que ya
+  seguia `replaceVariables` con las variables que no sabe resolver.
+
+  Vocabulario: en pantalla se llama **"motivo del mensaje"**, para no chocar con el "motivo" del
+  dialogo de descarte (`leads.discard_reason`), que responde a otra pregunta.
+
+  Un solo campo de texto por motivo, no etiqueta mas texto: el motivo es la frase que sustituye al
+  token y esa misma frase es la que se lee en el desplegable. Si algun dia se alargan tanto que el
+  desplegable se vuelve ilegible, agregar la etiqueta es aditivo.
+
+  Los tres canales resuelven por el mismo sitio (`applyReason` en `waHelper`), asi que la vista previa
+  y lo que se envia no pueden separarse. Once casos de prueba nuevos.
+
+- [PENDIENTE] Generalizar el catalogo si aparece una segunda variable de este tipo (`{ciudad}`,
+  `{plan_actual}`). Se dejo `message_reasons` especifica a proposito, contra la recomendacion del
+  agente de datos, porque hoy hay **una** variable de catalogo y generalizar sin el segundo caso es
+  diseñar a ciegas. La migracion a un catalogo generico es aditiva: una tabla de catalogos, y
+  `message_reasons` pasa a ser una fila suya.
 
 - [PENDIENTE] Tablas de flujos, pasos e inscripciones, con progreso por paso. El progreso **no se
   deduce de `send_logs`**: esa tabla no tiene referencia al flujo, asi que un envio manual de la misma
@@ -2507,6 +2536,13 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
 
 - [PENDIENTE] Vista "Hoy" como pantalla de entrada, no la lista de flujos. La pregunta del usuario
   ("que me falta enviar hoy") es transversal a todos los flujos.
+
+- [DEUDA] (`2026-08-16`) Los avisos de lint suben de 116 a **121** con el catalogo de motivos: cinco
+  efectos de carga asincrona nuevos (`useEffect` que hace `getAll().then(setState)` en los tres
+  compositores y en la pagina de plantillas). Es exactamente la familia que el capitulo 13.3 clasifico
+  como **no resoluble sin una capa de estado servidor**: `setState` despues de un `fetch` dentro de un
+  efecto es el patron correcto mientras no haya cache. Se anota para que el numero no parezca un
+  descuido.
 
 - [HALLAZGO] (`2026-08-16`) El lint de fronteras **no impide que un componente importe un
   repositorio**. Solo bloquea `lib/supabaseClient`, `platform/web` y la creacion del cliente. La
