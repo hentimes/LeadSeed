@@ -9,7 +9,6 @@ import type { AnyTemplate, AnyTemplateList, EditableTemplate } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
-import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
 import { Icon } from '../utils/icons';
 import { Button } from '../design';
 import { useMessageReasons } from '../hooks/useMessageReasons';
@@ -230,12 +229,6 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
           <button onClick={() => setTab('call')} className={`px-2 py-1 rounded text-xs font-medium ${tab === 'call' ? 'bg-amber-500 text-white' : 'bg-gray-200'}`}>Llamadas</button>
         </div>
       </div>
-
-      {tab === 'whatsapp' && (
-        <div className="mb-6">
-          <WhatsAppClientToggle />
-        </div>
-      )}
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
