@@ -8493,3 +8493,43 @@ en total.
 **Deuda que genera:** los avisos de lint pasan de 116 a 121, cinco efectos de
 carga asincrona. Es la familia que 13.3 dio por no resoluble sin capa de estado
 servidor. Anotado para que no parezca descuido.
+
+### 2026-08-16 CLT - Claude - LeadSeed / el desplegable de variables se salia del panel
+
+- Tipo: correccion de defecto de interfaz
+- Rol: Implementadora
+- Estado: aplicado; pendiente de verificacion visual del usuario
+
+**Se arreglo dos veces, y la primera fue por el eje equivocado.** El usuario
+reporto "la lista de los { } se sale del sidebar" y se asumio que era el eje
+vertical, porque se acababa de agregar la septima variable y la lista habia
+crecido. Se corrigio el vertical y el problema siguio.
+
+Era horizontal. El panel se ancla con `right-0`, es decir **crece hacia la
+izquierda**, y el boton `{ }` del editor de plantillas esta pegado al borde
+izquierdo: con 128 px de ancho y el boton terminando en x=80, el panel empezaba
+en -48.
+
+La segunda vez el usuario mando una captura y ahi se veia recortado por la
+izquierda. **La leccion es mirar la captura antes de deducir la causa**; la
+primera hipotesis era razonable y estaba equivocada, y costo una iteracion.
+
+**Lo que se hizo:** la decision de anclaje se saco a
+`src/utils/dropdownAnchor.ts` como funcion pura, con seis casos de prueba que
+cubren los dos ejes, el limite exacto del margen y la combinacion abajo-izquierda.
+Es logica que ya fallo dos veces; dejarla dentro del componente la hacia
+imposible de probar sin layout real, que en happy-dom no existe.
+
+Tambien existia desde antes una prop `direction` pensada para esto, y **ninguno
+de los cinco sitios que usan el componente la pasaba**. Nunca sirvio de nada. Se
+conserva como anulacion manual del eje vertical.
+
+De paso, el `hover` de la lista era `bg-blue-50` sin contraparte oscura: un
+destello claro en modo oscuro. El detector no lo caza porque ese color no esta
+en su lista de claros fijos. Pasado a tokens.
+
+**Nota sobre el historial:** estos tres archivos entraron en el commit `8625d0f`,
+cuyo mensaje habla del incidente del formulario de retiro y no los menciona. Fue
+un `git add -A` que barrio trabajo en curso. Queda registrado aqui porque el
+mensaje del commit no lo cuenta, y no se reescribe la historia por estar ya
+publicada.

@@ -2520,14 +2520,27 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
 
 - [HECHO] (`2026-08-16`) Dos correcciones tras la primera prueba del usuario:
 
-  **La lista de variables se salia del panel.** Desplegaba siempre hacia abajo, y en una columna alta
-  y estrecha los campos de la mitad inferior dejaban la lista fuera de la vista. Existia una prop
-  `direction` para eso desde el principio y **ninguno de los cinco sitios que usan el componente la
-  pasaba**, asi que nunca sirvio de nada. Ahora mide el sitio disponible al abrir y decide sola, con
-  un tope de alto y scroll por si la medicion falla.
+  **La lista de variables se salia del panel.** Existia una prop `direction` para eso desde el
+  principio y **ninguno de los cinco sitios que usan el componente la pasaba**, asi que nunca sirvio
+  de nada. Ahora mide el sitio disponible al abrir y decide sola, con un tope de alto y scroll por si
+  la medicion falla.
 
   El sintoma aparecio al pasar de seis variables a siete, pero el defecto estaba desde antes: la
   septima solo lo hizo visible.
+
+  **Se arreglo dos veces, y la primera fue por el eje equivocado.** El usuario dijo "se sale del
+  sidebar" y se asumio que era vertical, porque acababa de crecer la lista. Era horizontal: el panel
+  se ancla con `right-0`, o sea que **crece hacia la izquierda**, y el boton `{ }` del editor de
+  plantillas esta pegado al borde izquierdo. Con 128 px de ancho y el boton terminando en x=80, el
+  panel empezaba en -48.
+
+  La leccion practica: cuando el usuario manda una captura, mirarla antes de deducir la causa. La
+  primera correccion se hizo sobre una hipotesis razonable y equivocada, y costo una iteracion entera.
+
+  Por eso la decision se saco a `src/utils/dropdownAnchor.ts` como **funcion pura con seis casos de
+  prueba**. No es sobre-ingenieria: es logica que ya se equivoco dos veces, y ahora los dos ejes -y
+  sobre todo el caso del boton pegado al borde izquierdo- estan fijados por un test en vez de por
+  suerte.
 
   De paso, el `hover` de la lista era `bg-blue-50` sin contraparte oscura, asi que en modo oscuro
   daba un destello claro. El detector no lo caza porque `bg-blue-50` no esta en su lista de colores
