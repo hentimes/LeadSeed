@@ -5,6 +5,7 @@ export * from './captureLinks';
 export * from './agenda';
 export * from './lists';
 export * from './templates';
+export * from './messageFlows';
 export * from './settings';
 export * from './tasks';
 export * from './saas';
