@@ -262,29 +262,53 @@ export default function TemplateEditor({ template, type, categories = [], reason
         </div>
       </div>
 
-      {/* Solo se muestra si la plantilla usa {motivo}: un control que no hace
-          nada confunde mas de lo que ayuda. */}
-      {usaMotivo && (
+      {/* El bloque aparece en cuanto hay motivos en el catalogo, aunque la
+          plantilla todavia no use la variable.
+
+          Antes solo salia si el texto ya tenia `{motivo}`, y eso dejaba al
+          usuario sin camino: creaba los motivos, abria la plantilla y no veia
+          nada que los relacionara. El control que falta no puede esconderse
+          justo cuando hace falta descubrirlo. */}
+      {reasons.length > 0 && (
         <div className="pt-2">
           <label htmlFor="motivo-defecto" className="block text-sm font-medium text-ink-secondary mb-1">
-            Motivo del mensaje por defecto
+            Motivo del mensaje
           </label>
-          <select
-            id="motivo-defecto"
-            value={defaultReasonId ?? ''}
-            onChange={(e) => setDefaultReasonId(e.target.value ? Number(e.target.value) : null)}
-            className="w-full border border-line rounded-[6px] px-3 py-1.5 text-[13px] text-ink bg-surface outline-none focus:border-primary"
-          >
-            <option value="">Sin motivo por defecto</option>
-            {reasons.map((reason) => (
-              <option key={reason.id} value={reason.id}>{reason.text}</option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-ink-muted">
-            {reasons.length === 0
-              ? 'Todavia no hay motivos. Crealos con "Gestionar motivos".'
-              : 'Viene puesto al enviar y se puede cambiar en cada envio.'}
-          </p>
+
+          {usaMotivo ? (
+            <>
+              <select
+                id="motivo-defecto"
+                value={defaultReasonId ?? ''}
+                onChange={(e) => setDefaultReasonId(e.target.value ? Number(e.target.value) : null)}
+                className="w-full border border-line rounded-[6px] px-3 py-1.5 text-[13px] text-ink bg-surface outline-none focus:border-primary"
+              >
+                <option value="">Sin motivo por defecto</option>
+                {reasons.map((reason) => (
+                  <option key={reason.id} value={reason.id}>{reason.text}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-ink-muted">
+                Viene puesto al enviar y se puede cambiar en cada envío.
+              </p>
+            </>
+          ) : (
+            <div className="rounded-[6px] border border-dashed border-line-strong p-2.5">
+              <p className="text-xs text-ink-secondary">
+                Tienes {reasons.length} {reasons.length === 1 ? 'motivo creado' : 'motivos creados'}.
+                Para usarlos, pon <code className="font-mono text-ink">{'{motivo}'}</code> donde quieras
+                que aparezcan.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-2"
+                onClick={() => insertTextAtCursor(contenidoRef, contenido, '{motivo}', setContenido)}
+              >
+                Insertar {'{motivo}'} en el mensaje
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

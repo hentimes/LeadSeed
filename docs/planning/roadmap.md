@@ -2518,6 +2518,28 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
   Los tres canales resuelven por el mismo sitio (`applyReason` en `waHelper`), asi que la vista previa
   y lo que se envia no pueden separarse. Once casos de prueba nuevos.
 
+- [HECHO] (`2026-08-16`) Dos correcciones tras la primera prueba del usuario:
+
+  **La lista de variables se salia del panel.** Desplegaba siempre hacia abajo, y en una columna alta
+  y estrecha los campos de la mitad inferior dejaban la lista fuera de la vista. Existia una prop
+  `direction` para eso desde el principio y **ninguno de los cinco sitios que usan el componente la
+  pasaba**, asi que nunca sirvio de nada. Ahora mide el sitio disponible al abrir y decide sola, con
+  un tope de alto y scroll por si la medicion falla.
+
+  El sintoma aparecio al pasar de seis variables a siete, pero el defecto estaba desde antes: la
+  septima solo lo hizo visible.
+
+  De paso, el `hover` de la lista era `bg-blue-50` sin contraparte oscura, asi que en modo oscuro
+  daba un destello claro. El detector no lo caza porque `bg-blue-50` no esta en su lista de colores
+  claros fijos. Pasado a tokens.
+
+  **No habia forma de descubrir como usar un motivo.** El selector solo aparecia si la plantilla ya
+  contenia `{motivo}`, asi que quien creaba motivos y abria una plantilla no veia nada que los
+  relacionara. El control que falta no puede esconderse justo cuando hace falta descubrirlo.
+
+  Ahora el bloque aparece en cuanto hay motivos en el catalogo: si la plantilla todavia no usa la
+  variable, muestra cuantos motivos hay y un boton que inserta `{motivo}` en el texto.
+
 - [PENDIENTE] Generalizar el catalogo si aparece una segunda variable de este tipo (`{ciudad}`,
   `{plan_actual}`). Se dejo `message_reasons` especifica a proposito, contra la recomendacion del
   agente de datos, porque hoy hay **una** variable de catalogo y generalizar sin el segundo caso es
