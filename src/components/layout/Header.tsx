@@ -14,6 +14,7 @@ const PAGE_TITLES: Record<Page, string> = {
   leads: 'Gestión de Leads',
   lists: 'Listas y Cargas',
   templates: 'Plantillas de Mensaje',
+  flows: 'Flujos de Mensajes',
   send: 'Envío Masivo',
   history: 'Historial de Envíos',
   tasks: 'Mis Tareas',

@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    // ES2022.Error suma solo el tipo de `Error.cause`, que el lint exige al
+    // relanzar un error para no perder el original. El runtime es Chrome, que
+    // lo soporta desde la 93; no se sube el target entero por un tipo.
+    "lib": ["ES2020", "ES2022.Error", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",

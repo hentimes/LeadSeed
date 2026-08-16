@@ -9,6 +9,7 @@ const LeadsPage = lazy(() => import('../../pages/LeadsPage'));
 const ListsPage = lazy(() => import('../../pages/ListsPage'));
 const TemplatesPage = lazy(() => import('../../pages/TemplatesPage'));
 const SendPage = lazy(() => import('../../pages/SendPage'));
+const FlowsPage = lazy(() => import('../../pages/FlowsPage'));
 const SendHistoryPage = lazy(() => import('../../pages/SendHistoryPage'));
 const TasksPage = lazy(() => import('../../pages/TasksPage'));
 const DashboardPage = lazy(() => import('../../pages/DashboardPage'));
@@ -37,6 +38,7 @@ const PAGE_WIDTH: Partial<Record<Page, 'full' | 'md' | 'lg'>> = {
   tasks: 'lg',
   lists: 'lg',
   templates: 'lg',
+  flows: 'lg',
   send: 'lg',
   history: 'lg',
   community: 'lg',
@@ -182,6 +184,9 @@ export default function AppPageRenderer({
       break;
     case 'templates':
       pageContent = <TemplatesPage highlightTemplate={highlightTemplate} onClearHighlight={onClearHighlightTemplate} />;
+      break;
+    case 'flows':
+      pageContent = <FlowsPage />;
       break;
     case 'send':
       pageContent = <SendPage />;

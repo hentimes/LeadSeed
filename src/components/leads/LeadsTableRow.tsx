@@ -125,7 +125,10 @@ const LeadsTableRow = ({
                 onView(lead);
               }}
               className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full cursor-pointer hover:bg-green-600 shadow-sm"
-              title={`${enviosDelLead?.whatsapp} WhatsApp(s) enviado(s)`}
+              // "Abiertos", no "enviados": WhatsApp se abre en otra pestaña y la
+              // aplicacion no sabe si el mensaje llego a salir. El verde se queda
+              // porque es el color de marca del canal, no una afirmacion de exito.
+              title={`${enviosDelLead?.whatsapp} chat(s) de WhatsApp abierto(s)`}
             >
               {enviosDelLead?.whatsapp}
             </span>
@@ -137,7 +140,8 @@ const LeadsTableRow = ({
                 onView(lead);
               }}
               className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 shadow-sm"
-              title={`${enviosDelLead?.email} Email(s) enviado(s)`}
+              // Aqui "enviado" si es cierto: el correo sale de verdad por la API.
+              title={`${enviosDelLead?.email} correo(s) enviado(s)`}
             >
               {enviosDelLead?.email}
             </span>

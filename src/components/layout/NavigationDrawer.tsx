@@ -194,7 +194,8 @@ export default function NavigationDrawer({
                       {renderRoutes(visibleRoutes)}
                       {renderSubmenu('messages', 'Mensajes', Icon.Messages, [
                         { page: 'send', label: 'Enviar' },
-                        { page: 'templates', label: 'Plantillas' }
+                        { page: 'templates', label: 'Plantillas' },
+                        { page: 'flows', label: 'Flujos' }
                       ])}
                     </>
                   )}

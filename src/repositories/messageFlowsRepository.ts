@@ -179,6 +179,22 @@ export async function insertProgressRows(rows: Record<string, unknown>[]): Promi
   if (error) throw error;
 }
 
+/** Inscribe un lead. Toda la logica vive en el RPC para que sea atomica. */
+export async function callEnrollLeadInFlow(flowId: string, leadId: string): Promise<void> {
+  const { error } = await supabase.rpc('enroll_lead_in_flow', {
+    p_flow_id: flowId,
+    p_lead_id: leadId,
+  });
+  if (error) throw error;
+}
+
+/** Cola de lo que toca enviar. El RPC promueve pendiente a toca antes de leer. */
+export async function callDispatchQueue(): Promise<Array<Record<string, unknown>>> {
+  const { data, error } = await supabase.rpc('get_my_flow_dispatch_queue');
+  if (error || !data) return [];
+  return data as Array<Record<string, unknown>>;
+}
+
 export async function updateProgress(id: number, payload: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.from(PROGRESS).update(payload).eq('id', id);
   if (error) throw error;
