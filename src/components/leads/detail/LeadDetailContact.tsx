@@ -1,10 +1,15 @@
-import { openWhatsApp } from '../../../utils/waHelper';
 import { Icon } from '../../../utils/icons';
 
 interface Props {
   phone?: string;
   email?: string;
   onCopy: (text: string) => void;
+  /**
+   * Abre el chat de WhatsApp. Lo provee el controlador porque ademas registra
+   * el envio; antes este componente llamaba a `openWhatsApp` por su cuenta y
+   * no quedaba rastro de nada.
+   */
+  onWhatsApp: () => void;
 }
 
 // Glifo de marca de WhatsApp real; distinto de Icon.WhatsAppOutline (generico).
@@ -23,7 +28,7 @@ function WhatsAppGlyph() {
   );
 }
 
-export default function LeadDetailContact({ phone, email, onCopy }: Props) {
+export default function LeadDetailContact({ phone, email, onCopy, onWhatsApp }: Props) {
   return (
     <div className="flex gap-2 w-full">
       {phone && (
@@ -38,7 +43,7 @@ export default function LeadDetailContact({ phone, email, onCopy }: Props) {
             <span className="ml-auto text-slate-300 group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
           </div>
           <button
-            onClick={() => openWhatsApp(phone, '')}
+            onClick={onWhatsApp}
             className="w-8 h-8 flex shrink-0 items-center justify-center bg-surface-muted text-ink rounded-[6px] hover:bg-primary-soft hover:text-primary hover:border-primary-soft-strong transition-colors border border-line"
             title="WhatsApp"
           >

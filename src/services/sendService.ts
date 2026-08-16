@@ -59,6 +59,34 @@ export async function logWhatsAppSend(
   return loadTemplateSendLog(templateId);
 }
 
+/**
+ * Registra que se abrio el chat de WhatsApp de un lead sin usar plantilla.
+ *
+ * Existe porque el boton de WhatsApp de la ficha del lead abria el chat y **no
+ * dejaba rastro**: ese envio no aparecia en el historial, no sumaba en el
+ * contador de la lista y no habria contado para los flujos. Todo lo escrito
+ * desde ahi era invisible para el sistema.
+ *
+ * Se guarda sin plantilla y sin contenido, que es la verdad: no hubo plantilla y
+ * el mensaje lo escribio la persona dentro de WhatsApp, donde no llegamos.
+ */
+export async function logDirectWhatsAppOpen(userId: string, lead: Lead): Promise<void> {
+  await insertSendLogs([
+    {
+      user_id: userId,
+      template_id: null,
+      template_type: 'whatsapp',
+      lead_id: lead.id!,
+      lead_name: lead.name,
+      lead_phone: lead.phone,
+      sent_at: new Date().toISOString(),
+    },
+  ]);
+  // Mismo criterio que un envio con plantilla: abrir el chat cuenta como
+  // gestionar al lead.
+  await markLeadRowsAsContacted([lead.id!].filter(Boolean));
+}
+
 export async function scheduleEmailSend(
   userId: string,
   templateId: number | string,

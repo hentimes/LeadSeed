@@ -2,7 +2,8 @@ import { supabase } from '../lib/supabaseClient';
 
 export interface SendLogRow {
   id: number;
-  template_id: string;
+  /** Nulo cuando se abrio el chat sin plantilla desde la ficha del lead. */
+  template_id: string | null;
   template_type: 'whatsapp' | 'email' | 'call';
   lead_id: string;
   lead_name: string | null;

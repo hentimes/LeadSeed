@@ -129,23 +129,41 @@ export function enrichSendLogs(
     }
   }
 
+  /**
+   * Nombre de lo que se envio, en orden de fiabilidad.
+   *
+   * 1. La copia guardada al enviar (migracion 106). Es la unica que no miente
+   *    si la plantilla se edito o se borro despues.
+   * 2. La plantilla viva, para los envios anteriores a esa migracion.
+   * 3. Un texto que reconoce lo que no se sabe.
+   *
+   * Sin `templateId` no hay plantilla que buscar: es el chat abierto a mano
+   * desde la ficha del lead. Llamarlo "plantilla eliminada" seria inventar una
+   * que nunca existio.
+   */
+  const nombreDe = (log: SendLog, viva?: { nombre: string }) => {
+    if (log.templateName) return log.templateName;
+    if (log.templateId == null) return 'Mensaje directo';
+    return viva?.nombre || '(plantilla eliminada)';
+  };
+
   return logs.map((log) => {
     if (log.templateType === 'whatsapp') {
-      const template = waMap.get(log.templateId);
+      const template = log.templateId == null ? undefined : waMap.get(log.templateId);
       return {
         ...log,
-        templateNombre: template?.nombre || '(plantilla eliminada)',
-        templateContenido: template?.contenido || '',
+        templateNombre: nombreDe(log, template),
+        templateContenido: log.content || template?.contenido || '',
         isHtml: false,
       };
     }
 
-    const template = emailMap.get(log.templateId);
+    const template = log.templateId == null ? undefined : emailMap.get(log.templateId);
     return {
       ...log,
-      templateNombre: template?.nombre || '(plantilla eliminada)',
-      templateContenido: template?.contenido || '',
-      isHtml: template?.isHtml || false,
+      templateNombre: nombreDe(log, template),
+      templateContenido: log.content || template?.contenido || '',
+      isHtml: log.isHtml ?? template?.isHtml ?? false,
     };
   });
 }

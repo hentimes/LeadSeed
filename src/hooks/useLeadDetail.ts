@@ -17,6 +17,8 @@ import {
   getGoogleSyncPendingSummary,
 } from '../utils/appointmentStatusCopy';
 import { getCurrentAccessToken, getCurrentSession } from '../services/authService';
+import { logDirectWhatsAppOpen } from '../services/sendService';
+import { openWhatsApp } from '../utils/waHelper';
 import { createAppointmentFromLead, getDefaultAgendaRange, listMyAppointments } from '../services/agendaService';
 import {
   createLeadNote,
@@ -385,7 +387,30 @@ export function useLeadDetail(lead: Lead) {
    * respaldo se queda para los envios anteriores a la migracion 106, que no
    * tienen copia y nunca la van a tener.
    */
+  /**
+   * Abre el chat de WhatsApp del lead y **deja constancia**.
+   *
+   * Vive aqui y no en el componente de contacto por dos razones: ese componente
+   * es presentacional y no deberia disparar acciones de dominio, y necesita la
+   * sesion para registrar, que el controlador ya tiene.
+   *
+   * Se registra antes de abrir: si el registro falla, es preferible no haber
+   * abierto nada a abrir un chat que el historial no va a reflejar.
+   */
+  const abrirWhatsApp = async () => {
+    if (!lead.phone) return;
+    const session = await getCurrentSession();
+    const userId = session?.user?.id;
+    if (userId && lead.id) {
+      await logDirectWhatsAppOpen(userId, lead);
+    }
+    await openWhatsApp(lead.phone, '');
+  };
+
   const getTemplateName = (log: SendLog) => {
+    // Sin plantilla no es una plantilla borrada: es el chat abierto a mano
+    // desde la ficha. Decir "Plantilla eliminada" seria inventar una.
+    if (log.templateId == null && !log.templateName) return 'Mensaje directo';
     if (log.templateName) return log.templateName;
     if (log.templateType === 'whatsapp') {
       return waTemplates.find((template) => template.id === log.templateId)?.nombre || 'Plantilla eliminada';
@@ -452,6 +477,7 @@ export function useLeadDetail(lead: Lead) {
     setShowLogs,
     expandedLogId,
     setExpandedLogId,
+    abrirWhatsApp,
     getTemplateName,
     getTemplateContent,
     isEmailTemplateHtml,

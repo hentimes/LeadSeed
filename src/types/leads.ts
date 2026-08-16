@@ -174,7 +174,11 @@ export interface LeadNote {
 
 export interface SendLog {
   id?: number;
-  templateId: string | number;
+  /**
+   * Nulo cuando el mensaje no salio de una plantilla: el boton de WhatsApp de
+   * la ficha del lead abre el chat vacio.
+   */
+  templateId: string | number | null;
   templateType: 'whatsapp' | 'email' | 'call';
   leadId: string;
   leadName: string;

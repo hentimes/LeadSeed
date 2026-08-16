@@ -58,7 +58,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
         />
 
         <div className="flex-1 p-4 pt-3 space-y-4">
-          <LeadDetailContact phone={lead.phone} email={lead.email} onCopy={copyToClipboard} />
+          <LeadDetailContact phone={lead.phone} email={lead.email} onCopy={copyToClipboard} onWhatsApp={detail.abrirWhatsApp} />
 
           <LeadDetailOrigin metadata={detail.planesproMetadata} />
 
