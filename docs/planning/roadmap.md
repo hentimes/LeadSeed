@@ -2359,6 +2359,72 @@ lo alargaria sin decir nada que el titulo de la fase no diga ya.
 **Lo que si conviene retener:** el rediseño por pantalla es un frente propio, posterior al cierre de
 13.8, y depende por completo de poder ver la aplicacion.
 
+### Capitulo 13.17 - Links de retiro duplicados en Configuracion (`2026-08-16`)
+
+Reportado por el usuario: cada link de "Retiro tecnico extranjero" aparecia **dos veces**, con
+visitas distintas en cada fila y el mismo numero de leads.
+
+- [HECHO] (`2026-08-16`) Migracion **105**. No habia links duplicados: `capture_links` tiene 7 filas y
+  solo 2 son de retiro. La duplicacion la fabricaba `list_my_capture_links`.
+
+  El CTE `progress` agrupaba por `(capture_ref, form_slug)` y el JOIN aceptaba **dos** slugs para un
+  link de retiro:
+
+  ```sql
+  AND ( progress.form_slug = cl.link_type
+        OR (cl.link_type = 'retiro' AND progress.form_slug = 'retiro-v2') )
+  ```
+
+  Mientras el formulario emitio un solo slug el JOIN encontraba una fila y todo se veia bien. Desde
+  que hay eventos con los dos slugs para el mismo `capture_ref`, encuentra dos, y un `LEFT JOIN` que
+  casa dos veces duplica la fila. Los leads salian identicos en ambas filas porque vienen de otro
+  JOIN que si es uno a uno; esa pista es la que apunta al fan-out y no a un dato duplicado.
+
+  Los cuatro numeros de la pantalla cuadran exactamente con los datos:
+
+  | ref | `retiro` | `retiro-v2` |
+  |---|---|---|
+  | `3fn2er` | 54 visitas | 164 visitas |
+  | `vwzrm2` | 1 visita | 5 visitas |
+
+  **Arreglo:** agrupar por *familia* de formulario, quitando el sufijo de version con
+  `regexp_replace(form_slug, '-v[0-9]+$', '')`. Suma las visitas de las dos versiones en una fila, que
+  es lo que el usuario espera porque es el mismo formulario, y sobre todo **hace imposible la
+  duplicacion por construccion**: tras el `GROUP BY`, el par `(capture_ref, form_family)` es unico, asi
+  que el JOIN no puede devolver dos filas. Si aparece un `retiro-v3`, entra solo.
+
+  Se descarto la alternativa evidente, añadir el slug nuevo a la condicion, porque es la misma
+  solucion que ya fallo: enumerar versiones a mano deja el defecto esperando a la siguiente.
+
+  Verificado despues de aplicar: los 7 links devuelven **una fila cada uno**; `3fn2er` queda con 218
+  visitas (54 + 164) y `vwzrm2` con 6 (1 + 5).
+
+- [HALLAZGO] La clausula del `OR ... 'retiro-v2'` **no existia en ninguna migracion de este
+  repositorio**. Se aplico directamente contra la base en algun momento. La 105 la reemplaza y
+  devuelve la funcion al historial versionado.
+
+  Es el mismo patron que ya obligo a descargar `form-progress` desde produccion en vez de copiarlo del
+  repo: cambios aplicados a mano que el git no registra. Conviene comprobarlo antes de dar por buena
+  cualquier funcion.
+
+- [EXTERNO] El disparador viene de `landing-gerow`, no de aqui. El formulario desplegado en
+  `planespro.cl/retiro-tecnico-extranjero/` **cambio el slug que emite**: hasta el `2026-08-15` mandaba
+  `retiro-v2` y desde ese dia manda `retiro`. Comprobado en produccion: el `app.js` que se sirve hoy
+  declara `form_slug: "retiro"` y su token es `retiro-v5-progress-tracking`.
+
+  Ese archivo se sirve desde `forms/retiro/app.js` de la rama `codex/seo-clicmed-aeo`, no desde
+  `retiro-tecnico-extranjero/app.js` de `origin/master`, que sigue declarando `retiro-v2` y el token
+  `retiro-v2-9`. Es decir: **la reorganizacion a `forms/` esta desplegada en produccion sin estar en
+  `origin/master`**, que es el segundo caso de la misma clase que el del Worker `ppforms` descrito en
+  `docs/integrations/landing-gerow-superficie-compartida.md`.
+
+  Consecuencia que conviene tener presente: el historial de eventos de retiro queda **partido en dos
+  nombres**. La 105 los vuelve a unir al mostrarlos, pero en la tabla siguen separados.
+
+- [OBSERVACION] Los cuatro links de tipo `pb` muestran 0 visitas. No es efecto de este defecto: los 9
+  eventos con `form_slug = 'pb'` tienen `capture_ref` nulo, asi que no hay nada que enlazar. Queda
+  anotado por si resulta que el formulario `pb` no esta mandando el ref, que seria un problema propio.
+
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
 Frente nuevo, nunca registrado en este roadmap.

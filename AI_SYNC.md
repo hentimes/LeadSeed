@@ -8362,3 +8362,48 @@ worktrees, con sesiones activas hoy mismo; una tercera rama huerfana es coste.
 tres visuales (necesitan al usuario delante), cuatro frentes propios (TanStack
 Query, `ppcrm`, paginacion por cursor, division de archivos grandes), dos
 bloqueados por permisos y dos decisiones del usuario.
+
+### 2026-08-16 CLT - Claude - LeadSeed / links de retiro duplicados en Configuracion
+
+- Tipo: correccion de defecto / CONTROL 15.1
+- Rol: Implementadora
+- Estado: migracion 105 aplicada en produccion y verificada
+
+Sintoma reportado por el usuario: cada link de retiro aparecia dos veces, con
+visitas distintas y el mismo numero de leads.
+
+**Causa.** No hay links duplicados (7 filas en `capture_links`, 2 de retiro). La
+duplicacion la fabricaba `list_my_capture_links`: su CTE agrupa por
+`(capture_ref, form_slug)` y el JOIN aceptaba dos slugs para retiro
+(`form_slug = link_type OR (link_type = 'retiro' AND form_slug = 'retiro-v2')`).
+Con eventos de los dos slugs para el mismo ref, el LEFT JOIN casa dos veces y
+duplica la fila.
+
+La pista que lo delataba: los leads salian **identicos** en las dos filas y las
+visitas no. Los leads vienen de un JOIN uno a uno, asi que el problema estaba en
+el otro.
+
+Los numeros de la pantalla cuadran exactos: `3fn2er` 54 (`retiro`) y 164
+(`retiro-v2`); `vwzrm2` 1 y 5.
+
+**Arreglo (migracion 105).** Agrupar por familia de formulario en vez de por el
+slug crudo, con `regexp_replace(form_slug, '-v[0-9]+$', '')`. Ademas de sumar las
+dos versiones en una fila, **hace imposible el fan-out por construccion**: tras
+el GROUP BY el par `(capture_ref, form_family)` es unico. Se descarto añadir el
+slug nuevo a la condicion porque es la solucion que ya fallo.
+
+Verificado: los 7 links devuelven una fila cada uno; `3fn2er` 218 visitas,
+`vwzrm2` 6.
+
+**Dos hallazgos laterales.**
+
+1. La clausula del `OR ... 'retiro-v2'` **no estaba en ninguna migracion de este
+   repo**: se aplico a mano contra la base. Antes de generar la 105 se comparo la
+   funcion desplegada contra el cuerpo de la 092 y se confirmo que esa clausula
+   era la unica diferencia, asi que derivar de la 092 no perdia nada.
+2. El disparador es externo. El formulario de retiro cambio el slug que emite el
+   `2026-08-15` (`retiro-v2` -> `retiro`), y el `app.js` que produccion sirve hoy
+   viene de `forms/retiro/app.js` de la rama `codex/seo-clicmed-aeo`, no de
+   `origin/master`. Es el segundo caso de "produccion no es origin/master" en ese
+   repo, despues del Worker `ppforms`. Anotado en la auditoria de superficie
+   compartida.
