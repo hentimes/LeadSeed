@@ -24,6 +24,7 @@ Solo lo normativo y lo que las herramientas esperan encontrar ahi:
 | Archivo | Estado |
 |---|---|
 | `planespro-form-integration-contract.md` | **Incompleto.** Declara dos canales publicos cuando existen cuatro (`general`, `pb`, `retiro`, `form`) y no documenta el protocolo de dos fases. Ver roadmap 13.11. |
+| `landing-gerow-superficie-compartida.md` | Que usa LeadSeed de `landing-gerow` y que no se puede tocar sin romperlo. Escrito el `2026-08-15` para entregar a quien limpie ese repositorio. Contiene un hallazgo bloqueante: el Worker del borde publico difiere entre git y produccion. |
 | `landing-gerow-cloudflare-context.md` | Contexto operativo de `landing-gerow` y Cloudflare. **Version 2.0 del `2026-08-12`**, reescrito y verificado contra `origin/master`. Lectura obligatoria (protocolo seccion 7) antes de tocar la integracion con `planespro.cl`. |
 
 ## docs/auditorias
