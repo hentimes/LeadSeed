@@ -8533,3 +8533,39 @@ cuyo mensaje habla del incidente del formulario de retiro y no los menciona. Fue
 un `git add -A` que barrio trabajo en curso. Queda registrado aqui porque el
 mensaje del commit no lo cuenta, y no se reescribe la historia por estar ya
 publicada.
+
+### 2026-08-16 CLT - Claude - LeadSeed / base de datos de los flujos de mensajes
+
+- Tipo: capacidad nueva / CONTROL 15.1
+- Rol: Implementadora
+- Estado: migracion 108 aplicada y verificada; faltan capas y interfaz
+
+**Antes, el agujero que los habria contaminado.** El boton de WhatsApp de la
+ficha del lead llamaba a `openWhatsApp(phone, '')` y nada mas: lo escrito desde
+ahi no aparecia en el historial, no sumaba en el contador y no habria contado
+para ningun flujo. Ahora registra antes de abrir, sin plantilla y sin contenido,
+que es la verdad. En el historial se llama "Mensaje directo".
+
+De paso, `enrichSendLogs` tenia el mismo defecto que ya se habia corregido en la
+ficha: reconstruia desde la plantilla viva en vez de usar la copia de la 106.
+
+**Migracion 108.** Cuatro tablas con RLS y un trigger de propiedad.
+
+Lo que conviene retener:
+
+- El progreso **no se deduce de `send_logs`**: esa tabla no referencia al flujo,
+  asi que un envio suelto de la misma plantilla contaria como paso hecho, y no
+  hay donde expresar cuando toca el siguiente. La fila apunta con `send_log_id`
+  en vez de copiar.
+- `channel` se copia del flujo a la inscripcion porque Postgres no admite un
+  indice unico que una contra el padre, y la regla "una activa por lead y canal"
+  se expresa con un indice unico parcial.
+- El trigger existe porque una FK **no** impide apuntar al flujo de otro usuario:
+  solo comprueba que exista. Verificado con sonda: un paso insertado con el
+  `user_id` ajeno acaba perteneciendo al dueño del flujo.
+
+Sonda de cuatro comprobaciones contra produccion, todas pasadas, y sin dejar
+filas.
+
+**Sigue pendiente:** repositorio, servicio con `computeFlowProgress`, el RPC de
+"que falta enviar hoy", y toda la interfaz.

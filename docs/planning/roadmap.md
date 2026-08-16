@@ -2559,15 +2559,49 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
   diseñar a ciegas. La migracion a un catalogo generico es aditiva: una tabla de catalogos, y
   `message_reasons` pasa a ser una fila suya.
 
-- [PENDIENTE] Tablas de flujos, pasos e inscripciones, con progreso por paso. El progreso **no se
-  deduce de `send_logs`**: esa tabla no tiene referencia al flujo, asi que un envio manual de la misma
-  plantilla contaria como paso completado, y ademas no hay donde expresar cuando toca el siguiente
-  paso, que es justo lo que el usuario pide ver. La fila de progreso no copia lo enviado: apunta a
-  `send_logs`.
+- [HECHO] (`2026-08-16`) Migracion **108**: `message_flows`, `message_flow_steps`,
+  `message_flow_enrollments` y `message_flow_progress`, con RLS en las cuatro y el trigger de
+  propiedad.
 
-- [PENDIENTE] Las tablas hijas necesitan `user_id` propio y un trigger que lo copie del padre. Una FK
-  no impide insertar un paso apuntando al flujo de otro usuario: se pasa la RLS con el `user_id`
-  propio mientras el `flow_id` es ajeno.
+  **El progreso tiene tabla propia y no se deduce de `send_logs`.** Era tentador, porque ahi esta lo
+  que se mando, pero esa tabla no tiene referencia al flujo: un envio suelto de la misma plantilla
+  contaria como paso completado, y la misma plantilla en dos flujos contaria dos veces. Y sobre todo
+  no habria donde expresar **cuando toca** el siguiente paso, que es lo que el usuario quiere ver. La
+  fila de progreso no copia lo enviado: apunta con `send_log_id`, asi que `send_logs` sigue siendo el
+  unico registro de envios.
+
+  **El estado se llama `registrado`, no `enviado`.** Con WhatsApp solo consta que se abrio el chat.
+
+  **Los flujos son por canal**, como decidio el usuario. La restriccion es un indice unico parcial
+  sobre `(lead_id, channel) where status = 'activa'`: una inscripcion activa por lead y canal, y
+  parcial para que reinscribir cree una fila nueva en vez de reabrir la vieja. Un flujo que se
+  reinicia recorre la secuencia entera; continuar donde quedo otro intento mezclaria dos historias.
+
+  Para que ese indice funcione, `channel` se **copia** del flujo a la inscripcion: Postgres no admite
+  un indice que una contra la tabla padre. Lo copia el trigger, no el cliente.
+
+  **Borrar un paso con progreso esta prohibido** (`on delete restrict`), igual que borrar una
+  plantilla usada por un paso. Perder el rastro de lo que se envio para limpiar una definicion es el
+  peor intercambio posible.
+
+- [HECHO] (`2026-08-16`) El trigger de propiedad, verificado contra produccion con una sonda que
+  falla con excepcion si algo no se cumple. Se probaron cuatro cosas y las cuatro pasaron:
+
+  1. un paso insertado declarando el `user_id` de **otro** usuario acaba perteneciendo al dueño del
+     flujo;
+  2. una inscripcion que declara `channel = 'email'` sobre un flujo de WhatsApp acaba en `whatsapp`;
+  3. dos inscripciones activas del mismo lead en el mismo canal chocan;
+  4. cerrada la primera, reinscribir funciona.
+
+  La sonda borro lo que creo: `flujos = 0, pasos = 0, inscripciones = 0` despues de correrla.
+
+  El punto 1 es el que justifica el trigger: una clave foranea **no** lo impide, porque solo comprueba
+  que el flujo exista, no de quien es.
+
+- [PENDIENTE] Repositorio, servicio con `computeFlowProgress` (funcion pura, testeable) y el RPC de
+  "que falta enviar hoy".
+
+- [PENDIENTE] Interfaz: vista Hoy, editor de flujo, inscripcion y salida.
 
 - [PENDIENTE] Vista "Hoy" como pantalla de entrada, no la lista de flujos. La pregunta del usuario
   ("que me falta enviar hoy") es transversal a todos los flujos.
