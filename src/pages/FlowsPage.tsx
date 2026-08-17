@@ -6,10 +6,11 @@ import { useMessageFlows } from '../hooks/useMessageFlows';
 import { FlowTodayList } from '../components/flows/FlowTodayList';
 import { FlowEditor } from '../components/flows/FlowEditor';
 import { FlowEnrollModal } from '../components/flows/FlowEnrollModal';
+import { FlowDetail } from '../components/flows/FlowDetail';
 import { dispatchFlowStep } from '../services/flowDispatchService';
 import type { MessageFlow, MessageFlowStep, PendingFlowStep } from '../types';
 
-type Vista = 'hoy' | 'flujos' | 'editor';
+type Vista = 'hoy' | 'flujos' | 'editor' | 'detalle';
 
 const CANAL_LABEL = {
   whatsapp: 'WhatsApp',
@@ -34,6 +35,8 @@ export default function FlowsPage() {
   const [editando, setEditando] = useState<MessageFlow | null>(null);
   const [pasosEditando, setPasosEditando] = useState<MessageFlowStep[]>([]);
   const [inscribiendoEn, setInscribiendoEn] = useState<MessageFlow | null>(null);
+  const [viendo, setViendo] = useState<MessageFlow | null>(null);
+  const [pasosViendo, setPasosViendo] = useState<MessageFlowStep[]>([]);
 
   // Un solo reloj para toda la pantalla: si cada fila leyera el suyo, dos filas
   // podrian discrepar sobre si algo esta atrasado.
@@ -48,6 +51,12 @@ export default function FlowsPage() {
     setEditando(flujo);
     setPasosEditando(flujo ? await flujos.getSteps(flujo.id) : []);
     setVista('editor');
+  };
+
+  const abrirDetalle = async (flujo: MessageFlow) => {
+    setViendo(flujo);
+    setPasosViendo(await flujos.getSteps(flujo.id));
+    setVista('detalle');
   };
 
   const despachar = async (fila: PendingFlowStep) => {
@@ -108,7 +117,28 @@ export default function FlowsPage() {
         </p>
       )}
 
-      {vista === 'editor' ? (
+      {vista === 'detalle' && viendo ? (
+        <FlowDetail
+          flujo={viendo}
+          pasos={pasosViendo}
+          refreshKey={flujos.refreshKey}
+          onVolver={() => setVista('flujos')}
+          onEditar={() => abrirEditor(viendo)}
+          onInscribir={() => setInscribiendoEn(viendo)}
+          onPausar={async (activo) => {
+            await flujos.setActivo(viendo.id, activo);
+            const refrescados = await flujos.getAll();
+            setLista(refrescados);
+            const actualizado = refrescados.find((f) => f.id === viendo.id);
+            if (actualizado) setViendo(actualizado);
+            setAviso(activo ? `Flujo ${viendo.name} reanudado.` : `Flujo ${viendo.name} pausado.`);
+          }}
+          onSacar={async (enrollmentId, motivo) => {
+            await flujos.sacar(enrollmentId, motivo);
+            setAviso('Lead sacado del flujo.');
+          }}
+        />
+      ) : vista === 'editor' ? (
         <FlowEditor
           flujo={editando}
           pasosIniciales={pasosEditando}
@@ -142,13 +172,17 @@ export default function FlowsPage() {
                 key={flujo.id}
                 className="flex min-w-0 items-center gap-2 border-b border-line-soft px-3 py-2.5 last:border-0"
               >
-                <div className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => abrirDetalle(flujo)}
+                  className="min-w-0 flex-1 text-left"
+                >
                   <span className="block truncate text-body font-semibold text-ink">{flujo.name}</span>
                   <span className="mt-0.5 block truncate text-micro text-ink-secondary">
                     {CANAL_LABEL[flujo.channel]}
                     {!flujo.isActive && ' · pausado'}
                   </span>
-                </div>
+                </button>
                 <Button size="sm" onClick={() => setInscribiendoEn(flujo)}>
                   Inscribir
                 </Button>

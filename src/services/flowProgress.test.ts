@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { computeFlowProgress, tocaAhora } from './flowProgress';
+import { computeFlowProgress, estadosDePasos, tocaAhora } from './flowProgress';
 import type { FlowStepStatus, MessageFlowProgress, MessageFlowStep } from '../types';
 
 function paso(id: number, stepOrder: number): MessageFlowStep {
@@ -140,5 +140,32 @@ describe('tocaAhora', () => {
     const r = computeFlowProgress([paso(1, 1)], [fila(1, 'registrado')]);
 
     expect(tocaAhora(r, ahora)).toBe(false);
+  });
+});
+
+describe('estadosDePasos', () => {
+  const tres = [paso(1, 1), paso(2, 2), paso(3, 3)];
+
+  test('devuelve un estado por paso, en orden', () => {
+    const r = estadosDePasos(tres, [fila(1, 'registrado'), fila(2, 'toca')]);
+
+    expect(r).toEqual(['registrado', 'toca', 'pendiente']);
+  });
+
+  test('un paso sin fila sale pendiente y no se omite', () => {
+    // Si se omitiera, el riel tendria menos segmentos que pasos y el lead
+    // pareceria ir mas adelantado de lo que va.
+    expect(estadosDePasos(tres, [])).toEqual(['pendiente', 'pendiente', 'pendiente']);
+  });
+
+  test('ordena por stepOrder aunque lleguen desordenados', () => {
+    const desordenados = [paso(3, 3), paso(1, 1), paso(2, 2)];
+    const r = estadosDePasos(desordenados, [fila(3, 'omitido')]);
+
+    expect(r).toEqual(['pendiente', 'pendiente', 'omitido']);
+  });
+
+  test('sin pasos devuelve lista vacia', () => {
+    expect(estadosDePasos([], [fila(1, 'registrado')])).toEqual([]);
   });
 });

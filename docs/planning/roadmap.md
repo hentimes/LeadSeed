@@ -2598,10 +2598,70 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
   El punto 1 es el que justifica el trigger: una clave foranea **no** lo impide, porque solo comprueba
   que el flujo exista, no de quien es.
 
-- [PENDIENTE] Repositorio, servicio con `computeFlowProgress` (funcion pura, testeable) y el RPC de
-  "que falta enviar hoy".
+- [HECHO] (`2026-08-16`) Migracion **109**, escrita por el agente de datos y revisada linea a linea
+  antes de aplicar. Encontro un agujero real en la 108: una fila de progreso podia apuntar a la
+  inscripcion de un flujo y al **paso de otro flujo** del mismo dueño. La FK pasaba porque el paso
+  existe, la RLS porque el `user_id` coincide, y el unico porque era la primera fila.
 
-- [PENDIENTE] Interfaz: vista Hoy, editor de flujo, inscripcion y salida.
+  Ademas: `check` de consistencia de salida, promocion `pendiente -> toca` al consultar,
+  `enroll_lead_in_flow` atomica, `get_my_flow_dispatch_queue`, salida automatica al convertir o
+  descartar el lead, y avance de paso al registrar un envio.
+
+  Verificado con una sonda de cinco comprobaciones contra produccion, sin residuo.
+
+  Consecuencia que la sonda destapo: **un flujo con progreso no se puede borrar**. El borrado
+  cascadea a los pasos y los pasos con progreso estan protegidos. Es deliberado, y el servicio
+  traduce el error de Postgres a algo que se entienda.
+
+- [HECHO] (`2026-08-16`) Capas de aplicacion: tipos, repositorio, servicio, hook, y `flowProgress`
+  como funcion pura con 20 casos de prueba.
+
+  `computeFlowProgress` **resume el estado que la base ya escribio; no infiere ni avanza nada**. Si
+  empezara a inferir habria dos autoridades sobre lo mismo y acabarian discrepando.
+
+- [HECHO] (`2026-08-16`) Interfaz completa: vista Hoy, lista de flujos, editor, inscripcion, detalle
+  con inscritos y riel de progreso, salida con motivo, y pausa.
+
+  Decisiones que no se leen del codigo:
+
+  - **El editor es pagina, no dialogo.** En un panel de 360px un `Modal` deja 278px y una fila de paso
+    necesita 252 con el numero, la plantilla y dos flechas. Ademas el dialogo bloquea el scroll de la
+    pagina, asi que un flujo de ocho pasos scrollearia dentro de una caja dentro del panel.
+  - **Reordenar con flechas, no arrastrando.** En una columna estrecha que ya hace scroll vertical, el
+    arrastre pelea con el scroll, y dos botones se operan con teclado sin inventar ARIA de arrastre.
+  - **El riel mide 72px fijos y no crece con los pasos.** A doce pasos cada segmento queda en 4.2px,
+    que es el piso donde todavia se lee; por encima se cambia por el conteo. Una ficha por paso
+    moriria en el septimo.
+  - **Cuatro formas, no cuatro colores**: hueco falta, lleno hecho, alto reclama accion, bajo omitido.
+    Y el verde se reserva al correo: un paso de WhatsApp registrado va en azul, porque solo consta que
+    se abrio el chat.
+  - **La inscripcion solo lista leads con el dato del canal.** Inscribir en un flujo de correo a
+    alguien sin correo es programar un envio que no puede salir.
+  - **El paso se marca despues** de que el envio devuelva su registro. Si falla, se queda como estaba
+    y se puede reintentar.
+  - `fin_secuencia` y `otro_flujo` **no se ofrecen** como motivo de salida manual: los pone el sistema.
+
+- [HECHO] (`2026-08-16`) El despacho **reusa `sendService`**, no crea un camino paralelo: el envio
+  queda una sola vez en `send_logs`, con la misma forma, y suma en el contador del lead igual que uno
+  manual. Los flujos orquestan encima.
+
+- [HECHO] (`2026-08-16`) El motivo se elige en una hoja, no en un `select`. Un motivo es una frase
+  entera y el desplegable la corta justo cuando hace falta compararla. Se descarto darles nombre
+  corto: obligaria a dos campos por motivo, el nombre puede desincronizarse del texto, y no resuelve
+  el problema de fondo.
+
+  Lo que si lo resuelve: **la vista previa dejo de exigir destinatario**. Decia "Elegi un destinatario
+  para ver el mensaje", asi que al elegir motivo no se veia nada. Ahora cae a un lead de ejemplo y el
+  motivo se lee ya sustituido en la frase, que es mejor que leerlo suelto.
+
+- [PENDIENTE] Verificacion visual del usuario: crear un flujo, inscribir un lead y despachar un paso.
+  Es lo unico que ningun test puede responder.
+
+- [PENDIENTE] El detector de modo oscuro solo caza cinco patrones de fondo (`bg-white`, `bg-gray-50`,
+  `bg-slate-50`, `bg-gray-100`, `bg-slate-100`). No ve `text-slate-500`, `border-slate-300`,
+  `bg-green-500` ni hexadecimales, que son la mayoria de las desviaciones. **Dos agentes distintos lo
+  encontraron por separado.** Ampliarlo hoy dejaria el CI en rojo con 71 usos preexistentes, asi que
+  es una limpieza propia, no un añadido a este bloque.
 
 - [PENDIENTE] Vista "Hoy" como pantalla de entrada, no la lista de flujos. La pregunta del usuario
   ("que me falta enviar hoy") es transversal a todos los flujos.

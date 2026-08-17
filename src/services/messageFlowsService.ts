@@ -61,6 +61,7 @@ export async function fetchEnrollments(flowId: string): Promise<MessageFlowEnrol
     channel: row.channel,
     status: row.status,
     enrolledAt: row.enrolled_at,
+    ...(row.leads?.[0]?.name ? { leadName: row.leads[0].name } : {}),
     ...(row.exited_at ? { exitedAt: row.exited_at } : {}),
     ...(row.exit_reason ? { exitReason: row.exit_reason } : {}),
   }));

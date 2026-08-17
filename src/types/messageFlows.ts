@@ -49,6 +49,8 @@ export interface MessageFlowEnrollment {
   enrolledAt: string;
   exitedAt?: string;
   exitReason?: ExitReason;
+  /** Nombre del lead, resuelto en la consulta. */
+  leadName?: string;
 }
 
 export interface MessageFlowProgress {

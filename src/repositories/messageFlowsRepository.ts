@@ -20,6 +20,11 @@ export interface MessageFlowStepRow {
 
 export interface MessageFlowEnrollmentRow {
   id: number;
+  /**
+   * Viene del join con leads. Supabase lo tipa como arreglo aunque la relacion
+   * sea de uno, asi que se declara igual y el servicio toma el primero.
+   */
+  leads?: Array<{ name: string | null }> | null;
   flow_id: string;
   lead_id: string;
   channel: FlowChannel;
@@ -83,7 +88,10 @@ export async function fetchEnrollmentRows(
 ): Promise<MessageFlowEnrollmentRow[]> {
   let q = supabase
     .from(ENROLLMENTS)
-    .select('id, flow_id, lead_id, channel, status, enrolled_at, exited_at, exit_reason')
+    // Se trae el nombre del lead en el mismo viaje: la alternativa era pedir
+    // los leads aparte y cruzarlos en el cliente, que con 1900 leads seria
+    // traerlos todos para mostrar doce.
+    .select('id, flow_id, lead_id, channel, status, enrolled_at, exited_at, exit_reason, leads(name)')
     .eq('flow_id', flowId)
     .order('enrolled_at', { ascending: false });
 

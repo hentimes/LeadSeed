@@ -92,3 +92,20 @@ export function tocaAhora(progreso: FlowLeadProgress, ahora: Date): boolean {
   if (progreso.venceAt === null) return false;
   return new Date(progreso.venceAt).getTime() <= ahora.getTime();
 }
+
+/**
+ * Estado de cada paso, en orden, para pintar el riel de progreso.
+ *
+ * Un paso sin fila de progreso sale como `pendiente`, no se omite: si se
+ * saltara, el riel tendria menos segmentos que pasos y el lead pareceria ir
+ * mas adelantado de lo que va.
+ */
+export function estadosDePasos(
+  pasos: MessageFlowStep[],
+  progreso: MessageFlowProgress[]
+): FlowStepStatus[] {
+  const porPaso = new Map(progreso.map((p) => [p.stepId, p]));
+  return [...pasos]
+    .sort((a, b) => a.stepOrder - b.stepOrder)
+    .map((paso) => porPaso.get(paso.id)?.status ?? 'pendiente');
+}

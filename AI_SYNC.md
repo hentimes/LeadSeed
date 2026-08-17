@@ -8569,3 +8569,45 @@ filas.
 
 **Sigue pendiente:** repositorio, servicio con `computeFlowProgress`, el RPC de
 "que falta enviar hoy", y toda la interfaz.
+
+### 2026-08-16 CLT - Claude - LeadSeed / flujos de mensajes operativos de punta a punta
+
+- Tipo: capacidad nueva / CONTROL
+- Rol: Implementadora
+- Estado: funcional; pendiente verificacion visual del usuario
+
+Cerrado el frente de flujos: base, capas e interfaz.
+
+**Antes, el agujero que los habria contaminado.** El boton de WhatsApp de la
+ficha del lead abria el chat sin registrar nada: invisible para el historial,
+para el contador y para cualquier flujo. Ahora registra antes de abrir.
+
+**Migracion 109.** La escribio el agente de datos y encontro un fallo real en mi
+108: una fila de progreso podia apuntar a la inscripcion de un flujo y al paso
+de otro flujo del mismo dueño. FK, RLS e indice unico pasaban todos.
+
+**Lo que no se hizo, y por que.** El progreso no se deduce de `send_logs`: esa
+tabla no referencia al flujo, asi que un envio suelto contaria como paso hecho y
+no habria donde expresar cuando toca el siguiente.
+
+**Discrepancia con un agente, resuelta a mano.** Propuso pasar a azul el contador
+de WhatsApp de la tabla de leads por la regla de honestidad. Se hizo distinto: el
+verde es color de marca del canal, no una afirmacion de exito, y cambiarlo
+dejaria los dos contadores azules e indistinguibles. La mentira estaba en la
+palabra: "enviado" paso a "chats abiertos".
+
+**Del intercambio con el usuario salio una mejora que no estaba planeada.**
+Pregunto como evitar que un motivo largo se saliera del panel y propuso ponerles
+nombre. Se descarto -dos campos, el nombre puede desincronizarse, y seguirias sin
+saber que dice- y en su lugar el motivo se elige en una hoja donde el texto
+envuelve, mas la vista previa que ya no exige destinatario. El problema real no
+era el ancho del desplegable sino que no se veia el motivo en contexto.
+
+**Dos veces el lint tenia razon y corrigio el diseño:** el servicio importaba el
+cliente Supabase (los RPC bajaron al repositorio) y al relanzar un error hay que
+conservar el original (se sumo solo `ES2022.Error` a las librerias de tipos).
+
+**Tropiezo:** iba a añadir `fetchLeadById` y ya existia. Lo detecto el typecheck.
+Habria bastado con buscar antes de escribir.
+
+324 tests, 0 errores de lint, build, 6750 clases, modo oscuro sin huecos.
