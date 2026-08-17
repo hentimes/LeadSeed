@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
 import { buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
+import { ReasonPicker } from './ReasonPicker';
 import type { MessageReason } from '../../services/messageReasonsService';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
@@ -31,6 +32,20 @@ interface Props {
  * imita WhatsApp, no la app.
  */
 const WHATSAPP_CANVAS = '#efeae2';
+
+/**
+ * Lead ficticio para la vista previa cuando todavia no se eligio destinatario.
+ * Los mismos datos que usa el editor de plantillas, para que la frase se lea
+ * igual en los dos sitios.
+ */
+const LEAD_DE_EJEMPLO = {
+  name: 'María González',
+  phone: '+56912345678',
+  email: 'maria@ejemplo.cl',
+  company: 'Empresa Demo',
+  rut: '12345678-9',
+  notes: 'Cliente VIP',
+} as Lead;
 
 export default function WhatsAppSender({ leads, templates, templateLists, leadLists }: Props) {
   const [catId, setCatId] = useState<number | null>(null);
@@ -153,16 +168,11 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
                     : 'Sustituye a {motivo}. Es el mismo para todo este envio.'
                 }
               >
-                <Select
-                  value={motivoId === null ? '' : String(motivoId)}
-                  onChange={(e) => setMotivoId(e.target.value ? Number(e.target.value) : null)}
-                  aria-label="Motivo del mensaje"
-                >
-                  <option value="">Sin motivo</option>
-                  {reasons.map((reason) => (
-                    <option key={reason.id} value={reason.id}>{reason.text}</option>
-                  ))}
-                </Select>
+                <ReasonPicker
+                  motivos={reasons}
+                  seleccionado={motivoId}
+                  onSeleccionar={setMotivoId}
+                />
               </Field>
             )}
 
@@ -204,13 +214,16 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
                 className="max-h-32 overflow-y-auto rounded-md border border-line p-2"
                 style={{ backgroundColor: WHATSAPP_CANVAS }}
               >
-                {previewLead ? (
-                  <div className="inline-block max-w-[90%] whitespace-pre-wrap rounded-lg bg-surface p-2 text-micro text-slate-900 shadow-sm">
-                    {buildLeadMessages([previewLead], customBody, motivoTexto)[0]?.message}
-                  </div>
-                ) : (
-                  <p className="py-3 text-center text-micro text-ink-secondary">
-                    Elegí un destinatario para ver el mensaje.
+                {/* Sin destinatario elegido se usa uno de ejemplo, en vez de no
+                    mostrar nada. La vista previa es donde se lee el motivo ya
+                    sustituido en la frase, asi que tiene que servir desde el
+                    primer momento y no solo despues de elegir a quien escribir. */}
+                <div className="inline-block max-w-[90%] whitespace-pre-wrap rounded-lg bg-surface p-2 text-micro text-slate-900 shadow-sm">
+                  {buildLeadMessages([previewLead ?? LEAD_DE_EJEMPLO], customBody, motivoTexto)[0]?.message}
+                </div>
+                {!previewLead && (
+                  <p className="mt-1.5 text-center text-micro text-ink-secondary">
+                    Con datos de ejemplo. Elegí un destinatario para ver el suyo.
                   </p>
                 )}
               </div>

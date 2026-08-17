@@ -6,6 +6,7 @@ import { getCurrentSession } from '../../services/authService';
 import { logCallSend } from '../../services/sendService';
 import { applyReason } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
+import { ReasonPicker } from './ReasonPicker';
 import type { MessageReason } from '../../services/messageReasonsService';
 import { Field, Panel, Select } from '../../design';
 import { SendStep } from './SendStep';
@@ -131,16 +132,7 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
                   : 'Sustituye a {motivo} en el guion.'
               }
             >
-              <Select
-                value={motivoId === null ? '' : String(motivoId)}
-                onChange={(e) => setMotivoId(e.target.value ? Number(e.target.value) : null)}
-                aria-label="Motivo del mensaje"
-              >
-                <option value="">Sin motivo</option>
-                {reasons.map((reason) => (
-                  <option key={reason.id} value={reason.id}>{reason.text}</option>
-                ))}
-              </Select>
+              <ReasonPicker motivos={reasons} seleccionado={motivoId} onSeleccionar={setMotivoId} />
             </Field>
           </div>
         )}

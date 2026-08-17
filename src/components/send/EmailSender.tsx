@@ -15,6 +15,7 @@ import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../../services/sendService';
 import { applyReason } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
+import { ReasonPicker } from './ReasonPicker';
 import type { MessageReason } from '../../services/messageReasonsService';
 import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
@@ -286,16 +287,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
                   : 'Sustituye a {motivo} en el asunto y en el cuerpo. Es el mismo para todo este envio.'
               }
             >
-              <Select
-                value={motivoId === null ? '' : String(motivoId)}
-                onChange={(e) => setMotivoId(e.target.value ? Number(e.target.value) : null)}
-                aria-label="Motivo del mensaje"
-              >
-                <option value="">Sin motivo</option>
-                {reasons.map((reason) => (
-                  <option key={reason.id} value={reason.id}>{reason.text}</option>
-                ))}
-              </Select>
+              <ReasonPicker motivos={reasons} seleccionado={motivoId} onSeleccionar={setMotivoId} />
             </Field>
           </div>
         )}
