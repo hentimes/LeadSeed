@@ -28,7 +28,7 @@ export default function LeadsPageToasts({
             <button onClick={() => onUndoDelete(toast.id)} className="text-blue-400 hover:text-blue-300 font-medium underline">
               Deshacer
             </button>
-            <button onClick={onDismissToast} className="text-gray-400 hover:text-gray-300 ml-1">
+            <button onClick={onDismissToast} className="text-ink-muted hover:text-ink-muted ml-1">
               &times;
             </button>
           </div>

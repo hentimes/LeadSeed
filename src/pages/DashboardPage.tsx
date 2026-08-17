@@ -46,8 +46,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
     // Skeleton genérico simple
     return (
       <div className="flex w-full flex-col px-4 pb-6 animate-pulse">
-         <div className="h-8 bg-slate-200 w-1/3 rounded mb-2"></div>
-         <div className="h-4 bg-slate-200 w-1/2 rounded mb-6"></div>
+         <div className="h-8 bg-surface-sunken w-1/3 rounded mb-2"></div>
+         <div className="h-4 bg-surface-sunken w-1/2 rounded mb-6"></div>
          <div className="h-64 bg-surface-hover rounded-[14px]"></div>
       </div>
     );

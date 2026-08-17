@@ -39,7 +39,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
           className={`p-2 -ml-2 rounded-lg transition-colors focus:outline-none ${
             isDrawerOpen
               ? 'text-primary bg-primary-soft dark:bg-slate-800'
-              : 'text-slate-500 hover:text-primary hover:bg-primary-soft dark:text-slate-400 dark:hover:bg-slate-800'
+              : 'text-ink-secondary hover:text-primary hover:bg-primary-soft dark:hover:bg-slate-800'
           }`}
           aria-label={isDrawerOpen ? "Cerrar menú" : "Abrir menú"}
         >
@@ -63,7 +63,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
               <div className="text-primary w-6 h-6 flex items-center justify-center">
                 {Icon.Leads()}
               </div>
-              <span className="font-bold text-ink dark:text-white text-lg tracking-tight">LeadSeed</span>
+              <span className="font-bold text-ink text-lg tracking-tight">LeadSeed</span>
             </>
           )}
         </div>
@@ -71,7 +71,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
 
       <div className="flex items-center gap-4">
         {/* Notificaciones / Ayuda (Opcional) */}
-        <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+        <button className="p-2 text-ink-muted hover:text-ink-secondary transition-colors">
           <Icon.Help />
         </button>
 
@@ -84,7 +84,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
             <img 
               src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
               alt="Avatar" 
-              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover" 
+              className="w-8 h-8 rounded-full border border-line object-cover" 
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center text-sm font-bold border border-line">

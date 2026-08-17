@@ -7,6 +7,14 @@ resultado es texto claro sobre blanco.
 import io, re, glob, os, sys
 
 CLAROS = [
+    # Ampliado el 2026-08-16. Antes solo miraba cinco fondos, y por eso pasaban
+    # 123 bloques con texto y bordes grises fijos sin contraparte oscura: en un
+    # tema oscuro, un text-slate-400 sobre casi negro es ilegible. Lo
+    # encontraron dos agentes por separado; el primer sondeo propio dio cero
+    # por un escape mal puesto y estuvo a punto de cerrarse como falsa alarma.
+    (r'\b(?:bg)-(?:slate|gray|zinc|neutral|stone)-(?:50|100|200)\b', 'bg-', 'fondo gris claro fijo'),
+    (r'\b(?:border)-(?:slate|gray|zinc|neutral|stone)-(?:100|200|300)\b', 'border-', 'borde claro fijo'),
+    (r'\b(?:text)-(?:slate|gray|zinc|neutral|stone)-(?:300|400|500)\b', 'text-', 'texto gris fijo'),
     (r'\bbg-white\b', 'bg-', 'fondo blanco fijo'),
     (r'\bbg-gray-50\b', 'bg-', 'fondo gris muy claro fijo'),
     (r'\bbg-slate-50\b', 'bg-', 'fondo gris muy claro fijo'),

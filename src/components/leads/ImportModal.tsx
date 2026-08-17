@@ -221,13 +221,13 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                 <div className="flex gap-2 flex-wrap justify-end">
                   <button
                     onClick={selectAll}
-                    className="text-xs bg-surface-hover hover:bg-gray-200 px-2 py-1 rounded"
+                    className="text-xs bg-surface-hover hover:bg-surface-sunken px-2 py-1 rounded"
                   >
                     Seleccionar todo
                   </button>
                   <button
                     onClick={deselectAll}
-                    className="text-xs bg-surface-hover hover:bg-gray-200 px-2 py-1 rounded"
+                    className="text-xs bg-surface-hover hover:bg-surface-sunken px-2 py-1 rounded"
                   >
                     Deseleccionar todo
                   </button>
@@ -257,7 +257,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                       <span className="text-ink-muted truncate max-w-[140px]" title={col.original}>
                         "{col.original}"
                       </span>
-                      <span className="text-gray-300">→</span>
+                      <span className="text-ink-muted">→</span>
                       <span className={col.mapped ? 'text-green-600' : 'text-yellow-600'}>
                         {col.mapped || 'nombre'}
                       </span>

@@ -16,36 +16,36 @@ export default function DisplaySettings({ compactMode, onCompactModeChange, dark
 
   return (
     <div className="animate-fade-in pt-2">
-      <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-2">Apariencia y Visualización</h3>
+      <h3 className="text-sm font-bold text-ink mb-4 border-b border-line pb-2">Apariencia y Visualización</h3>
       
       <div className="space-y-6">
         <label className="flex items-center justify-between py-2 border-b border-gray-50">
           <div>
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 block">Modo compacto</span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">Reduce el espaciado en las tablas para ver más datos</span>
+            <span className="text-sm font-medium text-ink-secondary block">Modo compacto</span>
+            <span className="text-xs text-ink-muted">Reduce el espaciado en las tablas para ver más datos</span>
           </div>
           <input type="checkbox" checked={compactMode} onChange={(e) => onCompactModeChange(e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
         </label>
 
         <label className="flex items-center justify-between py-2 border-b border-gray-50">
           <div>
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 block">Modo oscuro</span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">Aplica un tema oscuro a toda la aplicación (Próximamente completo)</span>
+            <span className="text-sm font-medium text-ink-secondary block">Modo oscuro</span>
+            <span className="text-xs text-ink-muted">Aplica un tema oscuro a toda la aplicación (Próximamente completo)</span>
           </div>
           <input type="checkbox" checked={darkMode} onChange={(e) => onDarkModeChange(e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
         </label>
 
         <div className="pt-2">
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Columnas visibles en la tabla principal:</p>
-          <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 grid grid-cols-2 gap-2">
+          <p className="text-sm font-medium text-ink-secondary mb-2">Columnas visibles en la tabla principal:</p>
+          <div className="bg-surface-muted rounded-lg p-3 grid grid-cols-2 gap-2">
             {visibleCols.filter((c) => c.key !== 'name').map((col) => (
               <label key={col.key} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={col.visible} onChange={() => toggleCol(col.key)} className="rounded text-blue-600 focus:ring-blue-500" />
-                <span className="text-sm text-slate-600 dark:text-slate-300">{col.label}</span>
+                <span className="text-sm text-ink-secondary">{col.label}</span>
               </label>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-2">La columna "Nombre" siempre permanecerá visible.</p>
+          <p className="text-xs text-ink-muted mt-2">La columna "Nombre" siempre permanecerá visible.</p>
         </div>
       </div>
     </div>

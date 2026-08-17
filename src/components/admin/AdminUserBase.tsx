@@ -137,7 +137,7 @@ export default function AdminUserBase({
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-400 dark:text-slate-500 animate-pulse">Cargando base del usuario...</div>;
+    return <div className="p-8 text-center text-ink-muted animate-pulse">Cargando base del usuario...</div>;
   }
 
   if (error) {
@@ -145,10 +145,10 @@ export default function AdminUserBase({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-800/80 dark:backdrop-blur-md relative">
-      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Base observada</p>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+    <div className="flex flex-col h-full bg-surface dark:backdrop-blur-md relative">
+      <div className="px-4 py-3 border-b border-line bg-surface-muted">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-secondary">Base observada</p>
+        <p className="mt-1 text-sm text-ink-secondary">
           Leads y plantillas de {selectedUser.full_name || selectedUser.email}. Esta vista no cambia la agenda principal del superadmin.
         </p>
         {liveNotice && (
@@ -162,26 +162,26 @@ export default function AdminUserBase({
           </p>
         )}
       </div>
-      <div className="flex border-b border-slate-200 dark:border-slate-700/50">
+      <div className="flex border-b border-line">
         <button
           onClick={() => setActiveTab('leads')}
-          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'leads' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900'}`}
+          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'leads' ? 'border-blue-600 text-blue-600' : 'border-transparent text-ink-muted hover:text-ink hover:bg-surface-muted'}`}
         >
           Leads ({leads.length})
         </button>
         <button
           onClick={() => setActiveTab('templates')}
-          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'templates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900'}`}
+          className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'templates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-ink-muted hover:text-ink hover:bg-surface-muted'}`}
         >
           Plantillas ({templates.length})
         </button>
       </div>
 
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 flex gap-2 items-center">
+      <div className="p-4 border-b border-line bg-surface-muted flex gap-2 items-center">
         <select
           value={targetUserId}
           onChange={(event) => setTargetUserId(event.target.value)}
-          className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 text-sm"
+          className="flex-1 px-3 py-2 rounded-lg border border-line bg-surface text-sm"
         >
           <option value="">Transferir a...</option>
           {profiles.filter((profile) => profile.id !== selectedUser.id).map((profile) => (
@@ -194,7 +194,7 @@ export default function AdminUserBase({
           {isProcessing ? 'Procesando...' : 'Transferir'}
         </button>
         {activeTab === 'leads' && (
-          <button onClick={handleDownload} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700/50 text-sm font-semibold">
+          <button onClick={handleDownload} className="px-3 py-2 rounded-lg border border-line text-sm font-semibold">
             Descargar
           </button>
         )}
@@ -203,26 +203,26 @@ export default function AdminUserBase({
       <div className="flex-1 overflow-auto">
         {activeTab === 'leads' ? (
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-slate-50 dark:bg-slate-900">
+            <thead className="bg-surface-muted">
               <tr>
                 <th className="px-4 py-3 text-left">
                   <input type="checkbox" checked={leads.length > 0 && selectedLeads.size === leads.length} onChange={toggleAllLeads} />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">Lead</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase">Estado</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase">Lead</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase">Estado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {leads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-slate-50 dark:bg-slate-900">
+                <tr key={lead.id} className="hover:bg-surface-muted">
                   <td className="px-4 py-3">
                     <input type="checkbox" checked={selectedLeads.has(lead.id as string)} onChange={() => toggleLead(lead.id as string)} />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="text-sm font-medium text-slate-800 dark:text-slate-100">{lead.name || 'Sin nombre'}</div>
-                    <div className="text-xs text-slate-400 dark:text-slate-500">{lead.email || lead.phone || '-'}</div>
+                    <div className="text-sm font-medium text-ink">{lead.name || 'Sin nombre'}</div>
+                    <div className="text-xs text-ink-muted">{lead.email || lead.phone || '-'}</div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-500">{lead.status || 'Nuevo'}</td>
+                  <td className="px-4 py-3 text-sm text-ink-secondary">{lead.status || 'Nuevo'}</td>
                 </tr>
               ))}
             </tbody>
@@ -230,7 +230,7 @@ export default function AdminUserBase({
         ) : (
           <div className="divide-y divide-gray-200">
             {templates.map((template) => (
-              <label key={template.id} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:bg-slate-900">
+              <label key={template.id} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-muted">
                 <input
                   type="checkbox"
                   checked={selectedTemplates.has(template.id as string)}
@@ -242,10 +242,10 @@ export default function AdminUserBase({
                   }}
                 />
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <div className="text-sm font-medium text-ink flex items-center gap-2">
                     <Icon.Messages /> {template.nombre || 'Plantilla sin nombre'}
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2">{template.contenido || 'Sin contenido'}</p>
+                  <p className="text-xs text-ink-muted mt-1 line-clamp-2">{template.contenido || 'Sin contenido'}</p>
                 </div>
               </label>
             ))}

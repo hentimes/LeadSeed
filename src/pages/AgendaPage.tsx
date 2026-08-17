@@ -40,13 +40,13 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
       )}
 
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Citas activas</h3>
-        <span className="text-[11px] text-slate-400">{agenda.activeAppointments.length} activas</span>
+        <h3 className="text-xs font-bold uppercase tracking-wide text-ink-secondary">Citas activas</h3>
+        <span className="text-[11px] text-ink-muted">{agenda.activeAppointments.length} activas</span>
       </div>
 
       <div className="flex flex-col gap-3">
         {agenda.activeAppointments.length === 0 ? (
-          <p className="text-xs text-slate-400 border-y border-line py-4">No hay citas activas en el rango revisado.</p>
+          <p className="text-xs text-ink-muted border-y border-line py-4">No hay citas activas en el rango revisado.</p>
         ) : (
           agenda.activeAppointments.map((appointment) => (
             <AgendaAppointmentCard
@@ -92,7 +92,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         <button
           type="button"
           onClick={() => agenda.setShowCancelled((current) => !current)}
-          className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-500"
+          className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wide text-ink-secondary"
         >
           <span>Canceladas ({agenda.cancelledAppointments.length})</span>
           <span>{agenda.showCancelled ? Icon.ChevronDown() : Icon.ChevronRight()}</span>
@@ -101,7 +101,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         {agenda.showCancelled && (
           <div className="mt-3 flex flex-col gap-2">
             {agenda.cancelledAppointments.length === 0 ? (
-              <p className="text-xs text-slate-400">No hay citas canceladas en el rango revisado.</p>
+              <p className="text-xs text-ink-muted">No hay citas canceladas en el rango revisado.</p>
             ) : (
               agenda.cancelledAppointments.map((appointment) => (
                 <AgendaCancelledRow

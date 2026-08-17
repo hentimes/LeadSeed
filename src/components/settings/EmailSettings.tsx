@@ -16,12 +16,12 @@ export default function EmailSettings() {
   const s = useEmailChannels();
 
   if (s.loading) {
-    return <div className="pt-2 text-sm text-slate-500">Cargando ajustes de correo...</div>;
+    return <div className="pt-2 text-sm text-ink-secondary">Cargando ajustes de correo...</div>;
   }
 
   return (
     <div className="animate-fade-in pt-2">
-      <h3 className="mb-4 border-b border-slate-200 pb-2 text-sm font-bold text-slate-700 dark:border-slate-700/50 dark:text-slate-200">
+      <h3 className="mb-4 border-b border-line pb-2 text-sm font-bold text-ink">
         Correo y notificaciones
       </h3>
 
@@ -38,8 +38,8 @@ export default function EmailSettings() {
       <div className="pt-1">
         <div className="mb-2 flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Canales de correo</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-sm font-semibold text-ink">Canales de correo</p>
+            <p className="text-[11px] text-ink-secondary">
               {s.channels.length}/{s.channelLimit} canales API. Gmail usa la sesion actual.
             </p>
           </div>
@@ -54,14 +54,14 @@ export default function EmailSettings() {
             <button
               type="button"
               onClick={() => s.setOpenAddMenu((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-surface-hover"
             >
               {Icon.Plus()}
               Agregar
             </button>
 
             {s.openAddMenu ? (
-              <div className="absolute right-0 top-9 z-40 min-w-[170px] rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <div className="absolute right-0 top-9 z-40 min-w-[170px] rounded-md border border-line bg-surface p-1 shadow-lg">
                 <button
                   type="button"
                   onClick={() => {
@@ -69,7 +69,7 @@ export default function EmailSettings() {
                     s.openCreateForm();
                   }}
                   disabled={!s.canCreateMore}
-                  className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-ink transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Nueva API Resend
                 </button>
@@ -80,7 +80,7 @@ export default function EmailSettings() {
                     void s.handleConnectGoogle();
                   }}
                   disabled={s.connectingGoogle || !s.detectedGoogleEmail}
-                  className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-ink transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Agregar Gmail
                 </button>
@@ -89,8 +89,8 @@ export default function EmailSettings() {
           </div>
         </div>
 
-        <div className="border-y border-slate-200 dark:border-slate-700">
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,120px)_48px] gap-3 bg-slate-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:text-slate-400 sm:grid">
+        <div className="border-y border-line">
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,120px)_48px] gap-3 bg-surface-muted px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-ink-secondary sm:grid">
             <span>Canal</span>
             <span>Remitente</span>
             <span>Estado</span>
@@ -103,13 +103,13 @@ export default function EmailSettings() {
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,120px)_48px] sm:items-center">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">Gmail</span>
+                      <span className="truncate text-sm font-semibold text-ink">Gmail</span>
                       {s.provider === 'gmail' ? <RowPill tone="blue">Activo</RowPill> : null}
                     </div>
-                    <div className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400">Cuenta Google</div>
+                    <div className="mt-0.5 truncate text-[11px] text-ink-secondary">Cuenta Google</div>
                   </div>
 
-                  <div className="truncate text-xs text-slate-600 dark:text-slate-300">{s.googleEmail || 'Sin correo detectado'}</div>
+                  <div className="truncate text-xs text-ink-secondary">{s.googleEmail || 'Sin correo detectado'}</div>
 
                   <div className="flex items-center gap-2">
                     <StatusBadge label={s.googleStatusLabel} connected={s.googleSendEnabled} />
@@ -120,7 +120,7 @@ export default function EmailSettings() {
                     <MenuButton onClick={() => s.setOpenChannelMenuId((current) => (current === GMAIL_ROW_ID ? '' : GMAIL_ROW_ID))} />
 
                     {s.openChannelMenuId === GMAIL_ROW_ID ? (
-                      <div className="absolute right-0 top-9 z-40 min-w-[150px] rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                      <div className="absolute right-0 top-9 z-40 min-w-[150px] rounded-md border border-line bg-surface p-1 shadow-lg">
                         {s.provider !== 'gmail' ? (
                           <button
                             type="button"
@@ -141,7 +141,7 @@ export default function EmailSettings() {
                             void s.handleConnectGoogle();
                           }}
                           disabled={s.connectingGoogle || !s.detectedGoogleEmail}
-                          className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                          className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-ink transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {s.connectingGoogle ? 'Conectando...' : s.googleConnected ? 'Reconectar' : 'Conectar'}
                         </button>
@@ -165,18 +165,18 @@ export default function EmailSettings() {
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,120px)_48px] sm:items-center">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{channel.channelName}</span>
+                        <span className="truncate text-sm font-semibold text-ink">{channel.channelName}</span>
                         {isActiveProvider ? <RowPill tone="blue">Activo</RowPill> : channel.isDefault ? <RowPill tone="slate">Principal</RowPill> : null}
                       </div>
-                      <div className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="mt-0.5 truncate text-[11px] text-ink-secondary">
                         {providerLabel}
                         {hint}
                       </div>
                     </div>
 
-                    <div className="truncate text-xs text-slate-600 dark:text-slate-300">
+                    <div className="truncate text-xs text-ink-secondary">
                       <span className="block truncate">{channel.fromEmail}</span>
-                      <span className="block truncate text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="block truncate text-[11px] text-ink-secondary">
                         {channel.fromName} - {channel.dailyLimit}/dia
                       </span>
                     </div>
@@ -190,7 +190,7 @@ export default function EmailSettings() {
                       <MenuButton onClick={() => s.setOpenChannelMenuId((current) => (current === channel.id ? '' : channel.id))} />
 
                       {s.openChannelMenuId === channel.id ? (
-                        <div className="absolute right-0 top-9 z-40 min-w-[155px] rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        <div className="absolute right-0 top-9 z-40 min-w-[155px] rounded-md border border-line bg-surface p-1 shadow-lg">
                           {!isActiveProvider ? (
                             <button
                               onClick={() => {
@@ -209,7 +209,7 @@ export default function EmailSettings() {
                               s.openEdit(channel);
                             }}
                             disabled={isBusy}
-                            className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-800"
+                            className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-ink transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {Icon.Edit()}
                             Editar
@@ -220,7 +220,7 @@ export default function EmailSettings() {
                               void s.handleToggleActive(channel);
                             }}
                             disabled={isBusy}
-                            className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-800"
+                            className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-[11px] font-semibold text-ink transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {channel.isActive ? 'Desconectar' : 'Conectar'}
                           </button>
@@ -255,7 +255,7 @@ export default function EmailSettings() {
             })}
 
             {!s.canShowGmailRow && !s.orderedChannels.length ? (
-              <div className="px-3 py-6 text-sm text-slate-500 dark:text-slate-400">
+              <div className="px-3 py-6 text-sm text-ink-secondary">
                 Aun no has registrado canales de correo para esta cuenta.
               </div>
             ) : null}
@@ -279,7 +279,7 @@ export default function EmailSettings() {
         ) : null}
 
         {s.provider === 'emailjs' ? (
-          <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-[11px] text-ink-secondary">
             EmailJS queda solo como legado. Activa Gmail o un canal Resend para usar el flujo actual.
           </p>
         ) : null}

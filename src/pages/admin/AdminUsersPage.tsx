@@ -387,11 +387,11 @@ export default function AdminUsersPage() {
           <div className="flex gap-2 p-3 border-b border-line bg-surface-muted">
             {isAdmin && (
               <>
-                <button onClick={() => setActiveTab('licencias')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'licencias' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>Licencias</button>
-                <button onClick={() => setActiveTab('telemetria')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'telemetria' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>Actividad</button>
-                <button onClick={() => setActiveTab('heatmap')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'heatmap' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>Heatmap</button>
-                <button onClick={() => setActiveTab('inventario')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'inventario' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>Inventario</button>
-                <button onClick={() => setActiveTab('base')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'base' ? 'bg-red-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>
+                <button onClick={() => setActiveTab('licencias')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'licencias' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>Licencias</button>
+                <button onClick={() => setActiveTab('telemetria')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'telemetria' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>Actividad</button>
+                <button onClick={() => setActiveTab('heatmap')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'heatmap' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>Heatmap</button>
+                <button onClick={() => setActiveTab('inventario')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'inventario' ? 'bg-blue-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>Inventario</button>
+                <button onClick={() => setActiveTab('base')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'base' ? 'bg-red-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>
                   Base
                   {(leadAlertCounts[selectedUser.id] || 0) > 0 && activeTab !== 'base' && (
                     <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
@@ -399,15 +399,15 @@ export default function AdminUsersPage() {
                     </span>
                   )}
                 </button>
-                <button onClick={() => setActiveTab('agenda')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'agenda' ? 'bg-red-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>Agenda</button>
+                <button onClick={() => setActiveTab('agenda')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'agenda' ? 'bg-red-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>Agenda</button>
               </>
             )}
-            <button onClick={() => setActiveTab('soporte')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'soporte' ? 'bg-indigo-600 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>
+            <button onClick={() => setActiveTab('soporte')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors relative ${activeTab === 'soporte' ? 'bg-indigo-600 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>
               Mensajes
               {(unreadCounts[selectedUser.id] ?? 0) > 0 && activeTab !== 'soporte' && <span className="absolute top-0 right-0 w-2 h-2 bg-purple-600 rounded-full animate-ping"></span>}
             </button>
             {(selectedUser.is_helper || selectedUser.role === 'admin') && (
-              <button onClick={() => setActiveTab('helper')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'helper' ? 'bg-orange-500 text-white' : 'text-ink-secondary hover:bg-gray-200'}`}>
+              <button onClick={() => setActiveTab('helper')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === 'helper' ? 'bg-orange-500 text-white' : 'text-ink-secondary hover:bg-surface-sunken'}`}>
                 Helper Stats
               </button>
             )}
@@ -446,7 +446,7 @@ export default function AdminUsersPage() {
       ) : (
         <div className="flex-1 border-2 border-dashed border-line-strong rounded-xl flex items-center justify-center bg-surface-muted">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 mb-2">{Icon.Leads()}</div>
+            <div className="text-4xl text-ink-muted mb-2">{Icon.Leads()}</div>
             <p className="text-ink-muted font-medium">Selecciona un usuario de la lista</p>
           </div>
         </div>

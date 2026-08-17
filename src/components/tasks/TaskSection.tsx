@@ -34,7 +34,7 @@ export default function TaskSection({
   return (
     <div>
       <div className={`border-l-4 ${colors[color]} pl-3 py-1 mb-2 rounded-r`}>
-        <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-gray-300 uppercase tracking-wide">{title} ({tasks.length})</h3>
+        <h3 className="text-xs font-semibold text-ink-secondary uppercase tracking-wide">{title} ({tasks.length})</h3>
       </div>
       <div className="space-y-2">
         {tasks.map((task) => {

@@ -102,10 +102,10 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
   };
 
   return (
-    <div className="border-t-2 border-dashed border-slate-300 dark:border-slate-600/50 pt-4 mt-2 flex flex-col gap-3">
+    <div className="border-t-2 border-dashed border-line-strong pt-4 mt-2 flex flex-col gap-3">
       <button
         onClick={() => setExpanded((current) => !current)}
-        className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 self-start"
+        className="text-xs font-bold text-ink-secondary flex items-center gap-1.5 self-start"
       >
         <Icon.Plus />
         Administrar tipos de formulario (admin)
@@ -121,27 +121,27 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
 
           <div className="flex flex-col gap-2">
             {formTypes.map((formType) => (
-              <div key={formType.slug} className="border-l-4 border-l-slate-300 dark:border-l-slate-600 px-3 py-2 rounded-r bg-slate-50/70 dark:bg-slate-900/50 flex items-center justify-between gap-2">
+              <div key={formType.slug} className="border-l-4 border-l-slate-300 dark:border-l-slate-600 px-3 py-2 rounded-r bg-surface-muted/70 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{formType.displayName}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400">{formType.slug}</span>
-                    {!formType.isActive && <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-500">Inactivo</span>}
+                    <span className="text-sm font-bold text-ink">{formType.displayName}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-sunken text-ink-secondary">{formType.slug}</span>
+                    {!formType.isActive && <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-sunken text-ink-secondary">Inactivo</span>}
                   </div>
-                  <p className="text-[11px] text-slate-400 truncate mt-1">{formType.urlTemplate}</p>
+                  <p className="text-[11px] text-ink-muted truncate mt-1">{formType.urlTemplate}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
                     disabled={saving}
                     onClick={() => void handleToggleAdminOnly(formType)}
-                    className="text-xs text-slate-500 dark:text-slate-300 font-semibold whitespace-nowrap"
+                    className="text-xs text-ink-secondary font-semibold whitespace-nowrap"
                   >
                     {formType.linksAdminOnly ? 'Abrir a todos' : 'Volver a admin-only'}
                   </button>
                   <button
                     disabled={saving}
                     onClick={() => void handleToggleActive(formType)}
-                    className={`text-xs font-semibold whitespace-nowrap ${formType.isActive ? 'text-red-600' : 'text-slate-500 dark:text-slate-300'}`}
+                    className={`text-xs font-semibold whitespace-nowrap ${formType.isActive ? 'text-red-600' : 'text-ink-secondary'}`}
                   >
                     {formType.isActive ? 'Desactivar' : 'Reactivar'}
                   </button>
@@ -150,29 +150,29 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
             ))}
           </div>
 
-          <div className="border-t border-slate-200/80 dark:border-slate-700/60 pt-3 flex flex-col gap-2">
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Registrar formulario nuevo</p>
+          <div className="border-t border-line/80 pt-3 flex flex-col gap-2">
+            <p className="text-xs font-bold text-ink-secondary">Registrar formulario nuevo</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 value={form.slug}
                 onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
                 placeholder="slug interno (ej: form)"
-                className="border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm bg-transparent"
+                className="border border-line-strong rounded px-3 py-2 text-sm bg-transparent"
               />
               <input
                 value={form.displayName}
                 onChange={(event) => setForm((current) => ({ ...current, displayName: event.target.value }))}
                 placeholder="Nombre visible (ej: Formulario simplificado)"
-                className="border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm bg-transparent"
+                className="border border-line-strong rounded px-3 py-2 text-sm bg-transparent"
               />
             </div>
             <input
               value={form.urlTemplate}
               onChange={(event) => setForm((current) => ({ ...current, urlTemplate: event.target.value }))}
               placeholder="URL publica con {ref}, ej: https://planespro.cl/form/{ref}"
-              className="border border-slate-300 dark:border-slate-600/50 rounded px-3 py-2 text-sm bg-transparent"
+              className="border border-line-strong rounded px-3 py-2 text-sm bg-transparent"
             />
-            <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <label className="flex items-center gap-2 text-xs text-ink-secondary">
               <input
                 type="checkbox"
                 checked={form.linksAdminOnly}

@@ -287,7 +287,7 @@ export default function LeadsTable({
                   >
                     <div className="flex items-center gap-1">
                       {column.label}
-                      {sortField && <span className="text-gray-400 text-xs flex-shrink-0">{sortIcon(sortField, sort)}</span>}
+                      {sortField && <span className="text-ink-muted text-xs flex-shrink-0">{sortIcon(sortField, sort)}</span>}
                     </div>
                   </th>
                 );
@@ -328,11 +328,11 @@ export default function LeadsTable({
           </thead>
           <tbody ref={tbodyRef}>
             {isLoadingPage && leads.length === 0 ? (
-              <tr><td colSpan={100} className="p-0 text-center text-slate-400">
+              <tr><td colSpan={100} className="p-0 text-center text-ink-muted">
                 <LoadingOverlay message="Cargando leads..." />
               </td></tr>
             ) : leads.length === 0 ? (
-              <tr><td colSpan={100} className="px-3 py-12 text-center text-gray-400">
+              <tr><td colSpan={100} className="px-3 py-12 text-center text-ink-muted">
                 <div className="text-3xl mb-2 opacity-30 flex justify-center">{Icon.Leads()}</div>
                 <p className="text-sm font-medium">No hay leads</p>
                 <p className="text-xs mt-1">Creá uno o importá desde un archivo</p>

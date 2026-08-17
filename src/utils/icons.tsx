@@ -93,7 +93,7 @@ export const Icon = {
   // faArrowsUpDown y los activos faCaret*, y se veian como iconos distintos.
   // El activo se distingue por color, no por forma.
   Sort: () => (
-    <span className="inline-flex flex-col leading-none text-gray-300">
+    <span className="inline-flex flex-col leading-none text-ink-muted">
       <I icon={faCaretUp} className="text-[9px] -mb-[3px]" />
       <I icon={faCaretDown} className="text-[9px]" />
     </span>
@@ -101,16 +101,16 @@ export const Icon = {
   SortUp: () => (
     <span className="inline-flex flex-col leading-none">
       <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-primary" />
-      <I icon={faCaretDown} className="text-[9px] text-gray-300" />
+      <I icon={faCaretDown} className="text-[9px] text-ink-muted" />
     </span>
   ),
   SortDown: () => (
     <span className="inline-flex flex-col leading-none">
-      <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-gray-300" />
+      <I icon={faCaretUp} className="text-[9px] -mb-[3px] text-ink-muted" />
       <I icon={faCaretDown} className="text-[9px] text-primary" />
     </span>
   ),
-  Grip: () => <I icon={faGripVertical} className="text-[10px] text-gray-400" />,
+  Grip: () => <I icon={faGripVertical} className="text-[10px] text-ink-muted" />,
   Moon: () => <I icon={faMoon} className="text-xs" />,
   Sun: () => <I icon={faSun} className="text-xs" />,
   ThumbUp: () => <I icon={faThumbsUp} className="text-xs" />,

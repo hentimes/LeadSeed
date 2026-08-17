@@ -163,7 +163,7 @@ export default function AdminRequirementsPage() {
               {selectedReq.rating === 'up' && selectedReq.status === 'closed' && (
                 <button 
                   onClick={() => handleArchiveRequirement(selectedReq)}
-                  className="mt-4 w-full py-2.5 bg-surface-hover text-ink-secondary font-semibold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 border border-line"
+                  className="mt-4 w-full py-2.5 bg-surface-hover text-ink-secondary font-semibold rounded-xl hover:bg-surface-sunken transition-colors flex items-center justify-center gap-2 border border-line"
                 >
                   <Icon.Inbox />
                   Archivar Ticket

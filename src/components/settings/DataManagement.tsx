@@ -105,7 +105,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
           <div className="flex gap-3 items-center flex-wrap">
             <button
               onClick={exportBackup}
-              className="bg-surface-hover text-ink-secondary border border-line px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors shadow-sm flex items-center gap-2"
+              className="bg-surface-hover text-ink-secondary border border-line px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-sunken transition-colors shadow-sm flex items-center gap-2"
             >
               <Icon.Download /> Descargar Respaldo
             </button>
@@ -180,7 +180,7 @@ export default function DataManagement({ exportFormat, onExportFormatChange }: P
                 <div className="text-sm">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-ink">{d.lead1.name}</span>
-                    <span className="bg-gray-200 text-ink-secondary px-1.5 rounded text-xs">Principal</span>
+                    <span className="bg-surface-sunken text-ink-secondary px-1.5 rounded text-xs">Principal</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-ink-secondary">{d.lead2.name}</span>

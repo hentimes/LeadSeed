@@ -37,7 +37,7 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
   return (
     <Modal onClose={onClose} maxWidth="512px" label="Configuracion de listas inteligentes">
         <div className="px-4 py-2.5 border-b border-line flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
-          <h2 className="text-sm font-semibold text-ink dark:text-slate-200">Configuración de Listas Inteligentes</h2>
+          <h2 className="text-sm font-semibold text-ink">Configuración de Listas Inteligentes</h2>
           <button onClick={onClose} className="text-ink-secondary hover:text-ink">✕</button>
         </div>
         
@@ -48,7 +48,7 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
           
           {Object.entries(byCategory).map(([cat, lists]) => (
             <div key={cat} className="space-y-1">
-              <h3 className="font-medium text-xs text-ink-secondary dark:text-slate-400 border-b border-line pb-0.5">{cat}</h3>
+              <h3 className="font-medium text-xs text-ink-secondary border-b border-line pb-0.5">{cat}</h3>
               <div className="grid grid-cols-2 gap-1">
                 {lists.map(l => (
                   <label key={l.id} className="flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700/50">
@@ -59,7 +59,7 @@ export function SmartListSettingsModal({ activeSmartLists, onSave, onClose }: Pr
                       className="rounded border-line text-primary focus:ring-primary w-3 h-3"
                     />
                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color }}></span>
-                    <span className="text-[11px] font-medium text-ink dark:text-slate-300">{l.name}</span>
+                    <span className="text-[11px] font-medium text-ink">{l.name}</span>
                   </label>
                 ))}
               </div>

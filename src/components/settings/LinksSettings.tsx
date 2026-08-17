@@ -37,7 +37,7 @@ export default function LinksSettings() {
   }, [loadFormTypes]);
 
   if (loading) {
-    return <p className="text-sm text-slate-400 py-6">Cargando links de publicacion...</p>;
+    return <p className="text-sm text-ink-muted py-6">Cargando links de publicacion...</p>;
   }
 
   if (error) {
@@ -49,7 +49,7 @@ export default function LinksSettings() {
   return (
     <div className="flex flex-col gap-6">
       {visibleTypes.length === 0 && (
-        <p className="text-sm text-slate-400 py-6">No hay tipos de formulario disponibles todavia.</p>
+        <p className="text-sm text-ink-muted py-6">No hay tipos de formulario disponibles todavia.</p>
       )}
       {visibleTypes.map((formType) => (
         <FormTypeLinksSection key={formType.slug} formType={formType} />

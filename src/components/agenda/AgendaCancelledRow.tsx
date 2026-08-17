@@ -20,7 +20,7 @@ export default function AgendaCancelledRow({ appointment, isFocused, setRef, onO
         <button
           type="button"
           onClick={() => onOpenLead(appointment.leadId)}
-          className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate hover:text-blue-700 text-left"
+          className="text-xs font-semibold text-ink truncate hover:text-blue-700 text-left"
         >
           {appointment.leadName}
         </button>
@@ -43,8 +43,8 @@ export default function AgendaCancelledRow({ appointment, isFocused, setRef, onO
           </Button>
         </div>
       </div>
-      <p className="text-[11px] text-slate-400">Creada: {formatDateTime(appointment.createdAt)}</p>
-      <p className="text-[11px] text-slate-400">Cancelada: {formatDateTime(appointment.updatedAt)}</p>
+      <p className="text-[11px] text-ink-muted">Creada: {formatDateTime(appointment.createdAt)}</p>
+      <p className="text-[11px] text-ink-muted">Cancelada: {formatDateTime(appointment.updatedAt)}</p>
     </div>
   );
 }

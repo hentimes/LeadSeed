@@ -188,7 +188,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
-                  showPreview ? 'bg-blue-100 text-blue-700' : 'bg-surface-hover hover:bg-gray-200'
+                  showPreview ? 'bg-blue-100 text-blue-700' : 'bg-surface-hover hover:bg-surface-sunken'
                 }`}
               >
                  Vista Previa

@@ -38,41 +38,41 @@ export default function GoalsSettings() {
   return (
     <div className="bg-transparent pt-2 animate-fade-in">
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Metas y Dashboard</h3>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Configura tus objetivos diarios y la comparativa del panel.</p>
+        <h3 className="text-lg font-bold text-ink">Metas y Dashboard</h3>
+        <p className="text-xs text-ink-muted mt-1">Configura tus objetivos diarios y la comparativa del panel.</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Metas */}
           <div>
-            <h4 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3">Cuotas Diarias</h4>
+            <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">Cuotas Diarias</h4>
             <div className="flex flex-col gap-3">
-              <label className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <label className="flex items-center justify-between text-xs text-ink-secondary">
                 WhatsApp / día
-                <input type="number" min="0" value={waGoal} onChange={e => setWaGoal(Number(e.target.value))} className="w-20 border-b border-slate-300 dark:border-slate-600/50 px-2 py-1 text-right focus:border-blue-500 outline-none bg-transparent" />
+                <input type="number" min="0" value={waGoal} onChange={e => setWaGoal(Number(e.target.value))} className="w-20 border-b border-line-strong px-2 py-1 text-right focus:border-blue-500 outline-none bg-transparent" />
               </label>
-              <label className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <label className="flex items-center justify-between text-xs text-ink-secondary">
                 Emails / día
-                <input type="number" min="0" value={emailGoal} onChange={e => setEmailGoal(Number(e.target.value))} className="w-20 border-b border-slate-300 dark:border-slate-600/50 px-2 py-1 text-right focus:border-blue-500 outline-none bg-transparent" />
+                <input type="number" min="0" value={emailGoal} onChange={e => setEmailGoal(Number(e.target.value))} className="w-20 border-b border-line-strong px-2 py-1 text-right focus:border-blue-500 outline-none bg-transparent" />
               </label>
-              <label className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <label className="flex items-center justify-between text-xs text-ink-secondary">
                 Llamadas / día
-                <input type="number" min="0" value={callGoal} onChange={e => setCallGoal(Number(e.target.value))} className="w-20 border-b border-slate-300 dark:border-slate-600/50 px-2 py-1 text-right focus:border-blue-500 outline-none bg-transparent" />
+                <input type="number" min="0" value={callGoal} onChange={e => setCallGoal(Number(e.target.value))} className="w-20 border-b border-line-strong px-2 py-1 text-right focus:border-blue-500 outline-none bg-transparent" />
               </label>
             </div>
           </div>
 
           {/* Comparación */}
           <div>
-            <h4 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-3">Análisis de Progreso</h4>
+            <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">Análisis de Progreso</h4>
             <div className="flex flex-col gap-3">
-              <label className="flex flex-col text-xs text-slate-500 dark:text-slate-400">
+              <label className="flex flex-col text-xs text-ink-secondary">
                 <span className="mb-1">Comparar rendimiento contra:</span>
                 <select 
                   value={comparePeriod} 
                   onChange={(e) => setComparePeriod(e.target.value as ComparePeriod)} 
-                  className="border-b border-slate-300 dark:border-slate-600/50 px-2 py-1.5 focus:border-blue-500 outline-none bg-transparent w-full font-medium"
+                  className="border-b border-line-strong px-2 py-1.5 focus:border-blue-500 outline-none bg-transparent w-full font-medium"
                 >
                   <option value="yesterday">Día anterior (Ayer)</option>
                   <option value="lastWeek">Semana pasada</option>
@@ -84,7 +84,7 @@ export default function GoalsSettings() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700/50">
+        <div className="flex items-center gap-3 pt-4 border-t border-line">
           <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-xs font-semibold transition-colors disabled:opacity-50">
             {saving ? 'Guardando...' : 'Guardar configuración'}
           </button>

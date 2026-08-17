@@ -329,7 +329,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   };
 
   if (loading || banLoading) {
-    return <div className="flex items-center justify-center h-full text-slate-400">Cargando sala...</div>;
+    return <div className="flex items-center justify-center h-full text-ink-muted">Cargando sala...</div>;
   }
 
   if (myBan) {

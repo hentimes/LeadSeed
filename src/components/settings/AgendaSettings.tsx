@@ -217,20 +217,20 @@ export default function AgendaSettings() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-400 py-6">Cargando agenda...</p>;
+    return <p className="text-sm text-ink-muted py-6">Cargando agenda...</p>;
   }
 
   return (
     <div className="animate-fade-in pt-2 flex flex-col gap-5">
-      <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
+      <div className="border-y border-line/80 py-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Configuracion de agenda</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            <h3 className="text-sm font-bold text-ink">Configuracion de agenda</h3>
+            <p className="text-xs text-ink-muted mt-1">
               Define disponibilidad, bloquea horas y sincroniza Google Calendar.
             </p>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-1 rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">
+          <span className="text-[11px] font-semibold px-2 py-1 rounded bg-slate-900 text-white dark:text-slate-900">
             Realtime
           </span>
         </div>
@@ -243,15 +243,15 @@ export default function AgendaSettings() {
       )}
 
       {settings && (
-        <div className="border-l-4 border-l-blue-600 bg-slate-50/70 dark:bg-slate-900/50 px-3 py-3">
+        <div className="border-l-4 border-l-blue-600 bg-surface-muted/70 px-3 py-3">
           <div className="flex items-center justify-between gap-2 mb-3">
             <div>
-              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Google Calendar</p>
-              <p className="text-[11px] text-slate-400 truncate">
+              <p className="text-xs font-bold text-ink">Google Calendar</p>
+              <p className="text-[11px] text-ink-muted truncate">
                 {connectionStatus?.isConnected ? connectionStatus.googleEmail || 'Cuenta conectada' : 'Pendiente de reconectar con Google'}
               </p>
               {connectionStatus?.lastSyncFinishedAt && (
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-ink-muted">
                   Ultima sync: {formatDateTime(connectionStatus.lastSyncFinishedAt)}
                 </p>
               )}
@@ -271,24 +271,24 @@ export default function AgendaSettings() {
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <label className="text-[11px] font-semibold text-slate-500">
+            <label className="text-[11px] font-semibold text-ink-secondary">
               Duracion
               <select
                 value={settings.slotDurationMinutes}
                 onChange={(event) => setSettings({ ...settings, slotDurationMinutes: Number(event.target.value) })}
-                className="mt-1 w-full border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+                className="mt-1 w-full border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
               >
                 <option value={30}>30 min</option>
                 <option value={45}>45 min</option>
                 <option value={60}>60 min</option>
               </select>
             </label>
-            <label className="text-[11px] font-semibold text-slate-500">
+            <label className="text-[11px] font-semibold text-ink-secondary">
               Buffer
               <select
                 value={settings.slotBufferMinutes}
                 onChange={(event) => setSettings({ ...settings, slotBufferMinutes: Number(event.target.value) })}
-                className="mt-1 w-full border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+                className="mt-1 w-full border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
               >
                 <option value={0}>0 min</option>
                 <option value={10}>10 min</option>
@@ -296,15 +296,15 @@ export default function AgendaSettings() {
                 <option value={30}>30 min</option>
               </select>
             </label>
-            <label className="text-[11px] font-semibold text-slate-500">
+            <label className="text-[11px] font-semibold text-ink-secondary">
               Zona
               <input
                 value={settings.timezone}
                 onChange={(event) => setSettings({ ...settings, timezone: event.target.value })}
-                className="mt-1 w-full border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+                className="mt-1 w-full border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
               />
             </label>
-            <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 pt-5">
+            <label className="flex items-center gap-2 text-[11px] font-semibold text-ink-secondary pt-5">
               <input
                 type="checkbox"
                 checked={settings.allowPublicBooking}
@@ -324,9 +324,9 @@ export default function AgendaSettings() {
         </div>
       )}
 
-      <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
+      <div className="border-y border-line/80 py-3">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Horario semanal</h4>
+          <h4 className="text-xs font-bold uppercase tracking-wide text-ink-secondary">Horario semanal</h4>
           <button
             type="button"
             onClick={() => void handleRulesSave()}
@@ -339,22 +339,22 @@ export default function AgendaSettings() {
         <div className="flex flex-col gap-2">
           {rules.map((rule) => (
             <div key={rule.dayOfWeek} className="grid grid-cols-[42px_1fr_1fr_54px] items-center gap-2 text-xs">
-              <span className="font-bold text-slate-600 dark:text-slate-300">{dayLabels[rule.dayOfWeek]}</span>
+              <span className="font-bold text-ink-secondary">{dayLabels[rule.dayOfWeek]}</span>
               <input
                 type="time"
                 value={rule.startTime}
                 disabled={!rule.isActive}
                 onChange={(event) => updateRule(rule.dayOfWeek, { startTime: event.target.value })}
-                className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 bg-transparent disabled:opacity-40"
+                className="border border-line-strong rounded px-2 py-1.5 bg-transparent disabled:opacity-40"
               />
               <input
                 type="time"
                 value={rule.endTime}
                 disabled={!rule.isActive}
                 onChange={(event) => updateRule(rule.dayOfWeek, { endTime: event.target.value })}
-                className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 bg-transparent disabled:opacity-40"
+                className="border border-line-strong rounded px-2 py-1.5 bg-transparent disabled:opacity-40"
               />
-              <label className="flex items-center justify-end gap-1 text-[11px] text-slate-500">
+              <label className="flex items-center justify-end gap-1 text-[11px] text-ink-secondary">
                 <input
                   type="checkbox"
                   checked={rule.isActive}
@@ -367,26 +367,26 @@ export default function AgendaSettings() {
         </div>
       </div>
 
-      <div className="border-l-4 border-l-slate-700 dark:border-l-slate-300 bg-slate-50/70 dark:bg-slate-900/50 px-3 py-3">
-        <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3">Bloquear hora</h4>
+      <div className="border-l-4 border-l-slate-700 dark:border-l-slate-300 bg-surface-muted/70 px-3 py-3">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-ink-secondary mb-3">Bloquear hora</h4>
         <div className="grid grid-cols-2 sm:grid-cols-[1.1fr_0.8fr_0.8fr] gap-2">
           <input
             type="date"
             value={blockForm.date}
             onChange={(event) => setBlockForm((current) => ({ ...current, date: event.target.value }))}
-            className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+            className="border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
           />
           <input
             type="time"
             value={blockForm.startTime}
             onChange={(event) => setBlockForm((current) => ({ ...current, startTime: event.target.value }))}
-            className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+            className="border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
           />
           <input
             type="time"
             value={blockForm.endTime}
             onChange={(event) => setBlockForm((current) => ({ ...current, endTime: event.target.value }))}
-            className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+            className="border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_96px] gap-2 mt-2">
@@ -394,30 +394,30 @@ export default function AgendaSettings() {
             value={blockForm.note}
             onChange={(event) => setBlockForm((current) => ({ ...current, note: event.target.value }))}
             placeholder="Motivo interno"
-            className="border border-slate-300 dark:border-slate-600/50 rounded px-2 py-1.5 text-xs bg-transparent"
+            className="border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
           />
           <button
             type="button"
             onClick={() => void handleCreateBlock()}
             disabled={saving}
-            className="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-3 py-2 rounded text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-1"
+            className="bg-slate-900 text-white dark:text-slate-900 px-3 py-2 rounded text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-1"
           >
             <Icon.Plus /> Bloquear
           </button>
         </div>
       </div>
 
-      <div className="border-y border-slate-200/80 dark:border-slate-700/60 py-3">
-        <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">Bloqueos activos</h4>
+      <div className="border-y border-line/80 py-3">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-ink-secondary mb-2">Bloqueos activos</h4>
         <div className="flex flex-col gap-2">
           {blocks.length === 0 ? (
-            <p className="text-xs text-slate-400">Sin bloqueos en los proximos dias.</p>
+            <p className="text-xs text-ink-muted">Sin bloqueos en los proximos dias.</p>
           ) : (
             blocks.map((block) => (
               <div key={block.id} className="flex items-start justify-between gap-2 border-l-2 border-l-slate-300 dark:border-l-slate-600 pl-2">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{formatDateTime(block.startsAt)} - {formatDateTime(block.endsAt)}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{block.note || 'Bloqueo manual'}</p>
+                  <p className="text-xs font-semibold text-ink">{formatDateTime(block.startsAt)} - {formatDateTime(block.endsAt)}</p>
+                  <p className="text-[11px] text-ink-muted truncate">{block.note || 'Bloqueo manual'}</p>
                 </div>
                 {block.blockType === 'manual' && (
                   <button

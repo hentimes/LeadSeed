@@ -83,7 +83,7 @@ export default function ChatMessageList({
     className="flex-1 overflow-y-auto p-4 space-y-4 relative"
   >
     {visibleMessages.length === 0 && (
-      <div className="text-center text-sm text-slate-400 dark:text-gray-500 mt-10">
+      <div className="text-center text-sm text-ink-muted mt-10">
         No hay mensajes nuevos. Sé el primero en escribir.
       </div>
     )}
@@ -197,16 +197,16 @@ export default function ChatMessageList({
 
             <div className={`relative min-w-0 max-w-full px-4 py-2.5 text-[13px] sm:text-sm break-words break-all shadow-sm
               ${isOwn 
-                ? 'bg-primary-soft text-slate-800 dark:bg-gray-800 dark:text-gray-100 rounded-2xl rounded-tr-sm' 
-                : 'bg-white dark:bg-gray-800 text-ink dark:text-gray-100 rounded-2xl rounded-tl-sm border border-line dark:border-gray-700'
+                ? 'bg-primary-soft text-ink rounded-2xl rounded-tr-sm' 
+                : 'bg-surface text-ink rounded-2xl rounded-tl-sm border border-line dark:border-gray-700'
               }`}
             >
               {/* Reply Quote */}
               {msg.reply_to_message && (
                 <div className={`mb-2 pl-2 border-l-2 text-xs py-1 pr-2 rounded-r flex flex-col
                   ${isOwn 
-                    ? 'border-primary bg-white/50 text-slate-600' 
-                    : 'border-blue-400 bg-slate-50 dark:bg-gray-700 text-ink-muted'
+                    ? 'border-primary bg-surface/50 text-ink-secondary' 
+                    : 'border-blue-400 bg-surface-muted text-ink-muted'
                   }`}
                 >
                   <span className="font-semibold text-[10px]">
@@ -219,7 +219,7 @@ export default function ChatMessageList({
               )}
 
               {msg.deleted_at ? (
-                <p className="flex items-center gap-1.5 text-slate-400 dark:text-gray-500 italic text-[13px] sm:text-sm">
+                <p className="flex items-center gap-1.5 text-ink-muted italic text-[13px] sm:text-sm">
                   <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -257,8 +257,8 @@ export default function ChatMessageList({
           <div className={`relative opacity-0 group-hover:opacity-100 transition-opacity flex items-center ${isOwn ? 'mr-auto' : 'ml-auto'}`}>
             <button
               onClick={() => void handleToggleSaved(msg)}
-              className={`p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors ${
-                savedIds.has(msg.id) ? 'text-primary' : 'text-slate-400 hover:text-primary'
+              className={`p-1.5 rounded-full hover:bg-surface-hover transition-colors ${
+                savedIds.has(msg.id) ? 'text-primary' : 'text-ink-muted hover:text-primary'
               }`}
               title={savedIds.has(msg.id) ? 'Quitar de guardados' : 'Guardar mensaje'}
             >
@@ -269,8 +269,8 @@ export default function ChatMessageList({
 
             <button
               onClick={() => void highlights.toggleHighlight(msg)}
-              className={`p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors ${
-                highlights.myHighlightedIds.has(msg.id) ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500'
+              className={`p-1.5 rounded-full hover:bg-surface-hover transition-colors ${
+                highlights.myHighlightedIds.has(msg.id) ? 'text-amber-500' : 'text-ink-muted hover:text-amber-500'
               }`}
               title={highlights.myHighlightedIds.has(msg.id) ? 'Quitar destacado' : 'Destacar mensaje'}
             >
@@ -282,7 +282,7 @@ export default function ChatMessageList({
             {isStaff && (
               <button
                 onClick={() => setPinMenuFor(pinMenuFor === msg.id ? null : msg.id)}
-                className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                className="p-1.5 text-ink-muted hover:text-amber-600 hover:bg-surface-hover rounded-full transition-colors"
                 title="Fijar mensaje"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -305,7 +305,7 @@ export default function ChatMessageList({
             {!isOwn && (
               <button
                 onClick={() => setReportMenuFor(reportMenuFor === msg.id ? null : msg.id)}
-                className="p-1.5 text-slate-400 hover:text-state-danger hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                className="p-1.5 text-ink-muted hover:text-state-danger hover:bg-surface-hover rounded-full transition-colors"
                 title="Reportar mensaje"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -327,7 +327,7 @@ export default function ChatMessageList({
 
             <button
               onClick={() => setReplyTo(msg)}
-              className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              className="p-1.5 text-ink-muted hover:text-primary hover:bg-surface-hover rounded-full transition-colors"
               title="Responder"
             >
               <Icon.Reply />
@@ -336,7 +336,7 @@ export default function ChatMessageList({
             {isStaff && (
               <button
                 onClick={() => setDeleteMessageTarget(msg)}
-                className="p-1.5 text-slate-400 hover:text-state-danger hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                className="p-1.5 text-ink-muted hover:text-state-danger hover:bg-surface-hover rounded-full transition-colors"
                 title="Eliminar mensaje"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

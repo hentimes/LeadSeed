@@ -245,7 +245,7 @@ export default function SupportFloatingChat() {
                 <div key={message.id}>
                   {showDate && (
                     <div className="flex justify-center mb-3">
-                      <span className="bg-gray-200/60 text-ink-muted text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      <span className="bg-surface-sunken/60 text-ink-muted text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                         {formatMessageDate(message.created_at)}
                       </span>
                     </div>

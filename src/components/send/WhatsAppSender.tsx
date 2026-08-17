@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
 import { buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
+import { getSettings } from '../../services/appSettingsService';
 import { ReasonPicker } from './ReasonPicker';
 import type { MessageReason } from '../../services/messageReasonsService';
 import VariableDropdown from '../VariableDropdown';
@@ -70,9 +71,23 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   const [reasons, setReasons] = useState<MessageReason[]>([]);
   const [motivoId, setMotivoId] = useState<number | null>(null);
 
+  /**
+   * Donde se va a abrir WhatsApp.
+   *
+   * El modal de confirmacion decia siempre "Se abrira WhatsApp Web", incluso
+   * con la preferencia puesta en la app de escritorio: afirmaba algo falso
+   * justo en la pantalla donde el usuario decide si envia. El ajuste vive en
+   * Ajustes, lejos de aqui, y por eso nadie lo noto.
+   */
+  const [clienteWhatsApp, setClienteWhatsApp] = useState<'web' | 'app'>('web');
+
   useEffect(() => {
     motivos.getAll().then(setReasons);
   }, [motivos.refreshKey]);
+
+  useEffect(() => {
+    getSettings().then((s) => setClienteWhatsApp(s.whatsappClientPreference || 'web'));
+  }, []);
 
   useEffect(() => {
     if (selectedTemplate) {
@@ -264,7 +279,11 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       {showConfirmModal && selectedTemplate && (
         <SendConfirmModal
           title="Confirmar envío"
-          subtitle="Se abrirá WhatsApp Web para completar el envío."
+          subtitle={
+            clienteWhatsApp === 'app'
+              ? 'Se abrirá la app de escritorio de WhatsApp para completar el envío.'
+              : 'Se abrirá WhatsApp Web para completar el envío.'
+          }
           confirmLabel="Abrir WhatsApp"
           onCancel={() => setShowConfirmModal(false)}
           onConfirm={executeSend}

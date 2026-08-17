@@ -39,7 +39,7 @@ function Checkbox({
       disabled={disabled}
       title={title}
       onChange={(event) => onChange(event.target.checked)}
-      className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary disabled:opacity-30"
+      className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary disabled:opacity-30"
     />
   );
 }
@@ -77,25 +77,25 @@ export default function AlertsManager() {
   };
 
   if (!prefs) {
-    return <div className="pt-2 text-sm text-slate-500">Cargando alertas...</div>;
+    return <div className="pt-2 text-sm text-ink-secondary">Cargando alertas...</div>;
   }
 
   return (
     <div className="animate-fade-in pt-2">
-      <h3 className="mb-1 border-b border-slate-200 pb-2 text-sm font-bold text-slate-700 dark:border-slate-700/50 dark:text-slate-200">
+      <h3 className="mb-1 border-b border-line pb-2 text-sm font-bold text-ink">
         Administrador de alertas
       </h3>
-      <p className="mb-3 text-[11px] text-slate-500 dark:text-slate-400">
+      <p className="mb-3 text-[11px] text-ink-secondary">
         Elegi que te avisa y como. El contador morado del icono es exclusivo de leads nuevos.
       </p>
 
-      <div className="hidden sm:grid grid-cols-[1fr_repeat(4,56px)] gap-1 px-2 pb-1.5 border-b border-slate-200 dark:border-slate-700">
-        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Alerta</span>
+      <div className="hidden sm:grid grid-cols-[1fr_repeat(4,56px)] gap-1 px-2 pb-1.5 border-b border-line">
+        <span className="text-[10px] font-bold uppercase tracking-wide text-ink-secondary">Alerta</span>
         {COLUMNS.map((column) => (
           <span
             key={column.key}
             title={column.hint}
-            className="text-[10px] font-bold uppercase tracking-wide text-slate-500 text-center"
+            className="text-[10px] font-bold uppercase tracking-wide text-ink-secondary text-center"
           >
             {column.label}
           </span>
@@ -111,8 +111,8 @@ export default function AlertsManager() {
             <div key={type} className="px-2 py-2.5">
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_repeat(4,56px)] gap-2 sm:gap-1 sm:items-center">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">{meta.title}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{meta.description}</p>
+                  <p className="text-[13px] font-semibold text-ink">{meta.title}</p>
+                  <p className="text-[11px] text-ink-secondary">{meta.description}</p>
                 </div>
 
                 <div className="flex sm:contents gap-4">
@@ -125,7 +125,7 @@ export default function AlertsManager() {
                         title={column.hint}
                         onChange={(value) => void toggle(type, column.key, value)}
                       />
-                      <span className="sm:hidden text-[11px] text-slate-500">{column.label}</span>
+                      <span className="sm:hidden text-[11px] text-ink-secondary">{column.label}</span>
                     </label>
                   ))}
                 </div>
@@ -133,7 +133,7 @@ export default function AlertsManager() {
 
               {type === 'upcoming_appointment' && pref.enabled && (
                 <div className="mt-2 flex items-center gap-2 pl-0 sm:pl-1">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Avisar</span>
+                  <span className="text-[11px] text-ink-secondary">Avisar</span>
                   <input
                     type="number"
                     min={1}
@@ -141,9 +141,9 @@ export default function AlertsManager() {
                     value={minutesDraft}
                     onChange={(event) => setMinutesDraft(event.target.value)}
                     onBlur={() => void commitMinutes()}
-                    className="w-16 rounded-[4px] border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-700 focus:border-primary focus:outline-none dark:border-slate-600/50 dark:bg-slate-800"
+                    className="w-16 rounded-[4px] border border-line-strong bg-surface px-2 py-1 text-[11px] text-ink focus:border-primary focus:outline-none"
                   />
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">minutos antes</span>
+                  <span className="text-[11px] text-ink-secondary">minutos antes</span>
                 </div>
               )}
             </div>

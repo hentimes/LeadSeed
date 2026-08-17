@@ -158,7 +158,7 @@ export default function PipelinePage() {
       >
         <div className="flex items-center justify-center gap-1.5">
           <span className="uppercase tracking-wider">NUEVO</span>
-          <span className="text-[10px] px-1.5 rounded bg-white/70 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 shadow-sm">{total}</span>
+          <span className="text-[10px] px-1.5 rounded bg-surface/70 text-ink shadow-sm">{total}</span>
         </div>
       </button>
     );
@@ -187,7 +187,7 @@ export default function PipelinePage() {
       >
         <div className="flex items-center justify-between px-3 py-2 border-b" style={{ backgroundColor: `${STATUS_COLORS[s]}15`, borderColor: `${STATUS_COLORS[s]}30` }}>
           <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: STATUS_COLORS[s] }}>{STATUS_LABELS[s]}</span>
-          <span className="text-[10px] font-bold bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-700 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-200 dark:text-gray-200 shadow-sm">{items.length}</span>
+          <span className="text-[10px] font-bold bg-surface dark:backdrop-blur-md px-1.5 py-0.5 rounded text-ink shadow-sm">{items.length}</span>
         </div>
         <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
           {items.map((lead) => (
@@ -199,14 +199,14 @@ export default function PipelinePage() {
                  handleDragStart(e, lead);
                }}
                onDragEnd={handleDragEnd}
-               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white/5 rounded text-slate-600 dark:text-slate-300 dark:text-gray-300 font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
+               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 rounded text-ink-secondary font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
              >
                <span className="truncate">{lead.name}</span>
-               <span className="text-[10px] text-gray-300 group-hover/item:text-slate-400 dark:text-slate-500 opacity-0 group-hover/item:opacity-100 font-mono tracking-tighter ml-1">|||</span>
+               <span className="text-[10px] text-ink-muted group-hover/item:text-ink-muted opacity-0 group-hover/item:opacity-100 font-mono tracking-tighter ml-1">|||</span>
              </div>
           ))}
           {items.length === 0 && (
-             <div className="text-[10px] text-center text-gray-400 mt-6 flex flex-col items-center opacity-50">
+             <div className="text-[10px] text-center text-ink-muted mt-6 flex flex-col items-center opacity-50">
                <div className="text-xl mb-1">{Icon.Pipeline()}</div>
                <span className="mt-1">Vacío</span>
              </div>
@@ -227,10 +227,10 @@ export default function PipelinePage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar nombre, teléfono, email, RUT..."
-            className="w-full border border-slate-300 dark:border-slate-600/50 rounded h-full px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-line-strong rounded h-full px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           />
           {searchLower && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500">{totalInSearch} encontrados</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">{totalInSearch} encontrados</span>
           )}
         </div>
         <div className="w-1/4 min-w-[100px] flex">
@@ -239,20 +239,20 @@ export default function PipelinePage() {
       </div>
 
       <Card className="flex flex-col max-h-[250px] min-h-[150px] overflow-hidden mb-5">
-        <div className="bg-slate-50 dark:bg-slate-900 dark:bg-gray-900 border-b border-slate-200 dark:border-slate-700/50 dark:border-gray-700 px-3 py-2 flex justify-between items-center shrink-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 dark:text-gray-300 flex items-center gap-2">
+        <div className="bg-surface-muted border-b border-line px-3 py-2 flex justify-between items-center shrink-0">
+          <span className="text-xs font-bold uppercase tracking-wider text-ink-secondary flex items-center gap-2">
             Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span>
           </span>
-          <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 dark:text-gray-300">
+          <span className="text-[10px] font-bold bg-surface-sunken px-2 py-0.5 rounded text-ink-secondary">
             {grouped[activeTab].length} items
           </span>
         </div>
         <div className="flex-1 overflow-y-auto">
           {grouped[activeTab].length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-400 flex flex-col items-center justify-center h-full">
+            <div className="px-4 py-8 text-center text-sm text-ink-muted flex flex-col items-center justify-center h-full">
                <span className="text-3xl mb-3 opacity-20">{Icon.Pipeline()}</span>
                <span>No hay leads aquí</span>
-               <span className="text-xs mt-1 text-gray-300">Arrastra leads desde otras listas</span>
+               <span className="text-xs mt-1 text-ink-muted">Arrastra leads desde otras listas</span>
             </div>
           ) : (
             grouped[activeTab].map((lead) => (
@@ -261,20 +261,20 @@ export default function PipelinePage() {
                 draggable
                 onDragStart={(e) => handleDragStart(e, lead)}
                 onDragEnd={handleDragEnd}
-                className="border-b border-gray-100 dark:border-gray-700 last:border-0 px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center transition-colors group"
+                className="border-b border-line last:border-0 px-3 py-2 hover:bg-blue-50 cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center transition-colors group"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <span className="font-medium text-slate-700 dark:text-slate-200 dark:text-gray-200 text-xs group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{lead.name}</span>
+                  <span className="font-medium text-ink text-xs group-hover:text-blue-700 transition-colors">{lead.name}</span>
                   {(lead.company || lead.phone || lead.email) && (
-                    <span className="text-gray-400 text-[10px] truncate flex items-center gap-2">
+                    <span className="text-ink-muted text-[10px] truncate flex items-center gap-2">
                       {lead.company && <span className="flex items-center gap-1"><div className="w-3">{Icon.Messages()}</div> {lead.company}</span>}
                       {lead.phone && <span className="flex items-center gap-1"><div className="w-3">{Icon.Phone()}</div> ...{lead.phone.slice(-4)}</span>}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setViewLead(lead)} className="text-gray-400 hover:text-blue-500 cursor-pointer p-1" title="Ver detalle" aria-label={`Ver detalle de ${lead.name}`}><div className="w-4">{Icon.View()}</div></button>
-                  <span className="text-[10px] text-gray-400 font-mono tracking-tighter">|||</span>
+                  <button onClick={() => setViewLead(lead)} className="text-ink-muted hover:text-blue-500 cursor-pointer p-1" title="Ver detalle" aria-label={`Ver detalle de ${lead.name}`}><div className="w-4">{Icon.View()}</div></button>
+                  <span className="text-[10px] text-ink-muted font-mono tracking-tighter">|||</span>
                 </div>
               </div>
             ))
@@ -324,7 +324,7 @@ export default function PipelinePage() {
             </div>
           )}
           <div className="flex gap-2 justify-end">
-            <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 px-2 py-1.5">
+            <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-ink-muted hover:text-ink-secondary px-2 py-1.5">
               Omitir
             </button>
             <Button variant="primary" onClick={createTask}>

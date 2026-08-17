@@ -96,11 +96,11 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
             setPage(0);
           }}
           placeholder="Buscar lead, plantilla, email..."
-          className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-2 py-1.5 text-sm w-44"
+          className="border border-line-strong rounded px-2 py-1.5 text-sm w-44"
         />
         <div className="flex gap-0 border rounded overflow-hidden">
-          <button onClick={() => { setTab('envios'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'envios' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 text-slate-500 dark:text-slate-400'}`}>Envios ({filteredLogs.length})</button>
-          <button onClick={() => { setTab('actividad'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'actividad' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-800 text-slate-500 dark:text-slate-400'}`}>Actividad ({filteredActivity.length})</button>
+          <button onClick={() => { setTab('envios'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'envios' ? 'bg-blue-600 text-white' : 'bg-surface dark:backdrop-blur-md text-ink-secondary'}`}>Envios ({filteredLogs.length})</button>
+          <button onClick={() => { setTab('actividad'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'actividad' ? 'bg-blue-600 text-white' : 'bg-surface dark:backdrop-blur-md text-ink-secondary'}`}>Actividad ({filteredActivity.length})</button>
         </div>
         {tab === 'envios' && (
           <select
@@ -109,7 +109,7 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
               setFilter(e.target.value as typeof filter);
               setPage(0);
             }}
-            className="border border-slate-300 dark:border-slate-600/50 dark:border-gray-600 rounded px-2 py-1.5 text-xs"
+            className="border border-line-strong rounded px-2 py-1.5 text-xs"
           >
             <option value="todos">Todos</option>
             <option value="whatsapp">WhatsApp</option>
@@ -121,7 +121,7 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
       {tab === 'envios' ? (
         <Card className="overflow-hidden">
           {filteredLogs.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-gray-400">No hay envios.</p>
+            <p className="px-3 py-8 text-center text-xs text-ink-muted">No hay envios.</p>
           ) : (
             pagedLogs.map((log) => (
               <div key={log.id} className={`border-b last:border-0 dark:border-gray-700 ${expandedId === log.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
@@ -130,26 +130,26 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
                   {log.templateType === 'email' && <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Email /> EM</span>}
                   {log.templateType === 'call' && <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Phone /> LLAMADA</span>}
                   <span className="font-medium truncate">{log.leadName}</span>
-                  <span className="text-gray-400 truncate hidden sm:inline">{log.leadPhone}</span>
-                  <span className="text-gray-400">-</span>
+                  <span className="text-ink-muted truncate hidden sm:inline">{log.leadPhone}</span>
+                  <span className="text-ink-muted">-</span>
                   <button
                     onClick={() => {
                       openTemplate(log);
                     }}
-                    className={`${log.templateContenido ? 'text-blue-600 hover:text-blue-800 underline' : 'text-gray-400 cursor-default'}`}
+                    className={`${log.templateContenido ? 'text-blue-600 hover:text-blue-800 underline' : 'text-ink-muted cursor-default'}`}
                   >
                     {log.templateNombre}
                   </button>
-                  <span className="text-gray-400 ml-auto shrink-0">{new Date(log.sentAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-ink-muted ml-auto shrink-0">{new Date(log.sentAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                   {log.scheduledFor && <span className="text-amber-500 text-[10px] shrink-0">Prog.</span>}
                   {log.templateContenido && (
-                    <button onClick={() => setExpandedId(expandedId === log.id ? null : log.id || null)} className="text-gray-400 hover:text-blue-600 shrink-0 ml-1">
+                    <button onClick={() => setExpandedId(expandedId === log.id ? null : log.id || null)} className="text-ink-muted hover:text-blue-600 shrink-0 ml-1">
                       {expandedId === log.id ? '^' : 'v'}
                     </button>
                   )}
                 </div>
                 {expandedId === log.id && log.templateContenido && (
-                  <div className="px-3 pb-2 text-xs border-t dark:border-gray-700 bg-white dark:bg-slate-800/80 dark:backdrop-blur-md dark:bg-gray-900 max-h-40 overflow-y-auto">
+                  <div className="px-3 pb-2 text-xs border-t dark:border-gray-700 bg-surface dark:backdrop-blur-md max-h-40 overflow-y-auto">
                     {log.isHtml ? <div dangerouslySetInnerHTML={{ __html: log.templateContenido }} /> : <div className="whitespace-pre-wrap">{log.templateContenido}</div>}
                   </div>
                 )}
@@ -160,13 +160,13 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
       ) : (
         <Card className="overflow-hidden">
           {filteredActivity.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-gray-400">No hay actividad.</p>
+            <p className="px-3 py-8 text-center text-xs text-ink-muted">No hay actividad.</p>
           ) : (
             pagedActivity.map((item, index) => (
               <div key={index} className="px-3 py-1.5 text-xs flex items-center gap-2 border-b last:border-0 dark:border-gray-700">
                 <span className={item.type === 'send' ? 'text-green-500' : 'text-blue-500'}>{item.type === 'send' ? 'WA/@' : 'N'}</span>
-                <span className="text-slate-500 dark:text-slate-400 dark:text-gray-400 truncate">{item.text}</span>
-                <span className="text-gray-400 ml-auto shrink-0">{new Date(item.time).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="text-ink-secondary truncate">{item.text}</span>
+                <span className="text-ink-muted ml-auto shrink-0">{new Date(item.time).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             ))
           )}
@@ -176,7 +176,7 @@ export default function SendHistoryPage({ onViewTemplate }: Props) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-3">
           <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} className="px-2 py-1 text-xs border rounded disabled:opacity-30 dark:border-gray-600">{'<'}</button>
-          <span className="text-xs text-slate-400 dark:text-slate-500">{page + 1} / {totalPages}</span>
+          <span className="text-xs text-ink-muted">{page + 1} / {totalPages}</span>
           <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} className="px-2 py-1 text-xs border rounded disabled:opacity-30 dark:border-gray-600">{'>'}</button>
         </div>
       )}

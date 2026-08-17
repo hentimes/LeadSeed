@@ -23,10 +23,10 @@ export default function LeadDetailOrigin({ metadata }: Props) {
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-      <span className="text-slate-400 shrink-0">{Icon.Bullseye()}</span>
+      <span className="text-ink-muted shrink-0">{Icon.Bullseye()}</span>
       <Badge tone={config.tone}>{config.label}</Badge>
       {origin === 'web_form' && linkName && (
-        <span className="text-slate-500 font-medium truncate">
+        <span className="text-ink-secondary font-medium truncate">
           {linkName}
           {campaign ? ` · ${campaign}` : ''}
         </span>

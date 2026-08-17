@@ -40,7 +40,7 @@ export default function LeadDetailContact({ phone, email, onCopy, onWhatsApp }: 
           >
             <span className="text-ink-muted shrink-0">{Icon.Phone()}</span>
             <span className="text-[11px] font-semibold text-ink truncate">{phone}</span>
-            <span className="ml-auto text-slate-300 group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
+            <span className="ml-auto text-ink-muted group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
           </div>
           <button
             onClick={onWhatsApp}
@@ -67,7 +67,7 @@ export default function LeadDetailContact({ phone, email, onCopy, onWhatsApp }: 
           >
             <span className="text-ink-muted shrink-0">{Icon.Email()}</span>
             <span className="text-[11px] font-semibold text-ink truncate">{email}</span>
-            <span className="ml-auto text-slate-300 group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
+            <span className="ml-auto text-ink-muted group-hover:text-ink-secondary shrink-0">{Icon.Copy()}</span>
           </div>
           <a
             href={`mailto:${email}`}

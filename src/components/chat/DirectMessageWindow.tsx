@@ -80,7 +80,7 @@ export default function DirectMessageWindow({
                 className={`min-w-0 max-w-[85%] px-3 py-2 text-[13px] break-words break-all shadow-sm ${
                   isOwn
                     ? 'bg-primary text-white rounded-2xl rounded-tr-sm'
-                    : 'bg-white dark:bg-gray-800 text-ink dark:text-gray-100 border border-line dark:border-gray-700 rounded-2xl rounded-tl-sm'
+                    : 'bg-surface text-ink dark:text-gray-100 border border-line dark:border-gray-700 rounded-2xl rounded-tl-sm'
                 }`}
               >
                 {message.message}
@@ -102,7 +102,7 @@ export default function DirectMessageWindow({
 
       <form
         onSubmit={handleSend}
-        className="relative p-2 border-t border-line dark:border-gray-700 bg-white dark:bg-gray-900"
+        className="relative p-2 border-t border-line dark:border-gray-700 bg-surface"
       >
         {(guard.blockedReason || sendError) && (
           <p className="mb-1.5 px-1 text-[11px] font-medium text-state-danger">
@@ -133,7 +133,7 @@ export default function DirectMessageWindow({
             }}
             maxLength={MAX_LENGTH}
             placeholder="Escribí un mensaje..."
-            className="flex-1 min-w-0 rounded-full border border-line dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-[13px] text-ink dark:text-gray-100 outline-none focus:ring-2 focus:ring-primary-soft"
+            className="flex-1 min-w-0 rounded-full border border-line dark:border-gray-700 bg-surface px-3 py-1.5 text-[13px] text-ink dark:text-gray-100 outline-none focus:ring-2 focus:ring-primary-soft"
           />
 
           <button
@@ -155,7 +155,7 @@ export default function DirectMessageWindow({
           <button
             type="submit"
             disabled={!text.trim()}
-            className="w-8 h-8 rounded-full bg-primary hover:bg-primary-hover disabled:bg-line disabled:text-slate-400 text-white flex items-center justify-center flex-shrink-0 transition-colors"
+            className="w-8 h-8 rounded-full bg-primary hover:bg-primary-hover disabled:bg-line disabled:text-ink-muted text-white flex items-center justify-center flex-shrink-0 transition-colors"
             title="Enviar"
           >
             <span className="[&_svg]:!h-4 [&_svg]:!w-4">

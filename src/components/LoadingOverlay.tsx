@@ -13,8 +13,8 @@ export default function LoadingOverlay({ message = 'Cargando...', isFullScreen =
   const content = (
     <div className={containerClasses}>
       <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-slate-200 border-t-primary"></div>
-        <p className="text-sm font-medium text-slate-500">{message}</p>
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-line border-t-primary"></div>
+        <p className="text-sm font-medium text-ink-secondary">{message}</p>
       </div>
     </div>
   );

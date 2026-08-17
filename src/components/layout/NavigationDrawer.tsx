@@ -87,12 +87,12 @@ export default function NavigationDrawer({
         }}
         className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-sm font-medium transition-colors ${
           isActive 
-            ? 'bg-primary-soft dark:bg-slate-800 text-primary dark:text-white' 
-            : 'text-ink-muted dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-ink dark:hover:text-slate-200'
+            ? 'bg-primary-soft text-primary' 
+            : 'text-ink-muted hover:bg-surface-muted hover:text-ink'
         } ${isSubItem ? 'pl-9 text-[13px]' : ''}`}
       >
         {!isSubItem && icon && (
-          <span className={`w-5 h-5 flex items-center justify-center ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+          <span className={`w-5 h-5 flex items-center justify-center ${isActive ? 'text-primary' : 'text-ink-muted'}`}>
             {icon()}
           </span>
         )}
@@ -150,11 +150,11 @@ export default function NavigationDrawer({
           onClick={() => toggleSubmenu(id)}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-sm text-sm font-medium transition-colors ${
             isAnyActive 
-              ? 'text-primary dark:text-white' 
-              : 'text-ink-muted dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              ? 'text-primary' 
+              : 'text-ink-muted hover:bg-surface-muted'
           }`}
         >
-          <span className={`w-5 h-5 flex items-center justify-center ${isAnyActive ? 'text-primary' : 'text-slate-400'}`}>
+          <span className={`w-5 h-5 flex items-center justify-center ${isAnyActive ? 'text-primary' : 'text-ink-muted'}`}>
             {icon()}
           </span>
           {label}
@@ -177,7 +177,7 @@ export default function NavigationDrawer({
       <div className="fixed inset-0 z-30" onClick={onClose} aria-hidden="true" />
       
       <aside 
-        className="absolute top-[60px] left-2 sm:left-4 w-60 bg-white dark:bg-slate-900 border border-line dark:border-slate-800 rounded-md rounded-tl-none z-40 flex flex-col shadow-[var(--ls-shadow-float,0_16px_40px_rgba(17,24,39,0.14))] animate-fade-in origin-top-left overflow-hidden max-h-[calc(100vh-80px)]"
+        className="absolute top-[60px] left-2 sm:left-4 w-60 bg-surface border border-line dark:border-slate-800 rounded-md rounded-tl-none z-40 flex flex-col shadow-[var(--ls-shadow-float,0_16px_40px_rgba(17,24,39,0.14))] animate-fade-in origin-top-left overflow-hidden max-h-[calc(100vh-80px)]"
       >
         <div className="flex-1 overflow-y-auto py-3 px-3 space-y-5">
           {Object.entries(categorizedRoutes).map(([category, routes]) => {
