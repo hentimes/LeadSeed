@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Card, EmptyState, IconButton } from '../design';
+import { Button, Card, EmptyState, IconButton } from '../design';
 import { Icon } from '../utils/icons';
+import { useAuth } from '../contexts/AuthContext';
 import { useMessageFlows } from '../hooks/useMessageFlows';
 import { FlowTodayList } from '../components/flows/FlowTodayList';
-import type { MessageFlow, PendingFlowStep } from '../types';
+import { FlowEditor } from '../components/flows/FlowEditor';
+import { FlowEnrollModal } from '../components/flows/FlowEnrollModal';
+import { dispatchFlowStep } from '../services/flowDispatchService';
+import type { MessageFlow, MessageFlowStep, PendingFlowStep } from '../types';
 
-type Vista = 'hoy' | 'flujos';
+type Vista = 'hoy' | 'flujos' | 'editor';
 
 const CANAL_LABEL = {
   whatsapp: 'WhatsApp',
@@ -21,10 +25,15 @@ const CANAL_LABEL = {
  * la lista obligaria a abrir cada uno para enterarse de si hay algo pendiente.
  */
 export default function FlowsPage() {
+  const { user } = useAuth();
   const flujos = useMessageFlows();
   const [vista, setVista] = useState<Vista>('hoy');
   const [lista, setLista] = useState<MessageFlow[]>([]);
   const [aviso, setAviso] = useState('');
+
+  const [editando, setEditando] = useState<MessageFlow | null>(null);
+  const [pasosEditando, setPasosEditando] = useState<MessageFlowStep[]>([]);
+  const [inscribiendoEn, setInscribiendoEn] = useState<MessageFlow | null>(null);
 
   // Un solo reloj para toda la pantalla: si cada fila leyera el suyo, dos filas
   // podrian discrepar sobre si algo esta atrasado.
@@ -35,16 +44,28 @@ export default function FlowsPage() {
     flujos.getAll().then(setLista);
   }, [flujos.refreshKey]);
 
+  const abrirEditor = async (flujo: MessageFlow | null) => {
+    setEditando(flujo);
+    setPasosEditando(flujo ? await flujos.getSteps(flujo.id) : []);
+    setVista('editor');
+  };
+
   const despachar = async (fila: PendingFlowStep) => {
+    if (!user) return;
     setAviso('');
     try {
-      // De momento el despacho solo registra el paso. Abrir el canal se
-      // engancha en el siguiente bloque, reusando los compositores que ya
-      // escriben en send_logs: los flujos no crean un camino de envio paralelo.
-      await flujos.registrarPaso(fila.progressId);
-      setAviso(`Paso registrado para ${fila.leadName}.`);
+      await dispatchFlowStep(user.id, fila);
+      await flujos.recargarCola();
+      // "Abierto", no "enviado": con WhatsApp solo consta que se abrio el chat.
+      setAviso(
+        fila.channel === 'email'
+          ? `Correo enviado a ${fila.leadName}.`
+          : fila.channel === 'call'
+            ? `Llamada registrada para ${fila.leadName}.`
+            : `WhatsApp abierto para ${fila.leadName}.`
+      );
     } catch (error) {
-      setAviso(error instanceof Error ? error.message : 'No se pudo registrar el paso.');
+      setAviso(error instanceof Error ? error.message : 'No se pudo despachar el paso.');
     }
   };
 
@@ -87,7 +108,19 @@ export default function FlowsPage() {
         </p>
       )}
 
-      {vista === 'hoy' ? (
+      {vista === 'editor' ? (
+        <FlowEditor
+          flujo={editando}
+          pasosIniciales={pasosEditando}
+          onCancelar={() => setVista('flujos')}
+          onGuardar={async (datos, pasos) => {
+            await flujos.save(datos, pasos);
+            setLista(await flujos.getAll());
+            setVista('flujos');
+            setAviso(`Flujo ${datos.name} guardado.`);
+          }}
+        />
+      ) : vista === 'hoy' ? (
         <FlowTodayList
           cola={flujos.cola}
           ahora={ahora}
@@ -99,6 +132,7 @@ export default function FlowsPage() {
         <EmptyState
           title="Todavia no tienes flujos"
           description="Un flujo es una secuencia: el paso 1 hoy, el 2 a los tres dias. LeadSeed te avisa el dia que toca; tu decides si se envia."
+          action={<Button variant="primary" onClick={() => abrirEditor(null)}>Crear el primero</Button>}
         />
       ) : (
         <Card padding="none">
@@ -115,6 +149,16 @@ export default function FlowsPage() {
                     {!flujo.isActive && ' · pausado'}
                   </span>
                 </div>
+                <Button size="sm" onClick={() => setInscribiendoEn(flujo)}>
+                  Inscribir
+                </Button>
+                <IconButton
+                  icon={<Icon.Edit />}
+                  label={`Editar el flujo ${flujo.name}`}
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => abrirEditor(flujo)}
+                />
                 <IconButton
                   icon={<Icon.Trash />}
                   label={`Eliminar el flujo ${flujo.name}`}
@@ -137,10 +181,20 @@ export default function FlowsPage() {
         </Card>
       )}
 
-      {vista === 'flujos' && (
-        <p className="text-micro text-ink-muted">
-          El editor de flujos llega en el siguiente bloque. Por ahora se pueden ver y eliminar.
-        </p>
+      {vista === 'flujos' && lista.length > 0 && (
+        <Button variant="primary" onClick={() => abrirEditor(null)}>
+          Nuevo flujo
+        </Button>
+      )}
+
+      {inscribiendoEn && (
+        <FlowEnrollModal
+          flujo={inscribiendoEn}
+          onClose={() => setInscribiendoEn(null)}
+          onInscribir={async (leadId) => {
+            await flujos.inscribir(inscribiendoEn.id, leadId);
+          }}
+        />
       )}
     </div>
   );

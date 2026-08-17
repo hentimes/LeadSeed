@@ -3,7 +3,7 @@ import {
   faList, faClockRotateLeft, faGear, faEllipsis,
   faEye, faPencil, faTrash, faDownload, faUpload, faFileImport,
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
-  faRotateLeft, faChevronDown, faChevronRight, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
+  faRotateLeft, faChevronDown, faChevronUp, faChevronRight, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
   faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
   faCrown, faUser, faBell, faCommentDots, faArrowRight, faFilter,
@@ -87,6 +87,7 @@ export const Icon = {
 
   // UI
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,
+  ChevronUp: () => <I icon={faChevronUp} className="text-xs" />,
   ChevronRight: () => <I icon={faChevronRight} className="text-xs" />,
   // Misma familia de glifos en los tres estados: antes el inactivo usaba
   // faArrowsUpDown y los activos faCaret*, y se veian como iconos distintos.
