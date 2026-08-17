@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index,follow" />
+  <title>Política de Privacidad | LeadSeed</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1d2330;
+      --muted: #667085;
+      --line: #e7e8ef;
+      --accent: #6c4cf6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    main {
+      width: min(900px, calc(100% - 32px));
+      margin: 48px auto;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 42px;
+      box-shadow: 0 16px 48px rgba(16, 24, 40, 0.06);
+    }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 42px); letter-spacing: -0.03em; }
+    h2 { margin-top: 34px; font-size: 20px; }
+    p, li { font-size: 15px; }
+    .eyebrow { color: var(--accent); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+    .updated { color: var(--muted); margin-top: 0; }
+    .notice {
+      margin: 24px 0;
+      padding: 16px 18px;
+      border: 1px solid #ded8ff;
+      background: #f7f5ff;
+      border-radius: 12px;
+    }
+    a { color: var(--accent); }
+    code { background: #f2f3f7; padding: 2px 5px; border-radius: 5px; }
+    footer { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    @media (max-width: 640px) {
+      main { margin: 18px auto; padding: 26px 20px; border-radius: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">LeadSeed</div>
+    <h1>Política de Privacidad</h1>
+    <p class="updated">Última actualización: 17 de agosto de 2026</p>
+
+    <p>
+      LeadSeed es una herramienta de productividad y gestión comercial que funciona, entre otros entornos,
+      como extensión de Chrome con panel lateral. Permite gestionar contactos y leads, tareas, agenda,
+      comunicaciones y funciones de colaboración. Esta Política explica qué información puede tratar LeadSeed,
+      para qué se utiliza y con qué servicios puede compartirse cuando es necesario para prestar sus funciones.
+    </p>
+
+    <div class="notice">
+      <strong>Principio de uso limitado:</strong> LeadSeed utiliza los datos obtenidos mediante permisos de la
+      extensión y APIs conectadas únicamente para proporcionar o mejorar funciones visibles solicitadas por el
+      usuario. LeadSeed no vende datos personales, no los utiliza para publicidad personalizada, no los entrega
+      a corredores de datos y no los utiliza para determinar solvencia o elegibilidad crediticia.
+    </div>
+
+    <h2>1. Información que puede tratar LeadSeed</h2>
+    <p><strong>Cuenta y autenticación.</strong> Podemos tratar correo electrónico, identificadores de cuenta,
+      información básica de perfil entregada por el proveedor de autenticación y tokens de sesión necesarios
+      para mantener al usuario autenticado.</p>
+
+    <p><strong>Datos de contactos y leads.</strong> LeadSeed puede almacenar información que el usuario ingresa o
+      importa, como nombre, teléfono, correo electrónico, empresa, notas, estados comerciales y otros campos
+      relacionados con la gestión del contacto.</p>
+
+    <p><strong>Tareas, agenda y contenido creado por el usuario.</strong> Podemos tratar tareas, notas,
+      disponibilidad, citas, participantes, plantillas de mensajes, contenido de correos preparados para envío,
+      conversaciones internas y contenido de colaboración creado dentro de LeadSeed.</p>
+
+    <p><strong>Preferencias locales.</strong> La extensión puede guardar en el navegador preferencias de uso,
+      configuración visual y otros ajustes necesarios para recordar el estado de la interfaz.</p>
+
+    <h2>2. Cómo utilizamos la información</h2>
+    <ul>
+      <li>Autenticar al usuario y mantener su sesión.</li>
+      <li>Mostrar, organizar, actualizar, importar y exportar contactos y leads.</li>
+      <li>Gestionar tareas, agenda, disponibilidad, citas y recordatorios.</li>
+      <li>Preparar y enviar comunicaciones iniciadas por el usuario.</li>
+      <li>Sincronizar las funciones de Google autorizadas por el usuario.</li>
+      <li>Prestar funciones de chat, comunidad y colaboración disponibles dentro de LeadSeed.</li>
+      <li>Mantener la seguridad, continuidad y funcionamiento técnico del servicio.</li>
+    </ul>
+
+    <h2>3. Uso de Google Sign-In, Gmail y Google Calendar</h2>
+    <p>
+      Cuando el usuario conecta su cuenta de Google, LeadSeed puede recibir información básica de identidad,
+      incluyendo el correo electrónico de la cuenta, junto con tokens OAuth y el alcance de permisos concedido.
+      LeadSeed puede almacenar el token de acceso, token de actualización, permisos concedidos y fecha de
+      expiración para mantener activa la integración autorizada.
+    </p>
+
+    <p><strong>Gmail.</strong> LeadSeed utiliza Gmail API para enviar mensajes que el usuario decide enviar desde
+      la aplicación. La implementación revisada de LeadSeed utiliza el permiso de envío de Gmail y no requiere
+      leer la bandeja de entrada ni el contenido de correos recibidos para esta funcionalidad.</p>
+
+    <p><strong>Google Calendar.</strong> Cuando está autorizado, LeadSeed puede crear, modificar y eliminar eventos
+      de calendario; añadir participantes; generar enlaces de Google Meet; y consultar información de
+      disponibilidad mediante la función Free/Busy. Al crear una cita, el evento puede incluir información que
+      el usuario haya asociado al lead, como nombre, teléfono, correo electrónico, empresa, notas y participantes.</p>
+
+    <p>
+      Para sincronizar disponibilidad, LeadSeed puede consultar intervalos ocupados de Google Calendar y guardar
+      bloques horarios necesarios para evitar dobles reservas. Esta función no necesita copiar el contenido
+      completo de todos los eventos del calendario.
+    </p>
+
+    <p><strong>Google API Services User Data Policy.</strong><br />
+      The use of information received from Google Workspace scopes will adhere to the Google User Data Policy,
+      including the Limited Use requirements.
+    </p>
+
+    <p>
+      LeadSeed no utiliza información obtenida a través de Google Workspace APIs para desarrollar, mejorar o
+      entrenar modelos de inteligencia artificial o aprendizaje automático generalizados o no personalizados.
+    </p>
+
+    <h2>4. Servicios de terceros</h2>
+    <p>
+      LeadSeed puede utilizar proveedores externos únicamente cuando son necesarios para prestar las funciones
+      solicitadas. Entre ellos pueden encontrarse:
+    </p>
+    <ul>
+      <li><strong>Supabase:</strong> autenticación, base de datos, sincronización y funciones de backend.</li>
+      <li><strong>Google:</strong> autenticación, Gmail API, Google Calendar API y servicios OAuth autorizados.</li>
+      <li><strong>Resend:</strong> procesamiento y entrega de correos cuando el usuario utiliza un canal Resend.</li>
+      <li><strong>EmailJS:</strong> proveedor de correo disponible como integración heredada cuando el usuario decide utilizarlo.</li>
+      <li><strong>WhatsApp Web:</strong> LeadSeed puede abrir conversaciones o enlaces hacia WhatsApp Web para facilitar comunicaciones iniciadas por el usuario.</li>
+    </ul>
+    <p>
+      Estos proveedores reciben solamente la información necesaria para prestar la función correspondiente y
+      están sujetos a sus propios términos y políticas de privacidad.
+    </p>
+
+    <h2>5. Credenciales de servicios de correo</h2>
+    <p>
+      Cuando un usuario configura credenciales de un canal de correo compatible, LeadSeed las procesa para
+      habilitar dicho canal. La implementación de backend cifra las credenciales de canales compatibles antes de
+      almacenarlas en la base de datos. Las credenciales no se utilizan para fines publicitarios ni se venden a terceros.
+    </p>
+
+    <h2>6. Seguridad</h2>
+    <p>
+      LeadSeed utiliza conexiones HTTPS/TLS para proteger la información durante su transmisión y aplica controles
+      de autenticación y autorización para limitar el acceso a los datos del usuario. Ningún sistema puede garantizar
+      seguridad absoluta, por lo que mantenemos medidas razonables orientadas a reducir accesos, usos o divulgaciones no autorizadas.
+    </p>
+
+    <h2>7. Conservación y eliminación</h2>
+    <p>
+      Los datos se conservan mientras sean necesarios para prestar LeadSeed, mientras la cuenta permanezca activa
+      o hasta que el usuario elimine información disponible dentro de la aplicación. Los tokens OAuth de Google se
+      conservan únicamente mientras sean necesarios para mantener la integración autorizada. El usuario también
+      puede revocar el acceso de LeadSeed desde la configuración de seguridad de su Cuenta de Google.
+    </p>
+    <p>
+      Determinados registros técnicos o copias de seguridad pueden conservarse durante un período limitado cuando
+      sea necesario por razones de seguridad, continuidad, prevención de fraude, resolución de incidencias u obligaciones legales.
+    </p>
+
+    <h2>8. Acceso humano a los datos</h2>
+    <p>
+      El personal o colaboradores de LeadSeed no acceden al contenido privado del usuario salvo cuando sea
+      estrictamente necesario para prestar soporte solicitado por el usuario, investigar una incidencia de seguridad
+      o abuso, cumplir una obligación legal, o realizar operaciones internas sobre datos agregados o anonimizados.
+    </p>
+
+    <h2>9. Venta, publicidad y otros usos prohibidos</h2>
+    <p>LeadSeed no utiliza los datos obtenidos a través de la extensión o de Google Workspace APIs para:</p>
+    <ul>
+      <li>vender o alquilar información personal;</li>
+      <li>publicidad personalizada o retargeting;</li>
+      <li>crear perfiles comerciales ajenos a la funcionalidad solicitada por el usuario;</li>
+      <li>determinar solvencia, crédito, seguros o elegibilidad financiera;</li>
+      <li>transferir datos a corredores de datos;</li>
+      <li>entrenar modelos generales de IA/ML.</li>
+    </ul>
+
+    <h2>10. Derechos y control del usuario</h2>
+    <p>
+      Según las funciones disponibles, el usuario puede acceder, corregir, exportar o eliminar información de
+      contactos y otros registros que administra en LeadSeed. También puede revocar los permisos de Google desde
+      su Cuenta de Google. Para consultas adicionales relacionadas con privacidad o eliminación de datos, el usuario
+      puede utilizar el canal de soporte publicado en la ficha oficial de LeadSeed en Chrome Web Store.
+    </p>
+
+    <h2>11. Cambios a esta Política</h2>
+    <p>
+      Podemos actualizar esta Política cuando cambien las funciones de LeadSeed, los proveedores utilizados o los
+      requisitos aplicables. La fecha de última actualización se mostrará al inicio de esta página. Si un cambio
+      modifica de forma material el uso de datos de Google u otros datos sensibles, actualizaremos las divulgaciones
+      correspondientes antes de utilizar la información para el nuevo propósito.
+    </p>
+
+    <h2>12. Contacto</h2>
+    <p>
+      Para consultas de privacidad, soporte o solicitudes relacionadas con datos personales, utiliza el correo o canal
+      de soporte indicado en la ficha oficial de LeadSeed en Chrome Web Store. Antes del lanzamiento público general,
+      esta sección podrá actualizarse para incluir un correo de privacidad dedicado.
+    </p>
+
+    <footer>
+      © 2026 LeadSeed. Política de privacidad para la versión beta y posteriores de LeadSeed.
+    </footer>
+  </main>
+</body>
+</html>
