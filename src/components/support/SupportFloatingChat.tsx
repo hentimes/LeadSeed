@@ -231,7 +231,7 @@ export default function SupportFloatingChat() {
         <div className="fixed bottom-6 right-6 w-80 h-96 bg-surface rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-purple-100">
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 text-white flex justify-between items-center">
             <h3 className="font-bold text-sm">Soporte</h3>
-            <button onClick={handleClose} className="text-white/80 hover:text-white transition-colors">
+            <button type="button" aria-label="Cerrar el chat de soporte" onClick={handleClose} className="text-white/80 hover:text-white transition-colors">
               <Icon.Close />
             </button>
           </div>
@@ -307,7 +307,7 @@ export default function SupportFloatingChat() {
           <form onSubmit={handleSend} className="p-3 border-t border-line bg-surface">
             <div className="flex gap-2 items-center">
               <input type="text" value={newMessage} onChange={handleTyping} placeholder="Escribe aqui..." className="flex-1 bg-surface-muted border border-line rounded-full px-4 py-2 text-xs outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 text-ink-secondary" />
-              <button type="submit" disabled={!newMessage.trim()} className="bg-purple-600 hover:bg-purple-700 text-white w-8 h-8 rounded-full flex justify-center items-center disabled:opacity-50 transition-colors shrink-0">
+              <button type="submit" aria-label="Enviar mensaje" disabled={!newMessage.trim()} className="bg-purple-600 hover:bg-purple-700 text-white w-8 h-8 rounded-full flex justify-center items-center disabled:opacity-50 transition-colors shrink-0">
                 <Icon.Send />
               </button>
             </div>

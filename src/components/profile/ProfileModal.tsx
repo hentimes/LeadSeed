@@ -75,7 +75,7 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-ink">Editar Perfil</h2>
-          <button onClick={onClose} className="p-2 text-ink-muted hover:text-ink-secondary">
+          <button type="button" aria-label="Cerrar" onClick={onClose} className="p-2 text-ink-muted hover:text-ink-secondary">
             <Icon.Close />
           </button>
         </div>
