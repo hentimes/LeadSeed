@@ -1,4 +1,5 @@
 import type { DmSession } from '../../types';
+import { avatarUrl } from '../../utils/avatar';
 
 interface DmAvatarStripProps {
   sessions: DmSession[];
@@ -25,10 +26,7 @@ export default function DmAvatarStrip({ sessions, onToggle }: DmAvatarStripProps
           title={session.label}
         >
           <img
-            src={
-              session.avatarUrl ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(session.label)}&background=3b82f6&color=fff`
-            }
+            src={avatarUrl(session.label, session.avatarUrl)}
             alt={session.label}
             className={`w-8 h-8 rounded-full object-cover border-2 transition-transform hover:scale-105 ${
               session.minimized ? 'border-white dark:border-gray-800' : 'border-primary'

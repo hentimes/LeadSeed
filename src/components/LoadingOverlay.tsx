@@ -7,7 +7,7 @@ interface Props {
 
 export default function LoadingOverlay({ message = 'Cargando...', isFullScreen = false }: Props) {
   const containerClasses = isFullScreen
-    ? "fixed inset-0 z-[100] flex items-center justify-center bg-[var(--color-surface)] bg-opacity-80 backdrop-blur-sm"
+    ? "fixed inset-0 z-[100] flex items-center justify-center bg-surface/80 backdrop-blur-sm"
     : "flex flex-col items-center justify-center w-full min-h-[40vh] p-8";
 
   const content = (

@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { Lead } from '../types';
 import { getPlatform } from '../platform/registry';
+import { formatearFecha } from './date';
 
 function downloadFile(data: Blob | string, filename: string) {
   void getPlatform().fileSaver.save({
@@ -25,7 +26,7 @@ export function exportToExcel(leads: Lead[]) {
     Empresa: rest.company,
     RUT: rest.rut,
     Notas: rest.notes,
-    Ingreso: rest.createdAt ? new Date(rest.createdAt).toLocaleDateString('es-CL') : '',
+    Ingreso: formatearFecha(rest.createdAt),
   }));
 
   const wb = XLSX.utils.book_new();

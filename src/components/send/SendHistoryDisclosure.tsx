@@ -1,5 +1,6 @@
 import type { SendLog } from '../../types';
 import { Icon } from '../../utils/icons';
+import { formatearFecha } from '../../utils/date';
 
 /**
  * Historial de envios de la plantilla seleccionada.
@@ -36,7 +37,7 @@ export function SendHistoryDisclosure({ log, templateName }: { log: SendLog[]; t
               </span>
             )}
             <span className="shrink-0 text-micro tabular-nums text-ink-muted">
-              {new Date(entry.sentAt).toLocaleDateString('es-CL')}
+              {formatearFecha(entry.sentAt)}
             </span>
           </div>
         ))}

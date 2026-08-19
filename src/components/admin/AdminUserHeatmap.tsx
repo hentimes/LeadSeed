@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Icon } from '../../utils/icons';
 import type { Profile } from '../../types';
 import { loadAdminUserHeatmap } from '../../services/adminService';
+import { formatearFecha } from '../../utils/date';
 
 interface Props {
   selectedUser: Profile;
@@ -78,7 +79,7 @@ export default function AdminUserHeatmap({ selectedUser }: Props) {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-ink">{entry.profile.full_name || entry.profile.email.split('@')[0]}</p>
-                      <p className="text-xs text-ink-muted">Ultima int: {new Date(entry.lastInteraction).toLocaleDateString('es-CL')}</p>
+                      <p className="text-xs text-ink-muted">Ultima int: {formatearFecha(entry.lastInteraction)}</p>
                     </div>
                   </div>
 

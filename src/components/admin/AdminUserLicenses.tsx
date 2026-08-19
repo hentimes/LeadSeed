@@ -1,5 +1,6 @@
 import { Icon } from '../../utils/icons';
 import type { Feature, Plan, PlanFeature, Profile, UserFeatureOverride } from '../../types';
+import { formatearFecha } from '../../utils/date';
 
 interface Props {
   selectedUser: Profile;
@@ -96,7 +97,7 @@ export default function AdminUserLicenses({
 
                   {isTrial ? (
                     <p className="mt-2 text-xs font-medium text-amber-600">
-                      Expira: {new Date(override.expires_at!).toLocaleDateString('es-CL')}
+                      Expira: {formatearFecha(override.expires_at)}
                     </p>
                   ) : null}
 

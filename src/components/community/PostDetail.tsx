@@ -8,6 +8,7 @@ import CommentItem from './CommentItem';
 import LikeButton from './LikeButton';
 import type { CommunityCategory } from '../../types/community';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { avatarUrl } from '../../utils/avatar';
 
 interface PostDetailProps {
   postId: string;
@@ -43,9 +44,7 @@ export default function PostDetail({
   }
 
   const authorName = post.author?.full_name || 'Usuario';
-  const avatar =
-    post.author?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=3b82f6&color=fff`;
+  const avatar = avatarUrl(authorName, post.author?.avatar_url);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

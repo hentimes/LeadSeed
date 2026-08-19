@@ -33,6 +33,25 @@ const SAMPLE_LEAD = {
   notes: 'Cliente VIP',
 };
 
+
+/**
+ * Textura del simulador de WhatsApp.
+ *
+ * Antes era `url("https://user-images.githubusercontent.com/...png")`: un
+ * adjunto de un issue de GitHub de un tercero. Sin conexion no cargaba, y si
+ * ese adjunto desaparece la vista previa se queda plana sin que nadie se entere.
+ * Ahora es un SVG local sobre el mismo beige.
+ */
+const TEXTURA_WHATSAPP = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
+    '<g fill="none" stroke="#D5CBBF" stroke-width="1.4" stroke-linecap="round" opacity="0.55">' +
+    '<path d="M14 20h12M14 26h7"/><path d="M62 12h14M62 18h9"/>' +
+    '<path d="M30 54h13M30 60h8"/><path d="M70 66h12M70 72h6"/>' +
+    '<circle cx="24" cy="76" r="5"/><circle cx="80" cy="40" r="4"/>' +
+    '<path d="M46 30l5 5-5 5-5-5z"/><path d="M8 46l4 4-4 4-4-4z"/>' +
+    '</g></svg>',
+)}")`;
+
 export default function TemplateEditor({ template, type, categories = [], reasons = [], onSave, onCancel }: Props) {
   const [nombre, setNombre] = useState('');
   const [contenido, setContenido] = useState('');
@@ -251,7 +270,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
                   </div>
                   <button type="button" onClick={() => setShowPreview(false)} className="text-ink-muted hover:text-ink-secondary transition-colors p-1"><Icon.Close /></button>
                 </div>
-                <div className="p-4 flex-1 overflow-y-auto relative min-h-[300px]" style={{ backgroundColor: '#E5DDD5', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }}>
+                <div className="p-4 flex-1 overflow-y-auto relative min-h-[300px]" style={{ backgroundColor: '#E5DDD5', backgroundImage: TEXTURA_WHATSAPP, backgroundSize: '96px' }}>
                   <div className="bg-surface text-[#111B21] text-[12.5px] leading-relaxed p-2 px-3 rounded-lg rounded-tr-none shadow-sm max-w-[90%] float-right relative whitespace-pre-wrap">
                     {replaceVars(contenido)}
                   </div>

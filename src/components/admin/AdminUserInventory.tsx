@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Icon } from '../../utils/icons';
 import type { Profile, Lead } from '../../types';
 import { loadAdminUserInventory } from '../../services/adminService';
+import { formatearFecha } from '../../utils/date';
 
 interface Props {
   selectedUser: Profile;
@@ -92,7 +93,7 @@ export default function AdminUserInventory({ selectedUser }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-400 dark:text-slate-500">
-                      {new Date(lead.createdAt || '').toLocaleDateString('es-CL')}
+                      {formatearFecha(lead.createdAt)}
                     </td>
                   </tr>
                 ))}

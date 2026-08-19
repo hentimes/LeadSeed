@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import type { PropsTooltip } from '../rechartsProps';
+import { chartRamp } from '../../../design/palette';
 
 interface LossReasonsChartProps {
   /** Motivos contados por `get_my_dashboard_snapshot`, de mas a menos frecuente. */
@@ -18,7 +19,7 @@ interface LossReasonsChartProps {
  * anteriores nadie les pregunto. Esa barra es el estado real y se encoge sola.
  */
 export default function LossReasonsChart({ data }: LossReasonsChartProps) {
-  const COLORS = ['#7B5CFF', '#8F85FF', '#BCAFFF', '#EBE5FF'];
+  const COLORS = chartRamp();
 
   const CustomTooltip = ({ active, payload }: PropsTooltip) => {
     const entrada = payload?.[0];

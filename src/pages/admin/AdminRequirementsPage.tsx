@@ -12,6 +12,7 @@ import {
   subscribeRequirementsFeed,
 } from '../../services/adminService';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { formatearFecha } from '../../utils/date';
 
 export default function AdminRequirementsPage() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -279,7 +280,7 @@ export default function AdminRequirementsPage() {
                         }`}>
                           {req.type}
                         </span>
-                        <span className="text-[9px] text-ink-muted font-medium leading-none">{new Date(req.created_at).toLocaleDateString()}</span>
+                        <span className="text-[9px] text-ink-muted font-medium leading-none">{formatearFecha(req.created_at)}</span>
                       </div>
                     </div>
                   </div>

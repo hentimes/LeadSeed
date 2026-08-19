@@ -18,6 +18,7 @@ import {
 import { getErrorMessage } from '../../utils/errorMessage';
 import { Button, IconButton, Input } from '../../design';
 import { Card } from '../../design';
+import { formatearFecha, formatearHora } from '../../utils/date';
 
 function formatMessageDate(dateStr: string) {
   if (!dateStr) return '';
@@ -34,12 +35,12 @@ function formatMessageDate(dateStr: string) {
     const days = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
     return days[date.getDay()];
   }
-  return date.toLocaleDateString('es-CL');
+  return formatearFecha(date);
 }
 
 function formatMessageTime(dateStr: string) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleTimeString('es-CL', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return formatearHora(dateStr);
 }
 
 export default function AdminSupportChat({ selectedUser, activeRequirement }: { selectedUser: Profile; activeRequirement?: Requirement }) {
@@ -210,7 +211,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
   return (
     <div className="w-full h-[600px]">
       <Card className="w-full h-full flex flex-col overflow-hidden">
-        <div className="bg-[var(--color-surface)] border-b border-line p-4 flex items-center justify-between">
+        <div className="bg-surface border-b border-line p-4 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-lg text-ink">Chat Maestro</h2>
             <p className="text-xs text-ink-secondary">En vivo con {selectedUser.full_name || selectedUser.email}</p>
@@ -268,7 +269,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} className="p-4 bg-[var(--color-surface)] border-t border-line flex gap-2">
+        <form onSubmit={handleSend} className="p-4 bg-surface border-t border-line flex gap-2">
           {/* El campo declaraba `input-standard`, una clase que no existe en
               ningun CSS del proyecto: estaba sin borde, sin alto y sin padding.
               Pasa a la primitiva, que ademas mide 34px igual que el boton. */}

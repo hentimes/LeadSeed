@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { usePresence } from './usePresence';
 import type { OnlineUser } from '../types';
+import { avatarDeIniciales } from '../utils/avatar';
 
 export interface OnlineDirectory {
   users: OnlineUser[];
@@ -38,6 +39,5 @@ export function displayName(user: Pick<OnlineUser, 'full_name' | 'email'>): stri
 
 export function avatarFor(user: Pick<OnlineUser, 'full_name' | 'email' | 'avatar_url'>): string {
   if (user.avatar_url) return user.avatar_url;
-  const name = encodeURIComponent(displayName(user));
-  return `https://ui-avatars.com/api/?name=${name}&background=3b82f6&color=fff`;
+  return avatarDeIniciales(displayName(user));
 }

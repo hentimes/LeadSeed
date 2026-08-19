@@ -12,6 +12,8 @@ import type { Mention } from '../../types/mentions';
 import type { ChatScroll } from '../../hooks/useChatScroll';
 import type { useChatModeration } from '../../hooks/useChatModeration';
 import type { useDirectMessageSessions } from '../../hooks/useDirectMessageSessions';
+import { avatarUrl } from '../../utils/avatar';
+import { formatearHora } from '../../utils/date';
 
 /**
  * Lista de mensajes de la sala, con sus menus por mensaje.
@@ -139,7 +141,7 @@ export default function ChatMessageList({
                 title={msg.user_profile?.full_name || 'Usuario'}
               >
                 <img
-                  src={msg.user_profile?.avatar_url || `https://ui-avatars.com/api/?name=${msg.user_profile?.full_name || 'U'}&background=3b82f6&color=fff`}
+                  src={avatarUrl(msg.user_profile?.full_name, msg.user_profile?.avatar_url)}
                   alt="Avatar"
                   className="w-8 h-8 rounded-full object-cover border border-white dark:border-gray-700 shadow-sm transition-transform hover:scale-105"
                 />
@@ -190,7 +192,7 @@ export default function ChatMessageList({
                   {msg.user_profile?.full_name || 'Usuario'}
                 </button>
                 <span className="text-[10px] text-ink-muted font-medium">
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatearHora(msg.created_at)}
                 </span>
               </div>
             )}
@@ -243,7 +245,7 @@ export default function ChatMessageList({
 
               {isOwn && (
                 <span className="absolute -bottom-5 right-1 text-[10px] text-ink-muted font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatearHora(msg.created_at)}
                   <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 </span>
               )}

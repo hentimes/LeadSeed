@@ -106,7 +106,7 @@ export default function LoginPage() {
               onClick={handleGoogleLogin}
               className="w-full flex items-center justify-center gap-2.5 px-4 py-[12px] border border-line rounded-[12px] text-[#344054] bg-surface hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all shadow-[inset_0_1px_0_white,inset_0_-2px_0_rgba(230,232,240,0.5),0_2px_5px_rgba(0,0,0,0.02)] font-semibold text-[15px]"
             >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-[20px] h-[20px]" />
+              <img src="/logos/google.svg" alt="" aria-hidden="true" className="w-[20px] h-[20px]" />
               Continuar con Google
             </button>
           </div>

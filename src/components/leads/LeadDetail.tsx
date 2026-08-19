@@ -7,6 +7,7 @@ import LeadDetailOrigin from './detail/LeadDetailOrigin';
 import LeadDetailCrossExecAlert from './detail/LeadDetailCrossExecAlert';
 import LeadDetailHistory from './detail/LeadDetailHistory';
 import { Modal } from '../../design/Modal';
+import { formatearFecha } from '../../utils/date';
 
 interface Props {
   lead: Lead;
@@ -143,7 +144,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                 Detalles y Perfil
               </div>
               <span className="text-[11px] font-semibold text-ink-muted tracking-normal normal-case">
-                {new Date(lead.createdAt).toLocaleDateString('es-CL')}
+                {formatearFecha(lead.createdAt)}
               </span>
             </summary>
 

@@ -3,6 +3,7 @@ import { getCurrentSession } from '../services/authService';
 import { dispatchAlert, getAlertPreferences } from './alertNotifier';
 import { incrementBadgeCount } from './extensionBadgeTheme';
 import { isActiveAppointment } from '../utils/appointmentStatus';
+import { formatearHora } from '../utils/date';
 
 const STORAGE_KEY = 'agendaAlerts';
 const NOTIFIED_LIMIT = 50;
@@ -21,7 +22,7 @@ async function saveState(state: AgendaAlertsState): Promise<void> {
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  return formatearHora(iso);
 }
 
 /**

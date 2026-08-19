@@ -1,6 +1,7 @@
 import type { Lead, LeadList, PlanesproLeadMetadata, PlanesproLeadRawPayload } from '../types';
 import type { ColumnDef } from '../types';
 import type { LeadSortField } from '../repositories/leadsRepository';
+import { formatearFecha } from '../utils/date';
 
 export interface LeadColumnDef {
   key: string;
@@ -85,7 +86,7 @@ export function getLeadColumnValue(lead: Lead, key: string, lists: LeadList[]): 
     case 'score':
       return String(lead.score ?? 0);
     case 'createdAt':
-      return lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('es-CL') : '';
+      return formatearFecha(lead.createdAt);
     case 'lists':
       return lists
         .filter((list) => lead.listaIds?.includes(list.id!))

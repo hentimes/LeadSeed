@@ -21,6 +21,7 @@ import {
   type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { formatearFecha, formatearHora } from '../../utils/date';
 
 function formatMessageDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -29,11 +30,11 @@ function formatMessageDate(dateStr: string) {
   yesterday.setDate(today.getDate() - 1);
   if (date.toDateString() === today.toDateString()) return 'Hoy';
   if (date.toDateString() === yesterday.toDateString()) return 'Ayer';
-  return date.toLocaleDateString('es-CL');
+  return formatearFecha(date);
 }
 
 function formatMessageTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString('es-CL', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return formatearHora(dateStr);
 }
 
 export default function SupportFloatingChat() {

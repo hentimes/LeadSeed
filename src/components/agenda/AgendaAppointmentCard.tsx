@@ -57,7 +57,7 @@ export default function AgendaAppointmentCard({
   return (
     <div
       ref={setRef}
-      className={`border-l-2 pl-3 py-2 rounded-r bg-surface-muted ${isFocused ? 'bg-surface ring-1 ring-line' : ''} ${notice ? 'border-l-amber-500' : 'border-l-[var(--color-primary)]'}`}
+      className={`border-l-2 pl-3 py-2 rounded-r bg-surface-muted ${isFocused ? 'bg-surface ring-1 ring-line' : ''} ${notice ? 'border-l-amber-500' : 'border-l-primary'}`}
     >
       <div className="flex items-start justify-between gap-2">
         <button
@@ -144,7 +144,7 @@ export default function AgendaAppointmentCard({
                 {participants.map((participant) => (
                   <span
                     key={participant.id}
-                    className="inline-flex items-center gap-1 text-[10px] border border-line px-1.5 py-0.5 rounded-sm text-[var(--color-text)]"
+                    className="inline-flex items-center gap-1 text-[10px] border border-line px-1.5 py-0.5 rounded-sm text-ink"
                     title={participant.googleSyncError || participant.invitationStatus}
                   >
                     <span>{participant.name || participant.email}</span>

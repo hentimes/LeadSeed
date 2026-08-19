@@ -4,6 +4,7 @@ import { Icon } from '../../utils/icons';
 import { Requirement } from '../../types';
 import SupportTicketModal from '../support/SupportTicketModal';
 import { loadUserSupportRequirements, rateSupportRequirement, subscribeUserSupportRequirements } from '../../services/supportService';
+import { formatearFecha } from '../../utils/date';
 
 export default function SupportTicketsSettings() {
   const { user } = useAuth();
@@ -89,7 +90,7 @@ export default function SupportTicketsSettings() {
                           {req.ticket_code}
                         </span>
                       )}
-                      <span className="text-xs text-ink-muted ml-1">{new Date(req.created_at).toLocaleDateString()}</span>
+                      <span className="text-xs text-ink-muted ml-1">{formatearFecha(req.created_at)}</span>
                     </div>
                     <div className={`text-xs px-2.5 py-1 rounded-full font-bold ${
                       req.status === 'open' ? 'bg-surface-hover text-ink-secondary' : 

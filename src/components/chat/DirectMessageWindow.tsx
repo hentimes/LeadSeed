@@ -6,6 +6,7 @@ import { Icon } from '../../utils/icons';
 import EmojiPicker from './EmojiPicker';
 import FloatingWindow from './FloatingWindow';
 import { getErrorMessage } from '../../utils/errorMessage';
+import { formatearHora } from '../../utils/date';
 
 interface DirectMessageWindowProps {
   userId: string;
@@ -87,10 +88,7 @@ export default function DirectMessageWindow({
                 <span
                   className={`block mt-0.5 text-[10px] ${isOwn ? 'text-white/70' : 'text-ink-muted'}`}
                 >
-                  {new Date(message.created_at).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {formatearHora(message.created_at)}
                 </span>
               </div>
             </div>

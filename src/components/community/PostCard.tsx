@@ -2,6 +2,8 @@ import { Badge } from '../../design';
 import { Icon } from '../../utils/icons';
 import LikeButton from './LikeButton';
 import type { CommunityCategory, CommunityPost } from '../../types/community';
+import { avatarUrl } from '../../utils/avatar';
+import { formatearFecha } from '../../utils/date';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -20,7 +22,7 @@ function relativeTime(iso: string): string {
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `hace ${hours} h`;
 
-  return new Date(iso).toLocaleDateString();
+  return formatearFecha(iso);
 }
 
 export default function PostCard({
@@ -32,9 +34,7 @@ export default function PostCard({
   onOpen,
 }: PostCardProps) {
   const authorName = post.author?.full_name || 'Usuario';
-  const avatar =
-    post.author?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=3b82f6&color=fff`;
+  const avatar = avatarUrl(authorName, post.author?.avatar_url);
 
   return (
     <article

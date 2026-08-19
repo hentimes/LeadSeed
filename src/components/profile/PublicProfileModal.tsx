@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Modal } from '../../design';
-import { fetchPublicProfile, type PublicProfile } from '../../repositories/publicProfileRepository';
+import { loadPublicProfile, type PublicProfile } from '../../services/profileService';
+import { avatarUrl } from '../../utils/avatar';
 
 interface PublicProfileModalProps {
   userId: string;
@@ -37,7 +38,7 @@ export default function PublicProfileModal({
   useEffect(() => {
     let cancelled = false;
 
-    void fetchPublicProfile(userId).then((data) => {
+    void loadPublicProfile(userId).then((data) => {
       if (cancelled) return;
       setProfile(data);
       setLoading(false);
@@ -52,10 +53,7 @@ export default function PublicProfileModal({
   // Si ya tenemos la foto de antes (del mensaje/lista desde donde se abrio),
   // se usa desde el primer render -- sin esto se veia el flash de iniciales
   // mientras profile todavia era null.
-  const avatar =
-    profile?.avatar_url ||
-    fallbackAvatarUrl ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+  const avatar = profile?.avatar_url || fallbackAvatarUrl || avatarUrl(name);
 
   return (
     <Modal onClose={onClose} maxWidth="340px" label={`Perfil de ${name}`}>

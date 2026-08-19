@@ -1,10 +1,9 @@
 import type { CommunityComment } from '../../types/community';
+import { avatarUrl } from '../../utils/avatar';
 
 export default function CommentItem({ comment }: { comment: CommunityComment }) {
   const authorName = comment.author?.full_name || 'Usuario';
-  const avatar =
-    comment.author?.avatar_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=3b82f6&color=fff`;
+  const avatar = avatarUrl(authorName, comment.author?.avatar_url);
 
   return (
     <div className="flex gap-3">

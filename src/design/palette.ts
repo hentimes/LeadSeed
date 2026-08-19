@@ -104,3 +104,21 @@ export const chartSeries = (): string[] => [
   token('--ls-primary-light'),
   token('--ls-danger'),
 ];
+
+/**
+ * Rampa secuencial de un solo tono, de mas intenso a mas claro.
+ *
+ * Para datos **ordenados** (motivos de perdida por frecuencia, por ejemplo),
+ * donde la serie categorica de `chartSeries` mentiria: colores distintos
+ * sugieren categorias sin orden entre si, y aqui el orden es el dato.
+ *
+ * `LossReasonsChart` la llevaba escrita a mano como cuatro hexadecimales. Al no
+ * pasar por los tokens no cambiaba con el tema, asi que en modo oscuro el
+ * ultimo tramo quedaba casi blanco sobre el fondo.
+ */
+export const chartRamp = (): string[] => [
+  token('--ls-primary'),
+  token('--ls-primary-light'),
+  token('--ls-primary-soft-strong'),
+  token('--ls-primary-soft'),
+];
