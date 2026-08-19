@@ -81,10 +81,14 @@ y el detector ampliado y probado en los dos sentidos.
 Estos dos puntos ocupan el 40% del plan de accion y **no son correcciones, son decisiones de
 producto**. Mezclarlos con lo anterior hace que parezcan igual de obligatorios.
 
-**Fase 4, el monorepo.** Propone reestructurar el repositorio entero en `apps/` y `packages/` para
-alojar `apps/mobile`. Es correcto que hoy no hay workspaces. Pero eso solo es un defecto si existe la
-app movil, y no existe. Reestructurar antes de tener el segundo consumidor es pagar el coste sin el
-beneficio, y toca cada ruta de importacion del proyecto.
+**Fase 4, el monorepo.** ~~Propone reestructurar el repositorio entero en `apps/` y `packages/` para
+alojar `apps/mobile`. Eso solo es un defecto si existe la app movil, y no existe.~~
+
+**Rectificado el `2026-08-19`: la auditoria tenia razon y yo no.** El usuario confirmo que quiere el
+monorepo con la app en su propia carpeta, y que el objetivo movil es React Native. Mi argumento -no
+reestructurar antes de tener el segundo consumidor- era valido, pero el segundo consumidor estaba
+decidido desde antes; simplemente no estaba escrito en el repositorio, asi que lo trate como
+inexistente. Ver capitulo 13.6 del roadmap.
 
 **Sustituir `refreshKey` por React Query.** El diagnostico tecnico es correcto: siete hooks exponen un
 contador, no hay deduplicacion ni cache. Pero cambiar la gestion de estado asincrono de toda la

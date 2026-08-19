@@ -1640,6 +1640,43 @@ tomada solo mientras se mantenga la restriccion de no crear recursos nuevos en C
 
 ### Capitulo 13.6 - Preparacion para app movil (bloque 5)
 
+#### DECISION TOMADA: monorepo con la app en su propia carpeta
+
+**El usuario quiere un monorepo, con la app movil fisicamente separada del codigo actual, en su
+propia carpeta.** No una carpeta mas dentro de `src/`, no codigo movil mezclado con el de la
+extension. Registrado el `2026-08-19`.
+
+**Esto corrige una postura anterior mia.** El `2026-08-17`, al contrastar la auditoria externa,
+clasifique el monorepo como "no es deuda tecnica, es decision de producto" y recomende no ejecutarlo
+por inercia. El razonamiento seguia siendo valido -no reestructurar antes de tener el segundo
+consumidor- pero **ahora el segundo consumidor esta decidido**, asi que la premisa cambio y la
+recomendacion con ella.
+
+**Estructura objetivo:**
+
+```
+LeadSeed/
+├── apps/
+│   ├── extension/     lo actual: manifest, vite, components, pages, design, platform/web
+│   └── mobile/        React Native, aislada, con su propio entry y su propia UI
+└── packages/
+    └── core/          repositories, services, types, utils, config, lib, hooks de datos
+```
+
+**Lo que va a `packages/core`, medido el `2026-08-19`:** `repositories` (0 de 36 archivos atados a la
+plataforma), `services` (0 de 33), `types` (0 de 16), `config` (0 de 2), `lib` (0 de 2), `utils` (1 de
+22) y los hooks de datos (4 de 45 atados). Esas cifras no son una estimacion: son el conteo de
+archivos que mencionan `chrome`, `document` o `window`.
+
+**Consecuencia para el trabajo en curso:** la capa de cache (`lib/queryClient.ts` y los hooks
+migrados) **no toca plataforma**, asi que pertenece a `packages/core` y viaja a la app sin cambios.
+Seguir migrando hooks a esa capa es trabajo del nucleo compartido, no de la extension.
+
+**Riesgo del traslado, y por que no se hace de golpe:** mover el arbol toca cada ruta de importacion
+del proyecto. Se hace con la suite verde antes y despues, en un commit propio que solo mueva archivos
+y ajuste rutas, sin ningun cambio de comportamiento mezclado. Un traslado y una correccion en el
+mismo commit hacen imposible saber cual rompio que.
+
 #### DECISION TOMADA: React Native
 
 **El objetivo movil es React Native, no Capacitor ni una WebView.** Decidido por el usuario antes del
