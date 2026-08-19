@@ -2657,11 +2657,18 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
 - [PENDIENTE] Verificacion visual del usuario: crear un flujo, inscribir un lead y despachar un paso.
   Es lo unico que ningun test puede responder.
 
-- [PENDIENTE] El detector de modo oscuro solo caza cinco patrones de fondo (`bg-white`, `bg-gray-50`,
-  `bg-slate-50`, `bg-gray-100`, `bg-slate-100`). No ve `text-slate-500`, `border-slate-300`,
-  `bg-green-500` ni hexadecimales, que son la mayoria de las desviaciones. **Dos agentes distintos lo
-  encontraron por separado.** Ampliarlo hoy dejaria el CI en rojo con 71 usos preexistentes, asi que
-  es una limpieza propia, no un añadido a este bloque.
+- [HECHO] (`2026-08-16`) Detector de modo oscuro ampliado a texto y bordes, no solo fondos, y los
+  **123** huecos reales corregidos. La estimacion de "71 usos" que figuraba aqui era mia y estaba mal.
+
+  Casi se cierra como falsa alarma: mi primer sondeo dio **cero** porque el `` iba mal escapado a
+  traves del shell y se convertia en un backspace literal (`0x08`), o sea un regex incapaz de
+  coincidir con nada. Se detecto al contrastar con `grep`. El mismo escape volvio a colarse al
+  ampliar el detector de verdad, y solo aparecio al **plantar una violacion a proposito**.
+
+  Leccion aplicada: un detector solo probado en verde no esta probado. Ahora se comprueba en los dos
+  sentidos, y estos scripts se escriben a archivo en vez de pasarse por `python -c`.
+
+  Como los tokens resuelven ambos temas, salieron ademas 430 `dark:` redundantes.
 
 - [PENDIENTE] Vista "Hoy" como pantalla de entrada, no la lista de flujos. La pregunta del usuario
   ("que me falta enviar hoy") es transversal a todos los flujos.
@@ -2676,6 +2683,14 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
 - [HALLAZGO] (`2026-08-16`) El lint de fronteras **no impide que un componente importe un
   repositorio**. Solo bloquea `lib/supabaseClient`, `platform/web` y la creacion del cliente. La
   separacion de capas se sostiene por convencion, no por la guarda. Frente propio.
+
+  (`2026-08-17`) Confirmado en la practica: la auditoria externa encontro esa fuga en
+  `PublicProfileModal`, que llamaba al repositorio saltandose los servicios. Se corrigio a mano, pero
+  **nada impide la siguiente**. Pasa de observacion a pendiente.
+
+- [PENDIENTE] Cerrar la guarda: regla de ESLint que prohiba importar `repositories/` desde
+  `components/` y `pages/`. Con excepcion para `import type`, que no crea dependencia en ejecucion y
+  hoy se usa en tres sitios legitimos.
 
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
@@ -3005,3 +3020,46 @@ La contramedida adoptada no es prometer mas cuidado, sino tres cambios verificab
    el contador no puede mentir hacia arriba
 3. las marcas viven en el archivo afectado y no en una lista central, porque una lista central
    acumulo cuatro entradas inertes sin que nadie lo notara
+
+### Capitulo 15 - Auditoria externa contrastada (`2026-08-17`)
+
+Contraste completo en `docs/auditorias/contraste-auditoria-externa-2026-08-17.md`.
+
+Resumen: la auditoria es solida. Entre esperando cifras infladas y **falla por defecto**: 803 tamanos
+fijos donde decia 650, 281 botones donde decia 210, y sus ocho citas de archivo y linea eran exactas.
+
+- [HECHO] Cuatro variables CSS muertas. La auditoria lo llamo "prefijo antiguo" y era peor:
+  `--color-surface` y `--color-text` no existen, y una variable indefinida descarta la declaracion
+  entera. La capa de carga a pantalla completa no tenia fondo.
+
+- [HECHO] Tres dependencias de red retiradas: avatar de respaldo (dibujado local, siete copias),
+  fondo del simulador de WhatsApp (venia de un adjunto de un issue de GitHub ajeno) y logo de Google.
+  Al contrario de lo que decia el informe, la CSP no bloqueaba nada: `img-src` permite `https:`.
+
+- [HECHO] `utils/date.ts`. Convivian `es-CL`, `es-ES` y tres pantallas **sin idioma**, que es lo unico
+  grave: sin idioma manda el del navegador, y `03-04-2026` es 4 de marzo en una pantalla y 3 de abril
+  en la de al lado.
+
+- [HECHO] Fuga de capa en `PublicProfileModal`, y `chartRamp()` en `palette.ts` para datos ordenados.
+
+- [HECHO] Nombre accesible a tres botones que solo mostraban un icono.
+
+- [DESCARTADO] El bug de envio accidental por `<button>` sin `type` dentro de `<form>`: **no existe**.
+  El conteo de 18 era grueso (archivos que contienen un formulario en alguna parte). Dentro de un
+  `<form>` no hay ninguno.
+
+- [DESCARTADO] Los literales de color en graficos no son infraccion: `palette.ts` existe justo para
+  SVG y Recharts, que no leen variables CSS. El fallo era redeclararlos.
+
+- [HALLAZGO] El boton de ayuda de la cabecera (`Header.tsx:74`) **no tiene `onClick`**. Es un boton
+  que no hace nada. Conectarlo o retirarlo es decision de producto.
+
+- [PENDIENTE, REQUIERE APROBACION VISUAL] Los 281 botones nativos y los 803 tamanos fijos. Medido
+  antes de opinar: **81 valores de `className` distintos y 76 aparecen una sola vez**; el mas
+  repetido sale 3 veces. No hay mapeo mecanico, son ~270 decisiones visuales. Se propone pantalla por
+  pantalla, empezando por una que fije el criterio.
+
+- [NO ES DEUDA TECNICA] Monorepo (`apps/` + `packages/`) y sustituir `refreshKey` por React Query.
+  Ocupan el 40% del plan del informe. El monorepo solo es un defecto si existe la app movil, y no
+  existe; cambiar la gestion de estado asincrono toca cada pantalla a la vez. Son decisiones de
+  producto, no correcciones, y no deberian ejecutarse por inercia por estar en la misma lista.
