@@ -16,7 +16,6 @@ import { loadTemplateSendLog, scheduleEmailSend, sendImmediateEmail } from '../.
 import { applyReason } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
 import { ReasonPicker } from './ReasonPicker';
-import type { MessageReason } from '../../services/messageReasonsService';
 import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { listChannels } from '../../services/emailChannelsService';
@@ -44,8 +43,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const [customBody, setCustomBody] = useState('');
 
   // Motivo del mensaje: uno por envio, aplicado al asunto y al cuerpo.
-  const motivos = useMessageReasons();
-  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const { motivos: reasons } = useMessageReasons();
   const [motivoId, setMotivoId] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
@@ -87,10 +85,6 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       setMotivoId(null);
     }
   }, [selectedTemplate]);
-
-  useEffect(() => {
-    motivos.getAll().then(setReasons);
-  }, [motivos.refreshKey]);
 
   const usaMotivo = /\{motivo\}/i.test(customBody) || /\{motivo\}/i.test(customSubject);
   const motivoTexto = reasons.find((reason) => reason.id === motivoId)?.text;

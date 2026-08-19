@@ -4,7 +4,6 @@ import { buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
 import { getSettings } from '../../services/appSettingsService';
 import { ReasonPicker } from './ReasonPicker';
-import type { MessageReason } from '../../services/messageReasonsService';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
 import { getCurrentSession } from '../../services/authService';
@@ -67,8 +66,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Motivo del mensaje: se elige una vez por envio, no por destinatario.
-  const motivos = useMessageReasons();
-  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const { motivos: reasons } = useMessageReasons();
   const [motivoId, setMotivoId] = useState<number | null>(null);
 
   /**
@@ -80,10 +78,6 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
    * Ajustes, lejos de aqui, y por eso nadie lo noto.
    */
   const [clienteWhatsApp, setClienteWhatsApp] = useState<'web' | 'app'>('web');
-
-  useEffect(() => {
-    motivos.getAll().then(setReasons);
-  }, [motivos.refreshKey]);
 
   useEffect(() => {
     getSettings().then((s) => setClienteWhatsApp(s.whatsappClientPreference || 'web'));

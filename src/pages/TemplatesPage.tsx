@@ -70,7 +70,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const waT = useWhatsAppTemplates(); const waL = useWhatsAppTemplateLists();
   const emT = useEmailTemplates(); const emL = useEmailTemplateLists();
   const caT = useCallTemplates(); const caL = useCallTemplateLists();
-  const motivos = useMessageReasons();
+  const { motivos: reasons, save: guardarMotivo, remove: borrarMotivo } = useMessageReasons();
 
   // Los tres canales comparten la forma de WhatsAppTemplate; lo que cambia es
   // de que hook vienen, no el tipo.
@@ -97,11 +97,9 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   // administra aqui y no en Ajustes porque es contenido de mensajes, no una
   // preferencia de la cuenta.
   const [showReasonManager, setShowReasonManager] = useState(false);
-  const [reasons, setReasons] = useState<MessageReason[]>([]);
   const [reasonText, setReasonText] = useState('');
   const [reasonError, setReasonError] = useState('');
 
-  const loadReasons = async () => setReasons(await motivos.getAll());
 
   const handleCreateReason = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,17 +113,15 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
       return;
     }
     setReasonError('');
-    await motivos.save({ text, createdAt: '' });
+    await guardarMotivo({ text, createdAt: '' });
     setReasonText('');
-    await loadReasons();
   };
 
   const handleDeleteReason = async (id: number) => {
     // Las plantillas que lo tuvieran como valor por defecto lo pierden, pero no
     // se rompen: la columna es `on delete set null`.
     if (!confirm('¿Eliminar este motivo? Las plantillas que lo usaran por defecto quedaran sin motivo.')) return;
-    await motivos.remove(id);
-    await loadReasons();
+    await borrarMotivo(id);
   };
 
   const load = async () => {
@@ -148,9 +144,6 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     setBusqueda('');
   }, [tab]);
 
-  // Los motivos no dependen de la pestaña: el catalogo es uno solo para los tres
-  // canales. Se recarga cuando cambian desde otra pestaña del navegador.
-  useEffect(() => { loadReasons(); }, [motivos.refreshKey]);
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();

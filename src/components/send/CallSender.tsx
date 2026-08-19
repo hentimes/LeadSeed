@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../../types';
 import { getAssignedLeads } from '../../hooks/useTemplates';
 import { Icon } from '../../utils/icons';
@@ -7,7 +7,6 @@ import { logCallSend } from '../../services/sendService';
 import { applyReason } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
 import { ReasonPicker } from './ReasonPicker';
-import type { MessageReason } from '../../services/messageReasonsService';
 import { Field, Panel, Select } from '../../design';
 import { SendStep } from './SendStep';
 import { TemplatePicker } from './TemplatePicker';
@@ -29,13 +28,8 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
   const [message, setMessage] = useState('');
 
   // Motivo del mensaje: aqui alimenta el guion que se lee al llamar.
-  const motivos = useMessageReasons();
-  const [reasons, setReasons] = useState<MessageReason[]>([]);
+  const { motivos: reasons } = useMessageReasons();
   const [motivoId, setMotivoId] = useState<number | null>(null);
-
-  useEffect(() => {
-    motivos.getAll().then(setReasons);
-  }, [motivos.refreshKey]);
 
   const findTemplateById = (value: string) =>
     templates.find((template) => String(template.id ?? '') === value) || null;

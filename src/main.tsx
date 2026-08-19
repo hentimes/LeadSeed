@@ -7,6 +7,8 @@ import AppErrorBoundary from './components/app/AppErrorBoundary';
 import { setPlatform } from './platform/registry';
 import { webPlatform } from './platform/web';
 import { getErrorMessage } from './utils/errorMessage';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 
 // Antes de montar nada: la capa de dominio pide los puertos por registro, y
 // este es el unico modulo de la app que menciona la implementacion concreta.
@@ -22,11 +24,13 @@ if (!rootEl) {
   try {
     ReactDOM.createRoot(rootEl).render(
       <AppErrorBoundary>
-        <AuthProvider>
-          <PresenceProvider>
-            <App />
-          </PresenceProvider>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <PresenceProvider>
+              <App />
+            </PresenceProvider>
+          </AuthProvider>
+        </QueryClientProvider>
       </AppErrorBoundary>
     );
   } catch (e) {
