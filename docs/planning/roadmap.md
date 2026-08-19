@@ -1531,14 +1531,21 @@ bloque 4.
 
 ### Capitulo 13.4.e - Configurar ALLOWED_EXTENSION_IDS
 
-- [PENDIENTE] Configurar el secreto `ALLOWED_EXTENSION_IDS` con el id de la extension
-  (`blphejkibijeolonnebffpclhlghofnn`, derivado del `manifest.key` y por tanto estable) y redesplegar
-  `form-lead-file`.
+- [HECHO] (`2026-08-19`) Secreto `ALLOWED_EXTENSION_IDS` configurado y `form-lead-file`
+  redesplegada. Lo ejecuto el usuario; el clasificador de permisos rechaza estos comandos.
 
-  ```
-  npx supabase secrets set ALLOWED_EXTENSION_IDS=blphejkibijeolonnebffpclhlghofnn
-  npx supabase functions deploy form-lead-file --no-verify-jwt
-  ```
+  Antes de desplegar se **derivo el id desde el `manifest.key`** en vez de darlo por bueno: SHA-256
+  de la clave publica en DER, sus 16 primeros bytes, mapeando cada medio byte al rango `a-p`. Salio
+  `blphejkibijeolonnebffpclhlghofnn`, identico al que figuraba aqui. Importaba comprobarlo porque en
+  cuanto el secreto existe la funcion **deja de aceptar cualquier extension**, y un id equivocado
+  habria roto la descarga de PDFs sin aviso.
+
+  Nota de operacion: el `--no-verify-jwt` que figuraba en este comando **no se uso**, y es correcto
+  que no se usara. Esta funcion valida el `Authorization: Bearer` y la propiedad del lead; desactivar
+  la verificacion habria abierto justo lo que este item pretende cerrar.
+
+  - [PENDIENTE] Comprobacion del usuario: descargar un PDF adjunto de un lead. Es lo unico que
+    confirma que la extension real sigue pasando el filtro.
 
   **Motivo real: consistencia del estandar, no seguridad.** Conviene registrarlo asi para que nadie
   le de una urgencia que no tiene. Sin el secreto, la funcion acepta cualquier origen
@@ -2317,9 +2324,9 @@ enchufamos**. Un detector que nadie ejecuta es documentacion, no una guarda.
   descarta nada; y que `master` **no dispara ningun despliegue**, solo CI. Sin eso, propagar 104
   commits a la rama principal habria sido una publicacion a produccion disfrazada de tarea de git.
 
-- [BLOQUEADO] `ALLOWED_EXTENSION_IDS` (capitulo 13.4.e). Confirmado que **el secreto no existe** en el
-  proyecto: se listaron los 13 configurados y no esta. El comando para ponerlo lo rechazo el
-  clasificador.
+- [HECHO] (`2026-08-19`) `ALLOWED_EXTENSION_IDS` (capitulo 13.4.e). Configurado y desplegado por el
+  usuario. Con esto **la remediacion deja de tener items bloqueados del lado del usuario**; lo que
+  queda ahi son aprobaciones visuales y decisiones de producto, no tareas atascadas.
 
 ### Capitulo 13.16 - Checklist visual por pantalla (absorbido de `ux-ui-checklist.md` el `2026-08-15`)
 
