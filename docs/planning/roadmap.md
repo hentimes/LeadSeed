@@ -1640,6 +1640,38 @@ tomada solo mientras se mantenga la restriccion de no crear recursos nuevos en C
 
 ### Capitulo 13.6 - Preparacion para app movil (bloque 5)
 
+#### DECISION TOMADA: React Native
+
+**El objetivo movil es React Native, no Capacitor ni una WebView.** Decidido por el usuario antes del
+`2026-08-19`; se registra aqui ese dia porque **no estaba escrito en ninguna parte** del repositorio,
+y por eso se volvio a plantear como pregunta abierta al menos dos veces. Una decision que no esta en
+el repositorio no existe: se vuelve a discutir cada vez que alguien mira el problema de cero.
+
+**Lo que implica, y no es lo mismo que para una WebView.** Medido el `2026-08-19` sobre 41.985 lineas
+de `src/` sin tests:
+
+| Capa | Lineas | Con React Native |
+|---|---|---|
+| `repositories`, `services`, `types`, `utils`, `config` | 11.707 (28%) | **viajan** |
+| `hooks` | 4.526 (11%) | viajan los de datos; los de comportamiento visual no |
+| `platform` | 1.220 (3%) | se reescribe, es su proposito |
+| `components`, `pages`, `design` | 23.800 (57%) | **se reescribe entero** |
+
+**Consecuencia que cambia prioridades ya anotadas en este roadmap:** los 121 anchos fijos en px
+(capitulo 13.8.b) estan justificados como deuda de la extension en panel angosto, pero **no son un
+prerrequisito de movil**. Con React Native esa interfaz no se porta, se rehace, y Tailwind no
+interviene. Se habia clasificado como trabajo de preparacion movil y no lo es.
+
+**Lo que si es prerrequisito real**, por orden:
+
+1. Que `services/` y `repositories/` no toquen DOM ni `chrome`. **Ya se cumple: cero en ambas**
+   (verificado el `2026-08-19`). Este era el bloqueo que el capitulo declaraba clave y esta cerrado.
+2. Una capa de estado servidor con cache. Hoy `refreshKey` relanza consultas completas; en una red
+   movil intermitente eso es la diferencia entre usable e inusable. Deja de ser opcional.
+3. Verificar lo construido antes de abrir una segunda plataforma, para no duplicar la superficie
+   donde buscar cuando algo falle.
+
+
 Hallazgo clave: el acoplamiento que bloquea el port no es Chrome (93 usos bien contenidos en 18
 archivos) sino el DOM dentro de hooks de dominio.
 
