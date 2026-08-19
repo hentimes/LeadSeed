@@ -293,12 +293,12 @@ Regla de avance vigente:
 ### Capitulo 6.2 - Implementacion
 
 - [PARCIAL] Existe base de deteccion/duplicados local en `useDuplicates` y servicios relacionados.
-- [PENDIENTE] Crear o consolidar tablas/RPCs para alertas cruzadas multi-ejecutivo.
+- [HECHO] (`2026-08-19`, verificado contra el codigo) Tabla `lead_cross_exec_events`, migracion 021.
 - [PENDIENTE] Crear preferencia por usuario para activar/desactivar alertas reciprocas.
-- [PENDIENTE] Recalcular coincidencias al crear lead desde formulario general, `pb`, importacion, carga manual y edicion de RUT.
-- [PENDIENTE] Priorizar leads con alerta reciente al abrir bandeja de leads.
-- [PENDIENTE] Mostrar alerta discreta en detalle del lead con fecha y contexto minimo.
-- [PENDIENTE] Validar privacidad: sin revelar nombre, correo ni ID del otro ejecutivo.
+- [HECHO] (`2026-08-19`, verificado contra el codigo) Trigger `lead_cross_exec_sync_trg` sobre `leads`, que cubre todas las vias a la vez: formulario general, `pb`, importacion, carga manual y edicion de RUT.
+- [PARCIAL] (`2026-08-19`, verificado contra el codigo) Hay lectura por lote (`fetchCrossExecEventRowsByLeadIds`); no se comprobo que ordene la bandeja.
+- [HECHO] (`2026-08-19`, verificado contra el codigo) `LeadDetailCrossExecAlert.tsx`, en `LeadDetail` y `LeadsTableRow`.
+- [HECHO] (`2026-08-19`, verificado contra el codigo) Se cumple por construccion: el `select` trae `related_lead_id`, `event_kind`, `counterpart_captured_at` y `matched_by`, y no nombre, correo ni id del otro ejecutivo.
 
 ---
 
@@ -866,8 +866,7 @@ Base: commits `22e1a3a`, `e4e3f5a`, `cd70955`.
 - [HECHO] Borrado admin de mensajes de chat, commit `8fd5f3e`. Migraciones
   `sql/migrations/095_chat_message_admin_delete.sql` y su espejo. Este item decia "no estan
   commiteados" y contradecia al capitulo 13.1, que ya declaraba el commit; corregido el `2026-08-12`.
-- [PENDIENTE] Dividir `src/components/chat/ChatRoom.tsx`: 1097 lineas, ~30 `useState`, ~680 lineas de
-  JSX. Es el archivo de mayor riesgo de mantenibilidad del repositorio.
+- [HECHO] (`2026-08-19`, verificado contra el codigo) Dividir `ChatRoom.tsx`. El item citaba **1097 lineas**; el archivo esta en **601**, dentro del limite de 800 del propio roadmap. Se dividio en las extracciones del bloque 6 (capitulo 13.7.b) y no se marco aqui.
 - [HECHO] Resuelto el bloqueo sobre `EmojiPicker.tsx`. El usuario definio el `2026-08-12` la frontera
   exacta de la prohibicion, incorporada al protocolo como precision `10.1.a`: la regla aplica a todo
   emoji escrito en codigo, y no aplica a emojis que el usuario final elige y envia como contenido de
