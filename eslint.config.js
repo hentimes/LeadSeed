@@ -118,13 +118,31 @@ export default tseslint.config(
   // compruebalo con un archivo de prueba, no leyendo la config.
 
   // Capa de presentacion: puede componer UI libremente, pero no toca datos.
+  //
+  // Se usa la version de `@typescript-eslint` y no la de ESLint base porque solo
+  // aquella entiende `allowTypeImports`. Un `import type` desaparece al compilar:
+  // no crea dependencia en ejecucion y no es una fuga de capa. Prohibirlo
+  // obligaria a duplicar tipos, que es peor que el problema que se quiere evitar.
   {
     files: ['src/components/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': [
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': [
         'error',
         {
           patterns: [
+            {
+              // Frontera anadida el 2026-08-19. Hasta aqui la separacion de capas
+              // se sostenia por convencion: el lint bloqueaba el cliente Supabase
+              // pero no el repositorio que lo envuelve. Una auditoria externa
+              // encontro la fuga en `PublicProfileModal`, que llamaba a
+              // `fetchPublicProfile` saltandose los servicios. Se corrigio a mano
+              // y nada impedia la siguiente.
+              group: ['**/repositories/*', '**/repositories/**'],
+              allowTypeImports: true,
+              message:
+                'Un componente no llama al repositorio. Pasa por src/services/ o por un hook. Ver roadmap 3.2 y 14.',
+            },
             {
               group: ['**/lib/supabaseClient', '**/lib/supabaseClient.ts'],
               message: 'El cliente Supabase vive solo en src/repositories/. Ver roadmap 3.2 y 13.4.',

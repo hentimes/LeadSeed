@@ -1544,8 +1544,8 @@ bloque 4.
   que no se usara. Esta funcion valida el `Authorization: Bearer` y la propiedad del lead; desactivar
   la verificacion habria abierto justo lo que este item pretende cerrar.
 
-  - [PENDIENTE] Comprobacion del usuario: descargar un PDF adjunto de un lead. Es lo unico que
-    confirma que la extension real sigue pasando el filtro.
+  - [HECHO] (`2026-08-19`) Comprobado por el usuario: el PDF adjunto de un lead descarga
+    correctamente con el filtro activo. La extension real pasa. Capitulo cerrado.
 
   **Motivo real: consistencia del estandar, no seguridad.** Conviene registrarlo asi para que nadie
   le de una urgencia que no tiene. Sin el secreto, la funcion acepta cualquier origen
@@ -2696,9 +2696,19 @@ accesibilidad). Lo que sigue recoge las decisiones ya tomadas; el detalle de la 
   `PublicProfileModal`, que llamaba al repositorio saltandose los servicios. Se corrigio a mano, pero
   **nada impide la siguiente**. Pasa de observacion a pendiente.
 
-- [PENDIENTE] Cerrar la guarda: regla de ESLint que prohiba importar `repositories/` desde
-  `components/` y `pages/`. Con excepcion para `import type`, que no crea dependencia en ejecucion y
-  hoy se usa en tres sitios legitimos.
+- [HECHO] (`2026-08-19`) Guarda cerrada. `@typescript-eslint/no-restricted-imports` bloquea
+  `repositories/` desde `components/` y `pages/`, con `allowTypeImports: true`.
+
+  Se usa la version de `@typescript-eslint` y no la de ESLint base porque solo aquella entiende
+  `allowTypeImports`. Un `import type` desaparece al compilar: no crea dependencia en ejecucion y no
+  es una fuga. Prohibirlo obligaria a duplicar tipos, peor que el problema a evitar.
+
+  **Probada en los dos sentidos y en las dos formas**, siguiendo el aviso que el propio
+  `eslint.config.js` lleva escrito: los bloques `no-restricted-imports` solapados se pisan, no se
+  suman. Al cambiar de la regla base a la de TypeScript se podian haber anulado en silencio los tres
+  guardianes que ya vivian en ese bloque. Se planto un archivo con las tres importaciones prohibidas
+  y **las tres siguen saltando**; y otro con una importacion de valor y una de tipo al mismo
+  repositorio: salta la primera y no la segunda.
 
 ### Capitulo 13.9 - Accesibilidad WCAG 2.2
 
