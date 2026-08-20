@@ -71,6 +71,15 @@ interface ListPanelProps {
   title?: ReactNode;
   /** Cifra a la derecha de la cabecera: "995 items", "8 resultados". */
   count?: ReactNode;
+  /**
+   * Controles a la derecha de la cabecera, normalmente la paginacion.
+   *
+   * La cabecera se pinta si hay `title` o si hay `headerActions`: asi una lista
+   * puede tener cabecera fina con solo los controles, sin rotulo. Es lo que
+   * hace la tabla de leads, donde poner un rotulo que repita lo que la pantalla
+   * ya dice solo anade una franja.
+   */
+  headerActions?: ReactNode;
   /** Lo que se pinta cuando no hay ninguna fila. */
   empty?: ReactNode;
   /** Pie: normalmente `<ListPagination>`. */
@@ -103,6 +112,7 @@ interface ListPanelProps {
 export function ListPanel({
   title,
   count,
+  headerActions,
   empty,
   footer,
   flush = false,
@@ -119,14 +129,21 @@ export function ListPanel({
 
   return (
     <div className={`${caja} ${className}`}>
-      {title !== undefined && (
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-muted px-3 py-2">
-          <span className="min-w-0 truncate text-micro font-bold uppercase tracking-wide text-ink-secondary">
-            {title}
-          </span>
-          {count !== undefined && (
-            <span className="shrink-0 text-micro tabular-nums text-ink-muted">{count}</span>
+      {(title !== undefined || headerActions !== undefined) && (
+        <div className="flex min-h-[34px] shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-muted px-3 py-1">
+          {title !== undefined ? (
+            <span className="min-w-0 truncate text-micro font-bold uppercase tracking-wide text-ink-secondary">
+              {title}
+            </span>
+          ) : (
+            <span className="min-w-0" />
           )}
+          <div className="flex shrink-0 items-center gap-2">
+            {count !== undefined && (
+              <span className="text-micro tabular-nums text-ink-muted">{count}</span>
+            )}
+            {headerActions}
+          </div>
         </div>
       )}
 

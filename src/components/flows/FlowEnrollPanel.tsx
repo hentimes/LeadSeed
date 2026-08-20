@@ -35,6 +35,10 @@ interface Props {
  * las otras dos. El modal no aportaba nada que la vista no de: no hay nada
  * detras que convenga seguir viendo mientras eliges.
  */
+/** Lo que antes era un subtitulo de dos lineas bajo el titulo. */
+const AYUDA = (canal: string) =>
+  `El paso 1 se programa segun su espera. Solo aparecen leads con ${canal === 'email' ? 'correo' : 'telefono'}.`;
+
 /** Cuantos leads por pagina. */
 const LEADS_POR_PAGINA = 8;
 
@@ -98,14 +102,22 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2">
           <IconButton icon={<Icon.ArrowLeft />} label="Volver" size="sm" onClick={onVolver} />
-          <div className="min-w-0">
-            <h2 className="text-card-title font-semibold text-ink">Inscribir en {flujo.name}</h2>
-            <p className="mt-0.5 text-micro text-ink-secondary">
-              El paso 1 se programa segun su espera.
-              {flujo.channel === 'email'
-                ? ' Solo aparecen leads con correo.'
-                : ' Solo aparecen leads con telefono.'}
-            </p>
+          {/*
+            El subtitulo ocupaba dos lineas para explicar dos reglas que solo
+            importan la primera vez. Pasa a un icono de ayuda: quien ya lo sabe
+            no lo lee, y quien no, lo tiene a un puntero de distancia.
+          */}
+          <div className="flex min-w-0 items-center gap-1.5">
+            <h2 className="truncate text-card-title font-semibold text-ink">Inscribir en {flujo.name}</h2>
+            <span
+              className="shrink-0 cursor-help text-ink-muted"
+              tabIndex={0}
+              role="note"
+              aria-label={AYUDA(flujo.channel)}
+              title={AYUDA(flujo.channel)}
+            >
+              <div className="w-3.5">{Icon.Help()}</div>
+            </span>
           </div>
         </div>
       </div>
@@ -144,11 +156,16 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
              * lo pone `LeadIdentity` y dice "Sin nombre": un lector de pantalla
              * en modo de puntuacion completa verbaliza los parentesis.
              */
+            /*
+              Sin rotulo: "Leads disponibles" repetia lo que la pantalla ya
+              dice y anadia una franja entera para no informar de nada. Queda
+              una cabecera fina con la cuenta y la paginacion, como la de la
+              tabla de leads.
+            */
             <ListPanel
               flush
-              title="Leads disponibles"
               count={candidatos.length}
-              footer={
+              headerActions={
                 <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
               }
             >
