@@ -8687,3 +8687,53 @@ lead sin nombre, mas 35 colores fijos que se saltan `src/design/tokens.css`.
   - verificacion visual a 320/360/440/500/580px antes de dar nada por hecho
 
 Si necesitas alguno de esos archivos, avisa aqui antes de tocarlo.
+
+### 2026-08-20 CLT - Claude (sesion Overview) - LeadSeed / las filas de lead ya salen de una sola pieza
+
+- Tipo: unificacion de superficie visual
+- Rol: Implementadora
+- Estado: unificacion visual cerrada; queda pendiente una decision de interaccion
+
+**Commits:** `2dc7c85` (funciones y fichas), `074b84c` (la primitiva),
+`9a8a3a5` (envio masivo y flujos), `3ab77d3` (listas, pipeline y tabla de leads).
+
+**De siete implementaciones a una.** Se inventariaron los siete sitios que
+pintaban filas de lead con un agente de exploracion, uno de diseno y
+accesibilidad, y uno de arquitectura. Habia siete paddings distintos, cuatro
+tokens de separador y tres textos para un lead sin nombre.
+
+**Dos sitios quedaron fuera, con motivo, no por olvido.** `ChatMembersPanel`
+pinta `ChatMemberTarget`, no `Lead`: sin telefono, correo, RUT, estado ni
+listas. El parecido es visual, el dominio no. Y los dos paneles de admin usan
+una paleta literal -`slate-*`, `purple-*`- fuera del sistema de fichas: meter
+una fila tokenizada ahi daria una fila que no combina con su propio entorno.
+Admin necesita tokenizarse primero, y eso es otro bloque.
+
+**Dos fallos reales que aparecieron al inventariar, ya corregidos.** El
+`shortName` de la tabla de listas devolvia el apellido materno con nombres de
+cuatro partes: "Juan Carlos Perez Soto" salia "Juan Soto". Y el distintivo
+verde de esa misma tabla seguia diciendo "enviado(s)" cuando la correccion a
+"chats abiertos" -registrada el 2026-08-16- solo se habia aplicado en la tabla
+de leads. Una correccion que se aplica en un sitio y no en su gemelo es
+exactamente lo que esta unificacion viene a impedir.
+
+**Un fallo mio, detectado antes de commitear.** Expuse `--ls-text-xs` como
+`text-xs`. `text-xs` ya existe en Tailwind y vale 12px, asi que ese mapeo
+encogia en silencio los 284 usos repartidos por 64 archivos. Se renombro a
+`text-meta` y se verifico sobre el CSS compilado que `.text-xs` vuelve a emitir
+0.75rem. La leccion es la de siempre: al mapear una ficha a una clase, comprobar
+primero si esa clase ya existe.
+
+**Primeros tests de componente del repositorio.** `vitest.config.ts` ya habia
+elegido `happy-dom` para esto y ya incluia `.test.tsx`; solo faltaba estrenarlo.
+La limpieza entre renders va a mano porque la configuracion no activa `globals`.
+
+**Pendiente, y necesita al usuario.** Las acciones de la fila de leads iban a
+agruparse en un menu de tres puntos. Al ir a implementarlo se verifico que la
+premisa con la que se planteo la decision era falsa: pinchar la fila no abre el
+lead, lo **selecciona** (`LeadsTable.tsx:198`). Lo que abre el detalle son los
+contadores y el boton Ver. La decision se replanteo al usuario con el dato
+correcto antes de tocar nada.
+
+- Fronteras liberadas: ninguna. Sigue reservado `src/components/leads/`,
+  `lists/`, `send/`, `flows/` y `PipelinePage.tsx` hasta cerrar lo pendiente.
