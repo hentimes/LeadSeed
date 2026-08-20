@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Lead, LeadList } from '../../types';
-import { Badge, Button, EmptyState, Input, ListPanel, ListRow } from '../../design';
+import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 
@@ -19,6 +19,9 @@ import LeadIdentity from '../leads/LeadIdentity';
  *    tooltip posicionado con `left-full`, es decir, fuera del panel: en el
  *    side panel de Chrome no hay nada a la derecha, asi que no se veia.
  */
+/** Cuantos leads por pagina en el selector de destinatarios. */
+const LEADS_POR_PAGINA = 8;
+
 export function RecipientPicker({
   leads,
   leadLists,
@@ -61,25 +64,110 @@ export function RecipientPicker({
 
   const hasSelection = selectedLeadIds.size > 0 || selectedListIds.size > 0;
 
-  return (
-    <div className="flex flex-col gap-2.5">
-      {/* Listas */}
-      <div>
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="text-micro font-medium text-ink-secondary">Tus listas</span>
-          {hasSelection && (
-            <button
-              onClick={onClear}
-              className="text-micro font-semibold text-primary transition-colors hover:text-primary-hover"
-            >
-              Limpiar
-            </button>
-          )}
-        </div>
+  /*
+   * Paginacion. Antes se pintaban los mil leads de golpe dentro de un alto fijo
+   * de `max-h-52`: el navegador montaba mil filas para ensenar cuatro, y para
+   * llegar al lead 900 habia que arrastrar la barra a ciegas.
+   */
+  const [pagina, setPagina] = useState(1);
+  const totalPaginas = Math.max(1, Math.ceil(filteredLeads.length / LEADS_POR_PAGINA));
 
-        {leadLists.length === 0 ? (
-          <p className="text-micro text-ink-muted">Todavía no creaste listas.</p>
-        ) : (
+  /*
+   * Al cambiar el filtro, la pagina 7 puede dejar de existir, asi que se vuelve
+   * a la primera. Se hace ajustando el estado durante el render y no desde un
+   * `useEffect`: reiniciarlo en un efecto pinta primero la pagina vieja con el
+   * filtro nuevo y despues corrige, que es un render en cascada visible. Es el
+   * patron que React documenta para estado derivado de props.
+   */
+  const filtroActual = `${search}|${[...selectedListIds].sort().join(',')}`;
+  const [filtroAnterior, setFiltroAnterior] = useState(filtroActual);
+  if (filtroAnterior !== filtroActual) {
+    setFiltroAnterior(filtroActual);
+    setPagina(1);
+  }
+
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const visibles = filteredLeads.slice(
+    (paginaActual - 1) * LEADS_POR_PAGINA,
+    paginaActual * LEADS_POR_PAGINA,
+  );
+
+  return (
+    /*
+     * El orden cambio el 2026-08-20. Los chips de listas estaban arriba, entre
+     * el titulo del paso y el buscador, asi que empujaban la lista hacia abajo
+     * y con varias listas la dejaban fuera de la vista. Ahora la lista va
+     * primero -que es lo que se viene a hacer- y los filtros por lista quedan
+     * debajo, como refinamiento.
+     */
+    <div className="flex min-h-0 flex-col gap-2.5">
+      <Input
+        type="search"
+        value={search}
+        onChange={(event) => onSearchChange(event.target.value)}
+        placeholder="Buscar por nombre o teléfono..."
+      />
+
+      {/*
+        `flush` y los margenes negativos sacan la lista del relleno de la
+        tarjeta del paso: se apoya en el borde en vez de dibujar una segunda
+        caja dentro de la primera. Es el aspecto de la lista de inscripcion a
+        flujos, que es la referencia que adopto el producto.
+      */}
+      <ListPanel
+        flush
+        className="-mx-3"
+        title="Leads directos"
+        count={filteredLeads.length}
+        footer={
+          <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
+        }
+        empty={
+          <EmptyState
+            icon={<Icon.Search />}
+            title="Sin resultados"
+            description={search ? 'Probá con otro nombre o número.' : 'No hay leads en esta selección.'}
+          />
+        }
+      >
+        {visibles.map((lead) => {
+          const checked = selectedLeadIds.has(lead.id!);
+          const secondary = secondaryField === 'email' ? lead.email : lead.phone;
+          return (
+            <ListRow as="label" key={lead.id} isSelected={checked} className="cursor-pointer">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => onToggleLead(lead.id!)}
+                className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded-sm border-line accent-[var(--ls-primary)]"
+              />
+              <LeadIdentity
+                className="flex-1"
+                name={lead.name}
+                caption={secondary || (secondaryField === 'email' ? 'Sin correo' : 'Sin teléfono')}
+              />
+              {sentLeadIds.has(lead.id!) && (
+                <Badge tone="success" className="shrink-0">Enviado</Badge>
+              )}
+            </ListRow>
+          );
+        })}
+      </ListPanel>
+
+      {/* Filtro por lista, debajo de lo que filtra. */}
+      {leadLists.length > 0 && (
+        <div>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <span className="text-micro font-medium text-ink-secondary">Filtrar por lista</span>
+            {hasSelection && (
+              <button
+                onClick={onClear}
+                className="text-micro font-semibold text-primary transition-colors hover:text-primary-hover"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {leadLists.map((list) => {
               const on = selectedListIds.has(list.id!);
@@ -105,69 +193,8 @@ export function RecipientPicker({
               );
             })}
           </div>
-        )}
-      </div>
-
-      {/* Leads sueltos */}
-      <div>
-        <Input
-          type="search"
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Buscar por nombre o teléfono..."
-          className="mb-1.5"
-        />
-
-        <ListPanel title="Leads directos" count={filteredLeads.length} maxHeight="max-h-52">
-          {filteredLeads.length === 0 ? (
-            <EmptyState
-              icon={<Icon.Search />}
-              title="Sin resultados"
-              description={search ? 'Probá con otro nombre o número.' : 'No hay leads en esta selección.'}
-            />
-          ) : (
-            filteredLeads.map((lead) => {
-              const checked = selectedLeadIds.has(lead.id!);
-              const secondary = secondaryField === 'email' ? lead.email : lead.phone;
-              return (
-                <ListRow
-                  as="label"
-                  key={lead.id}
-                  isSelected={checked}
-                  className="cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => onToggleLead(lead.id!)}
-                    className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded-sm border-line accent-[var(--ls-primary)]"
-                  />
-                  {/*
-                    El nombre y el dato secundario se pintaban aqui a mano. Ahora
-                    salen de `LeadIdentity`, que es la misma pieza que usan las
-                    demas listas de leads. El `<label>` con su checkbox nativo se
-                    conserva tal cual: es lo que hace que pinchar en cualquier
-                    parte de la fila marque la casilla, y la primitiva no lo toca.
-
-                    Sin avatar a proposito: esta lista nunca lo mostro, y como el
-                    hueco solo se reserva si se pasa, no paga ancho por el.
-                  */}
-                  <LeadIdentity
-                    className="flex-1"
-                    name={lead.name}
-                    caption={secondary || (secondaryField === 'email' ? 'Sin correo' : 'Sin teléfono')}
-                  />
-                  {sentLeadIds.has(lead.id!) && (
-                    <Badge tone="success" className="shrink-0">
-                      Enviado
-                    </Badge>
-                  )}
-                </ListRow>
-              );
-            })
-          )}
-        </ListPanel>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -75,8 +75,17 @@ const LeadsTableRow = ({
    * Un lead sin abrir se tine hasta que se ve su detalle. No depende del badge
    * de la extension, que se limpia con solo abrirla: son cosas distintas.
    */
-  const densidad: ListDensity = compactMode ? 'compact' : 'normal';
-  const cellPad = compactMode ? 'px-3 py-1.5' : 'px-3 py-2';
+  /*
+   * El alto de fila ya no depende de `compactMode`: es el mismo `px-3 py-2` de
+   * todas las demas listas. Se pidio expresamente que la separacion entre dos
+   * leads fuera identica a la de la lista de flujos, y con `compactMode`
+   * -que viene activado por defecto- esta tabla era la unica a `py-1.5`.
+   *
+   * `compactMode` sigue haciendo lo demas: abreviar el nombre y sacar el RUT
+   * bajo el, que es donde de verdad ahorra espacio en un panel angosto.
+   */
+  const densidad: ListDensity = 'normal';
+  const cellPad = 'px-3 py-2';
 
   const trClass = `border-b border-line transition-colors cursor-pointer ${
     tonoDeFila({ isSelected, isUnread: lead.isUnread })

@@ -73,22 +73,39 @@ interface ListPanelProps {
   count?: ReactNode;
   /** Lo que se pinta cuando no hay ninguna fila. */
   empty?: ReactNode;
-  /** Altura maxima antes de que la lista scrollee por dentro. */
+  /** Pie: normalmente `<ListPagination>`. */
+  footer?: ReactNode;
+  /**
+   * Sin borde ni radio: la lista ocupa todo el ancho de su contenedor y se
+   * apoya en el, en vez de dibujar una caja dentro de otra caja.
+   *
+   * Es el aspecto de la lista de inscripcion a flujos, que es el que el
+   * producto adopto como referencia: una caja con borde metida dentro de una
+   * tarjeta que ya tiene borde se lee como dos marcos anidados, y en un panel
+   * de 360px eso ademas cuesta 24px de ancho util.
+   */
+  flush?: boolean;
+  /**
+   * Altura maxima antes de scrollear por dentro. Sin ella la lista crece con
+   * su contenido y, si el padre es flex, se estira para ocupar lo que haya.
+   */
   maxHeight?: string;
   children?: ReactNode;
   className?: string;
 }
 
 /**
- * La caja: borde, radio, cabecera opcional y scroll interno.
+ * La caja: cabecera opcional, cuerpo con scroll y pie opcional.
  *
  * El borde y el radio salen de las fichas, asi que cambiarlos en `tokens.css`
- * los cambia en las cinco listas a la vez.
+ * los cambia en todas las listas a la vez.
  */
 export function ListPanel({
   title,
   count,
   empty,
+  footer,
+  flush = false,
   maxHeight,
   children,
   className = '',
@@ -96,10 +113,14 @@ export function ListPanel({
   const vacia = children === null || children === undefined ||
     (Array.isArray(children) && children.length === 0);
 
+  const caja = flush
+    ? 'flex min-h-0 flex-col'
+    : 'flex min-h-0 flex-col overflow-hidden rounded-md border border-line bg-surface';
+
   return (
-    <div className={`overflow-hidden rounded-md border border-line bg-surface ${className}`}>
+    <div className={`${caja} ${className}`}>
       {title !== undefined && (
-        <div className="flex items-center justify-between gap-2 border-b border-line bg-surface-muted px-3 py-2">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-y border-line bg-surface-muted px-3 py-2">
           <span className="min-w-0 truncate text-micro font-bold uppercase tracking-wide text-ink-secondary">
             {title}
           </span>
@@ -109,9 +130,86 @@ export function ListPanel({
         </div>
       )}
 
-      <div className={maxHeight ? `overflow-y-auto ${maxHeight}` : undefined}>
+      <div className={`min-h-0 flex-1 ${maxHeight ? `overflow-y-auto ${maxHeight}` : 'overflow-y-auto'}`}>
         {vacia && empty !== undefined ? empty : children}
       </div>
+
+      {footer !== undefined && (
+        <div className="shrink-0 border-t border-line bg-surface-muted px-2 py-1.5">{footer}</div>
+      )}
+    </div>
+  );
+}
+
+interface ListPaginationProps {
+  page: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
+  disabled?: boolean;
+}
+
+const BOTON_PAGINA =
+  'h-7 min-w-[28px] px-1 flex items-center justify-center rounded-[6px] text-micro font-medium transition-colors';
+
+/**
+ * Paginacion de lista.
+ *
+ * Existe porque solo la tabla de leads paginaba. El resto cortaba por lo sano
+ * -flujos se quedaba en los primeros 50 leads sin decirlo, y el selector de
+ * destinatarios pintaba los mil de golpe dentro de un alto fijo-, asi que en
+ * ninguno de los dos habia forma de llegar al lead 51.
+ *
+ * El aspecto sale de la paginacion que ya tenia la tabla de leads: era la unica
+ * que existia, asi que es la referencia.
+ */
+export function ListPagination({ page, pageCount, onPageChange, disabled = false }: ListPaginationProps) {
+  if (pageCount <= 1) return null;
+
+  const paginas: number[] = [];
+  for (let p = 1; p <= pageCount; p++) {
+    if (p === 1 || p === pageCount || (p >= page - 1 && p <= page + 1)) paginas.push(p);
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-0.5">
+      <button
+        type="button"
+        aria-label="Pagina anterior"
+        onClick={() => onPageChange(page - 1)}
+        disabled={page <= 1 || disabled}
+        className={`${BOTON_PAGINA} text-ink-secondary hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-40`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+      </button>
+
+      {paginas.map((p, i) => (
+        <span key={p} className="flex items-center">
+          {i > 0 && paginas[i - 1] !== p - 1 && (
+            <span className="px-1 text-micro text-ink-muted">…</span>
+          )}
+          <button
+            type="button"
+            onClick={() => onPageChange(p)}
+            disabled={disabled}
+            aria-current={p === page ? 'page' : undefined}
+            className={`${BOTON_PAGINA} ${
+              p === page ? 'bg-primary-soft text-primary' : 'text-ink-secondary hover:bg-surface-hover'
+            }`}
+          >
+            {p}
+          </button>
+        </span>
+      ))}
+
+      <button
+        type="button"
+        aria-label="Pagina siguiente"
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= pageCount || disabled}
+        className={`${BOTON_PAGINA} text-ink-secondary hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-40`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+      </button>
     </div>
   );
 }

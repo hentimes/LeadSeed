@@ -18,5 +18,5 @@ export { PageShell, SectionHeader, EmptyState } from './PageShell';
 export { Field, Input, Textarea, Select, Checkbox } from './Field';
 export { PageTitle, SectionTitle, CardTitle, GroupLabel, Body, Hint } from './Text';
 export { Modal } from './Modal';
-export { ListPanel, ListRow, clasesDeFila, tonoDeFila } from './ListPanel';
+export { ListPanel, ListRow, ListPagination, clasesDeFila, tonoDeFila } from './ListPanel';
 export type { ListDensity } from './ListPanel';

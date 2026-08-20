@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, IconButton, Input, ListPanel, ListRow } from '../../design';
+import { Button, IconButton, Input, ListPagination, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchActiveLeads } from '../../services/leadsService';
@@ -35,12 +35,26 @@ interface Props {
  * las otras dos. El modal no aportaba nada que la vista no de: no hay nada
  * detras que convenga seguir viendo mientras eliges.
  */
+/** Cuantos leads por pagina. */
+const LEADS_POR_PAGINA = 8;
+
 export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [error, setError] = useState('');
   const [inscribiendo, setInscribiendo] = useState<string | null>(null);
+  const [pagina, setPagina] = useState(1);
+
+  /*
+   * Al filtrar, la pagina 7 puede dejar de existir. Se ajusta durante el render
+   * y no desde un efecto, que pintaria la pagina vieja antes de corregirse.
+   */
+  const [busquedaAnterior, setBusquedaAnterior] = useState(busqueda);
+  if (busquedaAnterior !== busqueda) {
+    setBusquedaAnterior(busqueda);
+    setPagina(1);
+  }
 
   useEffect(() => {
     if (user) fetchActiveLeads(user.id).then(setLeads);
@@ -50,10 +64,21 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
     flujo.channel === 'email' ? Boolean(lead.email?.trim()) : Boolean(lead.phone?.trim());
 
   const q = busqueda.trim().toLocaleLowerCase('es');
+  /*
+   * Aqui habia un `.slice(0, 50)` sin aviso: con mas de cincuenta candidatos,
+   * el lead 51 sencillamente no existia para esta pantalla y nada lo decia.
+   * Ahora se paginan todos.
+   */
   const candidatos = leads
     .filter(tieneDato)
-    .filter((l) => (q ? (l.name || '').toLocaleLowerCase('es').includes(q) : true))
-    .slice(0, 50);
+    .filter((l) => (q ? (l.name || '').toLocaleLowerCase('es').includes(q) : true));
+
+  const totalPaginas = Math.max(1, Math.ceil(candidatos.length / LEADS_POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const visibles = candidatos.slice(
+    (paginaActual - 1) * LEADS_POR_PAGINA,
+    paginaActual * LEADS_POR_PAGINA,
+  );
 
   const inscribir = async (lead: Lead) => {
     setError('');
@@ -119,9 +144,16 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
              * lo pone `LeadIdentity` y dice "Sin nombre": un lector de pantalla
              * en modo de puntuacion completa verbaliza los parentesis.
              */
-            <ListPanel title="Leads disponibles" count={candidatos.length}>
+            <ListPanel
+              flush
+              title="Leads disponibles"
+              count={candidatos.length}
+              footer={
+                <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
+              }
+            >
               <ul className="min-w-0">
-                {candidatos.map((lead) => (
+                {visibles.map((lead) => (
                   <ListRow as="li" key={lead.id}>
                     <LeadIdentity
                       className="flex-1"

@@ -108,7 +108,14 @@ export default function LeadsTable({
     onReorderPinned?.(reordered);
   };
 
-  const headPad = compactMode ? 'px-2.5 py-2.5' : 'px-2.5 py-2.5';
+  /*
+   * Cabecera delgada, igual que la de `ListPanel`: `px-3 py-2` con texto micro
+   * en mayusculas. Antes era `py-2.5` con el tamano de texto de la tabla, asi
+   * que pesaba mas que las filas que encabezaba y no se parecia en nada a la
+   * cabecera de las otras listas. El ternario tampoco hacia nada: las dos
+   * ramas daban el mismo valor.
+   */
+  const headPad = 'px-3 py-2';
   const allSelected = selectedIds.size > 0 && selectedIds.size === leads.length && leads.length > 0;
 
   /**
@@ -226,7 +233,7 @@ export default function LeadsTable({
 
       <Card ref={containerRef} className="overflow-x-auto w-full min-w-0">
         <table className="w-full table-fixed text-[13px] text-ink">
-          <thead className="border-b border-line text-ink-secondary bg-surface">
+          <thead className="border-y border-line bg-surface-muted text-micro font-bold uppercase tracking-wide text-ink-secondary">
             <tr>
               <th className={`w-8 ${headPad}`}>
                 <div
