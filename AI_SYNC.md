@@ -8611,3 +8611,39 @@ conservar el original (se sumo solo `ES2022.Error` a las librerias de tipos).
 Habria bastado con buscar antes de escribir.
 
 324 tests, 0 errores de lint, build, 6750 clases, modo oscuro sin huecos.
+
+### 2026-08-20 CLT - Claude - Atribucion equivocada en `00c2332`, y como no repetirla
+
+- Tipo: correccion de registro
+- Rol: Implementadora
+- Estado: cerrado
+
+**El bloque `screens` de `tailwind.config.js` no es mio.** Lo escribio otra sesion
+que trabajaba en paralelo sobre este mismo arbol, y mi `git add -A` lo recogio
+dentro de un commit etiquetado `docs(arquitectura)`. Lo describi como "mi commit"
+al hablar de el; era codigo ajeno barrido por mi comando.
+
+**Por que se deja escrito y no se reescribe la historia.** `00c2332` ya estaba en
+las tres ramas y la otra sesion tenia trabajo sin commitear encima. Cambiar el
+hash bajo sus pies es como se pierde trabajo de verdad. Mismo criterio que el
+`2026-08-16` con el arreglo del desplegable: el historial se corrige anadiendo.
+
+**El riesgo concreto que esto crea**, y es la razon de esta entrada. Quien mire
+`git log --follow tailwind.config.js` va a ver un commit de documentacion firmado
+por mi y puede concluir que esos umbrales son decoracion mia. **No lo son: estan
+medidos contra el ancho minimo real del contenido.** Cambiarlos a ojo reintroduce
+el recorte silencioso que venian a cerrar, y es silencioso porque los scrollbars
+estan ocultos globalmente, asi que el desborde no avisa. El propio archivo lo
+explica en su comentario; esta entrada existe para que el historial no contradiga
+al comentario.
+
+**Causa raiz, y ya van dos veces.** `git add -A`. La primera se llevo un `.zip` de
+1,4 MB; esta se llevo trabajo de otro agente. Dije que dejaria de usarlo y lo volvi
+a usar en el commit siguiente. Regla operativa: **anadir por nombre, y mirar
+`git status` antes de cada commit para detectar cambios que no sean mios.** En un
+arbol con dos agentes escribiendo, `-A` no es un atajo, es una recogida a ciegas.
+
+**Dato que salio de este cruce y vale mas que el incidente:** la otra sesion venia
+calculando sobre un panel de 400px y corrigio a 360 al leer la correccion del plan
+de arquitectura. El resultado se ve: las donas del Overview quedan a 72px en vez de
+a 56.
