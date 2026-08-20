@@ -17,6 +17,8 @@ interface MetricCardProps {
   subtitle?: React.ReactNode;
   trend?: Trend;
   onClick?: () => void;
+  /** Permite a la fila decidir si esta metrica cabe. Ver `OverviewTab`. */
+  className?: string;
 }
 
 export default function MetricCard({
@@ -26,31 +28,44 @@ export default function MetricCard({
   value,
   subtitle,
   trend,
-  onClick
+  onClick,
+  className = ''
 }: MetricCardProps) {
   return (
+    /*
+     * `lg:justify-start` estuvo aca desde el rediseno inicial sin llegar a
+     * aplicarse nunca: `lg` son 640px y este panel rara vez pasa de 500. Ahora
+     * usa la escala de panel, que si se alcanza.
+     */
     <div
       onClick={onClick}
-      className={`flex-1 flex items-start justify-center lg:justify-start gap-3 px-2 py-2 transition-all duration-300 ${
+      className={`flex-1 min-w-0 flex items-start justify-center panel-md:justify-start gap-2 panel-md:gap-3 px-1 panel-md:px-2 py-2 transition-all duration-300 ${
         onClick ? 'cursor-pointer group' : ''
-      }`}
+      } ${className}`}
     >
-      <div className={`w-[40px] h-[40px] flex items-center justify-center shrink-0 ${iconColor} ${onClick ? 'group-hover:scale-105 transition-transform' : ''}`}>
-        <div className="scale-[1.3]">{icon}</div>
+      <div className={`w-8 h-8 panel-md:w-[40px] panel-md:h-[40px] flex items-center justify-center shrink-0 ${iconColor} ${onClick ? 'group-hover:scale-105 transition-transform' : ''}`}>
+        <div className="scale-110 panel-md:scale-[1.3]">{icon}</div>
       </div>
-      
-      <div className="flex flex-col items-start text-left overflow-hidden">
-        <span className="text-[24px] font-medium leading-none tracking-tight text-ink">{value}</span>
-        <span className="text-[12px] font-medium text-ink-secondary mt-1.5 leading-tight whitespace-nowrap">{title}</span>
-        
+
+      {/*
+       * Los dos `whitespace-nowrap` que habia aqui eran la causa directa del
+       * corte. Con la etiqueta del periodo en una sola linea, "sin cambios vs
+       * sem. pasada" mide ~145px irreducibles; por tres tarjetas la fila pedia
+       * ~640px dentro de un panel de 400. Ahora el texto puede fluir y la
+       * etiqueta desaparece antes de deformar nada.
+       */}
+      <div className="flex flex-col items-start text-left min-w-0 overflow-hidden">
+        <span className="text-[20px] panel-md:text-[24px] font-medium leading-none tracking-tight text-ink">{value}</span>
+        <span className="text-[12px] font-medium text-ink-secondary mt-1.5 leading-tight">{title}</span>
+
         {(trend || subtitle) && (
-          <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium whitespace-nowrap">
+          <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium">
             {trend && (
               <span className={`flex items-center gap-1 ${COLOR_TENDENCIA[trend.direction]}`}>
                 {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : ''} {trend.value}
                 {/* La etiqueta viene del periodo elegido en ajustes. Estaba fija
                     en "vs ayer", asi que mentia con cualquier otro periodo. */}
-                <span className="text-ink-muted text-[11px] font-normal">{trend.label}</span>
+                <span className="hidden panel-xl:inline text-ink-muted text-[11px] font-normal">{trend.label}</span>
               </span>
             )}
             {subtitle && !trend && <span className="text-ink-secondary">{subtitle}</span>}

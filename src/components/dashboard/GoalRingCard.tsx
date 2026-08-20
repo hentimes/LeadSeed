@@ -2,7 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { chartColors } from '../../design/palette';
 import type { Trend } from './trend';
 
-function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: string; size?: number }) {
+/**
+ * El tamano llega por clase, no por prop numerica.
+ *
+ * Hasta el 2026-08-20 era `size = 88` aplicado como `style={{ width, height }}`.
+ * 88px fijos por dona, mas su texto al lado, daban una fila de ~540px de ancho
+ * minimo dentro de un panel que por defecto mide 400: la tercera dona quedaba
+ * cortada a la mitad contra el borde. El SVG ya usa `viewBox` con
+ * `width="100%"`, asi que escala solo; lo unico que hacia falta era dejar de
+ * clavar el tamano en pixeles para que los puntos de corte pudieran tocarlo.
+ */
+function AnimatedDonut({ percent, color, className = '' }: { percent: number; color: string; className?: string }) {
   const strokeWidth = 5;
   const radius = 50 - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
@@ -59,7 +69,7 @@ function AnimatedDonut({ percent, color, size = 88 }: { percent: number; color: 
   }, [percent, circumference]);
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
+    <div className={`relative shrink-0 transition-[width,height] duration-200 ease-spring ${className}`}>
       <svg width="100%" height="100%" viewBox="0 0 100 100" className="transform -rotate-90 drop-shadow-sm">
         {/* Gray ring */}
         <circle
@@ -115,6 +125,8 @@ interface GoalRingCardProps {
   trend?: Trend;
   color: string;
   tooltipText: string;
+  /** Permite a la fila decidir si esta dona cabe. Ver `OverviewTab`. */
+  className?: string;
 }
 
 export default function GoalRingCard({
@@ -126,40 +138,49 @@ export default function GoalRingCard({
   unit,
   trend,
   color,
-  tooltipText
+  tooltipText,
+  className = ''
 }: GoalRingCardProps) {
   const percent = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
 
   return (
-    <div className="flex flex-col items-start flex-1 px-1 py-1 group cursor-default">
-      
+    /* `min-w-0` es lo que permite encoger: sin el, un hijo flex se niega a bajar
+       de su ancho de contenido y empuja la fila fuera de la tarjeta. */
+    <div className={`flex flex-col items-start flex-1 min-w-0 px-1 py-1 group cursor-default ${className}`}>
+
       {/* Título y Logo alineado a la izquierda */}
-      <div className="flex items-center gap-2 mb-4 ml-3">
-        <div className={`flex items-center justify-center w-5 h-5 ${iconColor}`}>
+      <div className="flex items-center gap-1.5 panel-md:gap-2 mb-2 panel-md:mb-4 ml-1 panel-md:ml-3 min-w-0 w-full">
+        <div className={`flex items-center justify-center w-5 h-5 shrink-0 ${iconColor}`}>
           <div className="scale-110">{icon}</div>
         </div>
-        <span className="text-[14px] font-medium text-ink">{title}</span>
+        <span className="text-[13px] panel-md:text-[14px] font-medium text-ink truncate">{title}</span>
       </div>
 
       {/* Contenido principal */}
-      <div className="flex items-center gap-2 w-full">
+      <div className="flex items-center gap-1.5 panel-md:gap-2 w-full min-w-0">
         {/* Gráfica Animada Custom */}
         <div className="relative group/tooltip shrink-0 cursor-pointer" title={tooltipText}>
-          <AnimatedDonut percent={percent} color={color} size={88} />
+          <AnimatedDonut
+            percent={percent}
+            color={color}
+            className="w-14 h-14 panel-md:w-[72px] panel-md:h-[72px] panel-xl:w-[88px] panel-xl:h-[88px]"
+          />
         </div>
 
         {/* Textos y Trend */}
-        <div className="flex flex-col items-start justify-center">
+        <div className="flex flex-col items-start justify-center min-w-0">
           <div className="flex items-baseline gap-1">
-            <span className="text-[24px] font-medium text-ink tracking-tight">{current}</span>
+            <span className="text-[20px] panel-md:text-[24px] font-medium text-ink tracking-tight">{current}</span>
             <span className="text-[12px] font-medium text-ink-secondary">/ {target > 0 ? target : '-'}</span>
           </div>
           <span className="text-[12px] text-ink-secondary font-normal leading-none mb-2">{unit}</span>
-          
+
           {trend && (
             <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${COLOR_TENDENCIA[trend.direction]}`}>
               {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : ''} {trend.value}
-              <span className="text-ink-muted text-[11px] font-normal">{trend.label}</span>
+              {/* La etiqueta del periodo es lo primero que sobra cuando falta
+                  sitio: repite un dato que ya esta en la cabecera de la tarjeta. */}
+              <span className="hidden panel-xl:inline text-ink-muted text-[11px] font-normal">{trend.label}</span>
             </span>
           )}
         </div>

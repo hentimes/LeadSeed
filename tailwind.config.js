@@ -41,6 +41,31 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      /**
+       * Puntos de corte a escala de panel lateral.
+       *
+       * Los `sm`/`md`/`lg` que trae Tailwind arrancan en 640px. Esto es una
+       * extension que vive en el panel lateral de Chrome, que el usuario
+       * redimensiona entre ~320px y unos pocos cientos: 640px no se alcanza
+       * casi nunca. El resultado medible es que las ~40 clases `sm:`/`md:`/
+       * `lg:` repartidas por `src/` no se han activado jamas, y las filas que
+       * dependian de ellas para caber se recortaban en silencio (los
+       * scrollbars estan ocultos globalmente, asi que el desborde no avisa).
+       *
+       * Se anaden nombres nuevos en vez de redefinir `sm`/`md`/`lg` a
+       * proposito: bajarles el umbral encenderia de golpe esas 40 clases
+       * dormidas y cambiaria pantallas que hoy estan aprobadas. Cuando alguna
+       * de ellas se revise una por una, se migra a estos nombres.
+       *
+       * Los umbrales salen de medir el ancho minimo real del contenido, no de
+       * una escala redonda. Ver `src/pages/dashboard/OverviewTab.tsx`.
+       */
+      screens: {
+        'panel-sm': '360px',
+        'panel-md': '440px',
+        'panel-lg': '500px',
+        'panel-xl': '580px',
+      },
       colors: {
         primary: {
           DEFAULT: conAlfa('--ls-primary'),

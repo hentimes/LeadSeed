@@ -104,7 +104,20 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           </div>
         </div>
 
-        <div className="flex justify-between items-center divide-x divide-line">
+        {/*
+          Escalera de degradado de esta fila, de mas ancho a menos:
+            >=580px  tres donas de 88px con la etiqueta del periodo
+            >=500px  tres donas de 72px, sin etiqueta de periodo
+            <500px   dos donas: "Llamar" se retira entera
+
+          El orden importa: primero se comprime todo lo que se puede comprimir
+          sin deformar, y solo cuando eso se agota cae la tercera tarjeta. Lo
+          que no vuelve a pasar es que una dona quede partida contra el borde.
+
+          "Llamar" es la que cae porque es la meta con menos volumen del
+          producto; ensanchar el panel la devuelve.
+        */}
+        <div className="flex justify-between items-center divide-x divide-line min-w-0">
           <GoalRingCard
             icon={<Icon.WhatsAppOutline />}
             iconColor="text-primary-light"
