@@ -120,7 +120,7 @@ export function ListPanel({
   return (
     <div className={`${caja} ${className}`}>
       {title !== undefined && (
-        <div className="flex shrink-0 items-center justify-between gap-2 border-y border-line bg-surface-muted px-3 py-2">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-muted px-3 py-2">
           <span className="min-w-0 truncate text-micro font-bold uppercase tracking-wide text-ink-secondary">
             {title}
           </span>

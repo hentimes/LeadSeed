@@ -9,7 +9,7 @@ import LeadsTableRow from './LeadsTableRow';
 import LoadingOverlay from '../LoadingOverlay';
 import { useResponsiveColumns } from '../../hooks/useResponsiveColumns';
 import { LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
-import { Card } from '../../design';
+
 
 interface Props {
   leads: Lead[];
@@ -231,9 +231,18 @@ export default function LeadsTable({
         onFilterSourceChannelChange={onFilterSourceChannelChange}
       />
 
-      <Card ref={containerRef} className="overflow-x-auto w-full min-w-0">
+      {/*
+        La tabla vivia dentro de un `<Card>`, que trae `p-3`. Esos 12px de
+        relleno dejaban aire por encima de la cabecera, y con su borde propio la
+        cabecera se leia como una fila mas flotando dentro de la tarjeta en vez
+        de como el techo de la lista.
+        Ahora el contenedor pinta el borde y el radio pero no rellena, asi que
+        la cabecera arranca pegada al borde superior: no hay nada encima de ella.
+      */}
+      <div className="w-full min-w-0 overflow-hidden rounded-lg border border-line bg-surface shadow-card">
+        <div ref={containerRef} className="overflow-x-auto">
         <table className="w-full table-fixed text-[13px] text-ink">
-          <thead className="border-y border-line bg-surface-muted text-micro font-bold uppercase tracking-wide text-ink-secondary">
+          <thead className="border-b border-line bg-surface-muted text-micro font-bold uppercase tracking-wide text-ink-secondary">
             <tr>
               <th className={`w-8 ${headPad}`}>
                 <div
@@ -359,7 +368,8 @@ export default function LeadsTable({
             )}
           </tbody>
         </table>
-      </Card>
+        </div>
+      </div>
       
       {/* Bottom Pagination */}
       {pageCount > 1 && (
