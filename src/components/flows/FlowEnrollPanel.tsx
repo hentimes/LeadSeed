@@ -40,7 +40,7 @@ const AYUDA = (canal: string) =>
   `El paso 1 se programa segun su espera. Solo aparecen leads con ${canal === 'email' ? 'correo' : 'telefono'}.`;
 
 /** Cuantos leads por pagina. */
-const LEADS_POR_PAGINA = 8;
+const LEADS_POR_PAGINA = 12;
 
 export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
   const { user } = useAuth();
@@ -165,7 +165,7 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
             <ListPanel
               flush
               count={candidatos.length}
-              headerActions={
+              footer={
                 <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
               }
             >

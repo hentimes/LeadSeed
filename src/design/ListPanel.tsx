@@ -168,6 +168,9 @@ interface ListPaginationProps {
 const BOTON_PAGINA =
   'h-7 min-w-[28px] px-1 flex items-center justify-center rounded-[6px] text-micro font-medium transition-colors';
 
+/** Cuantas paginas se listan antes de los puntos suspensivos. */
+const PAGINAS_VISIBLES = 3;
+
 /**
  * Paginacion de lista.
  *
@@ -176,16 +179,52 @@ const BOTON_PAGINA =
  * destinatarios pintaba los mil de golpe dentro de un alto fijo-, asi que en
  * ninguno de los dos habia forma de llegar al lead 51.
  *
- * El aspecto sale de la paginacion que ya tenia la tabla de leads: era la unica
- * que existia, asi que es la referencia.
+ * ## Por que la maquetacion es fija
+ *
+ * La primera version calculaba que paginas mostrar segun donde estuvieras: en
+ * la 1 salian cuatro numeros, en la 40 salian cinco con dos grupos de puntos,
+ * y al final volvian a ser cuatro. El efecto es que **las flechas se movian de
+ * sitio al cambiar de pagina**, asi que apuntar a "siguiente" y volver a
+ * pulsar fallaba: el boton ya no estaba donde lo habias dejado.
+ *
+ * Ahora la fila tiene siempre las mismas cinco ranuras -tres numeros, los
+ * puntos y la ultima pagina- y las ranuras que no se usan se pintan vacias en
+ * vez de desaparecer. El ancho no cambia nunca, asi que las flechas tampoco.
  */
 export function ListPagination({ page, pageCount, onPageChange, disabled = false }: ListPaginationProps) {
   if (pageCount <= 1) return null;
 
-  const paginas: number[] = [];
-  for (let p = 1; p <= pageCount; p++) {
-    if (p === 1 || p === pageCount || (p >= page - 1 && p <= page + 1)) paginas.push(p);
-  }
+  /*
+   * Ventana de tres paginas que se desliza con la actual, sin pisar la ultima
+   * -que tiene ranura propia- y sin salirse por la izquierda.
+   */
+  const primeraDeLaVentana = Math.min(
+    Math.max(1, page - 1),
+    Math.max(1, pageCount - PAGINAS_VISIBLES),
+  );
+  const ventana = Array.from({ length: PAGINAS_VISIBLES }, (_, i) => primeraDeLaVentana + i)
+    .filter((p) => p <= pageCount);
+
+  const ultimaFueraDeVentana = !ventana.includes(pageCount);
+
+  const boton = (p: number) => (
+    <button
+      key={p}
+      type="button"
+      onClick={() => onPageChange(p)}
+      disabled={disabled}
+      aria-label={`Pagina ${p}`}
+      aria-current={p === page ? 'page' : undefined}
+      className={`${BOTON_PAGINA} ${
+        p === page ? 'bg-primary-soft text-primary' : 'text-ink-secondary hover:bg-surface-hover'
+      }`}
+    >
+      {p}
+    </button>
+  );
+
+  /** Ranura vacia: ocupa sitio para que nada de al lado se mueva. */
+  const hueco = (clave: string) => <span key={clave} className={BOTON_PAGINA} aria-hidden="true" />;
 
   return (
     <div className="flex items-center justify-center gap-0.5">
@@ -199,24 +238,16 @@ export function ListPagination({ page, pageCount, onPageChange, disabled = false
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
       </button>
 
-      {paginas.map((p, i) => (
-        <span key={p} className="flex items-center">
-          {i > 0 && paginas[i - 1] !== p - 1 && (
-            <span className="px-1 text-micro text-ink-muted">…</span>
-          )}
-          <button
-            type="button"
-            onClick={() => onPageChange(p)}
-            disabled={disabled}
-            aria-current={p === page ? 'page' : undefined}
-            className={`${BOTON_PAGINA} ${
-              p === page ? 'bg-primary-soft text-primary' : 'text-ink-secondary hover:bg-surface-hover'
-            }`}
-          >
-            {p}
-          </button>
-        </span>
-      ))}
+      {ventana.map(boton)}
+      {Array.from({ length: PAGINAS_VISIBLES - ventana.length }, (_, i) => hueco(`relleno-${i}`))}
+
+      {ultimaFueraDeVentana ? (
+        <span className={`${BOTON_PAGINA} text-ink-muted`} aria-hidden="true">…</span>
+      ) : (
+        hueco('puntos')
+      )}
+
+      {ultimaFueraDeVentana ? boton(pageCount) : hueco('ultima')}
 
       <button
         type="button"
