@@ -4,6 +4,7 @@ import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchActiveLeads } from '../../services/leadsService';
 import type { Lead, MessageFlow } from '../../types';
+import LeadIdentity from '../leads/LeadIdentity';
 
 interface Props {
   flujo: MessageFlow;
@@ -98,14 +99,24 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
               {candidatos.map((lead) => (
                 <li
                   key={lead.id}
-                  className="flex min-w-0 items-center gap-2 border-b border-line-soft py-2 last:border-0"
+                  className="flex min-w-0 items-center gap-2 border-b border-line-soft px-2.5 py-2 last:border-0"
                 >
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate text-body text-ink">{lead.name || '(sin nombre)'}</span>
-                    <span className="block truncate text-micro text-ink-muted">
-                      {flujo.channel === 'email' ? lead.email : lead.phone}
-                    </span>
-                  </div>
+                  {/*
+                    Esta lista era la unica sin relleno lateral: el nombre
+                    arrancaba pegado al borde del modal. Se le anade `px-2.5`,
+                    que es el de la tabla de leads, de donde sale el molde.
+
+                    El respaldo del nombre decia "(sin nombre)" con parentesis.
+                    Ahora lo pone `LeadIdentity` y dice "Sin nombre": un lector
+                    de pantalla en modo de puntuacion completa verbaliza los
+                    parentesis, y el resto de los vacios del producto ya usan
+                    esa forma.
+                  */}
+                  <LeadIdentity
+                    className="flex-1"
+                    name={lead.name}
+                    caption={flujo.channel === 'email' ? lead.email : lead.phone}
+                  />
                   <Button
                     size="sm"
                     variant="primary"

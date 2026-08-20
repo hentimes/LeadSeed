@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Lead, LeadList } from '../../types';
 import { Badge, Button, EmptyState, Input } from '../../design';
 import { Icon } from '../../utils/icons';
+import LeadIdentity from '../leads/LeadIdentity';
 
 /**
  * Seleccion de destinatarios por lista y por lead suelto.
@@ -146,12 +147,21 @@ export function RecipientPicker({
                     onChange={() => onToggleLead(lead.id!)}
                     className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded-sm border-line accent-[var(--ls-primary)]"
                   />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-body text-ink">{lead.name}</span>
-                    <span className="block truncate text-micro text-ink-muted">
-                      {secondary || (secondaryField === 'email' ? 'Sin correo' : 'Sin teléfono')}
-                    </span>
-                  </span>
+                  {/*
+                    El nombre y el dato secundario se pintaban aqui a mano. Ahora
+                    salen de `LeadIdentity`, que es la misma pieza que usan las
+                    demas listas de leads. El `<label>` con su checkbox nativo se
+                    conserva tal cual: es lo que hace que pinchar en cualquier
+                    parte de la fila marque la casilla, y la primitiva no lo toca.
+
+                    Sin avatar a proposito: esta lista nunca lo mostro, y como el
+                    hueco solo se reserva si se pasa, no paga ancho por el.
+                  */}
+                  <LeadIdentity
+                    className="flex-1"
+                    name={lead.name}
+                    caption={secondary || (secondaryField === 'email' ? 'Sin correo' : 'Sin teléfono')}
+                  />
                   {sentLeadIds.has(lead.id!) && (
                     <Badge tone="success" className="shrink-0">
                       Enviado
