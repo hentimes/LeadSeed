@@ -1,5 +1,6 @@
 import { Button, Card, EmptyState, IconButton } from '../../design';
 import { Icon } from '../../utils/icons';
+import { nombreVisible } from '../../utils/leadDisplay';
 import type { FlowChannel, PendingFlowStep } from '../../types';
 
 /**
@@ -64,7 +65,7 @@ export function FlowTodayList({ cola, ahora, onDespachar, onOmitir, onIrAFlujos 
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-baseline gap-2">
                       <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">
-                        {fila.leadName || '(sin nombre)'}
+                        {nombreVisible(fila.leadName)}
                       </span>
                       <span
                         className={`shrink-0 text-micro font-medium ${

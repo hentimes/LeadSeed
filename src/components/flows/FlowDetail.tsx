@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, IconButton, Select } from '../../design';
 import { Icon } from '../../utils/icons';
+import { nombreVisible } from '../../utils/leadDisplay';
 import { FlowProgressRail, MAX_PASOS_RIEL } from './FlowProgressRail';
 import { fetchEnrollments, fetchProgress } from '../../services/messageFlowsService';
 import { estadosDePasos } from '../../services/flowProgress';
@@ -153,11 +154,11 @@ export function FlowDetail({
                   >
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">
-                        {inscrito.leadName || '(sin nombre)'}
+                        {nombreVisible(inscrito.leadName)}
                       </span>
                       <IconButton
                         icon={<Icon.Close />}
-                        label={`Sacar a ${inscrito.leadName} del flujo`}
+                        label={`Sacar a ${nombreVisible(inscrito.leadName)} del flujo`}
                         size="sm"
                         onClick={() => setSacando(inscrito.id)}
                       />
@@ -228,7 +229,7 @@ export function FlowDetail({
                   className="flex min-w-0 items-center gap-2 border-b border-line-soft px-3 py-2 last:border-0"
                 >
                   <span className="min-w-0 flex-1 truncate text-body text-ink-secondary">
-                    {inscrito.leadName || '(sin nombre)'}
+                    {nombreVisible(inscrito.leadName)}
                   </span>
                   <span className="shrink-0 text-micro text-ink-muted">
                     {inscrito.exitReason ? ETIQUETA_SALIDA[inscrito.exitReason] : 'Salio'}
