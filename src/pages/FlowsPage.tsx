@@ -5,12 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMessageFlows } from '../hooks/useMessageFlows';
 import { FlowTodayList } from '../components/flows/FlowTodayList';
 import { FlowEditor } from '../components/flows/FlowEditor';
-import { FlowEnrollModal } from '../components/flows/FlowEnrollModal';
+import { FlowEnrollPanel } from '../components/flows/FlowEnrollPanel';
 import { FlowDetail } from '../components/flows/FlowDetail';
 import { dispatchFlowStep } from '../services/flowDispatchService';
 import type { MessageFlow, MessageFlowStep, PendingFlowStep } from '../types';
 
-type Vista = 'hoy' | 'flujos' | 'editor' | 'detalle';
+type Vista = 'hoy' | 'flujos' | 'editor' | 'detalle' | 'inscribir';
 
 const CANAL_LABEL = {
   whatsapp: 'WhatsApp',
@@ -117,14 +117,29 @@ export default function FlowsPage() {
         </p>
       )}
 
-      {vista === 'detalle' && viendo ? (
+      {vista === 'inscribir' && inscribiendoEn ? (
+        /*
+         * Inscribir era el unico paso de esta pagina que se abria en un modal.
+         * Editar y ver detalle ya eran vistas; ahora las tres se comportan
+         * igual, y la lista de leads se ve como la de envio masivo.
+         */
+        <FlowEnrollPanel
+          flujo={inscribiendoEn}
+          /* Se vuelve de donde se vino: al detalle si se entro desde ahi, a la
+             lista si se entro desde el boton de la fila del flujo. */
+          onVolver={() => { setInscribiendoEn(null); setVista(viendo ? 'detalle' : 'flujos'); }}
+          onInscribir={async (leadId: string) => {
+            await flujos.inscribir(inscribiendoEn.id, leadId);
+          }}
+        />
+      ) : vista === 'detalle' && viendo ? (
         <FlowDetail
           flujo={viendo}
           pasos={pasosViendo}
           refreshKey={flujos.refreshKey}
           onVolver={() => setVista('flujos')}
           onEditar={() => abrirEditor(viendo)}
-          onInscribir={() => setInscribiendoEn(viendo)}
+          onInscribir={() => { setInscribiendoEn(viendo); setVista('inscribir'); }}
           onPausar={async (activo) => {
             await flujos.setActivo(viendo.id, activo);
             const refrescados = await flujos.getAll();
@@ -183,7 +198,7 @@ export default function FlowsPage() {
                     {!flujo.isActive && ' · pausado'}
                   </span>
                 </button>
-                <Button size="sm" onClick={() => setInscribiendoEn(flujo)}>
+                <Button size="sm" onClick={() => { setInscribiendoEn(flujo); setVista('inscribir'); }}>
                   Inscribir
                 </Button>
                 <IconButton
@@ -221,15 +236,6 @@ export default function FlowsPage() {
         </Button>
       )}
 
-      {inscribiendoEn && (
-        <FlowEnrollModal
-          flujo={inscribiendoEn}
-          onClose={() => setInscribiendoEn(null)}
-          onInscribir={async (leadId) => {
-            await flujos.inscribir(inscribiendoEn.id, leadId);
-          }}
-        />
-      )}
     </div>
   );
 }

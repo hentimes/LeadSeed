@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, IconButton, Input, ListPanel, ListRow, Modal } from '../../design';
+import { Button, IconButton, Input, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchActiveLeads } from '../../services/leadsService';
@@ -9,7 +9,7 @@ import LeadIdentity from '../leads/LeadIdentity';
 interface Props {
   flujo: MessageFlow;
   onInscribir: (leadId: string) => Promise<void>;
-  onClose: () => void;
+  onVolver: () => void;
 }
 
 /**
@@ -22,8 +22,20 @@ interface Props {
  * El rechazo por canal ocupado -la base solo admite una inscripcion activa por
  * lead y canal- llega traducido desde el servicio, porque el texto crudo de
  * Postgres no le dice nada a nadie.
+ *
+ * ## Por que dejo de ser un modal el 2026-08-20
+ *
+ * Era el unico de esta pagina. Editar un flujo y ver su detalle ya eran vistas
+ * incrustadas; solo inscribir se abria en una ventana encima. El resultado es
+ * que la misma tarea -elegir un lead de una lista- se veia de una forma aqui y
+ * de otra en envio masivo, y las dos listas parecian de productos distintos
+ * aunque su contenido fuera identico.
+ *
+ * Ahora es una vista mas del conmutador de `FlowsPage`, con su "Volver" como
+ * las otras dos. El modal no aportaba nada que la vista no de: no hay nada
+ * detras que convenga seguir viendo mientras eliges.
  */
-export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
+export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [busqueda, setBusqueda] = useState('');
@@ -48,7 +60,7 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
     setInscribiendo(lead.id!);
     try {
       await onInscribir(lead.id!);
-      onClose();
+      onVolver();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo inscribir.');
     } finally {
@@ -57,9 +69,10 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
   };
 
   return (
-    <Modal onClose={onClose} maxWidth="400px" label={`Inscribir en ${flujo.name}`}>
-      <div className="flex max-h-[80vh] min-h-0 flex-col">
-        <div className="flex items-start justify-between gap-2 px-4 pt-4">
+    <div className="flex min-h-0 flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-start gap-2">
+          <IconButton icon={<Icon.ArrowLeft />} label="Volver" size="sm" onClick={onVolver} />
           <div className="min-w-0">
             <h2 className="text-card-title font-semibold text-ink">Inscribir en {flujo.name}</h2>
             <p className="mt-0.5 text-micro text-ink-secondary">
@@ -69,10 +82,10 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
                 : ' Solo aparecen leads con telefono.'}
             </p>
           </div>
-          <IconButton icon={<Icon.Close />} label="Cerrar" size="sm" onClick={onClose} />
         </div>
+      </div>
 
-        <div className="px-4 pt-3">
+      <div>
           <Input
             type="search"
             value={busqueda}
@@ -83,11 +96,11 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
           />
         </div>
 
-        {error && (
-          <p role="alert" className="px-4 pt-2 text-micro text-state-danger">{error}</p>
-        )}
+      {error && (
+        <p role="alert" className="text-micro text-state-danger">{error}</p>
+      )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3">
+      <div className="min-h-0 flex-1">
           {candidatos.length === 0 ? (
             <p className="text-micro text-ink-muted">
               {leads.length === 0
@@ -126,10 +139,9 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
                   </ListRow>
                 ))}
               </ul>
-            </ListPanel>
-          )}
-        </div>
+          </ListPanel>
+        )}
       </div>
-    </Modal>
+    </div>
   );
 }
