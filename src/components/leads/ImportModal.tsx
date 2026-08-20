@@ -174,6 +174,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
           )}
           {step === 'drop' && (
             <div
+              data-zona-archivos
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
               className="border-2 border-dashed border-line-strong rounded-lg p-12 text-center hover:border-blue-400 transition-colors"
