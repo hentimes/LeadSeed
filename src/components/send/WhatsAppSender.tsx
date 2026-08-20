@@ -10,6 +10,7 @@ import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, logWhatsAppSend } from '../../services/sendService';
 import { Field, Select, Textarea } from '../../design';
 import { SendStep } from './SendStep';
+import { puedeRecibirPor } from '../../utils/leadContacto';
 import { TemplatePicker } from './TemplatePicker';
 import { RecipientPicker, RecipientCount, SendAction } from './RecipientPicker';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
@@ -101,12 +102,20 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
+  /*
+   * El filtro por canal se aplica tambien aqui, no solo en la lista.
+   *
+   * Marcar una lista anadia todos sus leads directamente al envio, sin pasar
+   * por la lista de la pantalla: una lista de mil contactos metia a los que no
+   * tenian el dato del canal, y el envio salia con destinatarios que no podian
+   * recibirlo. Filtrar en el selector no bastaba porque ese camino lo esquiva.
+   */
   const recipients = useMemo(() => {
     const ids = new Set<string>(selectedLeadIds);
     for (const listId of selectedListIds) {
       leads.filter((l) => l.listaIds.includes(listId)).forEach((l) => ids.add(l.id!));
     }
-    return leads.filter((l) => ids.has(l.id!));
+    return leads.filter((l) => ids.has(l.id!) && puedeRecibirPor(l, 'whatsapp'));
   }, [leads, selectedLeadIds, selectedListIds]);
 
   // Set default preview lead
@@ -255,7 +264,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
           search={leadSearch}
           onSearchChange={setLeadSearch}
           sentLeadIds={sentLeadIds}
-          secondaryField="phone"
+          canal="whatsapp"
         />
       </SendStep>
 

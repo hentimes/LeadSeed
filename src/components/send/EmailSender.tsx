@@ -21,6 +21,7 @@ import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { listChannels } from '../../services/emailChannelsService';
 import { Button, Field, Modal, Select } from '../../design';
 import { SendStep } from './SendStep';
+import { puedeRecibirPor } from '../../utils/leadContacto';
 import { TemplatePicker } from './TemplatePicker';
 import { RecipientPicker, RecipientCount } from './RecipientPicker';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
@@ -159,12 +160,20 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
+  /*
+   * El filtro por canal se aplica tambien aqui, no solo en la lista.
+   *
+   * Marcar una lista anadia todos sus leads directamente al envio, sin pasar
+   * por la lista de la pantalla: una lista de mil contactos metia a los que no
+   * tenian el dato del canal, y el envio salia con destinatarios que no podian
+   * recibirlo. Filtrar en el selector no bastaba porque ese camino lo esquiva.
+   */
   const recipients = useMemo(() => {
     const ids = new Set<string>(selectedLeadIds);
     for (const listId of selectedListIds) {
       leads.filter((l) => l.listaIds.includes(listId)).forEach((l) => ids.add(l.id!));
     }
-    return leads.filter((l) => ids.has(l.id!));
+    return leads.filter((l) => ids.has(l.id!) && puedeRecibirPor(l, 'email'));
   }, [leads, selectedLeadIds, selectedListIds]);
 
   // Set default preview lead when recipients change
@@ -313,7 +322,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           search={leadSearch}
           onSearchChange={setLeadSearch}
           sentLeadIds={sentLeadIds}
-          secondaryField="email"
+          canal="email"
         />
       </SendStep>
 

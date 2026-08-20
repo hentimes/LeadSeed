@@ -11,6 +11,7 @@ import { Field, Panel, Select } from '../../design';
 import { SendStep } from './SendStep';
 import { TemplatePicker } from './TemplatePicker';
 import { SendAction } from './RecipientPicker';
+import { puedeRecibirPor } from '../../utils/leadContacto';
 
 interface Props {
   leads: Lead[];
@@ -59,9 +60,16 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
     }
   };
 
+  /*
+   * `validLeads` se llamaba asi sin comprobar nada: eran los asignados al
+   * guion, con telefono o sin el. Una llamada a un lead sin numero no es una
+   * llamada, asi que ahora el nombre dice la verdad.
+   */
   const validLeads = useMemo(() => {
     if (!selectedTemplateId) return [];
-    return leads.filter((lead) => assignedLeadIds.includes(lead.id!));
+    return leads.filter(
+      (lead) => assignedLeadIds.includes(lead.id!) && puedeRecibirPor(lead, 'call'),
+    );
   }, [leads, assignedLeadIds, selectedTemplateId]);
 
   const selectedTemplate = findTemplateById(selectedTemplateId);

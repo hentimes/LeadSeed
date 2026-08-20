@@ -3,6 +3,7 @@ import type { Lead, LeadList } from '../../types';
 import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
+import { puedeRecibirPor, DATO_DEL_CANAL, type CanalContacto } from '../../utils/leadContacto';
 
 /**
  * Seleccion de destinatarios por lista y por lead suelto.
@@ -33,8 +34,12 @@ export function RecipientPicker({
   search,
   onSearchChange,
   sentLeadIds,
-  /** Dato bajo el nombre: telefono en WhatsApp, correo en email. */
-  secondaryField = 'phone',
+  /**
+   * Canal del envio. Decide dos cosas a la vez: que dato se pinta bajo el
+   * nombre y, sobre todo, que leads se listan. Antes era `secondaryField` y
+   * solo decidia lo primero.
+   */
+  canal = 'whatsapp',
 }: {
   leads: Lead[];
   leadLists: LeadList[];
@@ -46,10 +51,24 @@ export function RecipientPicker({
   search: string;
   onSearchChange: (value: string) => void;
   sentLeadIds: Set<string>;
-  secondaryField?: 'phone' | 'email';
+  canal?: CanalContacto;
 }) {
+  /*
+   * Se listan solo los leads que pueden recibir por este canal.
+   *
+   * Antes se listaban todos y la fila se limitaba a poner "Sin telefono" bajo
+   * el nombre, pero la casilla se dejaba marcar igual: el envio salia con
+   * destinatarios incapaces de recibirlo. Peor todavia, marcar una lista metia
+   * a todos sus leads sin pasar por aqui.
+   */
+  const contactables = useMemo(
+    () => leads.filter((lead) => puedeRecibirPor(lead, canal)),
+    [leads, canal],
+  );
+  const descartados = leads.length - contactables.length;
+
   const filteredLeads = useMemo(() => {
-    let result = leads;
+    let result = contactables;
     if (selectedListIds.size > 0) {
       result = result.filter((lead) => lead.listaIds.some((id) => selectedListIds.has(id)));
     }
@@ -60,7 +79,7 @@ export function RecipientPicker({
       );
     }
     return result;
-  }, [leads, selectedListIds, search]);
+  }, [contactables, selectedListIds, search]);
 
   const hasSelection = selectedLeadIds.size > 0 || selectedListIds.size > 0;
 
@@ -109,6 +128,17 @@ export function RecipientPicker({
       />
 
       {/*
+        Se dice cuantos quedaron fuera y por que. Filtrar en silencio deja a
+        quien mira preguntandose donde estan sus leads.
+      */}
+      {descartados > 0 && (
+        <p className="text-micro text-ink-muted">
+          {descartados} {descartados === 1 ? 'lead sin' : 'leads sin'} {DATO_DEL_CANAL[canal]} valido
+          {descartados === 1 ? ' queda' : ' quedan'} fuera de este envio.
+        </p>
+      )}
+
+      {/*
         `flush` y los margenes negativos sacan la lista del relleno de la
         tarjeta del paso: se apoya en el borde en vez de dibujar una segunda
         caja dentro de la primera. Es el aspecto de la lista de inscripcion a
@@ -135,7 +165,7 @@ export function RecipientPicker({
       >
         {visibles.map((lead) => {
           const checked = selectedLeadIds.has(lead.id!);
-          const secondary = secondaryField === 'email' ? lead.email : lead.phone;
+          const secondary = canal === 'email' ? lead.email : lead.phone;
           return (
             <ListRow as="label" key={lead.id} isSelected={checked} className="cursor-pointer">
               <input
@@ -147,7 +177,7 @@ export function RecipientPicker({
               <LeadIdentity
                 className="flex-1"
                 name={lead.name}
-                caption={secondary || (secondaryField === 'email' ? 'Sin correo' : 'Sin teléfono')}
+                caption={secondary}
               />
               {sentLeadIds.has(lead.id!) && (
                 <Badge tone="success" className="shrink-0">Enviado</Badge>
@@ -174,7 +204,7 @@ export function RecipientPicker({
           <div className="flex flex-wrap gap-1.5">
             {leadLists.map((list) => {
               const on = selectedListIds.has(list.id!);
-              const count = leads.filter((lead) => lead.listaIds.includes(list.id!)).length;
+              const count = contactables.filter((lead) => lead.listaIds.includes(list.id!)).length;
               return (
                 <button
                   key={list.id}
