@@ -8,6 +8,8 @@ import { STATUS_LABELS, STATUS_COLORS } from '../types';
 import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
+import LeadIdentity from '../components/leads/LeadIdentity';
+import { nombreVisible, telefonoEnmascarado } from '../utils/leadDisplay';
 import DiscardReasonModal from '../components/leads/DiscardReasonModal';
 import { createFollowUpTaskForLead } from '../services/tasksService';
 import { Button } from '../design';
@@ -261,19 +263,31 @@ export default function PipelinePage() {
                 draggable
                 onDragStart={(e) => handleDragStart(e, lead)}
                 onDragEnd={handleDragEnd}
-                className="border-b border-line last:border-0 px-3 py-2 hover:bg-blue-50 cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center transition-colors group"
+                className="border-b border-line last:border-0 px-3 py-2 hover:bg-surface-hover cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center gap-2 transition-colors group"
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="font-medium text-ink text-xs group-hover:text-blue-700 transition-colors">{lead.name}</span>
-                  {(lead.company || lead.phone || lead.email) && (
-                    <span className="text-ink-muted text-[10px] truncate flex items-center gap-2">
-                      {lead.company && <span className="flex items-center gap-1"><div className="w-3">{Icon.Messages()}</div> {lead.company}</span>}
-                      {lead.phone && <span className="flex items-center gap-1"><div className="w-3">{Icon.Phone()}</div> ...{lead.phone.slice(-4)}</span>}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setViewLead(lead)} className="text-ink-muted hover:text-blue-500 cursor-pointer p-1" title="Ver detalle" aria-label={`Ver detalle de ${lead.name}`}><div className="w-4">{Icon.View()}</div></button>
+                {/*
+                  El nombre y el dato de contacto iban uno al lado del otro; el
+                  resto de las listas los apila. Se converge al molde, asi que la
+                  fila crece a dos lineas pero se lee igual que en las demas
+                  secciones.
+
+                  El icono que acompanaba a la empresa era `Icon.Messages`: no
+                  hay icono de empresa en el juego y se habia elegido por
+                  descarte, asi que decia "mensajes" donde ponia el nombre de una
+                  compania. Las lineas secundarias del resto de las listas son
+                  texto plano, y aqui tambien lo son ahora: ademas de quitar el
+                  icono equivocado, libera ancho en un panel de 360px.
+                */}
+                <LeadIdentity
+                  className="min-w-0 flex-1"
+                  density="compact"
+                  name={lead.name}
+                  caption={[lead.company, lead.phone && telefonoEnmascarado(lead.phone)]
+                    .filter(Boolean)
+                    .join(' · ')}
+                />
+                <div className="flex items-center gap-2 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setViewLead(lead)} className="text-ink-muted hover:text-primary cursor-pointer p-1" title="Ver detalle" aria-label={`Ver detalle de ${nombreVisible(lead.name)}`}><div className="w-4">{Icon.View()}</div></button>
                   <span className="text-[10px] text-ink-muted font-mono tracking-tighter">|||</span>
                 </div>
               </div>

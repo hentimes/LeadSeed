@@ -66,23 +66,13 @@ const sortIcon = (f: LeadSortField, s: LeadSortConfig) => {
   return s.dir === 'asc' ? Icon.SortUp() : Icon.SortDown();
 };
 
-/**
- * Nombre corto: primer nombre + primer apellido.
- *
- * El caso de 3 partes es ambiguo ("Juan Carlos Perez" vs "Juan Perez
- * Soto"). Se resuelve por convencion chilena, donde lo habitual es
- * nombre + dos apellidos, asi que la segunda parte se toma como apellido.
- *
- *   2 partes  Ana Soto              -> Ana Soto
- *   3 partes  Juan Perez Soto       -> Juan Perez
- *   4+ partes Juan Carlos Perez Soto-> Juan Perez
+/*
+ * `shortName` vivia aqui y se pasaba a cada fila como prop. Se mudo a
+ * `utils/leadDisplay.ts` como `nombreCorto`, con su documentacion y sus
+ * pruebas, porque la tabla de listas tenia otra funcion con el mismo nombre y
+ * una regla distinta -y equivocada- para el mismo lead. La fila la importa
+ * directamente, asi que la prop tambien desaparecio.
  */
-function shortName(full: string): string {
-  const parts = full.trim().split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return parts.join(' ');
-  if (parts.length === 3) return `${parts[0]} ${parts[1]}`;
-  return `${parts[0]} ${parts[2]}`;
-}
 
 export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
@@ -356,7 +346,6 @@ export default function LeadsTable({
                   onRestore={onRestore}
                   onTogglePin={onTogglePin}
                   getScore={getScore}
-                  shortName={shortName}
                   onPinDrop={onReorderPinned ? handlePinDrop : undefined}
                 />
               ))

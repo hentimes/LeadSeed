@@ -1,8 +1,10 @@
-import { memo, useState } from 'react';
+import { memo, useState, useMemo } from 'react';
 import type { Lead, LeadList } from '../../types';
 import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import LeadCell from './LeadCell';
+import LeadIdentity from './LeadIdentity';
+import { nombreCorto } from '../../utils/leadDisplay';
 
 interface Props {
   lead: Lead;
@@ -23,7 +25,6 @@ interface Props {
   onRestore?: (id: string) => void;
   onTogglePin: (lead: Lead, isPinned: boolean) => void;
   getScore: (lead: Lead) => number;
-  shortName: (full: string) => string;
 
   /** Reordenamiento de leads fijados por arrastre. */
   onPinDrop?: (sourceId: string, targetId: string) => void;
@@ -52,7 +53,7 @@ const AvatarIcon = () => (
 
 const LeadsTableRow = ({
   lead, idx, selectedIds, sendCounts, listsMap, compactMode, filterMode, isTrash, columns,
-  onView, onEdit, onDelete, onRestore, onTogglePin, getScore, shortName,
+  onView, onEdit, onDelete, onRestore, onTogglePin, getScore,
   onPinDrop,
 }: Props) => {
   const isSelected = selectedIds.has(lead.id!);
@@ -87,76 +88,90 @@ const LeadsTableRow = ({
     </div>
   );
 
-  const nameCell = (
-    <div className="flex items-center gap-2 min-w-0">
-      <div
-        className={`w-7 h-7 rounded-[4px] shrink-0 flex items-center justify-center shadow-sm relative ${getPurpleShade(lead.id!)}`}
-        onMouseEnter={() => setIsHoveringAvatar(true)}
-        onMouseLeave={() => setIsHoveringAvatar(false)}
-      >
-        <div className={`transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-0' : 'opacity-100'}`}>
-          <AvatarIcon />
-        </div>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onTogglePin(lead, !lead.isPinned);
-          }}
-          className={`absolute inset-0 flex items-center justify-center transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-100' : 'opacity-0'}`}
-          title={lead.isPinned ? 'Quitar pin' : 'Fijar lead al inicio'}
-        >
-          <div className="w-3.5 h-3.5">{Icon.pin()}</div>
-        </button>
-      </div>
-
-      <div className="flex flex-col min-w-0">
-        <div className="font-medium text-xs flex items-center gap-1.5 min-w-0">
-          <span className="truncate">{compactMode ? shortName(lead.name) : lead.name}</span>
-          {lead.hasUnreadCrossExecAlert && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 whitespace-nowrap">
-              {Icon.Warning()} Cruce
-            </span>
-          )}
-          {(enviosDelLead?.whatsapp ?? 0) > 0 && (
-            <span
-              onClick={(event) => {
-                event.stopPropagation();
-                onView(lead);
-              }}
-              className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-green-500 rounded-full cursor-pointer hover:bg-green-600 shadow-sm"
-              // "Abiertos", no "enviados": WhatsApp se abre en otra pestaña y la
-              // aplicacion no sabe si el mensaje llego a salir. El verde se queda
-              // porque es el color de marca del canal, no una afirmacion de exito.
-              title={`${enviosDelLead?.whatsapp} chat(s) de WhatsApp abierto(s)`}
-            >
-              {enviosDelLead?.whatsapp}
-            </span>
-          )}
-          {(enviosDelLead?.email ?? 0) > 0 && (
-            <span
-              onClick={(event) => {
-                event.stopPropagation();
-                onView(lead);
-              }}
-              className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-white bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 shadow-sm"
-              // Aqui "enviado" si es cierto: el correo sale de verdad por la API.
-              title={`${enviosDelLead?.email} correo(s) enviado(s)`}
-            >
-              {enviosDelLead?.email}
-            </span>
-          )}
-          {filterMode === 'olvidados' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 whitespace-nowrap">
-              {Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 3600 * 24))} días olv.
-            </span>
-          )}
-        </div>
-        {showRutUnderName && (
-          <div className="text-[11px] text-ink-secondary font-mono mt-0.5 truncate">RUT: {lead.rut}</div>
+  /*
+   * Los distintivos se memoizan con las mismas dependencias que usa el
+   * comparador de `memo` al final del archivo. No es adorno: `LeadIdentity`
+   * los recibe como un nodo, y un nodo nuevo en cada render del padre romperia
+   * la memoizacion de la fila en silencio. En una tabla de mil leads eso no se
+   * nota como un fallo, se nota como lentitud sin causa aparente.
+   */
+  const badges = useMemo(
+    () => (
+      <>
+        {lead.hasUnreadCrossExecAlert && (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-state-warning-soft text-state-warning whitespace-nowrap">
+            {Icon.Warning()} Cruce
+          </span>
         )}
+        {(enviosDelLead?.whatsapp ?? 0) > 0 && (
+          <span
+            onClick={(event) => {
+              event.stopPropagation();
+              onView(lead);
+            }}
+            className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-ink-inverse bg-state-success rounded-full cursor-pointer hover:bg-state-success/80 shadow-sm"
+            // "Abiertos", no "enviados": WhatsApp se abre en otra pestaña y la
+            // aplicacion no sabe si el mensaje llego a salir. El verde se queda
+            // porque es el color de marca del canal, no una afirmacion de exito.
+            title={`${enviosDelLead?.whatsapp} chat(s) de WhatsApp abierto(s)`}
+          >
+            {enviosDelLead?.whatsapp}
+          </span>
+        )}
+        {(enviosDelLead?.email ?? 0) > 0 && (
+          <span
+            onClick={(event) => {
+              event.stopPropagation();
+              onView(lead);
+            }}
+            className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-ink-inverse bg-state-info rounded-full cursor-pointer hover:bg-state-info/80 shadow-sm"
+            // Aqui "enviado" si es cierto: el correo sale de verdad por la API.
+            title={`${enviosDelLead?.email} correo(s) enviado(s)`}
+          >
+            {enviosDelLead?.email}
+          </span>
+        )}
+        {filterMode === 'olvidados' && (
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-state-danger-soft text-state-danger whitespace-nowrap">
+            {Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 3600 * 24))} días olv.
+          </span>
+        )}
+      </>
+    ),
+    [lead, enviosDelLead, filterMode, onView]
+  );
+
+  const avatar = (
+    <div
+      className={`w-7 h-7 rounded-[4px] shrink-0 flex items-center justify-center shadow-sm relative ${getPurpleShade(lead.id!)}`}
+      onMouseEnter={() => setIsHoveringAvatar(true)}
+      onMouseLeave={() => setIsHoveringAvatar(false)}
+    >
+      <div className={`transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-0' : 'opacity-100'}`}>
+        <AvatarIcon />
       </div>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onTogglePin(lead, !lead.isPinned);
+        }}
+        className={`absolute inset-0 flex items-center justify-center transition-opacity ${lead.isPinned || isHoveringAvatar ? 'opacity-100' : 'opacity-0'}`}
+        title={lead.isPinned ? 'Quitar pin' : 'Fijar lead al inicio'}
+      >
+        <div className="w-3.5 h-3.5">{Icon.pin()}</div>
+      </button>
     </div>
+  );
+
+  const nameCell = (
+    <LeadIdentity
+      density={compactMode ? 'compact' : 'normal'}
+      name={compactMode ? nombreCorto(lead.name) : lead.name}
+      avatar={avatar}
+      badges={badges}
+      caption={showRutUnderName ? <span className="font-mono">RUT: {lead.rut}</span> : undefined}
+    />
   );
 
   const actions = (
