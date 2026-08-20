@@ -75,6 +75,13 @@ export default {
           soft: conAlfa('--ls-primary-soft'),
           'soft-strong': conAlfa('--ls-primary-soft-strong'),
         },
+        /**
+         * Color del anillo de foco. Se expone como color y no solo como
+         * `ringColor` para que sirva igual en `ring-focus`, `border-focus` y
+         * `outline-focus`, que es como lo van a necesitar los distintos
+         * controles.
+         */
+        focus: conAlfa('--ls-focus-ring'),
         ink: {
           DEFAULT: conAlfa('--ls-text'),
           secondary: conAlfa('--ls-text-secondary'),
@@ -135,6 +142,14 @@ export default {
         'section-title': ['var(--ls-text-section-title)', { lineHeight: '1.3' }],
         'card-title': ['var(--ls-text-card-title)', { lineHeight: '1.35' }],
         body: ['var(--ls-text-body)', { lineHeight: '1.45' }],
+        /**
+         * `--ls-text-xs` (11px) vivia en tokens.css desde el principio pero no
+         * estaba expuesto aca, asi que era inalcanzable desde una clase. El
+         * resultado es que quien necesitaba 11px escribia `text-[11px]` a mano
+         * -el RUT bajo el nombre en la tabla de leads, entre otros- y ese valor
+         * literal dejaba de seguir a la ficha si la escala cambiaba.
+         */
+        xs: ['var(--ls-text-xs)', { lineHeight: '1.35' }],
         micro: ['var(--ls-text-micro)', { lineHeight: '1.3' }],
       },
       fontFamily: {

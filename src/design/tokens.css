@@ -93,6 +93,20 @@
   --ls-radius-full: 9999px;
 
   /* ---------------------------------------------------------------
+   * FOCO
+   * El anillo que marca donde esta el teclado. Existe desde el
+   * 2026-08-20: hasta entonces no habia ficha para esto y los dos
+   * sitios que dibujaban un anillo -la tabla de listas y el buscador
+   * del pipeline- usaban `ring-blue-500` literal de Tailwind. Era un
+   * azul generico, ajeno a la marca, y ademas distinto del morado que
+   * usa el resto del producto para senalar lo activo.
+   *
+   * Se iguala a --ls-primary a proposito: el foco es una senal de
+   * interaccion, y la marca ya es el color de la interaccion aca.
+   * --------------------------------------------------------------- */
+  --ls-focus-ring: var(--ls-primary);
+
+  /* ---------------------------------------------------------------
    * SOMBRAS
    * --------------------------------------------------------------- */
   --ls-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
