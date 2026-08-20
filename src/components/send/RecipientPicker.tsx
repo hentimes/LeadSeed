@@ -114,11 +114,14 @@ export function RecipientPicker({
         caja dentro de la primera. Es el aspecto de la lista de inscripcion a
         flujos, que es la referencia que adopto el producto.
       */}
+      {/*
+        Sin rotulo ni cuenta: "Leads directos" repetia lo que el paso ya dice y
+        gastaba una franja entera. La cuenta de seleccionados ya vive en la
+        cabecera del paso.
+      */}
       <ListPanel
         flush
         className="-mx-3"
-        title="Leads directos"
-        count={filteredLeads.length}
         footer={
           <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
         }

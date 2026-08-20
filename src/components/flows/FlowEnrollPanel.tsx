@@ -98,99 +98,78 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
   };
 
   return (
-    <div className="flex min-h-0 flex-col gap-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-2">
-          <IconButton icon={<Icon.ArrowLeft />} label="Volver" size="sm" onClick={onVolver} />
-          {/*
-            El subtitulo ocupaba dos lineas para explicar dos reglas que solo
-            importan la primera vez. Pasa a un icono de ayuda: quien ya lo sabe
-            no lo lee, y quien no, lo tiene a un puntero de distancia.
-          */}
-          <div className="flex min-w-0 items-center gap-1.5">
-            <h2 className="truncate text-card-title font-semibold text-ink">Inscribir en {flujo.name}</h2>
-            <span
-              className="shrink-0 cursor-help text-ink-muted"
-              tabIndex={0}
-              role="note"
-              aria-label={AYUDA(flujo.channel)}
-              title={AYUDA(flujo.channel)}
-            >
-              <div className="w-3.5">{Icon.Help()}</div>
-            </span>
-          </div>
-        </div>
+    /*
+     * Misma estructura que el paso "Destinatarios" de envio masivo, a
+     * proposito: tarjeta con relleno, cabecera, buscador, y la lista con
+     * sangria negativa para que sus filas lleguen al borde de la tarjeta.
+     * Antes esta lista colgaba suelta de la pagina, y por eso no se parecia a
+     * la otra aunque sus filas fueran identicas.
+     */
+    <section className="card-standard flex min-h-0 flex-col gap-2.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <IconButton icon={<Icon.ArrowLeft />} label="Volver" size="sm" onClick={onVolver} />
+        {/*
+          El subtitulo ocupaba dos lineas para explicar dos reglas que solo
+          importan la primera vez. Pasa a un icono de ayuda: quien ya lo sabe
+          no lo lee, y quien no, lo tiene a un puntero de distancia.
+        */}
+        <h2 className="min-w-0 truncate text-card-title font-semibold text-ink">
+          Inscribir en {flujo.name}
+        </h2>
+        <span
+          className="shrink-0 cursor-help text-ink-muted"
+          tabIndex={0}
+          role="note"
+          aria-label={AYUDA(flujo.channel)}
+          title={AYUDA(flujo.channel)}
+        >
+          <div className="w-3.5">{Icon.Help()}</div>
+        </span>
       </div>
 
-      <div>
-          <Input
-            type="search"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar lead..."
-            aria-label="Buscar lead"
-            autoFocus
-          />
-        </div>
+      <Input
+        type="search"
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        placeholder="Buscar lead..."
+        aria-label="Buscar lead"
+        autoFocus
+      />
 
-      {error && (
-        <p role="alert" className="text-micro text-state-danger">{error}</p>
-      )}
+      {error && <p role="alert" className="text-micro text-state-danger">{error}</p>}
 
-      <div className="min-h-0 flex-1">
-          {candidatos.length === 0 ? (
-            <p className="text-micro text-ink-muted">
-              {leads.length === 0
-                ? 'Todavia no tienes leads.'
-                : `Ningun lead con ${flujo.channel === 'email' ? 'correo' : 'telefono'} coincide.`}
-            </p>
-          ) : (
-            /*
-             * La lista no tenia caja ni relleno lateral: las filas colgaban
-             * sueltas del cuerpo del modal y el nombre arrancaba pegado al
-             * borde. Ahora usa `ListPanel` y `ListRow`, los mismos que usan el
-             * pipeline y el selector de destinatarios, asi que la lista se ve
-             * igual aunque el contenedor sea un modal y no una pagina.
-             *
-             * El respaldo del nombre decia "(sin nombre)" con parentesis. Ahora
-             * lo pone `LeadIdentity` y dice "Sin nombre": un lector de pantalla
-             * en modo de puntuacion completa verbaliza los parentesis.
-             */
-            /*
-              Sin rotulo: "Leads disponibles" repetia lo que la pantalla ya
-              dice y anadia una franja entera para no informar de nada. Queda
-              una cabecera fina con la cuenta y la paginacion, como la de la
-              tabla de leads.
-            */
-            <ListPanel
-              flush
-              count={candidatos.length}
-              footer={
-                <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
-              }
+      <ListPanel
+        flush
+        className="-mx-3"
+        footer={
+          <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
+        }
+        empty={
+          <p className="px-3 py-6 text-center text-micro text-ink-muted">
+            {leads.length === 0
+              ? 'Todavia no tienes leads.'
+              : `Ningun lead con ${flujo.channel === 'email' ? 'correo' : 'telefono'} coincide.`}
+          </p>
+        }
+      >
+        {visibles.map((lead) => (
+          <ListRow as="div" key={lead.id}>
+            <LeadIdentity
+              className="flex-1"
+              name={lead.name}
+              caption={flujo.channel === 'email' ? lead.email : lead.phone}
+            />
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={inscribiendo !== null}
+              onClick={() => inscribir(lead)}
             >
-              <ul className="min-w-0">
-                {visibles.map((lead) => (
-                  <ListRow as="li" key={lead.id}>
-                    <LeadIdentity
-                      className="flex-1"
-                      name={lead.name}
-                      caption={flujo.channel === 'email' ? lead.email : lead.phone}
-                    />
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      disabled={inscribiendo !== null}
-                      onClick={() => inscribir(lead)}
-                    >
-                      {inscribiendo === lead.id ? '...' : 'Inscribir'}
-                    </Button>
-                  </ListRow>
-                ))}
-              </ul>
-          </ListPanel>
-        )}
-      </div>
-    </div>
+              {inscribiendo === lead.id ? '...' : 'Inscribir'}
+            </Button>
+          </ListRow>
+        ))}
+      </ListPanel>
+    </section>
   );
 }
