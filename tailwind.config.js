@@ -143,13 +143,20 @@ export default {
         'card-title': ['var(--ls-text-card-title)', { lineHeight: '1.35' }],
         body: ['var(--ls-text-body)', { lineHeight: '1.45' }],
         /**
-         * `--ls-text-xs` (11px) vivia en tokens.css desde el principio pero no
-         * estaba expuesto aca, asi que era inalcanzable desde una clase. El
-         * resultado es que quien necesitaba 11px escribia `text-[11px]` a mano
-         * -el RUT bajo el nombre en la tabla de leads, entre otros- y ese valor
-         * literal dejaba de seguir a la ficha si la escala cambiaba.
+         * Dato secundario bajo una linea principal: el RUT bajo el nombre, la
+         * empresa bajo el lead. `--ls-text-xs` (11px) vivia en tokens.css desde
+         * el principio pero no estaba expuesto, asi que era inalcanzable desde
+         * una clase y quien lo necesitaba escribia `text-[11px]` a mano, que
+         * deja de seguir a la ficha si la escala cambia.
+         *
+         * Se llama `meta` y no `xs` a proposito. `text-xs` YA EXISTE como clase
+         * por defecto de Tailwind y vale 12px: mapearla a la ficha de 11px
+         * habria encogido en silencio los 284 usos repartidos por 64 archivos
+         * que hoy la usan esperando el valor de Tailwind. Ademas el resto de
+         * esta escala se nombra por funcion -`card-title`, `body`, `micro`-, no
+         * por talla.
          */
-        xs: ['var(--ls-text-xs)', { lineHeight: '1.35' }],
+        meta: ['var(--ls-text-xs)', { lineHeight: '1.35' }],
         micro: ['var(--ls-text-micro)', { lineHeight: '1.3' }],
       },
       fontFamily: {
