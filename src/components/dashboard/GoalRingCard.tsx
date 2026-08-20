@@ -7,7 +7,7 @@ import type { Trend } from './trend';
  *
  * Hasta el 2026-08-20 era `size = 88` aplicado como `style={{ width, height }}`.
  * 88px fijos por dona, mas su texto al lado, daban una fila de ~540px de ancho
- * minimo dentro de un panel que por defecto mide 400: la tercera dona quedaba
+ * minimo dentro de un panel que por defecto mide 360: la tercera dona quedaba
  * cortada a la mitad contra el borde. El SVG ya usa `viewBox` con
  * `width="100%"`, asi que escala solo; lo unico que hacia falta era dejar de
  * clavar el tamano en pixeles para que los puntos de corte pudieran tocarlo.
@@ -163,7 +163,7 @@ export default function GoalRingCard({
           <AnimatedDonut
             percent={percent}
             color={color}
-            className="w-14 h-14 panel-md:w-[72px] panel-md:h-[72px] panel-xl:w-[88px] panel-xl:h-[88px]"
+            className="w-14 h-14 panel-sm:w-[72px] panel-sm:h-[72px] panel-xl:w-[88px] panel-xl:h-[88px]"
           />
         </div>
 
@@ -176,11 +176,20 @@ export default function GoalRingCard({
           <span className="text-[12px] text-ink-secondary font-normal leading-none mb-2">{unit}</span>
 
           {trend && (
-            <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 ${COLOR_TENDENCIA[trend.direction]}`}>
+            /*
+             * `whitespace-nowrap`: "sin cambios" partido en "sin" / "cambios"
+             * no es un ahorro de espacio, es una linea rota. Se le permite al
+             * texto encoger por otras vias, pero no por esta.
+             *
+             * La etiqueta del periodo ("vs sem. pasada") se pintaba aqui, una
+             * vez por dona. Repetida tres veces pedia ~145px irreducibles por
+             * tarjeta, ~790px solo para esta fila, y a los anchos donde si
+             * cabia se partia en dos columnas ilegibles. Ahora se declara una
+             * sola vez en la cabecera de la tarjeta, que es donde el periodo es
+             * un dato de la tarjeta entera y no de cada metrica.
+             */
+            <span className={`text-[12px] font-medium mt-0.5 flex items-center gap-1 whitespace-nowrap ${COLOR_TENDENCIA[trend.direction]}`}>
               {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : ''} {trend.value}
-              {/* La etiqueta del periodo es lo primero que sobra cuando falta
-                  sitio: repite un dato que ya esta en la cabecera de la tarjeta. */}
-              <span className="hidden panel-xl:inline text-ink-muted text-[11px] font-normal">{trend.label}</span>
             </span>
           )}
         </div>

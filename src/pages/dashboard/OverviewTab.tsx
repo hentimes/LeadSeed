@@ -150,6 +150,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             trend={callTrend}
             color={chartColors.primaryLight}
             tooltipText={`${callToday} de ${settings.dailyGoalCalls} llamadas registradas.`}
+            className="hidden panel-lg:flex"
           />
         </div>
       </Card>
@@ -164,27 +165,25 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
 
       {/* Rendimiento hoy */}
       <Card className="mt-1">
+        {/* El periodo se declara aqui, no dentro de cada metrica. Ver MetricCard. */}
         <div className="card-header">
           <CardTitle as="h2">Rendimiento hoy</CardTitle>
+          <div className="text-[11px] font-medium text-ink-secondary bg-surface-muted px-3 py-1 rounded-[6px] whitespace-nowrap">
+            {compareLabel}
+          </div>
         </div>
         
-        <div className="flex justify-between items-center divide-x divide-line">
-          <MetricCard
-            icon={<Icon.CheckOutline />}
-            iconColor="text-ink"
-            title="Tareas hechas"
-            value={taskSummary.completedToday}
-            trend={tasksTrend}
-            onClick={() => onNavigate?.('tasks')}
-          />
-          <MetricCard
-            icon={<Icon.SendOutline />}
-            iconColor="text-ink"
-            title="Total envíos"
-            value={sendSummary.today.total}
-            trend={sendTrend}
-            onClick={() => onNavigate?.('history')}
-          />
+        {/*
+          Misma escalera que la fila de metas, y por el mismo motivo. El orden
+          de las tres tarjetas se fijo el 2026-08-20 con la degradacion en
+          mente: la que cae tiene que ser la ultima, porque `divide-x` pinta el
+          separador a la izquierda de cada hijo y ocultar uno intermedio dejaria
+          una linea suelta sin nada al lado.
+
+            >=500px  las tres
+            <500px   dos: "Tareas hechas" se retira entera
+        */}
+        <div className="flex justify-between items-center divide-x divide-line min-w-0">
           {/*
             Aqui habia una tarjeta "Respuestas" con el valor fijo en 0. No era un
             numero inventado, pero tampoco una medicion: el CRM no registra las
@@ -199,6 +198,23 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             value={leadSummary.createdToday}
             trend={leadsTrend}
             onClick={() => onNavigate?.('leads')}
+          />
+          <MetricCard
+            icon={<Icon.SendOutline />}
+            iconColor="text-ink"
+            title="Total envíos"
+            value={sendSummary.today.total}
+            trend={sendTrend}
+            onClick={() => onNavigate?.('history')}
+          />
+          <MetricCard
+            icon={<Icon.CheckOutline />}
+            iconColor="text-ink"
+            title="Tareas hechas"
+            value={taskSummary.completedToday}
+            trend={tasksTrend}
+            onClick={() => onNavigate?.('tasks')}
+            className="hidden panel-lg:flex"
           />
         </div>
       </Card>
@@ -230,10 +246,14 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
               {fuentes.length === 0 && <span className="text-ink-muted">Aun no hay leads.</span>}
               {fuentes.map((fuente, i) => (
                 <div key={fuente.origen} className="flex items-center justify-between gap-1.5">
-                  <span className="text-ink-secondary w-14 truncate">
+                  <span className="text-ink-secondary min-w-0 panel-md:w-14 truncate">
                     {ETIQUETAS_ORIGEN[fuente.origen] ?? fuente.origen}
                   </span>
-                  <div className="flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
+                  {/* La barra es decoracion: repite en grafico el porcentaje que
+                      ya esta escrito al lado. A 320px el `w-14` de la etiqueta
+                      mas la barra dejaban "Man..." / "Formu...", asi que la
+                      barra se retira y la etiqueta recupera su ancho. */}
+                  <div className="hidden panel-md:block flex-1 h-1 bg-surface-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${BARRAS_FUENTE[i] ?? 'bg-primary-soft'}`}
                       style={{ width: `${fuente.porcentaje}%` }}
@@ -256,18 +276,25 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             <h3 className="text-[10px] font-bold text-ink mb-2 leading-none">Conversión por etapa</h3>
             <div className="flex flex-col gap-1.5 text-[10px] font-medium leading-none">
               {etapas.map((etapa) => (
-                <div key={etapa.etiqueta} className="flex justify-between items-center">
-                  <span className="text-ink-secondary">{etapa.etiqueta}</span>
-                  <div className="flex gap-1">
+                /* El `gap-1` evita que a 320px la etiqueta y la cifra se toquen
+                   ("Contactado6"): `justify-between` reparte el sobrante, pero
+                   cuando no sobra nada no deja separacion ninguna. */
+                <div key={etapa.etiqueta} className="flex justify-between items-center gap-1">
+                  <span className="text-ink-secondary truncate">{etapa.etiqueta}</span>
+                  <div className="flex gap-1 shrink-0">
                     <span className="text-ink">{etapa.cantidad}</span>
-                    <span className="text-ink-muted w-7 text-right">({etapa.porcentaje}%)</span>
+                    {/* Truncar la etiqueta para salvar el porcentaje dejaba
+                        "Con..." en dos filas distintas (Contactado y
+                        Convertido): ilegible. Cae antes el porcentaje, que es
+                        derivable de la cifra y del total. */}
+                    <span className="hidden panel-md:inline text-ink-muted w-7 text-right">({etapa.porcentaje}%)</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-line mt-2 pt-2 flex justify-between items-center leading-none">
-              <span className="text-[10px] font-medium text-ink-secondary w-[60%]">Tasa global</span>
+            <div className="border-t border-line mt-2 pt-2 flex justify-between items-center gap-1 leading-none">
+              <span className="text-[10px] font-medium text-ink-secondary truncate">Tasa global</span>
               <span className="text-[12px] font-bold text-ink">{tasaGlobal}%</span>
             </div>
           </div>

@@ -43,15 +43,15 @@ export default function MetricCard({
         onClick ? 'cursor-pointer group' : ''
       } ${className}`}
     >
-      <div className={`w-8 h-8 panel-md:w-[40px] panel-md:h-[40px] flex items-center justify-center shrink-0 ${iconColor} ${onClick ? 'group-hover:scale-105 transition-transform' : ''}`}>
-        <div className="scale-110 panel-md:scale-[1.3]">{icon}</div>
+      <div className={`w-8 h-8 panel-sm:w-[40px] panel-sm:h-[40px] flex items-center justify-center shrink-0 ${iconColor} ${onClick ? 'group-hover:scale-105 transition-transform' : ''}`}>
+        <div className="scale-110 panel-sm:scale-[1.3]">{icon}</div>
       </div>
 
       {/*
        * Los dos `whitespace-nowrap` que habia aqui eran la causa directa del
        * corte. Con la etiqueta del periodo en una sola linea, "sin cambios vs
        * sem. pasada" mide ~145px irreducibles; por tres tarjetas la fila pedia
-       * ~640px dentro de un panel de 400. Ahora el texto puede fluir y la
+       * ~640px dentro de un panel de 360. Ahora el texto puede fluir y la
        * etiqueta desaparece antes de deformar nada.
        */}
       <div className="flex flex-col items-start text-left min-w-0 overflow-hidden">
@@ -59,13 +59,17 @@ export default function MetricCard({
         <span className="text-[12px] font-medium text-ink-secondary mt-1.5 leading-tight">{title}</span>
 
         {(trend || subtitle) && (
-          <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium">
+          <div className="mt-1.5 flex items-center gap-1 text-[12px] font-medium whitespace-nowrap">
+            {/*
+              La etiqueta del periodo ("vs sem. pasada") se pintaba aqui. Venia
+              de ajustes, asi que el dato era correcto, pero repetirla en cada
+              metrica costaba ~145px irreducibles por tarjeta y era la causa
+              directa de que la fila se saliera del panel. Pasa a declararse una
+              vez en la cabecera de la tarjeta, junto al titulo.
+            */}
             {trend && (
               <span className={`flex items-center gap-1 ${COLOR_TENDENCIA[trend.direction]}`}>
                 {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : ''} {trend.value}
-                {/* La etiqueta viene del periodo elegido en ajustes. Estaba fija
-                    en "vs ayer", asi que mentia con cualquier otro periodo. */}
-                <span className="hidden panel-xl:inline text-ink-muted text-[11px] font-normal">{trend.label}</span>
               </span>
             )}
             {subtitle && !trend && <span className="text-ink-secondary">{subtitle}</span>}
