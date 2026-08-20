@@ -2,6 +2,7 @@ import type { Lead } from '../../types';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import type { SortConfig, SortField } from '../../hooks/useSort';
 import LeadIdentity from '../leads/LeadIdentity';
+import { tonoDeFila } from '../../design';
 import { nombreCorto, nombreVisible, telefonoVisible } from '../../utils/leadDisplay';
 
 interface Props {
@@ -60,14 +61,14 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
             <th className="w-12 px-3 py-2.5"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line">
+        <tbody>
           {leads.map((lead) => {
             const isSelected = selectedIds.has(lead.id!);
             const enviosDelLead = sendCounts[lead.id!];
             return (
               <tr
                 key={lead.id}
-                className={`transition-colors hover:bg-surface-hover ${isSelected ? 'bg-primary-soft-strong' : ''}`}
+                className={`border-b border-line last:border-0 transition-colors ${tonoDeFila({ isSelected })}`}
               >
                 <td className="px-3 py-2 text-center">
                   <input

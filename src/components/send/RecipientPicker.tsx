@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Lead, LeadList } from '../../types';
-import { Badge, Button, EmptyState, Input } from '../../design';
+import { Badge, Button, EmptyState, Input, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 
@@ -110,11 +110,6 @@ export function RecipientPicker({
 
       {/* Leads sueltos */}
       <div>
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="text-micro font-medium text-ink-secondary">Leads directos</span>
-          <span className="text-micro tabular-nums text-ink-muted">{filteredLeads.length}</span>
-        </div>
-
         <Input
           type="search"
           value={search}
@@ -123,7 +118,7 @@ export function RecipientPicker({
           className="mb-1.5"
         />
 
-        <div className="max-h-52 overflow-y-auto rounded-md border border-line bg-surface">
+        <ListPanel title="Leads directos" count={filteredLeads.length} maxHeight="max-h-52">
           {filteredLeads.length === 0 ? (
             <EmptyState
               icon={<Icon.Search />}
@@ -135,11 +130,11 @@ export function RecipientPicker({
               const checked = selectedLeadIds.has(lead.id!);
               const secondary = secondaryField === 'email' ? lead.email : lead.phone;
               return (
-                <label
+                <ListRow
+                  as="label"
                   key={lead.id}
-                  className={`flex cursor-pointer items-center gap-2 border-b border-line px-2 py-1.5 transition-colors last:border-0 hover:bg-surface-hover ${
-                    checked ? 'bg-primary-soft' : ''
-                  }`}
+                  isSelected={checked}
+                  className="cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -167,11 +162,11 @@ export function RecipientPicker({
                       Enviado
                     </Badge>
                   )}
-                </label>
+                </ListRow>
               );
             })
           )}
-        </div>
+        </ListPanel>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ import { nombreVisible, telefonoEnmascarado } from '../utils/leadDisplay';
 import DiscardReasonModal from '../components/leads/DiscardReasonModal';
 import { createFollowUpTaskForLead } from '../services/tasksService';
 import { Button } from '../design';
-import { Card } from '../design';
+import { ListPanel, clasesDeFila } from '../design';
 
 
 export default function PipelinePage() {
@@ -240,16 +240,20 @@ export default function PipelinePage() {
         </div>
       </div>
 
-      <Card className="flex flex-col max-h-[250px] min-h-[150px] overflow-hidden mb-5">
-        <div className="bg-surface-muted border-b border-line px-3 py-2 flex justify-between items-center shrink-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-ink-secondary flex items-center gap-2">
-            Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span>
-          </span>
-          <span className="text-[10px] font-bold bg-surface-sunken px-2 py-0.5 rounded text-ink-secondary">
-            {grouped[activeTab].length} items
-          </span>
-        </div>
-        <div className="flex-1 overflow-y-auto">
+      {/*
+        La caja de esta lista estaba escrita a mano: su propia cabecera, su
+        propio contador con fondo, su propio borde. Ahora sale de `ListPanel`,
+        que es el mismo que usan el modal de flujos y el selector de
+        destinatarios, asi que las tres se ven igual. El color del estado se
+        conserva en el rotulo: es dato, no estilo.
+      */}
+      <ListPanel
+        className="mb-5"
+        title={<>Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span></>}
+        count={`${grouped[activeTab].length} items`}
+        maxHeight="max-h-[250px]"
+      >
+        <div>
           {grouped[activeTab].length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-ink-muted flex flex-col items-center justify-center h-full">
                <span className="text-3xl mb-3 opacity-20">{Icon.Pipeline()}</span>
@@ -263,7 +267,7 @@ export default function PipelinePage() {
                 draggable
                 onDragStart={(e) => handleDragStart(e, lead)}
                 onDragEnd={handleDragEnd}
-                className="border-b border-line last:border-0 px-3 py-2 hover:bg-surface-hover cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center gap-2 transition-colors group"
+                className={`${clasesDeFila()} cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center gap-2 group`}
               >
                 {/*
                   El nombre y el dato de contacto iban uno al lado del otro; el
@@ -294,7 +298,7 @@ export default function PipelinePage() {
             ))
           )}
         </div>
-      </Card>
+      </ListPanel>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         {(['contactado', 'interesado', 'convertido', 'descartado'] as LeadStatus[]).map((s) => renderSquareCard(s))}

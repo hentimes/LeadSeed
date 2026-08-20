@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, IconButton, Input, Modal } from '../../design';
+import { Button, IconButton, Input, ListPanel, ListRow, Modal } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchActiveLeads } from '../../services/leadsService';
@@ -95,39 +95,38 @@ export function FlowEnrollModal({ flujo, onInscribir, onClose }: Props) {
                 : `Ningun lead con ${flujo.channel === 'email' ? 'correo' : 'telefono'} coincide.`}
             </p>
           ) : (
-            <ul className="min-w-0">
-              {candidatos.map((lead) => (
-                <li
-                  key={lead.id}
-                  className="flex min-w-0 items-center gap-2 border-b border-line-soft px-2.5 py-2 last:border-0"
-                >
-                  {/*
-                    Esta lista era la unica sin relleno lateral: el nombre
-                    arrancaba pegado al borde del modal. Se le anade `px-2.5`,
-                    que es el de la tabla de leads, de donde sale el molde.
-
-                    El respaldo del nombre decia "(sin nombre)" con parentesis.
-                    Ahora lo pone `LeadIdentity` y dice "Sin nombre": un lector
-                    de pantalla en modo de puntuacion completa verbaliza los
-                    parentesis, y el resto de los vacios del producto ya usan
-                    esa forma.
-                  */}
-                  <LeadIdentity
-                    className="flex-1"
-                    name={lead.name}
-                    caption={flujo.channel === 'email' ? lead.email : lead.phone}
-                  />
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={inscribiendo !== null}
-                    onClick={() => inscribir(lead)}
-                  >
-                    {inscribiendo === lead.id ? '...' : 'Inscribir'}
-                  </Button>
-                </li>
-              ))}
-            </ul>
+            /*
+             * La lista no tenia caja ni relleno lateral: las filas colgaban
+             * sueltas del cuerpo del modal y el nombre arrancaba pegado al
+             * borde. Ahora usa `ListPanel` y `ListRow`, los mismos que usan el
+             * pipeline y el selector de destinatarios, asi que la lista se ve
+             * igual aunque el contenedor sea un modal y no una pagina.
+             *
+             * El respaldo del nombre decia "(sin nombre)" con parentesis. Ahora
+             * lo pone `LeadIdentity` y dice "Sin nombre": un lector de pantalla
+             * en modo de puntuacion completa verbaliza los parentesis.
+             */
+            <ListPanel title="Leads disponibles" count={candidatos.length}>
+              <ul className="min-w-0">
+                {candidatos.map((lead) => (
+                  <ListRow as="li" key={lead.id}>
+                    <LeadIdentity
+                      className="flex-1"
+                      name={lead.name}
+                      caption={flujo.channel === 'email' ? lead.email : lead.phone}
+                    />
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={inscribiendo !== null}
+                      onClick={() => inscribir(lead)}
+                    >
+                      {inscribiendo === lead.id ? '...' : 'Inscribir'}
+                    </Button>
+                  </ListRow>
+                ))}
+              </ul>
+            </ListPanel>
           )}
         </div>
       </div>

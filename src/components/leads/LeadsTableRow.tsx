@@ -2,6 +2,7 @@ import { memo, useState, useMemo } from 'react';
 import type { Lead, LeadList } from '../../types';
 import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
+import { tonoDeFila, type ListDensity } from '../../design';
 import LeadCell from './LeadCell';
 import LeadIdentity from './LeadIdentity';
 import { nombreCorto } from '../../utils/leadDisplay';
@@ -62,16 +63,24 @@ const LeadsTableRow = ({
   // comprobacion usaba `?.` pero la lectura de al lado no.
   const enviosDelLead = sendCounts[lead.id!];
 
-  const cellPad = compactMode ? 'px-2.5 py-1.5' : 'px-2.5 py-2';
-  // Un lead sin abrir se tiñe hasta que se ve su detalle. No depende del badge
-  // de la extension, que se limpia con solo abrirla: son cosas distintas.
-  const rowBackground = isSelected
-    ? 'bg-primary-soft-strong hover:bg-primary-soft-strong'
-    : lead.isUnread
-      ? 'bg-surface-unread hover:bg-surface-unread-hover'
-      : 'bg-surface hover:bg-surface-hover';
+  /*
+   * El relleno de la celda y el tono de la fila salen de `design/ListPanel`,
+   * que es de donde salen tambien en el pipeline, en el modal de flujos y en el
+   * selector de destinatarios. Estaban escritos a mano aqui, y por eso esta
+   * tabla tenia un relleno distinto de las otras cuatro listas.
+   *
+   * El tono va en el `<tr>` y el relleno en cada `<td>`, que es como funciona
+   * una tabla: un `<tr>` no admite relleno propio de forma fiable.
+   *
+   * Un lead sin abrir se tine hasta que se ve su detalle. No depende del badge
+   * de la extension, que se limpia con solo abrirla: son cosas distintas.
+   */
+  const densidad: ListDensity = compactMode ? 'compact' : 'normal';
+  const cellPad = compactMode ? 'px-3 py-1.5' : 'px-3 py-2';
 
-  const trClass = `border-b border-line transition-colors cursor-pointer ${rowBackground} ${
+  const trClass = `border-b border-line transition-colors cursor-pointer ${
+    tonoDeFila({ isSelected, isUnread: lead.isUnread })
+  } ${!isSelected && !lead.isUnread ? 'bg-surface' : ''} ${
     lead.isPinned ? 'cursor-grab active:cursor-grabbing active:opacity-50' : ''
   }`;
 
@@ -166,7 +175,7 @@ const LeadsTableRow = ({
 
   const nameCell = (
     <LeadIdentity
-      density={compactMode ? 'compact' : 'normal'}
+      density={densidad}
       name={compactMode ? nombreCorto(lead.name) : lead.name}
       avatar={avatar}
       badges={badges}
