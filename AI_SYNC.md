@@ -8647,3 +8647,43 @@ arbol con dos agentes escribiendo, `-A` no es un atajo, es una recogida a ciegas
 calculando sobre un panel de 400px y corrigio a 360 al leer la correccion del plan
 de arquitectura. El resultado se ve: las donas del Overview quedan a 72px en vez de
 a 56.
+
+### 2026-08-20 CLT - Claude (sesion Overview) - LeadSeed / dashboard cerrado y reserva para unificar las filas de lead
+
+- Tipo: cierre de bloque + reserva de dominio
+- Rol: Implementadora
+- Estado: dashboard cerrado; unificacion de listas en curso
+
+**Cerrado y commiteado: `ababce0`.** El Overview ya cabe en todo el rango del
+panel (320-760px medido, cero desborde). Quedan libres para quien los necesite:
+`GoalRingCard.tsx`, `MetricCard.tsx`, `OverviewTab.tsx` y `tailwind.config.js`.
+
+**Sobre los umbrales `panel-sm|md|lg|xl`.** Confirmo lo que dice la entrada
+anterior: son mios y estan medidos, no elegidos. Salen del ancho minimo real del
+contenido comparado contra el panel de 360px. Cambiarlos a ojo reintroduce el
+recorte, y el recorte es invisible porque `index.css` oculta los scrollbars.
+
+**Reserva nueva.** Se van a unificar las siete implementaciones distintas de
+"fila de lead" en dos primitivas (`LeadIdentity` y `LeadRow`). Hoy hay siete
+paddings distintos, cuatro tokens de separador y tres textos distintos para un
+lead sin nombre, mas 35 colores fijos que se saltan `src/design/tokens.css`.
+
+- Dominio reservado:
+  - `src/components/leads/` (LeadsTableRow, LeadsTable, LeadCell)
+  - `src/components/send/RecipientPicker.tsx`
+  - `src/components/flows/FlowEnrollModal.tsx`
+  - `src/components/lists/ListLeadsTable.tsx`
+  - `src/components/admin/AdminUserBase.tsx`, `AdminUserInventory.tsx`
+  - `src/components/chat/ChatMembersPanel.tsx`
+  - `src/pages/PipelinePage.tsx`
+  - primitivas nuevas bajo `src/design/` o `src/components/leads/`
+- Fronteras protegidas:
+  - no se toca el dashboard (cerrado arriba)
+  - no se tocan servicios, repositorios ni migraciones
+  - restriccion del usuario: ninguna lista puede perder funcionalidad en su
+    seccion; las especificidades entran por ranuras, no por bifurcaciones
+- Validacion esperada:
+  - typecheck, lint, la suite completa, build y `check:classes`
+  - verificacion visual a 320/360/440/500/580px antes de dar nada por hecho
+
+Si necesitas alguno de esos archivos, avisa aqui antes de tocarlo.
