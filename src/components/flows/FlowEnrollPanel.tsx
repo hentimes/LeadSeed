@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Button, IconButton, Input, ListPagination, ListPanel, ListRow } from '../../design';
+import { Button, IconButton, Input, ListPagination, ListPanel, ListRow, ToggleChip } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchActiveLeads } from '../../services/leadsService';
 import type { Lead, MessageFlow } from '../../types';
 import LeadIdentity from '../leads/LeadIdentity';
+import { nombreVisible, SIN_NOMBRE } from '../../utils/leadDisplay';
 
 interface Props {
   flujo: MessageFlow;
@@ -49,14 +50,18 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
   const [error, setError] = useState('');
   const [inscribiendo, setInscribiendo] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
+  /* Mismo filtro que en envio masivo, y con la misma pieza: las dos listas
+     tienen que seguir viendose iguales. */
+  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
 
   /*
    * Al filtrar, la pagina 7 puede dejar de existir. Se ajusta durante el render
    * y no desde un efecto, que pintaria la pagina vieja antes de corregirse.
    */
-  const [busquedaAnterior, setBusquedaAnterior] = useState(busqueda);
-  if (busquedaAnterior !== busqueda) {
-    setBusquedaAnterior(busqueda);
+  const filtroActual = `${busqueda}|${ocultarSinNombre}`;
+  const [filtroAnterior, setFiltroAnterior] = useState(filtroActual);
+  if (filtroAnterior !== filtroActual) {
+    setFiltroAnterior(filtroActual);
     setPagina(1);
   }
 
@@ -73,8 +78,11 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
    * el lead 51 sencillamente no existia para esta pantalla y nada lo decia.
    * Ahora se paginan todos.
    */
-  const candidatos = leads
-    .filter(tieneDato)
+  const conDato = leads.filter(tieneDato);
+  const sinNombre = conDato.filter((l) => nombreVisible(l.name) === SIN_NOMBRE).length;
+
+  const candidatos = conDato
+    .filter((l) => (ocultarSinNombre ? nombreVisible(l.name) !== SIN_NOMBRE : true))
     .filter((l) => (q ? (l.name || '').toLocaleLowerCase('es').includes(q) : true));
 
   const totalPaginas = Math.max(1, Math.ceil(candidatos.length / LEADS_POR_PAGINA));
@@ -135,6 +143,19 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
         aria-label="Buscar lead"
         autoFocus
       />
+
+      {sinNombre > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          <ToggleChip
+            active={ocultarSinNombre}
+            onClick={() => setOcultarSinNombre((v) => !v)}
+            count={sinNombre}
+            title="Deja fuera los leads que no tienen nombre"
+          >
+            Ocultar sin nombre
+          </ToggleChip>
+        </div>
+      )}
 
       {error && <p role="alert" className="text-micro text-state-danger">{error}</p>}
 

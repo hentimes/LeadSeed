@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { Lead, LeadList } from '../../types';
-import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow } from '../../design';
+import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow, ToggleChip } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 import { puedeRecibirPor, DATO_DEL_CANAL, type CanalContacto } from '../../utils/leadContacto';
+import { nombreVisible, SIN_NOMBRE } from '../../utils/leadDisplay';
 
 /**
  * Seleccion de destinatarios por lista y por lead suelto.
@@ -67,10 +68,27 @@ export function RecipientPicker({
   );
   const descartados = leads.length - contactables.length;
 
+  /*
+   * Ocultar los leads sin nombre. Apagado por defecto: esconder datos sin que
+   * nadie lo pida es como se pierden contactos de vista.
+   *
+   * Usa `nombreVisible` en vez de comprobar la cadena a mano, asi "sin nombre"
+   * significa lo mismo aqui que en la fila que lo pinta -incluido el caso del
+   * nombre que es solo espacios, que hay en los leads importados-.
+   */
+  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  const sinNombre = useMemo(
+    () => contactables.filter((lead) => nombreVisible(lead.name) === SIN_NOMBRE).length,
+    [contactables],
+  );
+
   const filteredLeads = useMemo(() => {
     let result = contactables;
     if (selectedListIds.size > 0) {
       result = result.filter((lead) => lead.listaIds.some((id) => selectedListIds.has(id)));
+    }
+    if (ocultarSinNombre) {
+      result = result.filter((lead) => nombreVisible(lead.name) !== SIN_NOMBRE);
     }
     if (search) {
       const query = search.toLowerCase();
@@ -79,7 +97,7 @@ export function RecipientPicker({
       );
     }
     return result;
-  }, [contactables, selectedListIds, search]);
+  }, [contactables, selectedListIds, search, ocultarSinNombre]);
 
   const hasSelection = selectedLeadIds.size > 0 || selectedListIds.size > 0;
 
@@ -98,7 +116,7 @@ export function RecipientPicker({
    * filtro nuevo y despues corrige, que es un render en cascada visible. Es el
    * patron que React documenta para estado derivado de props.
    */
-  const filtroActual = `${search}|${[...selectedListIds].sort().join(',')}`;
+  const filtroActual = `${search}|${ocultarSinNombre}|${[...selectedListIds].sort().join(',')}`;
   const [filtroAnterior, setFiltroAnterior] = useState(filtroActual);
   if (filtroAnterior !== filtroActual) {
     setFiltroAnterior(filtroActual);
@@ -126,6 +144,19 @@ export function RecipientPicker({
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Buscar por nombre o teléfono..."
       />
+
+      {sinNombre > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          <ToggleChip
+            active={ocultarSinNombre}
+            onClick={() => setOcultarSinNombre((v) => !v)}
+            count={sinNombre}
+            title="Deja fuera los leads que no tienen nombre"
+          >
+            Ocultar sin nombre
+          </ToggleChip>
+        </div>
+      )}
 
       {/*
         Se dice cuantos quedaron fuera y por que. Filtrar en silencio deja a
