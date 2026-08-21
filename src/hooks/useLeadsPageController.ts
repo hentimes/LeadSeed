@@ -278,6 +278,10 @@ export function useLeadsPageController() {
     getById,
     getForgottenPage,
     getPage,
+    // Sin esto, `loadLeads` se quedaba capturando el valor inicial del filtro:
+    // el efecto que la llama si se volvia a lanzar, pero ejecutaba la version
+    // memoizada de antes y la consulta salia siempre con el filtro apagado.
+    ocultarSinNombre,
     search,
     showTrash,
     sort.dir,
