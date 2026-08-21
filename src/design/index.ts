@@ -19,5 +19,4 @@ export { Field, Input, Textarea, Select, Checkbox } from './Field';
 export { PageTitle, SectionTitle, CardTitle, GroupLabel, Body, Hint } from './Text';
 export { Modal } from './Modal';
 export { ListPanel, ListRow, ListPagination, clasesDeFila, tonoDeFila } from './ListPanel';
-export { ToggleChip } from './ToggleChip';
 export type { ListDensity } from './ListPanel';

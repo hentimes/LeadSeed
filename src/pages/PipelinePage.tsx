@@ -9,6 +9,7 @@ import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
 import LeadIdentity from '../components/leads/LeadIdentity';
+import SinNombreToggle, { contarSinNombre, pasaFiltroDeNombre } from '../components/leads/SinNombreToggle';
 import { nombreVisible, telefonoEnmascarado } from '../utils/leadDisplay';
 import DiscardReasonModal from '../components/leads/DiscardReasonModal';
 import { createFollowUpTaskForLead } from '../services/tasksService';
@@ -29,6 +30,7 @@ export default function PipelinePage() {
   const [activeTab, setActiveTab] = useState<LeadStatus>('nuevo');
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
   const [taskPrompt, setTaskPrompt] = useState<{ leadId: string; leadName: string; lead: Lead | null; newStatus: LeadStatus } | null>(null);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDate, setTaskDate] = useState('');
@@ -60,9 +62,12 @@ export default function PipelinePage() {
 
   const searchLower = search.toLowerCase().trim();
 
+  const sinNombreTotal = useMemo(() => contarSinNombre(leads), [leads]);
+
   const grouped = useMemo(() => {
     const map: Record<LeadStatus, Lead[]> = { nuevo: [], contactado: [], interesado: [], convertido: [], descartado: [] };
     for (const l of leads) {
+      if (!pasaFiltroDeNombre(l, ocultarSinNombre)) continue;
       if (searchLower) {
         const match = l.name.toLowerCase().includes(searchLower) ||
           (l.company || '').toLowerCase().includes(searchLower) ||
@@ -75,7 +80,7 @@ export default function PipelinePage() {
       map[s].push(l);
     }
     return map;
-  }, [leads, searchLower]);
+  }, [leads, searchLower, ocultarSinNombre]);
 
   const handleDragStart = (_e: React.DragEvent, lead: Lead) => {
     draggingRef.current = lead.id!;
@@ -235,6 +240,11 @@ export default function PipelinePage() {
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">{totalInSearch} encontrados</span>
           )}
         </div>
+        <SinNombreToggle
+          count={sinNombreTotal}
+          ocultos={ocultarSinNombre}
+          onToggle={() => setOcultarSinNombre((v) => !v)}
+        />
         <div className="w-1/4 min-w-[100px] flex">
           {renderNuevoTab()}
         </div>

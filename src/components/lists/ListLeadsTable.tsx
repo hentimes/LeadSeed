@@ -1,7 +1,9 @@
 import type { Lead } from '../../types';
+import { useMemo, useState } from 'react';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import type { SortConfig, SortField } from '../../hooks/useSort';
 import LeadIdentity from '../leads/LeadIdentity';
+import SinNombreToggle, { contarSinNombre, pasaFiltroDeNombre } from '../leads/SinNombreToggle';
 import { tonoDeFila } from '../../design';
 import { nombreCorto, nombreVisible, telefonoVisible } from '../../utils/leadDisplay';
 
@@ -26,6 +28,12 @@ interface Props {
 
 export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSelectAll, onRemoveLead, sort, onSort }: Props) {
   const sendCounts = useSendCounts();
+  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  const sinNombre = useMemo(() => contarSinNombre(leads), [leads]);
+  const visibles = useMemo(
+    () => leads.filter((lead) => pasaFiltroDeNombre(lead, ocultarSinNombre)),
+    [leads, ocultarSinNombre],
+  );
   if (leads.length === 0) {
     return <p className="text-sm text-ink-muted text-center py-6 bg-surface border rounded-lg">Sin leads en esta lista.</p>;
   }
@@ -58,11 +66,19 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
             >
               RUT {sort.field === 'rut' ? (sort.dir === 'asc' ? '↑' : '↓') : ''}
             </th>
-            <th className="w-12 px-3 py-2.5"></th>
+            {/* El interruptor va en la cabecera de la columna de acciones: es
+                una accion sobre la lista, no una columna de dato. */}
+            <th className="w-12 px-3 py-1 text-center">
+              <SinNombreToggle
+                count={sinNombre}
+                ocultos={ocultarSinNombre}
+                onToggle={() => setOcultarSinNombre((v) => !v)}
+              />
+            </th>
           </tr>
         </thead>
         <tbody>
-          {leads.map((lead) => {
+          {visibles.map((lead) => {
             const isSelected = selectedIds.has(lead.id!);
             const enviosDelLead = sendCounts[lead.id!];
             return (

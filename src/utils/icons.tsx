@@ -1,7 +1,7 @@
 import {
   faUsers, faPaperPlane, faClipboardCheck, faChartBar, faDiagramProject,
   faList, faClockRotateLeft, faGear, faEllipsis,
-  faEye, faPencil, faTrash, faDownload, faUpload, faFileImport,
+  faEye, faEyeSlash, faPencil, faTrash, faDownload, faUpload, faFileImport,
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
   faRotateLeft, faChevronDown, faChevronUp, faChevronRight, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
@@ -44,6 +44,7 @@ export const Icon = {
 
   // Actions
   View: () => <I icon={faEye} className="text-xs" />,
+  ViewOff: () => <I icon={faEyeSlash} className="text-xs" />,
   Edit: () => <I icon={faPencil} className="text-xs" />,
   Trash: () => <I icon={faTrash} className="text-xs" />,
   Export: () => <I icon={faDownload} className="text-sm" />,

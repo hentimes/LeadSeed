@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { Lead, LeadList } from '../../types';
-import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow, ToggleChip } from '../../design';
+import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 import { puedeRecibirPor, DATO_DEL_CANAL, type CanalContacto } from '../../utils/leadContacto';
-import { nombreVisible, SIN_NOMBRE } from '../../utils/leadDisplay';
+import SinNombreToggle, { contarSinNombre, pasaFiltroDeNombre } from '../leads/SinNombreToggle';
 
 /**
  * Seleccion de destinatarios por lista y por lead suelto.
@@ -77,19 +77,14 @@ export function RecipientPicker({
    * nombre que es solo espacios, que hay en los leads importados-.
    */
   const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
-  const sinNombre = useMemo(
-    () => contactables.filter((lead) => nombreVisible(lead.name) === SIN_NOMBRE).length,
-    [contactables],
-  );
+  const sinNombre = useMemo(() => contarSinNombre(contactables), [contactables]);
 
   const filteredLeads = useMemo(() => {
     let result = contactables;
     if (selectedListIds.size > 0) {
       result = result.filter((lead) => lead.listaIds.some((id) => selectedListIds.has(id)));
     }
-    if (ocultarSinNombre) {
-      result = result.filter((lead) => nombreVisible(lead.name) !== SIN_NOMBRE);
-    }
+    result = result.filter((lead) => pasaFiltroDeNombre(lead, ocultarSinNombre));
     if (search) {
       const query = search.toLowerCase();
       result = result.filter(
@@ -138,25 +133,20 @@ export function RecipientPicker({
      * debajo, como refinamiento.
      */
     <div className="flex min-h-0 flex-col gap-2.5">
-      <Input
-        type="search"
-        value={search}
-        onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="Buscar por nombre o teléfono..."
-      />
-
-      {sinNombre > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          <ToggleChip
-            active={ocultarSinNombre}
-            onClick={() => setOcultarSinNombre((v) => !v)}
-            count={sinNombre}
-            title="Deja fuera los leads que no tienen nombre"
-          >
-            Ocultar sin nombre
-          </ToggleChip>
-        </div>
-      )}
+      <div className="flex items-center gap-1.5">
+        <Input
+          type="search"
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Buscar por nombre o teléfono..."
+          className="flex-1"
+        />
+        <SinNombreToggle
+          count={sinNombre}
+          ocultos={ocultarSinNombre}
+          onToggle={() => setOcultarSinNombre((v) => !v)}
+        />
+      </div>
 
       {/*
         Se dice cuantos quedaron fuera y por que. Filtrar en silencio deja a

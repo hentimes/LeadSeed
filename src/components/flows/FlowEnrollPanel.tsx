@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Button, IconButton, Input, ListPagination, ListPanel, ListRow, ToggleChip } from '../../design';
+import { Button, IconButton, Input, ListPagination, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchActiveLeads } from '../../services/leadsService';
 import type { Lead, MessageFlow } from '../../types';
 import LeadIdentity from '../leads/LeadIdentity';
-import { nombreVisible, SIN_NOMBRE } from '../../utils/leadDisplay';
+import SinNombreToggle, { contarSinNombre, pasaFiltroDeNombre } from '../leads/SinNombreToggle';
 
 interface Props {
   flujo: MessageFlow;
@@ -79,10 +79,10 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
    * Ahora se paginan todos.
    */
   const conDato = leads.filter(tieneDato);
-  const sinNombre = conDato.filter((l) => nombreVisible(l.name) === SIN_NOMBRE).length;
+  const sinNombre = contarSinNombre(conDato);
 
   const candidatos = conDato
-    .filter((l) => (ocultarSinNombre ? nombreVisible(l.name) !== SIN_NOMBRE : true))
+    .filter((l) => pasaFiltroDeNombre(l, ocultarSinNombre))
     .filter((l) => (q ? (l.name || '').toLocaleLowerCase('es').includes(q) : true));
 
   const totalPaginas = Math.max(1, Math.ceil(candidatos.length / LEADS_POR_PAGINA));
@@ -135,27 +135,22 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
         </span>
       </div>
 
-      <Input
-        type="search"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        placeholder="Buscar lead..."
-        aria-label="Buscar lead"
-        autoFocus
-      />
-
-      {sinNombre > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          <ToggleChip
-            active={ocultarSinNombre}
-            onClick={() => setOcultarSinNombre((v) => !v)}
-            count={sinNombre}
-            title="Deja fuera los leads que no tienen nombre"
-          >
-            Ocultar sin nombre
-          </ToggleChip>
-        </div>
-      )}
+      <div className="flex items-center gap-1.5">
+        <Input
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar lead..."
+          aria-label="Buscar lead"
+          autoFocus
+          className="flex-1"
+        />
+        <SinNombreToggle
+          count={sinNombre}
+          ocultos={ocultarSinNombre}
+          onToggle={() => setOcultarSinNombre((v) => !v)}
+        />
+      </div>
 
       {error && <p role="alert" className="text-micro text-state-danger">{error}</p>}
 
