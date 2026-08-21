@@ -8737,3 +8737,66 @@ correcto antes de tocar nada.
 
 - Fronteras liberadas: ninguna. Sigue reservado `src/components/leads/`,
   `lists/`, `send/`, `flows/` y `PipelinePage.tsx` hasta cerrar lo pendiente.
+
+### 2026-08-21 CLT - Claude (sesion Overview) - LeadSeed / listas unificadas, filtros de canal y de nombre
+
+- Tipo: cierre de bloque
+- Rol: Implementadora
+- Estado: cerrado; dominio liberado
+
+**Commits:** de `2dc7c85` a `a5e113a`. Se libera todo lo reservado el 2026-08-20:
+`components/leads/`, `lists/`, `send/`, `flows/` y `PipelinePage.tsx`.
+
+## Lo que quedo hecho
+
+**Una sola fila y una sola caja.** `LeadIdentity` unifica avatar, nombre y dato
+secundario; `ListPanel`/`ListRow` unifican borde, cabecera, alto de fila,
+separador y pie. Antes habia siete tratamientos distintos. Las dos tablas
+reales consumen `clasesDeFila` en su `<tr>`, porque un `<tr>` no admite un
+`<div>` y duplicar los valores es como se llego a las siete variantes.
+
+**Inscribir a un flujo dejo de ser un modal.** Era el unico paso de su pagina
+que se abria en ventana; editar y ver detalle ya eran vistas. `FlowEnrollModal`
+paso a `FlowEnrollPanel` con `git mv`.
+
+**Paginacion donde no habia.** Flujos cortaba con un `.slice(0, 50)` sin
+avisar: el lead 51 no existia para esa pantalla. El selector de destinatarios
+pintaba mil filas dentro de un alto fijo. La maquetacion de `ListPagination` es
+de ancho fijo a proposito, porque la primera version movia las flechas de sitio
+al cambiar de pagina.
+
+**Cada canal lista solo a quien puede recibir.** Y el filtro va tambien en el
+calculo de destinatarios, no solo en la lista: marcar una lista metia a todos
+sus leads por un camino que esquivaba el filtro de la pantalla.
+
+**Filtro de "sin nombre" en las cinco listas.** En la tabla de leads baja hasta
+la consulta, porque pagina en servidor.
+
+## Tres errores propios que conviene no repetir
+
+1. **Mapear una ficha a una clase que ya existe.** Expuse `--ls-text-xs` como
+   `text-xs`, que es una clase de Tailwind que vale 12px: habria encogido en
+   silencio 284 usos en 64 archivos. Se detecto comprobando el CSS compilado
+   antes de commitear. Al exponer una ficha, mirar primero si la clase existe.
+2. **Anadir una dependencia al array equivocado.** El filtro de "sin nombre" no
+   ocultaba nada porque `ocultarSinNombre` fue a la lista del efecto que llama a
+   `loadLeads` y no a la de `loadLeads`. `exhaustive-deps` esta como aviso y ese
+   archivo ya arrastraba otros, asi que no destaco.
+3. **Discutir en vez de renderizar.** El usuario repitio tres veces que las
+   listas no se parecian y yo defendi una distincion entre contenido y
+   contenedor que, mirando la pantalla, no le servia. Se resolvio en un mensaje
+   en cuanto empece a renderizar las dos juntas y a medirlas.
+
+## Pendiente para quien siga
+
+- **La migracion `20260821000100_normalizar_nombres_en_blanco.sql` esta sin
+  aplicar.** Normaliza los nombres hechos solo de espacios a cadena vacia e
+  instala un trigger. Sin ella, el filtro de la tabla de leads deja pasar esos
+  casos: PostgREST filtra sobre la columna y no admite `btrim(name) <> ''`.
+- **Los paneles de admin siguen fuera de la unificacion**, con paleta literal
+  (`slate-*`, `purple-*`) ajena al sistema de fichas. Hay que tokenizarlos antes
+  de meterles `LeadIdentity`, o la fila no combinara con su propio entorno.
+- **`ChatMembersPanel` queda fuera a proposito**: pinta `ChatMemberTarget`, no
+  `Lead`.
+- **`Trend.label` ya no se renderiza en ningun sitio** desde que el periodo subio
+  a la cabecera de la tarjeta. Se puede retirar del tipo.
