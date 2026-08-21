@@ -54,6 +54,9 @@ export function useLeadFilters() {
   const [filterCaptureLinkId, setFilterCaptureLinkId] = useState<number | null>(null);
   // Independiente de filterOrigin: 'pb' | 'general' | 'retiro'.
   const [filterSourceChannel, setFilterSourceChannel] = useState<LeadSourceChannel | null>(null);
+  /* Ocultar los leads sin nombre. Apagado por defecto: esconder filas sin que
+     nadie lo pida es como se pierden contactos de vista. */
+  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
   const [search, setSearch] = useState('');
 
   const setFilterOriginAndReset = (origin: LeadOrigin | null) => {
@@ -76,6 +79,8 @@ export function useLeadFilters() {
     setFilterCaptureLinkId,
     filterSourceChannel,
     setFilterSourceChannel,
+    ocultarSinNombre,
+    setOcultarSinNombre,
     search,
     setSearch,
   };

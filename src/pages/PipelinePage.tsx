@@ -240,10 +240,14 @@ export default function PipelinePage() {
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">{totalInSearch} encontrados</span>
           )}
         </div>
+        {/* `shrink-0`: la barra tiene un buscador `flex-1` y una pestana
+            `w-1/4`, asi que sin esto el boton se comprimia a cero y no habia
+            forma de verlo ni de pulsarlo. */}
         <SinNombreToggle
           count={sinNombreTotal}
           ocultos={ocultarSinNombre}
           onToggle={() => setOcultarSinNombre((v) => !v)}
+          className="shrink-0 self-center"
         />
         <div className="w-1/4 min-w-[100px] flex">
           {renderNuevoTab()}

@@ -5,6 +5,7 @@ import type { LeadOrigin } from '../../repositories/leadsRepository';
 import { listMyCaptureLinks } from '../../services/captureLinksService';
 import type { CaptureLink } from '../../types/captureLinks';
 import { Button } from '../../design';
+import SinNombreToggle from './SinNombreToggle';
 
 const ORIGIN_LABELS: Record<LeadOrigin, string> = {
   manual: 'Manual',
@@ -38,6 +39,8 @@ interface Props {
   onFilterCaptureLinkIdChange: (id: number | null) => void;
   filterSourceChannel: LeadSourceChannel | null;
   onFilterSourceChannelChange: (channel: LeadSourceChannel | null) => void;
+  ocultarSinNombre: boolean;
+  onOcultarSinNombreChange: (ocultar: boolean) => void;
 }
 
 export default function LeadsTableControls({
@@ -45,6 +48,7 @@ export default function LeadsTableControls({
   filterDate, onFilterDateChange, filterOrigin, onFilterOriginChange,
   filterCaptureLinkId, onFilterCaptureLinkIdChange,
   filterSourceChannel, onFilterSourceChannelChange,
+  ocultarSinNombre, onOcultarSinNombreChange,
 }: Props) {
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState<'listas' | 'estados' | 'fechas' | 'origen' | 'canal'>('listas');
@@ -115,6 +119,20 @@ export default function LeadsTableControls({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
             )}
+
+            {/*
+              Va dentro del panel de filtros y no suelto en la barra: es un
+              filtro mas, y ahi es donde se buscan. Sin cifra a proposito: esta
+              tabla pagina en servidor y solo recibe la pagina visible, asi que
+              cualquier numero que pusiera aqui seria el de la pagina y no el
+              del total.
+            */}
+            <SinNombreToggle
+              ocultos={ocultarSinNombre}
+              onToggle={() => onOcultarSinNombreChange(!ocultarSinNombre)}
+              mostrarCantidad={false}
+              className="shrink-0"
+            />
 
             <span className="shrink-0">Filtrar por:</span>
 

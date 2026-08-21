@@ -37,6 +37,8 @@ interface Props {
   onFilterCaptureLinkIdChange: (id: number | null) => void;
   filterSourceChannel: LeadSourceChannel | null;
   onFilterSourceChannelChange: (channel: LeadSourceChannel | null) => void;
+  ocultarSinNombre: boolean;
+  onOcultarSinNombreChange: (ocultar: boolean) => void;
   search: string;
   onSearchChange: (search: string) => void;
   sort: LeadSortConfig;
@@ -78,7 +80,8 @@ export default function LeadsTable({
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
   onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange,
   filterOrigin, onFilterOriginChange, filterCaptureLinkId, onFilterCaptureLinkIdChange,
-  filterSourceChannel, onFilterSourceChannelChange, search, onSearchChange,
+  filterSourceChannel, onFilterSourceChannelChange,
+  ocultarSinNombre, onOcultarSinNombreChange, search, onSearchChange,
   sort, onSort, totalCount, visibleCount, selectedCount, currentPage, pageCount, pageSize, isLoadingPage, onPageChange, visibleCols, compactMode, lastClickedIndex, onSetLastClicked, leftActions, bulkActions,
   onReorderCols, onReorderPinned,
 }: Props) {
@@ -229,6 +232,8 @@ export default function LeadsTable({
         onFilterCaptureLinkIdChange={onFilterCaptureLinkIdChange}
         filterSourceChannel={filterSourceChannel}
         onFilterSourceChannelChange={onFilterSourceChannelChange}
+        ocultarSinNombre={ocultarSinNombre}
+        onOcultarSinNombreChange={onOcultarSinNombreChange}
       />
 
       {/*

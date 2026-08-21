@@ -18,6 +18,17 @@ import { nombreVisible, SIN_NOMBRE } from '../../utils/leadDisplay';
  * para averiguar que hace; con la cifra dentro, la decision se toma antes de
  * pulsar.
  *
+ * El icono es una persona tachada y no un ojo tachado, aunque el ojo describa
+ * mejor "ocultar": el ojo ya significa "ver el detalle de este lead" en la
+ * tabla de leads y en el pipeline, y dos ojos con dos significados en la misma
+ * pantalla es peor que un icono menos literal. La persona tachada ademas dice
+ * de que va el filtro, no solo que hace.
+ *
+ * Donde no se puede saber cuantos hay -la tabla de leads pagina en servidor y
+ * solo recibe la pagina visible- se pasa `mostrarCantidad={false}` y el tooltip
+ * queda en "Ocultar los leads sin nombre". Preferible a inventar una cifra que
+ * seria la de la pagina y no la del total.
+ *
  * No se pinta si no hay ninguno que ocultar: un control que no hace nada es
  * ruido, y en la mayoria de las cuentas no habra leads sin nombre.
  */
@@ -49,24 +60,29 @@ export function useLeadsConNombre<T extends Pick<Lead, 'name'>>(leads: T[], ocul
 
 export default function SinNombreToggle({
   /** Cuantos leads sin nombre hay en la coleccion completa, no en la pagina. */
-  count,
+  count = 0,
   ocultos,
   onToggle,
+  /** A false, el tooltip no menciona cantidades y el boton se pinta siempre. */
+  mostrarCantidad = true,
   className = '',
 }: {
-  count: number;
+  count?: number;
   ocultos: boolean;
   onToggle: () => void;
+  mostrarCantidad?: boolean;
   className?: string;
 }) {
-  if (count === 0) return null;
+  // Sin cantidad que ensenar no hay nada que ocultar, asi que el boton sobra.
+  if (mostrarCantidad && count === 0) return null;
 
-  const plural = count === 1 ? 'lead sin nombre' : 'leads sin nombre';
-  const etiqueta = ocultos ? `Mostrar ${count} ${plural}` : `Ocultar ${count} ${plural}`;
+  const etiqueta = mostrarCantidad
+    ? `${ocultos ? 'Mostrar' : 'Ocultar'} ${count} ${count === 1 ? 'lead sin nombre' : 'leads sin nombre'}`
+    : `${ocultos ? 'Mostrar' : 'Ocultar'} los leads sin nombre`;
 
   return (
     <IconButton
-      icon={ocultos ? <Icon.ViewOff /> : <Icon.View />}
+      icon={ocultos ? <Icon.UserSlash /> : <Icon.User />}
       label={etiqueta}
       title={etiqueta}
       size="sm"

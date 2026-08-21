@@ -58,6 +58,8 @@ export interface LeadPageQuery {
   captureLinkId?: number | null;
   /** 'pb' | 'general' | 'retiro'. Independiente de origin: filtra por metadata.source_channel. */
   sourceChannel?: string | null;
+  /** Deja fuera los leads sin nombre. */
+  hideUnnamed?: boolean;
 }
 
 export interface LeadPageRowResult {
@@ -178,6 +180,19 @@ function applyLeadPageFilters(
     nextQuery = nextQuery.eq('metadata->>source_channel', params.sourceChannel);
   }
 
+  if (params.hideUnnamed) {
+    /*
+     * Nombre presente y no vacio.
+     *
+     * PostgREST filtra sobre la columna, no sobre una expresion, asi que no hay
+     * forma de pedir `btrim(name) <> ''` desde aqui: un nombre hecho solo de
+     * espacios se colaria. La migracion 20260821000100 normaliza esos nombres a cadena
+     * vacia justamente para que este filtro no tenga ese agujero, y el trigger
+     * que instala evita que vuelvan a entrar.
+     */
+    nextQuery = nextQuery.not('name', 'is', null).neq('name', '');
+  }
+
   if (params.dateFilter) {
     const now = new Date();
     let cutoffIso = '';
@@ -231,6 +246,7 @@ export function hasActiveLeadFilters(params: LeadPageQuery): boolean {
     params.dateFilter ||
     params.origin ||
     params.sourceChannel ||
+    params.hideUnnamed ||
     (params.captureLinkId !== undefined && params.captureLinkId !== null)
   );
 }

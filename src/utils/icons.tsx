@@ -1,12 +1,12 @@
 import {
   faUsers, faPaperPlane, faClipboardCheck, faChartBar, faDiagramProject,
   faList, faClockRotateLeft, faGear, faEllipsis,
-  faEye, faEyeSlash, faPencil, faTrash, faDownload, faUpload, faFileImport,
+  faEye, faPencil, faTrash, faDownload, faUpload, faFileImport,
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
   faRotateLeft, faChevronDown, faChevronUp, faChevronRight, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
   faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
-  faCrown, faUser, faBell, faCommentDots, faArrowRight, faFilter,
+  faCrown, faUser, faUserSlash, faBell, faCommentDots, faArrowRight, faFilter,
   faLightbulb, faLayerGroup, faCalendarDays, faShareNodes
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -44,7 +44,7 @@ export const Icon = {
 
   // Actions
   View: () => <I icon={faEye} className="text-xs" />,
-  ViewOff: () => <I icon={faEyeSlash} className="text-xs" />,
+  UserSlash: () => <I icon={faUserSlash} className="text-xs" />,
   Edit: () => <I icon={faPencil} className="text-xs" />,
   Trash: () => <I icon={faTrash} className="text-xs" />,
   Export: () => <I icon={faDownload} className="text-sm" />,
