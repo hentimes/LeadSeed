@@ -236,8 +236,10 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
         )}
       </div>
 
-      {/* Panel inferior: 3 Columnas */}
-      <div className="grid grid-cols-3 gap-4 mt-2">
+      {/* Panel inferior: 3 columnas cuando hay ancho, 2 cuando no.
+          Con el rail de navegacion ocupando 48px, tres columnas mas dos
+          separaciones de 16 dejaban 74px por tarjeta: no cabe ni el titulo. */}
+      <div className="grid grid-cols-2 gap-2 mt-2 panel-sm:grid-cols-3 panel-sm:gap-4">
         {/* Fuentes principales */}
         <div className="bg-surface border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>

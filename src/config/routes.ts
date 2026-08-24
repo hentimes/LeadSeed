@@ -27,4 +27,8 @@ export const secondaryRoutes: RouteDef[] = [
   { page: 'chat', label: 'Chat', icon: Icon.Messages, badge: true },
   { page: 'community', label: 'Comunidad', icon: Icon.Users, requiredFeature: 'module:community' },
   { page: 'settings', label: 'Ajustes', icon: Icon.Settings, shortcut: '5' },
+  // Vivia suelta dentro del cajon de navegacion, con su propio `hasFeature`
+  // escrito a mano. Aqui la ve tambien `AppPageRenderer`, que es quien corta
+  // el paso a las paginas sin permiso.
+  { page: 'admin', label: 'Admin SaaS', icon: Icon.Admin, requiredFeature: 'module:admin' },
 ];

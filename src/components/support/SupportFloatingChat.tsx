@@ -222,13 +222,13 @@ export default function SupportFloatingChat() {
   return (
     <>
       {hasUnread && !isOpen && (
-        <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-2xl flex items-center justify-center z-50 transition-colors">
+        <button onClick={() => setIsOpen(true)} className="fixed bottom-6 left-4 w-14 h-14 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-2xl flex items-center justify-center z-20 transition-colors">
           <Icon.Messages />
         </button>
       )}
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 h-96 bg-surface rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-purple-100">
+        <div className="fixed bottom-6 left-4 right-[calc(var(--ls-rail-width,0px)+1rem)] h-96 bg-surface rounded-2xl shadow-2xl flex flex-col overflow-hidden z-20 border border-purple-100">
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 text-white flex justify-between items-center">
             <h3 className="font-bold text-sm">Soporte</h3>
             <button type="button" aria-label="Cerrar el chat de soporte" onClick={handleClose} className="text-white/80 hover:text-white transition-colors">

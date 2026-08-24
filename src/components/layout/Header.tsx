@@ -3,8 +3,6 @@ import { Icon } from '../../utils/icons';
 import type { Page } from '../../types';
 
 interface Props {
-  isDrawerOpen: boolean;
-  onToggleDrawer: () => void;
   onToggleUserMenu: () => void;
   currentPage: Page;
 }
@@ -27,35 +25,16 @@ const PAGE_TITLES: Record<Page, string> = {
   chat: 'Chats Activos',
 };
 
-export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu, currentPage }: Props) {
+export default function Header({ onToggleUserMenu, currentPage }: Props) {
   const { user, profile } = useAuth();
   const pageTitle = PAGE_TITLES[currentPage];
 
   return (
     <header className="h-[64px] shrink-0 bg-surface dark:bg-slate-900 border-b border-line dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 relative">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onToggleDrawer}
-          className={`p-2 -ml-2 rounded-lg transition-colors focus:outline-none ${
-            isDrawerOpen
-              ? 'text-primary bg-primary-soft dark:bg-slate-800'
-              : 'text-ink-secondary hover:text-primary hover:bg-primary-soft dark:hover:bg-slate-800'
-          }`}
-          aria-label={isDrawerOpen ? "Cerrar menú" : "Abrir menú"}
-        >
-          {isDrawerOpen ? (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
-        <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           {pageTitle ? (
-            <span className="text-section-title font-semibold text-ink tracking-tight ml-2">
+            <span className="truncate text-section-title font-semibold text-ink tracking-tight">
               {pageTitle}
             </span>
           ) : (
@@ -71,7 +50,7 @@ export default function Header({ isDrawerOpen, onToggleDrawer, onToggleUserMenu,
 
       <div className="flex items-center gap-4">
         {/* Notificaciones / Ayuda (Opcional) */}
-        <button className="p-2 text-ink-muted hover:text-ink-secondary transition-colors">
+        <button type="button" aria-label="Ayuda" className="p-2 text-ink-muted hover:text-ink-secondary transition-colors">
           <Icon.Help />
         </button>
 

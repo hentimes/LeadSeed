@@ -87,7 +87,7 @@ export default function CommunityPage({
             sort={sort}
             onSortChange={setSort}
           />
-          <Button variant="primary" onClick={() => setIsComposerOpen(true)} icon={<Icon.Plus />}>
+          <Button variant="primary" className="shrink-0" onClick={() => setIsComposerOpen(true)} icon={<Icon.Plus />}>
             Publicar
           </Button>
         </div>

@@ -147,6 +147,15 @@
   --ls-control-height: 34px;
   --ls-control-height-sm: 28px;
 
+  /*
+   * Rail de navegacion. El contenido solo reserva el ancho contraido: al
+   * expandirse el rail flota por encima, para que ninguna seccion cambie de
+   * ancho al abrir el menu. Por eso `--ls-rail-width` es constante y no
+   * sigue al estado del rail.
+   */
+  --ls-rail-width: 48px;
+  --ls-rail-width-expanded: 176px;
+
   --ls-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 

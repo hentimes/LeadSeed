@@ -23,7 +23,10 @@ export default function CategoryFilterBar({
     }`;
 
   return (
-    <div className="flex flex-col gap-2">
+    // `min-w-0` no es decorativo: sin el, el ancho intrinseco de los chips
+    // (cinco categorias, mas de 400px) empuja fuera del contenedor al boton de
+    // publicar que va al lado.
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
       <div className="flex items-center gap-1 self-start rounded-full bg-surface-muted dark:bg-gray-800 p-1">
         <button
           type="button"

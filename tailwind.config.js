@@ -60,11 +60,18 @@ export default {
        * Los umbrales salen de medir el ancho minimo real del contenido, no de
        * una escala redonda. Ver `src/pages/dashboard/OverviewTab.tsx`.
        */
+      /*
+       * Los umbrales miden la ventana, no el contenido. Desde que el rail de
+       * navegacion se quedo con 48px fijos del borde derecho, el contenido
+       * mide 48 menos que la ventana, asi que los cuatro umbrales llevan esos
+       * 48 sumados: el ancho de contenido en el que disparan sigue siendo el
+       * que se midio en su dia (312 / 392 / 452 / 532 de contenido util).
+       */
       screens: {
-        'panel-sm': '360px',
-        'panel-md': '440px',
-        'panel-lg': '500px',
-        'panel-xl': '580px',
+        'panel-sm': '408px',
+        'panel-md': '488px',
+        'panel-lg': '548px',
+        'panel-xl': '628px',
       },
       colors: {
         primary: {

@@ -11,7 +11,7 @@ export default function LeadAlertToast({ alerts, onDismiss, onOpenLead }: Props)
   if (alerts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-[110] flex flex-col gap-2 items-center pointer-events-none">
+    <div className="fixed bottom-4 left-4 right-[calc(var(--ls-rail-width)+1rem)] z-[110] flex flex-col gap-2 items-center pointer-events-none">
       {alerts.map((alert) => (
         <div
           key={alert.id}
