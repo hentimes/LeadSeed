@@ -1,9 +1,78 @@
 import { beginGoogleLogin, completeGoogleExtensionLogin } from '../services/authService';
+import { useEffect, useRef } from 'react';
+import { AuthLinkButton } from '../components/auth/AuthControls';
+import {
+  LoginForm,
+  NewPasswordForm,
+  OtpVerifyForm,
+  RecoveryRequestForm,
+  SignUpForm,
+} from '../components/auth/AuthForms';
+import { useEmailAuthForm, type AuthView } from '../hooks/useEmailAuthForm';
 import { chartColors } from '../design/palette';
 import { getPlatform } from '../platform/registry';
 import { getErrorMessage } from '../utils/errorMessage';
 
+/**
+ * Encabezado de cada vista.
+ *
+ * Se declara fuera del componente porque no depende de su estado: es una tabla,
+ * no logica de render.
+ */
+const ENCABEZADOS: Record<AuthView, { titulo: string; subtitulo: string }> = {
+  login: {
+    titulo: 'Iniciar sesión',
+    subtitulo: 'Accede a tu cuenta para gestionar tus leads y campañas.',
+  },
+  registro: {
+    titulo: 'Crear cuenta',
+    subtitulo: 'Empieza a gestionar tus leads en un par de minutos.',
+  },
+  'verificar-otp': {
+    titulo: 'Revisa tu correo',
+    subtitulo: 'Escribe el código que te enviamos para confirmar que eres tú.',
+  },
+  recuperar: {
+    titulo: 'Recuperar contraseña',
+    subtitulo: 'Te enviamos un código para que puedas poner una nueva.',
+  },
+  'nueva-contrasena': {
+    titulo: 'Contraseña nueva',
+    subtitulo: 'Elige una contraseña que no uses en ningún otro sitio.',
+  },
+};
+
 export default function LoginPage() {
+  const form = useEmailAuthForm();
+  const { titulo, subtitulo } = ENCABEZADOS[form.view];
+  const puedeEntrarConGoogle = form.view === 'login' || form.view === 'registro';
+
+  const tituloRef = useRef<HTMLHeadingElement>(null);
+  const esPrimerRender = useRef(true);
+
+  /**
+   * Al cambiar de vista, el foco va al titulo.
+   *
+   * Sin esto el boton que disparo el cambio se desmonta con su formulario y el
+   * foco cae al `<body>`: quien navega con teclado tiene que tabular desde el
+   * principio de la pagina para llegar al primer campo de la pantalla nueva.
+   *
+   * Y resuelve un segundo problema de paso: al recibir el foco, el lector de
+   * pantalla lee el encabezado, que es como se entera de que la pantalla cambio
+   * de "Iniciar sesion" a "Crear cuenta". Sin eso, un cambio de vista sin banner
+   * es completamente silencioso.
+   *
+   * En el primer render no se toca el foco: robarselo al usuario nada mas abrir
+   * el panel seria peor que el problema que arregla.
+   */
+  useEffect(() => {
+    if (esPrimerRender.current) {
+      esPrimerRender.current = false;
+      return;
+    }
+    tituloRef.current?.focus();
+  }, [form.view]);
+
   const handleGoogleLogin = async () => {
     try {
       const oauthUrl = await beginGoogleLogin(getPlatform().oauth.redirectUrl(), getPlatform().oauth.canCompleteInApp());
@@ -77,44 +146,71 @@ export default function LoginPage() {
             <div className="absolute -bottom-2 w-10 h-2 bg-primary/10 rounded-[100%] blur-sm"></div>
           </div>
 
-          <h1 className="text-[28px] tracking-tight font-bold text-ink mb-2">
-            Iniciar sesión
+          <h1
+            ref={tituloRef}
+            tabIndex={-1}
+            className="text-[28px] tracking-tight font-bold text-ink mb-2 focus:outline-none"
+          >
+            {titulo}
           </h1>
-          <p className="text-[14px] text-center text-ink-secondary mb-10 max-w-[240px] leading-relaxed">
-            Accede a tu cuenta para gestionar tus leads y campañas.
+          <p className="text-[14px] text-center text-ink-secondary mb-8 max-w-[240px] leading-relaxed">
+            {subtitulo}
           </p>
 
           <div className="w-full space-y-4">
-            {/* Botón Principal (Deshabilitado pero Morado con efecto 3D) */}
-            <button
-              disabled
-              className="w-full flex items-center justify-center gap-2.5 px-4 py-[12px] bg-gradient-to-b from-[#7e62f9] to-[#603FE2] text-white rounded-[12px] font-semibold text-[15px] cursor-not-allowed shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),inset_0_-2px_0_rgba(0,0,0,0.15),0_4px_14px_0_rgba(108,76,246,0.35)]"
-            >
-              <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-              Iniciar sesión
-            </button>
+            {form.view === 'login' && <LoginForm form={form} />}
+            {form.view === 'registro' && <SignUpForm form={form} />}
+            {form.view === 'verificar-otp' && <OtpVerifyForm form={form} />}
+            {form.view === 'recuperar' && <RecoveryRequestForm form={form} />}
+            {form.view === 'nueva-contrasena' && <NewPasswordForm form={form} />}
 
-            {/* Separador */}
-            <div className="flex items-center gap-3 w-full py-2">
-              <div className="flex-1 h-px bg-line"></div>
-              <span className="text-[13px] text-ink-secondary">o continúa con</span>
-              <div className="flex-1 h-px bg-line"></div>
-            </div>
+            {/*
+              Google solo acompana al login y al registro. En las pantallas del
+              codigo estorbaria: el usuario esta a mitad de otra cosa y ofrecerle
+              una via alternativa ahi invita a abandonar el flujo por accidente.
+            */}
+            {puedeEntrarConGoogle && (
+              <>
+                {/* Separador */}
+                <div className="flex items-center gap-3 w-full py-2">
+                  <div className="flex-1 h-px bg-line"></div>
+                  <span className="text-[13px] text-ink-secondary">o continúa con</span>
+                  <div className="flex-1 h-px bg-line"></div>
+                </div>
 
-            {/* Botón Google */}
-            <button
-              onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2.5 px-4 py-[12px] border border-line rounded-[12px] text-[#344054] bg-surface hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all shadow-[inset_0_1px_0_white,inset_0_-2px_0_rgba(230,232,240,0.5),0_2px_5px_rgba(0,0,0,0.02)] font-semibold text-[15px]"
-            >
-              <img src="/logos/google.svg" alt="" aria-hidden="true" className="w-[20px] h-[20px]" />
-              Continuar con Google
-            </button>
+                {/* Botón Google */}
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-[12px] border border-line rounded-[12px] text-[#344054] bg-surface hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all shadow-[inset_0_1px_0_white,inset_0_-2px_0_rgba(230,232,240,0.5),0_2px_5px_rgba(0,0,0,0.02)] font-semibold text-[15px]"
+                >
+                  <img src="/logos/google.svg" alt="" aria-hidden="true" className="w-[20px] h-[20px]" />
+                  Continuar con Google
+                </button>
+              </>
+            )}
           </div>
 
           {/* Footer */}
-          <p className="mt-8 text-center text-[13px] text-ink-secondary">
-            ¿Aún no tienes cuenta? <a href="#" className="text-primary font-semibold hover:underline">Regístrate</a>
-          </p>
+          {puedeEntrarConGoogle && (
+            <p className="mt-8 text-center text-[13px] text-ink-secondary">
+              {form.view === 'login' ? (
+                <>
+                  ¿Aún no tienes cuenta?{' '}
+                  <AuthLinkButton onClick={() => form.goTo('registro')} disabled={form.isBusy}>
+                    Regístrate
+                  </AuthLinkButton>
+                </>
+              ) : (
+                <>
+                  ¿Ya tienes cuenta?{' '}
+                  <AuthLinkButton onClick={() => form.goTo('login')} disabled={form.isBusy}>
+                    Inicia sesión
+                  </AuthLinkButton>
+                </>
+              )}
+            </p>
+          )}
         </div>
       </div>
     </div>
