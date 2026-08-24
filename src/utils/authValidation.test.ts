@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   MIN_PASSWORD_LENGTH,
-  OTP_LENGTH,
+  OTP_MAX_LENGTH,
   normalizeOtpCode,
   validateEmail,
   validateFullName,
@@ -74,12 +74,15 @@ describe('normalizeOtpCode', () => {
   });
 
   it('tolera el codigo pegado desde el correo con espacios y salto de linea', () => {
-    expect(normalizeOtpCode('\n 123456 \n')).toBe('123456');
+    expect(normalizeOtpCode('\n 12345678 \n')).toBe('12345678');
   });
 
-  it('recorta lo que sobra', () => {
-    expect(normalizeOtpCode('1234567890')).toBe('123456');
-    expect(normalizeOtpCode('1234567890')).toHaveLength(OTP_LENGTH);
+  it('no recorta un codigo de ocho digitos', () => {
+    expect(normalizeOtpCode('12345678')).toBe('12345678');
+  });
+
+  it('recorta solo lo que pasa del maximo', () => {
+    expect(normalizeOtpCode('123456789012345')).toHaveLength(OTP_MAX_LENGTH);
   });
 
   it('devuelve cadena vacia si no habia ningun digito', () => {
@@ -88,12 +91,19 @@ describe('normalizeOtpCode', () => {
 });
 
 describe('validateOtpCode', () => {
-  it('acepta seis digitos', () => {
+  // Produccion emite codigos de OCHO digitos aunque config.toml declare seis.
+  // Clavar una longitud fija en el cliente rompia la verificacion entera, y no
+  // se veia en los tests porque todos usaban un '123456' inventado.
+  it('acepta los ocho digitos que emite el servidor de verdad', () => {
+    expect(validateOtpCode('12345678')).toBeNull();
+  });
+
+  it('acepta tambien seis, por si se cambia el ajuste', () => {
     expect(validateOtpCode('123456')).toBeNull();
   });
 
-  it('acepta seis digitos con basura alrededor, porque se normaliza antes', () => {
-    expect(validateOtpCode(' 123 456 ')).toBeNull();
+  it('acepta el codigo con basura alrededor, porque se normaliza antes', () => {
+    expect(validateOtpCode(' 1234 5678 ')).toBeNull();
   });
 
   it('pide el codigo cuando no hay ningun digito', () => {
@@ -101,7 +111,7 @@ describe('validateOtpCode', () => {
     expect(validateOtpCode('abcdef')).toBe('Escribe el codigo que te llego por correo.');
   });
 
-  it('avisa cuando faltan digitos', () => {
-    expect(validateOtpCode('12345')).toBe(`El codigo tiene ${OTP_LENGTH} digitos.`);
+  it('avisa cuando el codigo esta claramente incompleto', () => {
+    expect(validateOtpCode('12345')).toBe('Ese codigo esta incompleto.');
   });
 });

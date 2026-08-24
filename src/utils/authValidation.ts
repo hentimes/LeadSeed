@@ -19,8 +19,21 @@
 /** Debe coincidir con `minimum_password_length` de supabase/config.toml. */
 export const MIN_PASSWORD_LENGTH = 10;
 
-/** Numero de digitos del codigo que llega por correo (`otp_length`). */
-export const OTP_LENGTH = 6;
+/**
+ * Rango de digitos que se acepta en el codigo del correo.
+ *
+ * No es una longitud fija a proposito, y la razon la dio una prueba contra el
+ * servidor real: `supabase/config.toml` declara `otp_length = 6`, pero el
+ * proyecto en produccion emite codigos de OCHO digitos. Con un 6 clavado en el
+ * cliente, el campo recortaba el codigo y la verificacion fallaba siempre, sin
+ * que ningun test lo notara -todos usaban un '123456' inventado-.
+ *
+ * Aceptando un rango, el formulario funciona con la configuracion actual y
+ * seguira funcionando si algun dia se cambia. La comprobacion de verdad la hace
+ * el servidor; esto solo evita enviar algo obviamente incompleto.
+ */
+export const OTP_MIN_LENGTH = 6;
+export const OTP_MAX_LENGTH = 10;
 
 /**
  * No se persigue validar el RFC 5322 completo, que es inabarcable con una
@@ -72,12 +85,12 @@ export function validateFullName(value: string): string | null {
  * que no es culpa suya.
  */
 export function normalizeOtpCode(value: string): string {
-  return value.replace(/\D/g, '').slice(0, OTP_LENGTH);
+  return value.replace(/\D/g, '').slice(0, OTP_MAX_LENGTH);
 }
 
 export function validateOtpCode(value: string): string | null {
   const code = normalizeOtpCode(value);
   if (!code) return 'Escribe el codigo que te llego por correo.';
-  if (code.length < OTP_LENGTH) return `El codigo tiene ${OTP_LENGTH} digitos.`;
+  if (code.length < OTP_MIN_LENGTH) return 'Ese codigo esta incompleto.';
   return null;
 }

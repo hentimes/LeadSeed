@@ -12,7 +12,8 @@ Hasta que estos pasos estén hechos, **el flujo no funciona de punta a punta**.
 `Authentication → Emails`, plantillas **Confirm signup** y **Reset password**.
 
 Ambas usan `{{ .ConfirmationURL }}` por defecto, es decir mandan un enlace. Hay que
-cambiarlas para que manden `{{ .Token }}`, el código de seis dígitos.
+cambiarlas para que manden `{{ .Token }}`, el código numérico (hoy de ocho
+dígitos; ver más abajo).
 
 No es una preferencia estética. En una extensión no existe URL que un correo pueda
 enlazar: `chrome-extension://` no es clicable desde el buzón, y el dominio de
@@ -27,7 +28,7 @@ Tu código para entrar en LeadSeed es:
 
 {{ .Token }}
 
-Caduca en 5 minutos. Si no fuiste tú, ignora este correo.
+Caduca en 5 minutos. Si no fuiste tu, ignora este correo.
 ```
 
 ## 2. Política de contraseñas
@@ -44,9 +45,10 @@ Caduca en 5 minutos. Si no fuiste tú, ignora este correo.
 
 `Authentication → Providers → Email`.
 
-- **OTP expiry: 300 segundos.** Estaba en 3600. Una hora es demasiado para seis
-  dígitos: Supabase limita los intentos **por IP, no por cuenta**, así que la
-  ventana era el único freno real contra un atacante que rote direcciones.
+- **OTP expiry: 300 segundos.** Estaba en 3600. Una hora es demasiado para un
+  código numérico corto: Supabase limita los intentos **por IP, no por cuenta**,
+  así que la ventana era el único freno real contra un atacante que rote
+  direcciones.
 - **Minimum interval between emails: 60 segundos.** Estaba en 1s, que no frena
   nada y permite quemar la cuota de SMTP. Los 60s son los que ya asume el
   contador del botón "Reenviar" en la interfaz.
@@ -75,18 +77,41 @@ indistinguible de que el flujo esté roto.
 
 ---
 
-## Prueba de humo obligatoria antes de confiar en producción
+## Comprobado contra el servidor real
 
+Se recorrio el flujo entero de recuperacion sin enviar correo, usando
+`admin/generate_link`, con un usuario desechable que se borro despues. Salio bien
+de punta a punta: el trigger rellena `full_name` desde los metadatos, `plan_id`
+nace nulo y cae al onboarding, el RPC `current_user_auth_providers` devuelve
+`["email"]` con un JWT real y **rechaza a `anon` con 401**, el codigo se canjea,
+la contrasena cambia, la nueva funciona y la vieja deja de servir.
+
+Esa prueba destapo un fallo que ningun test unitario podia ver: **produccion
+emite codigos de OCHO digitos**, no de seis como declaraba `config.toml`. El
+campo del formulario los recortaba a seis y la verificacion habria fallado
+siempre. El cliente acepta ahora de 6 a 10 digitos y `otp_length` se puso en 8
+para que coincida con la realidad.
+
+## Prueba de humo que queda pendiente
+
+El flujo ya se probo entero, pero con la configuracion ACTUAL de produccion.
 `supabase/config.toml` quedó con `secure_password_change = true`, que exige sesión
 reciente para cambiar la contraseña. El razonamiento es que la sesión que emite
 `verifyOtp` es nueva y por tanto pasa la comprobación, pero **eso no está
 verificado contra el servidor**: es lógica interna de GoTrue y no se puede
 comprobar leyendo código ni consultando la base de datos.
 
-Antes de dar el flujo por bueno, hacer una recuperación completa con una cuenta de
-prueba: pedir código → verificarlo → cambiar contraseña. Si `updateUser` devuelve
-un error de reautenticación, poner `secure_password_change = false`. Es una
+Como esa bandera todavia no esta aplicada en produccion, la prueba de humo no la
+ejercito. Hay que repetirla DESPUES de aplicar la configuracion: pedir código →
+verificarlo → cambiar contraseña. Si `updateUser` devuelve un error de
+reautenticación, poner `secure_password_change = false`. Es una
 bandera aislada; revertirla no afecta a ninguna otra protección.
+
+**NO uses `supabase config push`.** El `config.toml` no declara ningún bloque
+`[auth.external.google]`, así que un push enviaría Google como desactivado y
+**tumbaría el login que ya funciona**. El comando no tiene modo simulación. Si
+algún día quieres usarlo, primero hay que declarar en el archivo todos los
+proveedores externos con su estado real y sus secretos.
 
 **Ojo con `config.toml`:** ese archivo tenía `enable_confirmations = false` (la
 plantilla por defecto). En producción la confirmación ya estaba activa, pero un

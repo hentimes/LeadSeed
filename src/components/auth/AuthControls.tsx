@@ -9,7 +9,7 @@
 
 import { useId } from 'react';
 import type { AuthBanner as AuthBannerModel } from '../../hooks/useEmailAuthForm';
-import { OTP_LENGTH } from '../../utils/authValidation';
+import { OTP_MAX_LENGTH } from '../../utils/authValidation';
 
 /**
  * Aviso de la pantalla.
@@ -119,7 +119,7 @@ export function OtpCodeInput({
   return (
     <div className="w-full">
       <label htmlFor={id} className="block text-[13px] font-medium text-ink mb-1.5">
-        Codigo de {OTP_LENGTH} digitos
+        Codigo del correo
       </label>
       <input
         id={id}
@@ -129,11 +129,11 @@ export function OtpCodeInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
-        maxLength={OTP_LENGTH}
-        placeholder="000000"
+        maxLength={OTP_MAX_LENGTH}
+        placeholder="Pegalo aqui"
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`w-full px-3.5 py-[11px] rounded-[12px] border bg-surface text-center text-[22px] font-semibold tracking-[0.4em] text-ink placeholder:text-ink-secondary/40 placeholder:tracking-[0.4em] focus:outline-none focus:ring-2 transition-all disabled:opacity-60 ${
+        className={`w-full px-3.5 py-[11px] rounded-[12px] border bg-surface text-center text-[22px] font-semibold tracking-[0.25em] text-ink placeholder:text-[15px] placeholder:font-normal placeholder:tracking-normal placeholder:text-ink-secondary/60 focus:outline-none focus:ring-2 transition-all disabled:opacity-60 ${
           error
             ? 'border-state-danger focus:ring-state-danger-soft'
             : 'border-line focus:ring-primary-soft focus:border-primary-soft'

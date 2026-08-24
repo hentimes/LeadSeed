@@ -242,7 +242,12 @@ secure_password_change = true
 # SMTP. 60s es lo que ya asume el cooldown del boton "Reenviar" en la UI.
 max_frequency = "60s"
 # Number of characters used in the email OTP.
-otp_length = 6
+# Puesto en 8 porque es lo que emite el proyecto en produccion, comprobado
+# generando codigos reales con la Admin API. Estaba en 6 por ser el valor de la
+# plantilla, y un `config push` habria cambiado la longitud de los codigos sin
+# que nadie lo pidiera. El cliente acepta de 6 a 10 digitos (authValidation.ts),
+# asi que cambiar esto no lo rompe.
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 # 1 hora es demasiado para 6 digitos: Supabase limita los intentos por IP, no
 # por cuenta, asi que la ventana era el unico freno real. 5 minutos.
