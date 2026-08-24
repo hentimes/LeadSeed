@@ -38,13 +38,17 @@ describe('estado inicial', () => {
     expect(result.current.usaGoogle).toBe(true);
   });
 
-  it('no bloquea el formulario si no se puede averiguar el estado', async () => {
+  // Ante la duda se avisa, no se finge un estado: decir "cambiar la contrasena"
+  // a quien no tiene ninguna es la misma clase de error que el fail-open que ya
+  // se corrigio en la recuperacion.
+  it('avisa y no asume nada si no se puede averiguar el estado', async () => {
     vi.mocked(auth.describeCurrentUserPassword).mockRejectedValue(new Error('rpc caido'));
 
     const { result } = await montar();
 
     expect(result.current.step).toBe('formulario');
     expect(result.current.tienePassword).toBeNull();
+    expect(result.current.banner?.tone).toBe('error');
   });
 });
 
@@ -156,5 +160,74 @@ describe('cuando la sesion es vieja', () => {
 
     expect(auth.confirmCurrentUserPassword).not.toHaveBeenCalled();
     expect(result.current.step).toBe('formulario');
+  });
+});
+
+describe('la contrasena en memoria', () => {
+  beforeEach(() => {
+    vi.mocked(auth.setCurrentUserPassword).mockResolvedValue({ status: 'necesita_codigo' });
+  });
+
+  // Sin esto la credencial sobrevivia a cerrar el modal: el usuario cree que
+  // abandono y sigue en el heap del proceso.
+  it('se borra al desmontar el hook', async () => {
+    const vista = await montar();
+
+    await act(async () => {
+      await vista.result.current.submitPassword('ContrasenaNueva1');
+    });
+    expect(vista.result.current.step).toBe('codigo');
+
+    const submitCode = vista.result.current.submitCode;
+    vista.unmount();
+
+    await act(async () => {
+      await submitCode('12345678');
+    });
+
+    expect(auth.confirmCurrentUserPassword).not.toHaveBeenCalled();
+  });
+
+  it('aguanta un codigo equivocado sin obligar a reescribir la contrasena', async () => {
+    vi.mocked(auth.confirmCurrentUserPassword).mockRejectedValue(
+      new Error('El codigo no es correcto.')
+    );
+    const { result } = await montar();
+
+    await act(async () => {
+      await result.current.submitPassword('ContrasenaNueva1');
+    });
+    await act(async () => {
+      await result.current.submitCode('11111111');
+    });
+
+    expect(result.current.step).toBe('codigo');
+    expect(result.current.banner?.tone).toBe('error');
+  });
+
+  it('pero al tercer fallo vuelve al principio y la olvida', async () => {
+    vi.mocked(auth.confirmCurrentUserPassword).mockRejectedValue(
+      new Error('El codigo no es correcto.')
+    );
+    const { result } = await montar();
+
+    await act(async () => {
+      await result.current.submitPassword('ContrasenaNueva1');
+    });
+    for (let i = 0; i < 3; i += 1) {
+      await act(async () => {
+        await result.current.submitCode('11111111');
+      });
+    }
+
+    expect(result.current.step).toBe('formulario');
+    expect(result.current.banner?.text).toContain('Demasiados intentos');
+
+    // Y ya no queda nada que confirmar a ciegas.
+    vi.mocked(auth.confirmCurrentUserPassword).mockClear();
+    await act(async () => {
+      await result.current.submitCode('12345678');
+    });
+    expect(auth.confirmCurrentUserPassword).not.toHaveBeenCalled();
   });
 });

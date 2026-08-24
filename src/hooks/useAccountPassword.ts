@@ -29,6 +29,9 @@ import { getErrorMessage } from '../utils/errorMessage';
 
 export type AccountPasswordStep = 'cargando' | 'formulario' | 'codigo';
 
+/** Fallos seguidos con el codigo antes de volver al principio. */
+const MAX_INTENTOS_CODIGO = 3;
+
 export interface AccountPasswordBanner {
   tone: 'info' | 'error';
   text: string;
@@ -63,6 +66,18 @@ export function useAccountPassword(): AccountPassword {
    */
   const passwordRef = useRef('');
 
+  /** Intentos fallidos con el codigo. Ver el tope mas abajo. */
+  const intentosRef = useRef(0);
+
+  // Al desmontar se borra la contrasena de memoria. Sin esto sobrevivia a cerrar
+  // el modal: el usuario cree que abandono el proceso y la credencial sigue en
+  // el heap, ampliando la ventana ante un volcado de memoria.
+  useEffect(() => {
+    return () => {
+      passwordRef.current = '';
+    };
+  }, []);
+
   useEffect(() => {
     let cancelado = false;
 
@@ -75,9 +90,16 @@ export function useAccountPassword(): AccountPassword {
       })
       .catch(() => {
         if (cancelado) return;
-        // Sin saber el estado no se puede etiquetar bien el formulario, pero
-        // tampoco hace falta impedirlo: el servidor sabra que hacer.
+        // Se deja en null y se avisa, en vez de asumir un estado. Fingir aqui
+        // llevaba a ofrecer "cambiar la contrasena" a quien no tiene ninguna, y
+        // es el mismo error que ya se corrigio en completePasswordRecovery: ante
+        // la duda, decirlo, no inventarlo. El formulario sigue disponible porque
+        // el servidor es quien manda de todos modos.
         setTienePassword(null);
+        setBanner({
+          tone: 'error',
+          text: 'No se pudo comprobar si ya tienes contrasena. Puedes intentarlo igualmente.',
+        });
         setStep('formulario');
       });
 
@@ -140,19 +162,39 @@ export function useAccountPassword(): AccountPassword {
         return;
       }
 
-      await ejecutar(async () => {
-        await confirmCurrentUserPassword(passwordRef.current, code);
-        passwordRef.current = '';
-        setTienePassword(true);
-        setStep('formulario');
-        setBanner({ tone: 'info', text: 'Contrasena guardada.' });
-      });
+      try {
+        await ejecutar(async () => {
+          await confirmCurrentUserPassword(passwordRef.current, code);
+          passwordRef.current = '';
+          intentosRef.current = 0;
+          setTienePassword(true);
+          setStep('formulario');
+          setBanner({ tone: 'info', text: 'Contrasena guardada.' });
+        });
+      } finally {
+        // Se conserva la contrasena entre intentos -equivocarse de codigo no
+        // deberia obligar a reescribirla- pero no indefinidamente: al tercer
+        // fallo se vuelve al principio y se borra de memoria.
+        if (passwordRef.current) {
+          intentosRef.current += 1;
+          if (intentosRef.current >= MAX_INTENTOS_CODIGO) {
+            passwordRef.current = '';
+            intentosRef.current = 0;
+            setStep('formulario');
+            setBanner({
+              tone: 'error',
+              text: 'Demasiados intentos. Vuelve a escribir la contrasena.',
+            });
+          }
+        }
+      }
     },
     [ejecutar]
   );
 
   const cancelarCodigo = useCallback(() => {
     passwordRef.current = '';
+    intentosRef.current = 0;
     setStep('formulario');
     setBanner(null);
     setErrors({});

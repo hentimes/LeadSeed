@@ -33,7 +33,27 @@ export default function AccountPasswordSection() {
     );
   }
 
+  /**
+   * Tres estados, no dos.
+   *
+   * `tienePassword` puede ser null cuando la consulta fallo, y ahi no se puede
+   * decir ni "anadir" ni "cambiar" sin mentir en uno de los dos casos. Se usa un
+   * texto neutro y el aviso de error explica lo que pasa.
+   */
   const esAlta = cuenta.tienePassword === false;
+  const esDesconocido = cuenta.tienePassword === null;
+
+  const titulo = esDesconocido
+    ? 'Contrasena de la cuenta'
+    : esAlta
+      ? 'Anadir una contrasena'
+      : 'Cambiar la contrasena';
+
+  const textoBoton = esDesconocido
+    ? 'Guardar contrasena'
+    : esAlta
+      ? 'Anadir contrasena'
+      : 'Cambiar contrasena';
 
   const enviarPassword = (event: FormEvent) => {
     event.preventDefault();
@@ -48,9 +68,7 @@ export default function AccountPasswordSection() {
   return (
     <div className="border-t border-line pt-4 mt-4 space-y-3">
       <div>
-        <h3 className="font-semibold text-ink text-[15px]">
-          {esAlta ? 'Anadir una contrasena' : 'Cambiar la contrasena'}
-        </h3>
+        <h3 className="font-semibold text-ink text-[15px]">{titulo}</h3>
         {esAlta && (
           <p className="text-[13px] text-ink-secondary leading-relaxed mt-1">
             {cuenta.usaGoogle
@@ -69,7 +87,7 @@ export default function AccountPasswordSection() {
       {cuenta.step === 'formulario' ? (
         <form noValidate className="space-y-3" onSubmit={enviarPassword}>
           <AuthTextField
-            label={esAlta ? 'Contrasena nueva' : 'Contrasena nueva'}
+            label="Contrasena nueva"
             type="password"
             value={password}
             onChange={setPassword}
@@ -78,9 +96,7 @@ export default function AccountPasswordSection() {
             placeholder="Al menos 10 caracteres"
             disabled={cuenta.isBusy}
           />
-          <AuthPrimaryButton isBusy={cuenta.isBusy}>
-            {esAlta ? 'Anadir contrasena' : 'Cambiar contrasena'}
-          </AuthPrimaryButton>
+          <AuthPrimaryButton isBusy={cuenta.isBusy}>{textoBoton}</AuthPrimaryButton>
         </form>
       ) : (
         <form noValidate className="space-y-3" onSubmit={enviarCodigo}>
