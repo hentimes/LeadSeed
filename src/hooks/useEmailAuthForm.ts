@@ -22,8 +22,11 @@ import {
 } from '../services/authService';
 import {
   clearPendingAuthFlow,
+  clearRememberedEmail,
   loadPendingAuthFlow,
+  loadRememberedEmail,
   savePendingAuthFlow,
+  saveRememberedEmail,
   type OtpPurpose,
 } from '../services/authFlowState';
 import {
@@ -58,12 +61,14 @@ export interface EmailAuthForm {
   view: AuthView;
   /** Correo del flujo en curso. Se muestra en la pantalla del codigo. */
   email: string;
+  /** Correo recordado de la ultima vez, para rellenar el formulario. */
+  rememberedEmail: string;
   banner: AuthBanner | null;
   errors: AuthFieldErrors;
   isBusy: boolean;
   resendCooldownSeconds: number;
   goTo(view: AuthView): void;
-  submitLogin(email: string, password: string): Promise<void>;
+  submitLogin(email: string, password: string, recordar: boolean): Promise<void>;
   submitSignUp(input: { email: string; password: string; fullName: string }): Promise<void>;
   submitOtp(code: string): Promise<void>;
   submitRecoveryRequest(email: string): Promise<void>;
@@ -79,6 +84,7 @@ export function useEmailAuthForm(): EmailAuthForm {
   const [errors, setErrors] = useState<AuthFieldErrors>({});
   const [isBusy, setIsBusy] = useState(false);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
+  const [rememberedEmail, setRememberedEmail] = useState('');
 
   /**
    * El codigo verificado vive SOLO aqui, en memoria, entre la pantalla del
@@ -102,6 +108,20 @@ export function useEmailAuthForm(): EmailAuthForm {
   // Al montar, recupera un flujo dejado a medias. Hace falta porque `signUp` con
   // confirmacion no devuelve sesion: entre crear la cuenta y canjear el codigo
   // no hay nada que Supabase pueda restaurar por su cuenta.
+  // El correo recordado de la ultima vez. Solo el correo: ver authFlowState.
+  useEffect(() => {
+    let cancelado = false;
+
+    void loadRememberedEmail().then((correo) => {
+      if (cancelado) return;
+      setRememberedEmail(correo);
+    });
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
   useEffect(() => {
     let cancelado = false;
 
@@ -166,7 +186,7 @@ export function useEmailAuthForm(): EmailAuthForm {
   }, []);
 
   const submitLogin = useCallback(
-    async (correo: string, password: string) => {
+    async (correo: string, password: string, recordar: boolean) => {
       const camposMal: AuthFieldErrors = {};
       const errorCorreo = validateEmail(correo);
       if (errorCorreo) camposMal.email = errorCorreo;
@@ -177,6 +197,14 @@ export function useEmailAuthForm(): EmailAuthForm {
 
       await ejecutar(async () => {
         const resultado = await loginWithEmailPassword(correo, password);
+
+        // Se recuerda solo cuando el login sale bien: guardar un correo que
+        // acaba de fallar seria rellenar el formulario con lo que no funciona.
+        if (recordar) {
+          await saveRememberedEmail(correo);
+        } else {
+          await clearRememberedEmail();
+        }
 
         if (resultado.status === 'pendiente_verificacion') {
           const limpio = correo.trim();
@@ -331,6 +359,7 @@ export function useEmailAuthForm(): EmailAuthForm {
   return {
     view,
     email,
+    rememberedEmail,
     banner,
     errors,
     isBusy,

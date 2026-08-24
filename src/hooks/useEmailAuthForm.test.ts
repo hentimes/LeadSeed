@@ -12,8 +12,11 @@ vi.mock('../services/authService', () => ({
 
 vi.mock('../services/authFlowState', () => ({
   clearPendingAuthFlow: vi.fn(),
+  clearRememberedEmail: vi.fn(),
   loadPendingAuthFlow: vi.fn(),
+  loadRememberedEmail: vi.fn(),
   savePendingAuthFlow: vi.fn(),
+  saveRememberedEmail: vi.fn(),
 }));
 
 import * as auth from '../services/authService';
@@ -32,6 +35,9 @@ beforeEach(() => {
   vi.mocked(flowState.loadPendingAuthFlow).mockResolvedValue(null);
   vi.mocked(flowState.savePendingAuthFlow).mockResolvedValue(undefined);
   vi.mocked(flowState.clearPendingAuthFlow).mockResolvedValue(undefined);
+  vi.mocked(flowState.loadRememberedEmail).mockResolvedValue('');
+  vi.mocked(flowState.saveRememberedEmail).mockResolvedValue(undefined);
+  vi.mocked(flowState.clearRememberedEmail).mockResolvedValue(undefined);
 });
 
 describe('estado inicial', () => {
@@ -64,7 +70,7 @@ describe('validacion antes de salir a la red', () => {
     const { result } = await montar();
 
     await act(async () => {
-      await result.current.submitLogin('no-es-un-correo', 'Contrasena1');
+      await result.current.submitLogin('no-es-un-correo', 'Contrasena1', false);
     });
 
     expect(auth.loginWithEmailPassword).not.toHaveBeenCalled();
@@ -91,7 +97,7 @@ describe('login', () => {
     const { result } = await montar();
 
     await act(async () => {
-      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1');
+      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1', false);
     });
 
     expect(result.current.view).toBe('login');
@@ -105,7 +111,7 @@ describe('login', () => {
     const { result } = await montar();
 
     await act(async () => {
-      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1');
+      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1', false);
     });
 
     expect(result.current.view).toBe('verificar-otp');
@@ -120,7 +126,7 @@ describe('login', () => {
     const { result } = await montar();
 
     await act(async () => {
-      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1');
+      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1', false);
     });
 
     expect(result.current.banner).toEqual({
@@ -287,7 +293,7 @@ describe('goTo', () => {
     const { result } = await montar();
 
     await act(async () => {
-      await result.current.submitLogin('mal', '');
+      await result.current.submitLogin('mal', '', false);
     });
     expect(result.current.errors.email).toBeTruthy();
 
@@ -298,5 +304,64 @@ describe('goTo', () => {
     expect(result.current.view).toBe('registro');
     expect(result.current.errors).toEqual({});
     expect(result.current.banner).toBeNull();
+  });
+});
+
+describe('recordar el correo', () => {
+  it('lo guarda al entrar si se marco la casilla', async () => {
+    vi.mocked(auth.loginWithEmailPassword).mockResolvedValue({ status: 'ok' });
+    const { result } = await montar();
+
+    await act(async () => {
+      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1', true);
+    });
+
+    expect(flowState.saveRememberedEmail).toHaveBeenCalledWith('ana@ejemplo.com');
+  });
+
+  it('lo olvida si no se marco', async () => {
+    vi.mocked(auth.loginWithEmailPassword).mockResolvedValue({ status: 'ok' });
+    const { result } = await montar();
+
+    await act(async () => {
+      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1', false);
+    });
+
+    expect(flowState.clearRememberedEmail).toHaveBeenCalled();
+    expect(flowState.saveRememberedEmail).not.toHaveBeenCalled();
+  });
+
+  // Guardar un correo que acaba de fallar seria rellenar el formulario con lo
+  // que no funciona.
+  it('no lo guarda si el login falla', async () => {
+    vi.mocked(auth.loginWithEmailPassword).mockRejectedValue(new Error('Correo o contrasena incorrectos.'));
+    const { result } = await montar();
+
+    await act(async () => {
+      await result.current.submitLogin('ana@ejemplo.com', 'mala', true);
+    });
+
+    expect(flowState.saveRememberedEmail).not.toHaveBeenCalled();
+  });
+
+  it('lo ofrece al montar para rellenar el formulario', async () => {
+    vi.mocked(flowState.loadRememberedEmail).mockResolvedValue('ana@ejemplo.com');
+    const { result } = await montar();
+
+    await waitFor(() => expect(result.current.rememberedEmail).toBe('ana@ejemplo.com'));
+  });
+
+  // La contrasena no se guarda nunca. Este test existe para que quitarlo sea una
+  // decision consciente y no un descuido.
+  it('nunca guarda la contrasena', async () => {
+    vi.mocked(auth.loginWithEmailPassword).mockResolvedValue({ status: 'ok' });
+    const { result } = await montar();
+
+    await act(async () => {
+      await result.current.submitLogin('ana@ejemplo.com', 'Contrasena1', true);
+    });
+
+    const guardado = JSON.stringify(vi.mocked(flowState.saveRememberedEmail).mock.calls);
+    expect(guardado).not.toContain('Contrasena1');
   });
 });

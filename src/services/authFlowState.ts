@@ -90,3 +90,42 @@ export async function clearPendingAuthFlow(): Promise<void> {
     .storage.local.set({ [STORAGE_KEY]: null })
     .catch(() => undefined);
 }
+
+// ---------------------------------------------------------------------------
+// Recordar el correo entre sesiones
+// ---------------------------------------------------------------------------
+//
+// Solo el correo. La contrasena NO se guarda, y no es una limitacion pendiente
+// de resolver: guardarla dejaria una credencial en claro en el almacenamiento de
+// la extension, al alcance de cualquiera con acceso al equipo, a cambio de
+// ahorrar unos segundos de tecleo. De rellenar la contrasena ya se encarga el
+// gestor del navegador, que la cifra con el perfil del usuario y para eso los
+// campos declaran `autoComplete`.
+//
+// Nota sobre la sesion: esto no es lo que mantiene al usuario dentro. De eso se
+// encarga Supabase, que persiste la sesion en `chrome.storage.local` desde
+// `supabaseClient.ts`. Esto solo sirve para cuando se cierra sesion a proposito
+// o caduca del todo.
+
+const REMEMBERED_EMAIL_KEY = 'rememberedEmail';
+
+export async function saveRememberedEmail(email: string): Promise<void> {
+  await getPlatform()
+    .storage.local.set({ [REMEMBERED_EMAIL_KEY]: email.trim() })
+    .catch(() => undefined);
+}
+
+export async function loadRememberedEmail(): Promise<string> {
+  const guardado = await getPlatform()
+    .storage.local.get([REMEMBERED_EMAIL_KEY])
+    .catch(() => ({}) as Record<string, unknown>);
+
+  const email = guardado[REMEMBERED_EMAIL_KEY];
+  return typeof email === 'string' ? email : '';
+}
+
+export async function clearRememberedEmail(): Promise<void> {
+  await getPlatform()
+    .storage.local.set({ [REMEMBERED_EMAIL_KEY]: null })
+    .catch(() => undefined);
+}

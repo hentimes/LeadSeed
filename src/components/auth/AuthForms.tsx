@@ -31,18 +31,33 @@ function alEnviar(accion: () => void) {
 }
 
 export function LoginForm({ form }: { form: EmailAuthForm }) {
-  const [email, setEmail] = useState('');
+  /**
+   * null significa "sin tocar": manda el correo recordado.
+   *
+   * Se deriva en vez de copiarlo con un efecto porque el correo recordado llega
+   * despues del primer render, y copiarlo provoca renders en cascada -el ESLint
+   * del repo lo marca-. Asi, en cuanto llega aparece solo, y deja de mandar en
+   * cuanto el usuario escribe.
+   */
+  const [emailEditado, setEmailEditado] = useState<string | null>(null);
   const [password, setPassword] = useState('');
+  const [recordar, setRecordar] = useState(true);
+
+  const email = emailEditado ?? form.rememberedEmail;
 
   return (
-    <form noValidate className="w-full space-y-4" onSubmit={alEnviar(() => void form.submitLogin(email, password))}>
+    <form
+      noValidate
+      className="w-full space-y-4"
+      onSubmit={alEnviar(() => void form.submitLogin(email, password, recordar))}
+    >
       <AuthBanner banner={form.banner} />
 
       <AuthTextField
         label="Correo"
         type="email"
         value={email}
-        onChange={setEmail}
+        onChange={setEmailEditado}
         error={form.errors.email}
         autoComplete="email"
         placeholder="tu@correo.com"
@@ -59,7 +74,23 @@ export function LoginForm({ form }: { form: EmailAuthForm }) {
         disabled={form.isBusy}
       />
 
-      <div className="flex justify-end -mt-1">
+      <div className="flex items-center justify-between -mt-1">
+        {/*
+          Recuerda el correo, no la contrasena. De esa se encarga el gestor del
+          navegador, que la cifra con el perfil del usuario; guardarla nosotros
+          seria dejarla en claro en el almacenamiento de la extension.
+        */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={recordar}
+            onChange={(event) => setRecordar(event.target.checked)}
+            disabled={form.isBusy}
+            className="w-4 h-4 rounded border-line text-primary focus:ring-2 focus:ring-primary-soft cursor-pointer"
+          />
+          <span className="text-[13px] text-ink-secondary">Recordar mi correo</span>
+        </label>
+
         <AuthLinkButton onClick={() => form.goTo('recuperar')} disabled={form.isBusy}>
           <span className="text-[13px]">Olvide mi contrasena</span>
         </AuthLinkButton>
