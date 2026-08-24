@@ -58,6 +58,12 @@ export interface AppSettings {
   dailyGoalCalls: number;
   dashboardComparePeriod: ComparePeriod;
   whatsappClientPreference: 'web' | 'app';
+  /**
+   * Ocultar los leads sin nombre. Preferencia de trabajo, no estado de pantalla:
+   * se aplica igual en la tabla, el pipeline y el panel de flujos, y sobrevive a
+   * cambiar de seccion y a cerrar el panel. Ver migracion 116.
+   */
+  hideUnnamedLeads: boolean;
 
   // Agrupación y Smart Lists
   activeSmartLists?: string[];

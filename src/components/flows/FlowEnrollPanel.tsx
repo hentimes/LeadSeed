@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useHideUnnamedLeads } from '../../hooks/useHideUnnamedLeads';
 import { Button, IconButton, Input, ListPagination, ListPanel, ListRow } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -52,7 +53,8 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
   const [pagina, setPagina] = useState(1);
   /* Mismo filtro que en envio masivo, y con la misma pieza: las dos listas
      tienen que seguir viendose iguales. */
-  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  // Misma preferencia que la tabla de leads y el pipeline.
+  const [ocultarSinNombre, setOcultarSinNombre] = useHideUnnamedLeads();
 
   /*
    * Al filtrar, la pagina 7 puede dejar de existir. Se ajusta durante el render
@@ -148,7 +150,7 @@ export function FlowEnrollPanel({ flujo, onInscribir, onVolver }: Props) {
         <SinNombreToggle
           count={sinNombre}
           ocultos={ocultarSinNombre}
-          onToggle={() => setOcultarSinNombre((v) => !v)}
+          onToggle={() => setOcultarSinNombre(!ocultarSinNombre)}
         />
       </div>
 

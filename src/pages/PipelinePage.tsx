@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { useHideUnnamedLeads } from '../hooks/useHideUnnamedLeads';
 import { useLeads } from '../hooks/useLeads';
 import { useWhatsAppTemplates } from '../hooks/useTemplates';
 import { useLists } from '../hooks/useLists';
@@ -30,7 +31,9 @@ export default function PipelinePage() {
   const [activeTab, setActiveTab] = useState<LeadStatus>('nuevo');
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  // Compartido con la tabla de leads y el panel de flujos: es una preferencia
+  // de la cuenta, no de esta pantalla.
+  const [ocultarSinNombre, setOcultarSinNombre] = useHideUnnamedLeads();
   const [taskPrompt, setTaskPrompt] = useState<{ leadId: string; leadName: string; lead: Lead | null; newStatus: LeadStatus } | null>(null);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDate, setTaskDate] = useState('');
@@ -246,7 +249,7 @@ export default function PipelinePage() {
         <SinNombreToggle
           count={sinNombreTotal}
           ocultos={ocultarSinNombre}
-          onToggle={() => setOcultarSinNombre((v) => !v)}
+          onToggle={() => setOcultarSinNombre(!ocultarSinNombre)}
           className="shrink-0 self-center"
         />
         <div className="w-1/4 min-w-[100px] flex">

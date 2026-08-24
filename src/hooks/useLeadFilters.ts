@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useHideUnnamedLeads } from './useHideUnnamedLeads';
 import type { Lead, LeadSourceChannel, LeadStatus } from '../types';
 import type { LeadOrigin } from '../repositories/leadsRepository';
 
@@ -54,9 +55,10 @@ export function useLeadFilters() {
   const [filterCaptureLinkId, setFilterCaptureLinkId] = useState<number | null>(null);
   // Independiente de filterOrigin: 'pb' | 'general' | 'retiro'.
   const [filterSourceChannel, setFilterSourceChannel] = useState<LeadSourceChannel | null>(null);
-  /* Ocultar los leads sin nombre. Apagado por defecto: esconder filas sin que
-     nadie lo pida es como se pierden contactos de vista. */
-  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  /* Ocultar los leads sin nombre. Ya no es estado local: se recuerda en la
+     cuenta, porque es una preferencia de trabajo y antes se reiniciaba al
+     cambiar de seccion. Ver `useHideUnnamedLeads`. */
+  const [ocultarSinNombre, setOcultarSinNombre] = useHideUnnamedLeads();
   const [search, setSearch] = useState('');
 
   const setFilterOriginAndReset = (origin: LeadOrigin | null) => {
