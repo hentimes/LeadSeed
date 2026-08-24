@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import {
   fetchCurrentSession,
   fetchCurrentUserAuthProviders,
+  fetchCurrentUserHasPassword,
   persistOAuthSession,
   persistGoogleCalendarConnection,
   sendPasswordRecoveryOtp,
@@ -11,7 +12,9 @@ import {
   signUpWithEmailPassword,
   startGoogleOAuthFlow,
   subscribeToAuthChanges,
+  requestPasswordChangeNonce,
   updateCurrentUserPassword,
+  updateCurrentUserPasswordWithNonce,
   verifyEmailOtp,
 } from '../repositories/authRepository';
 
@@ -333,17 +336,21 @@ export async function completePasswordRecovery(
   // igual. Es decir, bastaba con que el RPC fallara -o con provocar que
   // fallara- para saltarse la unica comprobacion que impide ponerle contrasena
   // a una cuenta de Google. Ante la duda no se toca nada.
-  let providers: string[];
+  let providers: CurrentUserPasswordState;
   try {
-    providers = await fetchCurrentUserAuthProviders();
+    providers = await describeCurrentUserPassword();
   } catch (error) {
     await logoutCurrentUser().catch(() => undefined);
     throw new Error('No se pudo comprobar la cuenta. Intentalo de nuevo.', { cause: error });
   }
 
-  const soloGoogle = providers.includes('google') && !providers.includes('email');
+  // Se rechaza por NO tener contrasena, no por "ser de Google". Son cosas
+  // distintas: quien entro con Google y luego se puso contrasena desde su perfil
+  // si tiene derecho a recuperarla, y deducirlo de las identidades se la habria
+  // negado, porque poner una contrasena no crea identidad de correo.
+  const sinPassword = !providers.tienePassword;
 
-  if (soloGoogle) {
+  if (sinPassword) {
     await logoutCurrentUser().catch(() => undefined);
     return { status: 'cuenta_google' };
   }
@@ -355,4 +362,82 @@ export async function completePasswordRecovery(
   }
 
   return { status: 'ok' };
+}
+
+// ---------------------------------------------------------------------------
+// Poner o cambiar la contrasena estando ya dentro
+// ---------------------------------------------------------------------------
+//
+// Aqui NO aplica la regla de "no revelar si existe la cuenta": el usuario ya
+// entro, la cuenta es suya y ya sabe todo lo que hay que saber sobre ella. Por
+// eso esta parte si puede decirle con claridad si tiene contrasena o solo entra
+// con Google.
+//
+// Es ademas la unica via legitima para que una cuenta de Google acabe teniendo
+// contrasena. La diferencia con la recuperacion no es el resultado, es quien lo
+// pide: aqui hay una sesion abierta que lo demuestra; alli solo habia alguien
+// que sabia una direccion de correo.
+
+export interface CurrentUserPasswordState {
+  /** true si la cuenta ya tiene identidad de correo, o sea contrasena propia. */
+  tienePassword: boolean;
+  /** true si ademas entra con Google. */
+  usaGoogle: boolean;
+}
+
+export type SetPasswordResult =
+  | { status: 'ok' }
+  /** La sesion no es reciente: hay que confirmar con el codigo del correo. */
+  | { status: 'necesita_codigo' };
+
+export async function describeCurrentUserPassword(): Promise<CurrentUserPasswordState> {
+  const [tienePassword, providers] = await Promise.all([
+    fetchCurrentUserHasPassword(),
+    fetchCurrentUserAuthProviders(),
+  ]);
+
+  return {
+    tienePassword,
+    usaGoogle: providers.includes('google'),
+  };
+}
+
+/**
+ * Intenta poner la contrasena directamente.
+ *
+ * Se prueba sin codigo a proposito, en vez de pedirlo siempre: si la sesion es
+ * reciente -lo normal, alguien que acaba de entrar y va a su perfil- el cambio
+ * sale a la primera y el usuario no tiene que ir al correo a por nada. Solo si
+ * el servidor lo exige se pasa al camino con codigo.
+ */
+export async function setCurrentUserPassword(password: string): Promise<SetPasswordResult> {
+  try {
+    await updateCurrentUserPassword(password);
+    return { status: 'ok' };
+  } catch (error) {
+    if (errorCode(error) === 'reauthentication_needed') {
+      return { status: 'necesita_codigo' };
+    }
+    throw new Error(authErrorMessage(error, 'No se pudo cambiar la contrasena.'), {
+      cause: error,
+    });
+  }
+}
+
+export async function requestPasswordChangeCode(): Promise<void> {
+  try {
+    await requestPasswordChangeNonce();
+  } catch (error) {
+    throw new Error(authErrorMessage(error, 'No se pudo enviar el codigo.'), { cause: error });
+  }
+}
+
+export async function confirmCurrentUserPassword(password: string, code: string): Promise<void> {
+  try {
+    await updateCurrentUserPasswordWithNonce(password, code.trim());
+  } catch (error) {
+    throw new Error(authErrorMessage(error, 'No se pudo cambiar la contrasena.'), {
+      cause: error,
+    });
+  }
 }

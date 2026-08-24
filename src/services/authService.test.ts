@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../repositories/authRepository', () => ({
   fetchCurrentSession: vi.fn(),
   fetchCurrentUserAuthProviders: vi.fn(),
+  fetchCurrentUserHasPassword: vi.fn(),
   persistOAuthSession: vi.fn(),
   persistGoogleCalendarConnection: vi.fn(),
   sendPasswordRecoveryOtp: vi.fn(),
@@ -14,13 +15,18 @@ vi.mock('../repositories/authRepository', () => ({
   signUpWithEmailPassword: vi.fn(),
   startGoogleOAuthFlow: vi.fn(),
   subscribeToAuthChanges: vi.fn(),
+  requestPasswordChangeNonce: vi.fn(),
   updateCurrentUserPassword: vi.fn(),
+  updateCurrentUserPasswordWithNonce: vi.fn(),
   verifyEmailOtp: vi.fn(),
 }));
 
 import * as repo from '../repositories/authRepository';
 import {
   beginEmailSignUp,
+  confirmCurrentUserPassword,
+  describeCurrentUserPassword,
+  setCurrentUserPassword,
   beginPasswordRecovery,
   completePasswordRecovery,
   confirmEmailSignUp,
@@ -148,6 +154,7 @@ describe('completePasswordRecovery', () => {
   it('cambia la contrasena de una cuenta con identidad propia', async () => {
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['email']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
     vi.mocked(repo.updateCurrentUserPassword).mockResolvedValue(undefined);
 
     await expect(
@@ -160,6 +167,7 @@ describe('completePasswordRecovery', () => {
   it('usa el tipo recovery, no signup, al canjear el codigo', async () => {
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['email']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
     vi.mocked(repo.updateCurrentUserPassword).mockResolvedValue(undefined);
 
     await completePasswordRecovery('ana@ejemplo.com', '123456', 'ContrasenaNueva1');
@@ -173,6 +181,7 @@ describe('completePasswordRecovery', () => {
   it('NO le pone contrasena a una cuenta que solo entra con Google', async () => {
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['google']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(false);
     vi.mocked(repo.signOutCurrentSession).mockResolvedValue(undefined);
 
     await expect(
@@ -185,6 +194,7 @@ describe('completePasswordRecovery', () => {
   it('ademas cierra la sesion que abrio el codigo en ese caso', async () => {
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['google']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(false);
     vi.mocked(repo.signOutCurrentSession).mockResolvedValue(undefined);
 
     await completePasswordRecovery('ana@ejemplo.com', '123456', 'ContrasenaNueva1');
@@ -196,6 +206,7 @@ describe('completePasswordRecovery', () => {
     // Caso real en produccion: una cuenta con google y email a la vez.
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['email', 'google']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
     vi.mocked(repo.updateCurrentUserPassword).mockResolvedValue(undefined);
 
     await expect(
@@ -228,6 +239,20 @@ describe('completePasswordRecovery', () => {
     ).rejects.toThrow();
 
     expect(repo.signOutCurrentSession).toHaveBeenCalled();
+  });
+
+  // Antes se rechazaba por "es de Google". Ahora se rechaza por no tener
+  // contrasena, que no es lo mismo: quien entro con Google y luego se puso una
+  // desde su perfil si puede recuperarla.
+  it('deja recuperar a un usuario de Google que ya se puso contrasena', async () => {
+    vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
+    vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['google']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
+    vi.mocked(repo.updateCurrentUserPassword).mockResolvedValue(undefined);
+
+    await expect(
+      completePasswordRecovery('ana@ejemplo.com', '12345678', 'ContrasenaNueva1')
+    ).resolves.toEqual({ status: 'ok' });
   });
 
   it('no cambia nada si el codigo es incorrecto', async () => {
@@ -322,6 +347,7 @@ describe('traduccion de errores', () => {
   it('traduce la contrasena repetida al cambiarla', async () => {
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['email']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
     vi.mocked(repo.updateCurrentUserPassword).mockRejectedValue(supabaseError('same_password'));
 
     await expect(
@@ -350,10 +376,99 @@ describe('normalizacion del correo', () => {
   it('el cambio de contrasena tambien', async () => {
     vi.mocked(repo.verifyEmailOtp).mockResolvedValue({} as never);
     vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['email']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
     vi.mocked(repo.updateCurrentUserPassword).mockResolvedValue(undefined);
 
     await completePasswordRecovery('  ana@ejemplo.com  ', '123456', 'ContrasenaNueva1');
 
     expect(repo.verifyEmailOtp).toHaveBeenCalledWith('ana@ejemplo.com', '123456', 'recovery');
+  });
+});
+
+
+describe('describeCurrentUserPassword', () => {
+  it('sabe que una cuenta de Google sin contrasena no la tiene', async () => {
+    vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['google']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(false);
+
+    await expect(describeCurrentUserPassword()).resolves.toEqual({
+      tienePassword: false,
+      usaGoogle: true,
+    });
+  });
+
+  // El caso que la version anterior fallaba: poner una contrasena NO crea
+  // identidad de correo, asi que deducirlo de las identidades daba false para
+  // siempre y el perfil seguia ofreciendo "anadir contrasena".
+  it('detecta la contrasena de un usuario de Google que se puso una', async () => {
+    vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['google']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(true);
+
+    await expect(describeCurrentUserPassword()).resolves.toEqual({
+      tienePassword: true,
+      usaGoogle: true,
+    });
+  });
+
+  // Y el simetrico: una identidad de correo puede existir sin contrasena.
+  it('no se cree que hay contrasena solo porque exista identidad de correo', async () => {
+    vi.mocked(repo.fetchCurrentUserAuthProviders).mockResolvedValue(['email']);
+    vi.mocked(repo.fetchCurrentUserHasPassword).mockResolvedValue(false);
+
+    await expect(describeCurrentUserPassword()).resolves.toEqual({
+      tienePassword: false,
+      usaGoogle: false,
+    });
+  });
+});
+
+describe('setCurrentUserPassword', () => {
+  it('cambia la contrasena directamente si la sesion es reciente', async () => {
+    vi.mocked(repo.updateCurrentUserPassword).mockResolvedValue(undefined);
+
+    await expect(setCurrentUserPassword('ContrasenaNueva1')).resolves.toEqual({ status: 'ok' });
+  });
+
+  // GoTrue considera reciente una sesion de menos de 24 horas. Pasado ese plazo
+  // exige demostrar otra vez quien eres antes de tocar la credencial.
+  it('pide codigo cuando el servidor exige reautenticacion', async () => {
+    vi.mocked(repo.updateCurrentUserPassword).mockRejectedValue(
+      supabaseError('reauthentication_needed')
+    );
+
+    await expect(setCurrentUserPassword('ContrasenaNueva1')).resolves.toEqual({
+      status: 'necesita_codigo',
+    });
+  });
+
+  it('traduce la contrasena repetida', async () => {
+    vi.mocked(repo.updateCurrentUserPassword).mockRejectedValue(supabaseError('same_password'));
+
+    await expect(setCurrentUserPassword('ContrasenaNueva1')).rejects.toThrow(
+      'La contrasena nueva es igual a la anterior.'
+    );
+  });
+});
+
+describe('confirmCurrentUserPassword', () => {
+  it('manda el codigo como nonce, recortado', async () => {
+    vi.mocked(repo.updateCurrentUserPasswordWithNonce).mockResolvedValue(undefined);
+
+    await confirmCurrentUserPassword('ContrasenaNueva1', '  12345678  ');
+
+    expect(repo.updateCurrentUserPasswordWithNonce).toHaveBeenCalledWith(
+      'ContrasenaNueva1',
+      '12345678'
+    );
+  });
+
+  it('avisa si el codigo no vale', async () => {
+    vi.mocked(repo.updateCurrentUserPasswordWithNonce).mockRejectedValue(
+      supabaseError('reauthentication_not_valid')
+    );
+
+    await expect(
+      confirmCurrentUserPassword('ContrasenaNueva1', '12345678')
+    ).rejects.toThrow('No se pudo cambiar la contrasena.');
   });
 });

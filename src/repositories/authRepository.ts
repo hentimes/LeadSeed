@@ -245,3 +245,58 @@ export async function fetchCurrentUserAuthProviders(): Promise<string[]> {
 
   return Array.isArray(data) ? (data as string[]) : [];
 }
+
+// ---------------------------------------------------------------------------
+// Poner o cambiar la contrasena desde dentro de la aplicacion
+// ---------------------------------------------------------------------------
+//
+// Esta es la unica via por la que una cuenta creada con Google puede llegar a
+// tener contrasena, y funciona porque el usuario YA entro: no hay nada que
+// suplantar. Hacerlo desde "olvide mi contrasena" seria lo contrario, una puerta
+// lateral al login de Google, y por eso alli se rechaza.
+
+/**
+ * Si el usuario actual tiene contrasena propia.
+ *
+ * Va aparte de `fetchCurrentUserAuthProviders` porque son dos preguntas
+ * distintas que hasta la migracion 114 se respondian con el mismo dato, mal:
+ * `auth.identities` dice COMO entra, no SI tiene contrasena. Una identidad de
+ * correo puede existir sin contrasena, y poner una contrasena no crea identidad.
+ */
+export async function fetchCurrentUserHasPassword(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('current_user_has_password');
+
+  if (error) {
+    throw error;
+  }
+
+  return data === true;
+}
+
+/**
+ * Pide el codigo de reautenticacion, que llega por correo.
+ *
+ * Hace falta cuando el proyecto tiene activado el cambio seguro de contrasena y
+ * la sesion NO es reciente. GoTrue considera reciente una sesion creada en las
+ * ultimas 24 horas; pasadas esas horas exige demostrar otra vez que eres tu
+ * antes de dejarte tocar la contrasena.
+ */
+export async function requestPasswordChangeNonce(): Promise<void> {
+  const { error } = await supabase.auth.reauthenticate();
+
+  if (error) {
+    throw error;
+  }
+}
+
+/** Cambia la contrasena aportando el codigo de reautenticacion. */
+export async function updateCurrentUserPasswordWithNonce(
+  password: string,
+  nonce: string
+): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password, nonce });
+
+  if (error) {
+    throw error;
+  }
+}
