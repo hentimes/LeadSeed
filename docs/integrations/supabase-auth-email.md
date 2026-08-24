@@ -11,22 +11,32 @@ Management API con un token personal `sbp_...` de la cuenta.
 
 ## Lo que queda pendiente
 
-### 1. SMTP propio — es el bloqueante real
+### 1. Apuntar el SMTP del Auth a Resend
 
-`Project Settings → Authentication → SMTP Settings`.
+**No hay que contratar nada.** El proyecto ya envía por Resend, con el dominio
+`planespro.cl` verificado: lo usan los avisos de citas y los canales de correo de
+los usuarios (`supabase/functions/_shared/emailChannels.ts`). Sólo falta que el
+Auth mire al mismo sitio.
 
-Sin esto no funciona el flujo, y por dos razones encadenadas:
+`Project Settings → Authentication → SMTP Settings`:
 
-- El correo por defecto de Supabase entrega unos pocos mensajes por hora. No es
-  un proveedor de producción.
-- **Y mientras se use, Supabase no deja modificar las plantillas.** La Management
-  API responde literalmente: *"Email template modification is not available for
-  free tier projects using the default email provider"*.
+| Campo | Valor |
+|---|---|
+| Sender email | `notificaciones@planespro.cl` |
+| Sender name | `LeadSeed` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | una API key de Resend con permiso de envío |
 
-Es decir, SMTP propio desbloquea el punto 2, que es el que hace que el flujo
-funcione. Con Resend, Postmark o similar, y configurando SPF, DKIM y DMARC en el
-DNS del dominio: sin eso los códigos acaban en spam, que desde fuera es
-indistinguible de que el flujo esté roto.
+Conviene una key nueva y de sólo envío para esto, en vez de reutilizar la del
+resto del proyecto: si algo pasa se revoca sin tocar los correos de citas.
+
+Esto importa por dos razones encadenadas. El correo por defecto de Supabase
+entrega unos pocos mensajes por hora, y **mientras se use, Supabase no deja
+modificar las plantillas**: la Management API responde *"Email template
+modification is not available for free tier projects using the default email
+provider"*. Es decir, este paso desbloquea el siguiente.
 
 ### 2. Plantillas de correo — después del SMTP
 
@@ -41,15 +51,12 @@ No es estética. En una extensión no existe URL que un correo pueda enlazar:
 [`src/lib/supabaseClient.ts`](../../src/lib/supabaseClient.ts) arranca con
 `detectSessionInUrl: false`, así que un enlace no haría nada aunque llegase.
 
-Cuerpo mínimo:
+El contenido está listo para copiar y pegar:
 
-```
-Tu codigo para entrar en LeadSeed es:
-
-{{ .Token }}
-
-Caduca en 5 minutos. Si no fuiste tu, ignora este correo.
-```
+- [`supabase/templates/confirmacion.html`](../../supabase/templates/confirmacion.html)
+  — asunto sugerido: *Tu codigo para confirmar la cuenta*
+- [`supabase/templates/recuperacion.html`](../../supabase/templates/recuperacion.html)
+  — asunto sugerido: *Tu codigo para cambiar la contrasena*
 
 ### 3. Protección de contraseñas filtradas — requiere plan Pro
 
