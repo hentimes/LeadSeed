@@ -1,135 +1,145 @@
-# Alta y login con correo: lo que hay que tocar en el panel de Supabase
+# Alta y login con correo: estado de la configuración de Auth
 
-El código y las migraciones ya están. Esto es lo que **no** se puede hacer desde el
-repositorio, porque la configuración de Auth vive en la plataforma y no en la base
-de datos: el `service_role` key no da acceso a estos ajustes, sólo el panel o la
-Management API con un token personal.
+El código y las migraciones están hechos. Este documento dice qué quedó aplicado
+en el proyecto de producción y qué falta, con el porqué de cada cosa.
 
-Hasta que estos pasos estén hechos, **el flujo no funciona de punta a punta**.
+La configuración de Auth **no vive en la base de datos**: ni el `service_role` key
+ni la contraseña de Postgres llegan a ella. Se toca por el panel o por la
+Management API con un token personal `sbp_...` de la cuenta.
 
-## 1. Plantillas de correo (bloqueante)
+---
+
+## Lo que queda pendiente
+
+### 1. SMTP propio — es el bloqueante real
+
+`Project Settings → Authentication → SMTP Settings`.
+
+Sin esto no funciona el flujo, y por dos razones encadenadas:
+
+- El correo por defecto de Supabase entrega unos pocos mensajes por hora. No es
+  un proveedor de producción.
+- **Y mientras se use, Supabase no deja modificar las plantillas.** La Management
+  API responde literalmente: *"Email template modification is not available for
+  free tier projects using the default email provider"*.
+
+Es decir, SMTP propio desbloquea el punto 2, que es el que hace que el flujo
+funcione. Con Resend, Postmark o similar, y configurando SPF, DKIM y DMARC en el
+DNS del dominio: sin eso los códigos acaban en spam, que desde fuera es
+indistinguible de que el flujo esté roto.
+
+### 2. Plantillas de correo — después del SMTP
 
 `Authentication → Emails`, plantillas **Confirm signup** y **Reset password**.
 
-Ambas usan `{{ .ConfirmationURL }}` por defecto, es decir mandan un enlace. Hay que
-cambiarlas para que manden `{{ .Token }}`, el código numérico (hoy de ocho
-dígitos; ver más abajo).
+Hoy las dos usan `{{ .ConfirmationURL }}`, o sea mandan un enlace. Tienen que
+mandar `{{ .Token }}`, el código numérico.
 
-No es una preferencia estética. En una extensión no existe URL que un correo pueda
-enlazar: `chrome-extension://` no es clicable desde el buzón, y el dominio de
+No es estética. En una extensión no existe URL que un correo pueda enlazar:
+`chrome-extension://` no es clicable desde el buzón, y el dominio de
 `chrome.identity` sólo intercepta un flujo que la propia extensión abrió. Además
 [`src/lib/supabaseClient.ts`](../../src/lib/supabaseClient.ts) arranca con
 `detectSessionInUrl: false`, así que un enlace no haría nada aunque llegase.
 
-Sugerencia de cuerpo:
+Cuerpo mínimo:
 
 ```
-Tu código para entrar en LeadSeed es:
+Tu codigo para entrar en LeadSeed es:
 
 {{ .Token }}
 
 Caduca en 5 minutos. Si no fuiste tu, ignora este correo.
 ```
 
-## 2. Política de contraseñas
+### 3. Protección de contraseñas filtradas — requiere plan Pro
 
-`Authentication → Policies`.
+`password_hibp_enabled` comprueba contra Have I Been Pwned por k-anonimato.
+La Management API lo rechaza en el plan actual: *"available on Pro Plans and up"*.
+Queda pendiente de que el proyecto suba de plan.
 
-| Ajuste | Valor | Por qué |
-|---|---|---|
-| Minimum password length | **10** | Estaba en 6. El código valida 10 en `src/utils/authValidation.ts`; si el servidor acepta menos, el desajuste no abre un agujero pero produce el peor síntoma posible: un formulario que rechaza lo que el backend aceptaría. |
-| Password requirements | **Lowercase, uppercase, digits** | Sin símbolos a propósito: sin medidor de fuerza a la vista, exigirlos empuja a la contraseña-post-it. |
-| Leaked password protection | **Activado** | Comprueba contra Have I Been Pwned por k-anonimato. Sólo existe en el panel, no en `config.toml`. |
+### 4. CAPTCHA — requiere una clave de Cloudflare
 
-## 3. Caducidad del código y frecuencia de envío
+`Authentication → Settings → Bot and Abuse Protection`, proveedor **Turnstile**.
+Hace falta crear el widget en Cloudflare y traer su *secret key*; con eso se
+activa en un minuto.
 
-`Authentication → Providers → Email`.
+Sin CAPTCHA, el envío de códigos es un endpoint público sin autenticar: se puede
+usar para spamear buzones ajenos a costa del proyecto y manchar la reputación del
+dominio.
 
-- **OTP expiry: 300 segundos.** Estaba en 3600. Una hora es demasiado para un
-  código numérico corto: Supabase limita los intentos **por IP, no por cuenta**,
-  así que la ventana era el único freno real contra un atacante que rote
-  direcciones.
-- **Minimum interval between emails: 60 segundos.** Estaba en 1s, que no frena
-  nada y permite quemar la cuota de SMTP. Los 60s son los que ya asume el
-  contador del botón "Reenviar" en la interfaz.
+---
 
-## 4. CAPTCHA
+## Lo que quedó aplicado
 
-`Authentication → Settings → Bot and Abuse Protection`. Activar **Turnstile**
-(gratuito, y menos molesto que hCaptcha) sobre el alta y la solicitud de código.
+Por la Management API, con PATCH quirúrgicos que sólo tocaron los campos
+nombrados. Verificado leyendo la configuración después.
 
-Sin esto, el envío de correos es un endpoint público sin autenticar: se puede
-usar para spamear buzones ajenos a tu costa y manchar la reputación de tu dominio.
+| Ajuste | Antes | Ahora | Por qué |
+|---|---|---|---|
+| `mailer_otp_exp` | 3600 | **300** | Una hora era demasiado. Supabase limita los intentos **por IP, no por cuenta**, así que la caducidad era el único freno real contra quien rote direcciones. |
+| `password_min_length` | 6 | **10** | 6 es indefendible para una cuenta que da acceso a leads, chat y comunidad. |
+| `password_required_characters` | ninguno | **minúscula + mayúscula + dígito** | Sin símbolos a propósito: sin medidor de fuerza a la vista, exigirlos empuja a la contraseña-post-it. |
+| `security_update_password_require_reauthentication` | false | **true** | Exige sesión reciente para cambiar la contraseña. Corta el cambio desde una sesión robada y vieja. |
 
-## 5. SMTP propio
+Migraciones 110 a 113, aplicadas: `is_current_user_confirmed()` y diez políticas
+de escritura de contenido visible por terceros —chat, comunidad, mensajes
+directos, adjuntos, reportes y edición de posts— que ahora exigen correo
+confirmado. Más el RPC `current_user_auth_providers()`, que lee `auth.uid()` en
+vez de aceptar un correo, para no ser un oráculo de enumeración.
 
-`Project Settings → Authentication → SMTP Settings`.
+## Lo que NO se tocó, y conviene que siga así
 
-El SMTP por defecto de Supabase entrega unos pocos correos por hora y no está
-pensado para producción. Con Resend, Postmark o similar, configurar además SPF,
-DKIM y DMARC en el DNS del dominio; sin eso los códigos acaban en spam, que es
-indistinguible de que el flujo esté roto.
-
-## 6. URLs
-
-`Authentication → URL Configuration`. `Site URL` y `Redirect URLs` apuntaban a
-`http://127.0.0.1:3000`. Poner los dominios reales antes de publicar.
+- **`site_url`** ya apuntaba a `https://blphejkibijeolonnebffpclhlghofnn.chromiumapp.org`,
+  el redirect de la extensión. El `127.0.0.1:3000` que aparece en `config.toml` es
+  la plantilla por defecto, no el estado real.
+- **`mailer_otp_length` sigue en 8.** Ver más abajo.
+- **`external_google_enabled` sigue en `true`.**
 
 ---
 
 ## Comprobado contra el servidor real
 
-Se recorrio el flujo entero de recuperacion sin enviar correo, usando
-`admin/generate_link`, con un usuario desechable que se borro despues. Salio bien
-de punta a punta: el trigger rellena `full_name` desde los metadatos, `plan_id`
-nace nulo y cae al onboarding, el RPC `current_user_auth_providers` devuelve
-`["email"]` con un JWT real y **rechaza a `anon` con 401**, el codigo se canjea,
-la contrasena cambia, la nueva funciona y la vieja deja de servir.
+Se recorrió el flujo entero de recuperación sin enviar ningún correo, usando
+`admin/generate_link` con un usuario desechable que se borró después. Diez pasos,
+todos correctos: el trigger rellena `full_name` desde los metadatos, `plan_id`
+nace nulo y cae al onboarding, el RPC devuelve `["email"]` con un JWT real y
+**rechaza a `anon` con 401**, el código se canjea, la contraseña cambia, la nueva
+funciona y la vieja deja de servir.
 
-Esa prueba destapo un fallo que ningun test unitario podia ver: **produccion
-emite codigos de OCHO digitos**, no de seis como declaraba `config.toml`. El
-campo del formulario los recortaba a seis y la verificacion habria fallado
-siempre. El cliente acepta ahora de 6 a 10 digitos y `otp_length` se puso en 8
-para que coincida con la realidad.
+Se repitió **después** de activar `security_update_password_require_reauthentication`,
+que era el riesgo que quedaba sin verificar: `updateUser` acepta el cambio con la
+sesión que emite `verifyOtp`, porque es un login recién hecho. La bandera es
+segura y se queda activada.
 
-## Prueba de humo que queda pendiente
+Esa prueba destapó además un fallo que ningún test unitario podía ver:
+**el proyecto emite códigos de OCHO dígitos** (`mailer_otp_length: 8`), no de seis
+como declaraba `config.toml`. El campo del formulario los recortaba a seis y la
+verificación habría fallado siempre; los tests no lo notaban porque todos usaban
+un `'123456'` inventado, que casaba con la suposición equivocada en vez de con el
+servidor. El cliente acepta ahora de 6 a 10 dígitos, así que no se rompe si algún
+día se cambia el ajuste.
 
-El flujo ya se probo entero, pero con la configuracion ACTUAL de produccion.
-`supabase/config.toml` quedó con `secure_password_change = true`, que exige sesión
-reciente para cambiar la contraseña. El razonamiento es que la sesión que emite
-`verifyOtp` es nueva y por tanto pasa la comprobación, pero **eso no está
-verificado contra el servidor**: es lógica interna de GoTrue y no se puede
-comprobar leyendo código ni consultando la base de datos.
+---
 
-Como esa bandera todavia no esta aplicada en produccion, la prueba de humo no la
-ejercito. Hay que repetirla DESPUES de aplicar la configuracion: pedir código →
-verificarlo → cambiar contraseña. Si `updateUser` devuelve un error de
-reautenticación, poner `secure_password_change = false`. Es una
-bandera aislada; revertirla no afecta a ninguna otra protección.
+## Avisos
 
 **NO uses `supabase config push`.** El `config.toml` no declara ningún bloque
 `[auth.external.google]`, así que un push enviaría Google como desactivado y
-**tumbaría el login que ya funciona**. El comando no tiene modo simulación. Si
-algún día quieres usarlo, primero hay que declarar en el archivo todos los
-proveedores externos con su estado real y sus secretos.
+**tumbaría el login que ya funciona**. Tampoco tiene modo simulación. Si algún día
+quieres usarlo, primero hay que declarar en el archivo todos los proveedores
+externos con su estado real y sus secretos, y revisar `site_url`, que en el
+archivo sigue apuntando a localhost.
 
-**Ojo con `config.toml`:** ese archivo tenía `enable_confirmations = false` (la
-plantilla por defecto). En producción la confirmación ya estaba activa, pero un
-`supabase config push` la habría desactivado, dejando entrar correos sin verificar
-al chat y a la comunidad. Ya está corregido a `true`; no volver a bajarlo.
-
-## Lo que sí quedó hecho
-
-- Migraciones 110 a 113, aplicadas en producción: `is_current_user_confirmed()` y
-  diez políticas de escritura que ahora exigen correo confirmado, más el RPC
-  `current_user_auth_providers()`.
-- Toda la capa de código: repositorio, servicio, hook, componentes y la pantalla.
-- `supabase/config.toml` alineado con lo que hay que poner en el panel.
+**`enable_confirmations`** estaba en `false` en `config.toml` por ser la plantilla
+por defecto. En producción la confirmación ya estaba activa (`mailer_autoconfirm:
+false`), pero un push la habría desactivado, dejando entrar correos sin verificar
+al chat y a la comunidad. Ya está corregido a `true` en el archivo; no volver a
+bajarlo.
 
 ## Deuda conocida
 
-Supabase no limita los intentos de código **por cuenta**, sólo por IP. Un atacante
-que rote direcciones no tiene techo real. Se mitigó bajando la caducidad a cinco
-minutos y con Turnstile, y se decidió aplazar la solución completa: una Edge
-Function que envuelva `verifyOtp` y cuente fallos por correo con bloqueo temporal.
-Revisar si aparece abuso.
+Supabase no limita los intentos de código **por cuenta**, sólo por IP. Quien rote
+direcciones no tiene techo real. Se mitigó bajando la caducidad a cinco minutos, y
+se decidió aplazar la solución completa: una Edge Function que envuelva
+`verifyOtp` y cuente fallos por correo con bloqueo temporal. Revisar si aparece
+abuso. El CAPTCHA del punto 4 cubre la otra mitad del problema, el envío masivo.
