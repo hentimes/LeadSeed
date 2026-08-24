@@ -96,7 +96,30 @@ export function insertMention(
   query: MentionQuery,
   mention: Mention
 ): { text: string; cursor: number } {
-  const display = `@${mention.label} `;
+  return replaceQuery(text, query, `@${mention.label} `);
+}
+
+/**
+ * Inserta un comando (`@limpiar`) en lugar de una mencion.
+ *
+ * Se distingue de `insertMention` en que el resultado es texto tal cual: un
+ * comando no apunta a ningun registro, no se registra como mencion resuelta y
+ * por tanto `serializeFromDisplay` no lo toca. Lo lee `ChatRoom`, que compara
+ * el texto del borrador con cada gatillo.
+ */
+export function insertCommand(
+  text: string,
+  query: MentionQuery,
+  name: string
+): { text: string; cursor: number } {
+  return replaceQuery(text, query, `@${name} `);
+}
+
+function replaceQuery(
+  text: string,
+  query: MentionQuery,
+  display: string
+): { text: string; cursor: number } {
   const next = text.slice(0, query.start) + display + text.slice(query.end);
 
   return { text: next, cursor: query.start + display.length };

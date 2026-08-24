@@ -3,6 +3,7 @@ import { useChat } from '../../hooks/useChat';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnlineDirectory } from '../../hooks/useOnlineDirectory';
 import { useMentionAutocomplete } from '../../hooks/useMentionAutocomplete';
+import { CHAT_COMMAND_SUGGESTIONS } from '../../config/chatCommands';
 import { usePostMentionSuggestions } from '../../hooks/usePostMentionSuggestions';
 import type { Mention } from '../../types/mentions';
 import type { ChatMessage, DmSession } from '../../types';
@@ -90,6 +91,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     text: inputText,
     excludeUserId: user?.id,
     extraSuggestions: postSuggestions,
+    commands: isStaff ? CHAT_COMMAND_SUGGESTIONS : undefined,
     onTextChange: (text, cursor) => {
       setInputText(text);
       // El cursor debe reposicionarse despues de que React pinte el valor nuevo.

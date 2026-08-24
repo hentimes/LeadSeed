@@ -224,10 +224,11 @@ export default function ChatComposer({
             mentions.syncFromInput(target.value, target.selectionStart ?? target.value.length);
           }}
           onBlur={() => setTimeout(mentions.close, 150)}
-          placeholder={
+          placeholder="Escribe tu mensaje..."
+          title={
             isStaff
-              ? 'Escribe tu mensaje... usa @ para mencionar o "@todos" al inicio para anunciar'
-              : 'Escribe tu mensaje... usa @ para mencionar'
+              ? 'Usa @ para mencionar, o "@todos" al inicio para anunciar'
+              : 'Usa @ para mencionar'
           }
           className="flex-1 resize-none bg-transparent border-none p-2 text-[14px] text-ink focus:ring-0 focus:outline-none max-h-32 min-h-[40px] leading-relaxed placeholder:text-ink-muted"
           rows={1}

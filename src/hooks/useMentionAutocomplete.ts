@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   detectMentionQuery,
+  insertCommand,
   insertMention,
   serializeFromDisplay,
   type MentionQuery,
@@ -17,6 +18,12 @@ interface UseMentionAutocompleteOptions {
   excludeUserId?: string;
   /** Sugerencias adicionales (ej. publicaciones del foro) ya filtradas. */
   extraSuggestions?: MentionSuggestion[];
+  /**
+   * Comandos de moderacion, para quien pueda usarlos. Se filtran por lo que se
+   * lleve escrito y solo aparecen si el `@` abre el mensaje, que es la unica
+   * posicion donde el chat los interpreta.
+   */
+  commands?: MentionSuggestion[];
 }
 
 export function useMentionAutocomplete({
@@ -24,6 +31,7 @@ export function useMentionAutocomplete({
   onTextChange,
   excludeUserId,
   extraSuggestions = [],
+  commands = [],
 }: UseMentionAutocompleteOptions) {
   const [query, setQuery] = useState<MentionQuery | null>(null);
   const [highlighted, setHighlighted] = useState(0);
@@ -36,6 +44,13 @@ export function useMentionAutocomplete({
   const suggestions = useMemo<MentionSuggestion[]>(() => {
     if (!query) return [];
 
+    const commandSuggestions =
+      query.start === 0
+        ? commands.filter((command) =>
+            command.label.toLowerCase().startsWith(query.term.toLowerCase()),
+          )
+        : [];
+
     const userSuggestions: MentionSuggestion[] = users
       .filter((user) => user.id !== excludeUserId)
       .map((user) => ({
@@ -46,8 +61,13 @@ export function useMentionAutocomplete({
         avatarUrl: avatarFor(user),
       }));
 
-    return [...userSuggestions, ...extraSuggestions].slice(0, MAX_SUGGESTIONS);
-  }, [query, users, excludeUserId, extraSuggestions]);
+    // Los comandos van delante: cuando alguien de staff abre el mensaje con
+    // una arroba, casi siempre es para moderar, no para mencionarse a nadie.
+    return [...commandSuggestions, ...userSuggestions, ...extraSuggestions].slice(
+      0,
+      MAX_SUGGESTIONS,
+    );
+  }, [query, users, excludeUserId, extraSuggestions, commands]);
 
   const isOpen = query !== null && suggestions.length > 0;
 
@@ -62,6 +82,15 @@ export function useMentionAutocomplete({
   const select = useCallback(
     (suggestion: MentionSuggestion) => {
       if (!query) return;
+
+      // Un comando es texto y nada mas: no se guarda como mencion resuelta
+      // porque no hay identificador que recuperar al enviar.
+      if (suggestion.kind === 'command') {
+        const resultado = insertCommand(text, query, suggestion.label);
+        onTextChange(resultado.text, resultado.cursor);
+        setQuery(null);
+        return;
+      }
 
       const mention: Mention = {
         kind: suggestion.kind,

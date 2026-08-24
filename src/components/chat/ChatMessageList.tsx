@@ -131,7 +131,7 @@ export default function ChatMessageList({
       }
 
       return (
-        <div key={msg.id} className={`flex gap-2 group items-start ${isOwn ? 'flex-row-reverse' : ''}`}>
+        <div key={msg.id} className={`relative flex gap-2 group items-start ${isOwn ? 'flex-row-reverse' : ''}`}>
           {!isOwn && (
             <div className="relative flex-shrink-0">
               <button
@@ -183,21 +183,21 @@ export default function ChatMessageList({
 
           <div className={`flex flex-col min-w-0 max-w-[85%] ${isOwn ? 'items-end' : 'items-start'}`}>
             {!isOwn && (
-              <div className="flex items-center gap-2 h-8 mb-1">
+              <div className="mb-1 flex h-8 min-w-0 max-w-full items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setAuthorMenuFor(authorMenuFor === msg.id ? null : msg.id)}
-                  className="font-medium text-sm text-ink dark:text-gray-200 hover:text-primary transition-colors"
+                  className="truncate font-medium text-sm text-ink dark:text-gray-200 hover:text-primary transition-colors"
                 >
                   {msg.user_profile?.full_name || 'Usuario'}
                 </button>
-                <span className="text-[10px] text-ink-muted font-medium">
+                <span className="shrink-0 text-[10px] text-ink-muted font-medium">
                   {formatearHora(msg.created_at)}
                 </span>
               </div>
             )}
 
-            <div className={`relative min-w-0 max-w-full px-4 py-2.5 text-[13px] sm:text-sm break-words break-all shadow-sm
+            <div className={`relative min-w-0 max-w-full px-4 py-2.5 text-[13px] sm:text-sm break-words [overflow-wrap:anywhere] shadow-sm
               ${isOwn 
                 ? 'bg-primary-soft text-ink rounded-2xl rounded-tr-sm' 
                 : 'bg-surface text-ink rounded-2xl rounded-tl-sm border border-line dark:border-gray-700'
@@ -254,9 +254,14 @@ export default function ChatMessageList({
           
           {/* Acciones del mensaje: un mensaje ya eliminado no tiene mas
               nada que hacerle -- guardarlo, destacarlo o responderle a un
-              aviso vacio no tiene sentido. */}
+              aviso vacio no tiene sentido.
+
+              Flotan sobre la esquina en vez de ocupar sitio en la fila: cinco
+              botones son unos 140px que la fila reservaba aunque estuvieran
+              invisibles, y en un panel de 320px eso se lo quitaba a la
+              burbuja, que acababa partiendo el texto a una letra por linea. */}
           {!msg.deleted_at && (
-          <div className={`relative opacity-0 group-hover:opacity-100 transition-opacity flex items-center ${isOwn ? 'mr-auto' : 'ml-auto'}`}>
+          <div className={`absolute top-0 z-10 flex items-center rounded-full border border-line bg-surface/95 shadow-sm opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-gray-700 ${isOwn ? 'left-0' : 'right-0'}`}>
             <button
               onClick={() => void handleToggleSaved(msg)}
               className={`p-1.5 rounded-full hover:bg-surface-hover transition-colors ${
