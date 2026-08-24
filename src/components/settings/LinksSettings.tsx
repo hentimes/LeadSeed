@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { listFormTypes } from '../../services/captureLinksService';
 import type { FormType } from '../../types';
-import FormTypeLinksSection from './FormTypeLinksSection';
+import FormTypeLinksSection from './links/FormTypeLinksSection';
 import FormTypeRegistryForm from './FormTypeRegistryForm';
 import { getErrorMessage } from '../../utils/errorMessage';
 
@@ -47,7 +47,7 @@ export default function LinksSettings() {
   const visibleTypes = formTypes.filter((type) => type.isActive && (!type.linksAdminOnly || isAdmin));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {visibleTypes.length === 0 && (
         <p className="text-sm text-ink-muted py-6">No hay tipos de formulario disponibles todavia.</p>
       )}
