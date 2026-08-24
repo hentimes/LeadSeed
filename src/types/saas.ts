@@ -32,6 +32,8 @@ export interface Profile {
 
   // Comunidad y Gamificación
   bio?: string;
+  /** Empresa donde trabaja. Texto libre, ver migracion 115. */
+  company?: string;
   show_premium_frame?: boolean;
   is_invisible?: boolean;
   badges?: string[];

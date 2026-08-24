@@ -1,154 +1,328 @@
 /**
- * Ajustes de la cuenta: como entras y con que contrasena.
+ * Ajustes de la cuenta: tus datos y como entras.
  *
- * Vive en Ajustes y no en el modal de perfil, aunque el primer intento fue ese.
- * La diferencia no es de sitio, es de naturaleza: el perfil es como te ven los
- * demas -nombre, avatar, biografia, marco premium- y esto es como entras tu. Una
- * credencial no es decoracion, y encima quedaba enterrada al final de un modal
- * con scroll, que es donde nadie la busca.
+ * El reparto con el modal de Perfil no es de sitio, es de naturaleza. El perfil
+ * es como te ven los demas y se limita a mostrarlo; aqui se edita. Antes estaba
+ * al reves -se editaba en un modal titulado "Editar Perfil" y la contrasena
+ * colgaba al final del mismo- y eso mezclaba dos cosas que no se parecen: la
+ * biografia es presentacion, la contrasena es acceso.
+ *
+ * La contrasena no tiene formulario propio a la vista. Es una linea de estado
+ * con un enlace, y el formulario vive en un dialogo: cambiarla es una tarea con
+ * principio y fin, no un ajuste que se toquetea de paso, y tenerla desplegada
+ * ocupaba media pantalla para algo que se hace dos veces en la vida.
  */
 
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { AuthBanner, AuthPrimaryButton, AuthTextField, OtpCodeInput } from '../auth/AuthControls';
 import { useAccountPassword } from '../../hooks/useAccountPassword';
-import { MIN_PASSWORD_LENGTH } from '../../utils/authValidation';
+import { changeAvatar, saveProfileFields } from '../../services/profileService';
+import { getErrorMessage } from '../../utils/errorMessage';
+import PasswordDialog from './PasswordDialog';
+
+const MAX_BIO = 140;
 
 export default function AccountSettings() {
-  const { user } = useAuth();
+  const { profile, user, refreshProfile, hasFeature, isAdmin } = useAuth();
   const cuenta = useAccountPassword();
-  const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
 
-  const esAlta = cuenta.tienePassword === false;
-  const esDesconocido = cuenta.tienePassword === null;
+  /**
+   * null significa "sin tocar": se muestra lo que diga el perfil.
+   *
+   * Copiar el perfil al estado con un efecto era lo primero que hice, y provoca
+   * renders en cascada -el propio ESLint del repo lo marca-. Derivando el valor
+   * no hay nada que sincronizar: si el perfil cambia por debajo, lo que se ve
+   * cambia solo, salvo que el usuario ya estuviera escribiendo.
+   */
+  const [bioEditada, setBioEditada] = useState<string | null>(null);
+  const [companyEditada, setCompanyEditada] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [aviso, setAviso] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  const [dialogoAbierto, setDialogoAbierto] = useState(false);
+  const [subiendoAvatar, setSubiendoAvatar] = useState(false);
+  const ficheroRef = useRef<HTMLInputElement>(null);
 
-  const titulo = esDesconocido
-    ? 'Contraseña de la cuenta'
-    : esAlta
-      ? 'Añadir una contraseña'
-      : 'Cambiar la contraseña';
+  const esPro = hasFeature('premium_aesthetics') || isAdmin;
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
-  const textoBoton = esDesconocido
-    ? 'Guardar contraseña'
-    : esAlta
-      ? 'Añadir contraseña'
-      : 'Cambiar contraseña';
+  const subirAvatar = async (evento: ChangeEvent<HTMLInputElement>) => {
+    const fichero = evento.target.files?.[0];
+    if (!fichero || !user) return;
 
-  const enviarPassword = (event: FormEvent) => {
-    event.preventDefault();
-    void cuenta.submitPassword(password).then(() => setPassword(''));
+    setSubiendoAvatar(true);
+    setAviso(null);
+    try {
+      await changeAvatar(user.id, fichero);
+      await refreshProfile();
+      setAviso({ tone: 'ok', text: 'Foto actualizada.' });
+      setTimeout(() => setAviso(null), 2500);
+    } catch (error) {
+      setAviso({ tone: 'error', text: getErrorMessage(error, 'No se pudo subir la foto.') });
+    } finally {
+      setSubiendoAvatar(false);
+      // Se limpia para que volver a elegir el MISMO fichero dispare el evento.
+      if (ficheroRef.current) ficheroRef.current.value = '';
+    }
   };
 
-  const enviarCodigo = (event: FormEvent) => {
-    event.preventDefault();
-    void cuenta.submitCode(code).then(() => setCode(''));
+  /** Los interruptores de comunidad se guardan solos, sin boton. */
+  const alternar = async (campo: 'show_premium_frame' | 'is_invisible', valor: boolean) => {
+    if (!user) return;
+    try {
+      await saveProfileFields(user.id, { [campo]: valor });
+      await refreshProfile();
+    } catch (error) {
+      setAviso({ tone: 'error', text: getErrorMessage(error, 'No se pudo guardar.') });
+    }
   };
+
+  const bioGuardada = profile?.bio || '';
+  const companyGuardada = profile?.company || '';
+  const bio = bioEditada ?? bioGuardada;
+  const company = companyEditada ?? companyGuardada;
+  const sucio = bio !== bioGuardada || company !== companyGuardada;
+
+  const guardar = async () => {
+    if (!user) return;
+    setGuardando(true);
+    setAviso(null);
+    try {
+      await saveProfileFields(user.id, { bio: bio.trim(), company: company.trim() });
+      await refreshProfile();
+      // Se vuelve a "sin tocar" para que mande otra vez el perfil recien leido.
+      setBioEditada(null);
+      setCompanyEditada(null);
+      setAviso({ tone: 'ok', text: 'Datos guardados.' });
+      setTimeout(() => setAviso(null), 2500);
+    } catch (error) {
+      setAviso({ tone: 'error', text: getErrorMessage(error, 'No se pudo guardar.') });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const estadoPassword =
+    cuenta.step === 'cargando'
+      ? '...'
+      : cuenta.tienePassword === null
+        ? 'No se pudo comprobar'
+        : cuenta.tienePassword
+          ? 'Configurada'
+          : 'Sin configurar';
 
   return (
     <div className="bg-transparent pt-2 animate-fade-in">
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-ink">Cuenta y acceso</h3>
-        <p className="text-xs text-ink-muted mt-1">
-          Con qué entras a LeadSeed y cómo cambiar tu contraseña.
-        </p>
+        <h3 className="text-lg font-bold text-ink">Cuenta</h3>
+        <p className="text-xs text-ink-muted mt-1">Tus datos y la forma en que entras.</p>
       </div>
 
       <div className="max-w-md space-y-6">
-        <div>
+        {/* Tus datos */}
+        <section>
+          <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
+            Tus datos
+          </h4>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-surface-hover border border-line shrink-0">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-lg font-bold text-ink-muted">
+                    {(profile?.full_name || user?.email || '?').charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink truncate">
+                  {profile?.full_name || user?.email}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => ficheroRef.current?.click()}
+                  disabled={subiendoAvatar}
+                  className="text-xs font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary-soft rounded disabled:opacity-40"
+                >
+                  {subiendoAvatar ? 'Subiendo...' : 'Cambiar foto'}
+                </button>
+                <input
+                  ref={ficheroRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => void subirAvatar(e)}
+                />
+              </div>
+            </div>
+
+            <label className="block">
+              <span className="text-xs text-ink-secondary">Empresa</span>
+              <input
+                type="text"
+                value={company}
+                onChange={(e) => setCompanyEditada(e.target.value)}
+                maxLength={80}
+                placeholder="Dónde trabajas"
+                className="mt-1 w-full border-b border-line-strong px-1 py-1.5 text-sm bg-transparent text-ink placeholder:text-ink-muted focus:border-primary outline-none transition-colors"
+              />
+            </label>
+
+            <label className="block">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs text-ink-secondary">Descripción</span>
+                <span
+                  className={`text-[11px] ${bio.length === MAX_BIO ? 'text-state-danger font-semibold' : 'text-ink-muted'}`}
+                >
+                  {bio.length}/{MAX_BIO}
+                </span>
+              </div>
+              <textarea
+                value={bio}
+                onChange={(e) => setBioEditada(e.target.value)}
+                rows={2}
+                maxLength={MAX_BIO}
+                placeholder="Una línea sobre ti"
+                className="mt-1 w-full rounded-lg border border-line px-2.5 py-2 text-sm bg-surface-muted text-ink placeholder:text-ink-muted focus:border-primary focus:ring-1 focus:ring-primary-soft outline-none resize-none transition-colors"
+              />
+            </label>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void guardar()}
+                disabled={!sucio || guardando}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {guardando ? 'Guardando...' : 'Guardar'}
+              </button>
+              {aviso && (
+                <span
+                  className={`text-xs ${aviso.tone === 'ok' ? 'text-state-success' : 'text-state-danger'}`}
+                >
+                  {aviso.text}
+                </span>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Comunidad */}
+        <section>
+          <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
+            En la comunidad
+          </h4>
+
+          <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
+            <Interruptor
+              titulo="Marco premium"
+              detalle="Destaca tu perfil en la comunidad"
+              activo={profile?.show_premium_frame || false}
+              esPro={esPro}
+              onChange={(v) => void alternar('show_premium_frame', v)}
+            />
+            <Interruptor
+              titulo="Modo fantasma"
+              detalle="Oculta tu estado de conexión"
+              activo={profile?.is_invisible || false}
+              esPro={esPro}
+              onChange={(v) => void alternar('is_invisible', v)}
+            />
+          </div>
+        </section>
+
+        {/* Como entras */}
+        <section>
           <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
             Cómo entras
           </h4>
-          <div className="rounded-xl border border-line bg-surface-muted p-3 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-ink-secondary">Correo</span>
-              <span className="text-ink font-medium">{user?.email}</span>
+
+          <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2.5">
+              <span className="text-xs text-ink-secondary">Correo</span>
+              <span className="text-xs text-ink font-medium truncate ml-3">{user?.email}</span>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-ink-secondary">Google</span>
-              <span className="text-ink font-medium">
-                {cuenta.usaGoogle ? 'Activado' : 'No conectado'}
+
+            <div className="flex items-center justify-between px-3 py-2.5">
+              <span className="text-xs text-ink-secondary">Google</span>
+              <span className="text-xs text-ink font-medium">
+                {cuenta.usaGoogle ? 'Conectado' : 'No conectado'}
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-ink-secondary">Contraseña</span>
-              <span className="text-ink font-medium">
-                {cuenta.step === 'cargando'
-                  ? '...'
-                  : esDesconocido
-                    ? 'No se pudo comprobar'
-                    : cuenta.tienePassword
-                      ? 'Configurada'
-                      : 'Sin configurar'}
-              </span>
-            </div>
-          </div>
-        </div>
 
-        <div>
-          <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
-            {titulo}
-          </h4>
-
-          {esAlta && (
-            <p className="text-xs text-ink-secondary leading-relaxed mb-3">
-              {cuenta.usaGoogle
-                ? 'Ahora entras solo con Google. Si pones una contraseña podrás entrar también con tu correo, sin perder el acceso con Google.'
-                : 'Todavía no tienes contraseña en esta cuenta.'}
-            </p>
-          )}
-
-          <div className="space-y-3">
-            <AuthBanner banner={cuenta.banner} />
-
-            {cuenta.step === 'codigo' ? (
-              <form noValidate className="space-y-3" onSubmit={enviarCodigo}>
-                <OtpCodeInput
-                  value={code}
-                  onChange={setCode}
-                  error={cuenta.errors.code}
-                  disabled={cuenta.isBusy}
-                />
-                <AuthPrimaryButton isBusy={cuenta.isBusy}>Confirmar</AuthPrimaryButton>
+            <div className="flex items-center justify-between px-3 py-2.5">
+              <span className="text-xs text-ink-secondary">Contraseña</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-ink font-medium">{estadoPassword}</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setCode('');
-                    cuenta.cancelarCodigo();
-                  }}
-                  disabled={cuenta.isBusy}
-                  className="w-full text-[13px] text-ink-secondary hover:text-ink focus:outline-none focus:ring-2 focus:ring-primary-soft rounded py-1 disabled:opacity-60"
-                >
-                  Cancelar
-                </button>
-              </form>
-            ) : (
-              <form noValidate className="space-y-3" onSubmit={enviarPassword}>
-                <AuthTextField
-                  label="Contraseña nueva"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  error={cuenta.errors.password}
-                  autoComplete="new-password"
-                  placeholder={`Al menos ${MIN_PASSWORD_LENGTH} caracteres`}
-                  disabled={cuenta.isBusy || cuenta.step === 'cargando'}
-                />
-                <p className="text-[11px] text-ink-muted leading-relaxed">
-                  Necesita al menos {MIN_PASSWORD_LENGTH} caracteres, con una mayúscula, una
-                  minúscula y un número.
-                </p>
-                <AuthPrimaryButton
-                  isBusy={cuenta.isBusy}
+                  onClick={() => setDialogoAbierto(true)}
                   disabled={cuenta.step === 'cargando'}
+                  className="text-xs font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary-soft rounded disabled:opacity-40"
                 >
-                  {textoBoton}
-                </AuthPrimaryButton>
-              </form>
-            )}
+                  {cuenta.tienePassword ? 'Cambiar' : 'Crear'}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+
+          {cuenta.tienePassword === false && cuenta.usaGoogle && (
+            <p className="text-[11px] text-ink-muted leading-relaxed mt-2">
+              Ahora entras solo con Google. Con una contraseña podrás entrar también con tu correo.
+            </p>
+          )}
+        </section>
       </div>
+
+      {dialogoAbierto && (
+        <PasswordDialog cuenta={cuenta} onClose={() => setDialogoAbierto(false)} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Fila con interruptor.
+ *
+ * Se extrae porque las dos filas eran identicas salvo el texto, y en el modal
+ * anterior estaban duplicadas enteras, incluida la cadena de clases del switch.
+ */
+function Interruptor({
+  titulo,
+  detalle,
+  activo,
+  esPro,
+  onChange,
+}: {
+  titulo: string;
+  detalle: string;
+  activo: boolean;
+  esPro: boolean;
+  onChange: (valor: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between px-3 py-2.5 gap-3">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-ink">{titulo}</p>
+        <p className="text-[11px] text-ink-muted">{detalle}</p>
+      </div>
+      {esPro ? (
+        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            checked={activo}
+            onChange={(e) => onChange(e.target.checked)}
+            aria-label={titulo}
+          />
+          <div className="w-9 h-5 bg-surface-sunken rounded-full peer peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-primary-soft after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border after:border-line-strong after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+        </label>
+      ) : (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-state-warning-soft text-state-warning rounded shrink-0">
+          PRO
+        </span>
+      )}
     </div>
   );
 }
