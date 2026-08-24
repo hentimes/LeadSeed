@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { changeAvatar, saveProfileFields } from '../../services/profileService';
-import AccountPasswordSection from './AccountPasswordSection';
 import { Icon } from '../../utils/icons';
 import { Modal } from '../../design';
 import { getErrorMessage } from '../../utils/errorMessage';
@@ -190,13 +189,6 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
             )}
           </div>
         </div>
-
-        {/*
-          La contrasena se guarda por su cuenta, con su propio boton, y por eso
-          va despues del formulario de perfil y no dentro. El "Guardar Perfil" de
-          abajo no la toca: cambiar el avatar no deberia rozar la credencial.
-        */}
-        <AccountPasswordSection />
 
         <div className="flex gap-3 justify-end">
           <button

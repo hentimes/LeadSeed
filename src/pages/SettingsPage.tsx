@@ -9,6 +9,7 @@ import GoalsSettings from '../components/settings/GoalsSettings';
 import SupportTicketsSettings from '../components/settings/SupportTicketsSettings';
 import LinksSettings from '../components/settings/LinksSettings';
 import AgendaSettings from '../components/settings/AgendaSettings';
+import AccountSettings from '../components/settings/AccountSettings';
 import AlertsManager from '../components/settings/AlertsManager';
 import WhatsAppClientToggle from '../components/settings/WhatsAppClientToggle';
 
@@ -21,14 +22,20 @@ interface Props {
   onColsChange: (cols: ColumnDef[]) => void;
 }
 
-type Tab = 'display' | 'data' | 'links' | 'agenda' | 'email' | 'goals' | 'support';
+type Tab = 'display' | 'data' | 'links' | 'agenda' | 'email' | 'goals' | 'support' | 'cuenta';
+
+// Una sola lista: estaba repetida en el estado inicial y en el listener del
+// hash, y anadir una pestaña obligaba a acordarse de las dos.
+const TABS: Tab[] = ['display', 'data', 'links', 'agenda', 'email', 'goals', 'support', 'cuenta'];
+
+function tabDesdeHash(hash: string): Tab | null {
+  const limpio = hash.replace('#', '');
+  return (TABS as string[]).includes(limpio) ? (limpio as Tab) : null;
+}
 
 
 export default function SettingsPage({ compactMode, onCompactModeChange, darkMode, onDarkModeChange, visibleCols, onColsChange }: Props) {
-  const [tab, setTab] = useState<Tab>(() => {
-    const hash = window.location.hash.replace('#', '');
-    return (['display', 'data', 'links', 'agenda', 'email', 'goals', 'support'].includes(hash)) ? hash as Tab : 'display';
-  });
+  const [tab, setTab] = useState<Tab>(() => tabDesdeHash(window.location.hash) ?? 'display');
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
 
   useEffect(() => {
@@ -39,10 +46,8 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (['display', 'data', 'links', 'agenda', 'email', 'goals', 'support'].includes(hash)) {
-        setTab(hash as Tab);
-      }
+      const siguiente = tabDesdeHash(window.location.hash);
+      if (siguiente) setTab(siguiente);
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -89,6 +94,10 @@ export default function SettingsPage({ compactMode, onCompactModeChange, darkMod
         
         {tab === 'goals' && (
           <GoalsSettings />
+        )}
+
+        {tab === 'cuenta' && (
+          <AccountSettings />
         )}
 
         {tab === 'support' && (
