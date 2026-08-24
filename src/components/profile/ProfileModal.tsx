@@ -7,8 +7,11 @@
  * lo ve el resto. Ahora la edicion vive entera en Ajustes -> Cuenta y esto es la
  * vista, que es lo que un "perfil" deberia ser.
  *
- * El enlace de abajo lleva a Cuenta por hash, que es como navega el resto de la
- * aplicacion entre secciones de ajustes (ver `navigationGroups.ts`).
+ * El enlace de abajo no navega por su cuenta: recibe la accion desde arriba. El
+ * primer intento escribia `window.location.hash` a pelo y no funcionaba, porque
+ * ir a una seccion de Ajustes son dos cosas -cambiar de pagina Y fijar el hash-
+ * y el hash solo no cambia de pagina. Ademas, estando ya en esa seccion, escribir
+ * el mismo hash no dispara `hashchange` y no pasaba absolutamente nada.
  */
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,9 +21,11 @@ import { Modal } from '../../design';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  /** Lleva a Ajustes -> Cuenta. La navegacion la resuelve quien monta el modal. */
+  onEditAccount: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose }: Props) {
+export default function ProfileModal({ isOpen, onClose, onEditAccount }: Props) {
   const { profile, user, hasFeature, isAdmin } = useAuth();
 
   if (!isOpen) return null;
@@ -28,11 +33,6 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
   const esPro = hasFeature('premium_aesthetics') || isAdmin;
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
   const conMarco = esPro && profile?.show_premium_frame;
-
-  const irACuenta = () => {
-    onClose();
-    window.location.hash = '#cuenta';
-  };
 
   return (
     <Modal onClose={onClose} maxWidth="360px" label="Tu perfil">
@@ -101,7 +101,7 @@ export default function ProfileModal({ isOpen, onClose }: Props) {
 
         <button
           type="button"
-          onClick={irACuenta}
+          onClick={onEditAccount}
           className="w-full mt-5 py-2 rounded-xl text-[13px] font-semibold text-primary hover:bg-primary-soft/30 focus:outline-none focus:ring-2 focus:ring-primary-soft transition-colors"
         >
           Editar en Ajustes
