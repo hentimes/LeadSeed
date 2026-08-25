@@ -7,6 +7,8 @@ import { useSort } from '../hooks/useSort';
 import { useAuth } from '../contexts/AuthContext';
 import ListLeadsTable from '../components/lists/ListLeadsTable';
 import { SmartListSettingsModal } from '../components/lists/SmartListSettingsModal';
+import ListDescription from '../components/lists/ListDescription';
+import { MAX_LIST_DESCRIPTION } from '../types';
 import { SMART_LIST_DEFS, getSmartListLeads } from '../utils/smartLists';
 import { getSettings, saveSettings } from '../services/appSettingsService';
 import { Button, IconButton } from '../design';
@@ -46,6 +48,8 @@ type UnifiedList = {
   name: string;
   color: string;
   isSmart: boolean;
+  /** Solo las manuales la tienen: una lista automatica se explica por su regla. */
+  description?: string;
 };
 
 export default function ListsPage() {
@@ -65,6 +69,7 @@ export default function ListsPage() {
   const [showSmartSettings, setShowSmartSettings] = useState(false);
   
   const [newListName, setNewListName] = useState('');
+  const [newListDescription, setNewListDescription] = useState('');
   const [newListColor, setNewListColor] = useState('#6C4CF6');
   const [colorPageIndex, setColorPageIndex] = useState(0);
   
@@ -90,7 +95,7 @@ export default function ListsPage() {
       return def ? { id: def.id, name: def.name, color: def.color, isSmart: true } : null;
     }).filter(Boolean) as UnifiedList[];
     
-    const manualLists = lists.map(l => ({ id: l.id!, name: l.name, color: l.color, isSmart: false }));
+    const manualLists = lists.map(l => ({ id: l.id!, name: l.name, color: l.color, isSmart: false, description: l.description }));
     return [...smartLists, ...manualLists];
   }, [settings, lists]);
 
@@ -122,8 +127,24 @@ export default function ListsPage() {
       return;
     }
 
-    await save({ name: newListName.trim(), color: newListColor, createdAt: '' });
+    await save({
+      name: newListName.trim(),
+      color: newListColor,
+      createdAt: '',
+      description: newListDescription.trim() || undefined,
+    });
     setNewListName('');
+    setNewListDescription('');
+    load();
+  };
+
+  const handleSaveDescription = async (list: UnifiedList, description: string) => {
+    // Se reenvian nombre y color porque `saveLeadList` actualiza la fila
+    // entera; mandar solo la descripcion los dejaria en null.
+    const original = lists.find(l => l.id === list.id);
+    if (!original) return;
+
+    await save({ ...original, description });
     load();
   };
 
@@ -301,11 +322,19 @@ export default function ListsPage() {
         >
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: list.color }} />
-            <span className="font-medium text-[13px] text-ink dark:text-slate-200 flex items-center gap-2">
-              {list.name}
-              {list.isSmart && <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">Automática</span>}
+            <span className="flex flex-col min-w-0">
+              <span className="font-medium text-[13px] text-ink dark:text-slate-200 flex items-center gap-2">
+                {list.name}
+                {list.isSmart && <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">Automática</span>}
+              </span>
+              <ListDescription
+                description={list.description}
+                editable={!list.isSmart}
+                listName={list.name}
+                onSave={(descripcion) => handleSaveDescription(list, descripcion)}
+              />
             </span>
-            <span className="bg-surface-hover text-ink-secondary text-[10px] px-2 py-0.5 rounded-md font-semibold border border-line dark:border-slate-600">{leads.length} leads</span>
+            <span className="bg-surface-hover text-ink-secondary text-[10px] px-2 py-0.5 rounded-md font-semibold border border-line dark:border-slate-600 shrink-0">{leads.length} leads</span>
           </div>
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -393,7 +422,17 @@ export default function ListsPage() {
               placeholder="Nueva Lista (Ej: Prioritarios)" 
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-transparent outline-none flex-1 min-w-[220px]"
+              className="px-3 py-1.5 text-sm bg-transparent outline-none flex-1 min-w-[160px]"
+            />
+            {/* Opcional: crear una lista no deberia obligar a describirla. */}
+            <input
+              type="text"
+              placeholder="De que va (opcional)"
+              value={newListDescription}
+              onChange={(e) => setNewListDescription(e.target.value)}
+              maxLength={MAX_LIST_DESCRIPTION}
+              aria-label="Descripcion de la lista nueva"
+              className="px-3 py-1.5 text-[13px] bg-transparent outline-none border-l border-line min-w-[150px] flex-1 text-ink-secondary placeholder:text-ink-muted"
             />
             <div className="flex gap-1.5 items-center px-3 border-l border-line">
               {AVAILABLE_COLORS.slice(colorPageIndex * 5, colorPageIndex * 5 + 5).map(c => (

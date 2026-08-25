@@ -5,6 +5,7 @@ export interface LeadListRow {
   name: string;
   color: string | null;
   created_at: string;
+  description: string | null;
 }
 
 const LEAD_LISTS_TABLE = 'lead_lists';
@@ -12,7 +13,7 @@ const LEAD_LISTS_TABLE = 'lead_lists';
 export async function fetchLeadListRows(userId: string): Promise<LeadListRow[]> {
   const { data, error } = await supabase
     .from(LEAD_LISTS_TABLE)
-    .select('id, name, color, created_at')
+    .select('id, name, color, created_at, description')
     .eq('user_id', userId)
     .order('name');
 
