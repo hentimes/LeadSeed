@@ -230,20 +230,20 @@ export default function AgendaSettings() {
               Define disponibilidad, bloquea horas y sincroniza Google Calendar.
             </p>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-1 rounded bg-slate-900 text-white dark:text-slate-900">
+          <span className="text-[11px] font-semibold px-2 py-1 rounded bg-ink text-ink-inverse">
             Realtime
           </span>
         </div>
       </div>
 
       {(message || error) && (
-        <div className={`text-xs px-3 py-2 rounded border ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
+        <div className={`text-xs px-3 py-2 rounded border ${error ? 'border-state-danger/25 bg-state-danger-soft text-state-danger' : 'border-state-success/25 bg-state-success-soft text-state-success'}`}>
           {error || message}
         </div>
       )}
 
       {settings && (
-        <div className="border-l-4 border-l-blue-600 bg-surface-muted/70 px-3 py-3">
+        <div className="border-l-4 border-l-primary bg-surface-muted/70 px-3 py-3">
           <div className="flex items-center justify-between gap-2 mb-3">
             <div>
               <p className="text-xs font-bold text-ink">Google Calendar</p>
@@ -257,20 +257,20 @@ export default function AgendaSettings() {
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-[10px] px-2 py-1 rounded font-semibold ${connectionStatus?.isConnected ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+              <span className={`text-[10px] px-2 py-1 rounded font-semibold ${connectionStatus?.isConnected ? 'bg-state-success-soft text-state-success' : 'bg-state-warning-soft text-state-warning'}`}>
                 {connectionStatus?.isConnected ? 'Conectado' : 'Pendiente'}
               </span>
               <button
                 type="button"
                 onClick={() => void handleGoogleSync()}
                 disabled={!connectionStatus?.isConnected || syncingGoogle}
-                className="text-xs text-blue-600 font-semibold disabled:opacity-40"
+                className="text-xs text-primary font-semibold disabled:opacity-40"
               >
                 {syncingGoogle ? 'Sincronizando' : 'Sincronizar'}
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 panel-md:grid-cols-4 gap-2">
             <label className="text-[11px] font-semibold text-ink-secondary">
               Duracion
               <select
@@ -317,7 +317,7 @@ export default function AgendaSettings() {
             type="button"
             onClick={() => void handleSettingsSave()}
             disabled={saving}
-            className="mt-3 bg-blue-600 text-white px-3 py-2 rounded text-xs font-semibold hover:bg-blue-700 disabled:opacity-40"
+            className="mt-3 bg-primary text-ink-inverse px-3 py-2 rounded-md text-micro font-semibold hover:bg-primary-hover disabled:opacity-40"
           >
             Guardar ajustes
           </button>
@@ -331,7 +331,7 @@ export default function AgendaSettings() {
             type="button"
             onClick={() => void handleRulesSave()}
             disabled={saving}
-            className="text-xs text-blue-600 font-semibold flex items-center gap-1 disabled:opacity-40"
+            className="text-xs text-primary font-semibold flex items-center gap-1 disabled:opacity-40"
           >
             <Icon.Check /> Guardar
           </button>
@@ -369,7 +369,7 @@ export default function AgendaSettings() {
 
       <div className="border-l-4 border-l-slate-700 dark:border-l-slate-300 bg-surface-muted/70 px-3 py-3">
         <h4 className="text-xs font-bold uppercase tracking-wide text-ink-secondary mb-3">Bloquear hora</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-[1.1fr_0.8fr_0.8fr] gap-2">
+        <div className="grid grid-cols-2 panel-md:grid-cols-[1.1fr_0.8fr_0.8fr] gap-2">
           <input
             type="date"
             value={blockForm.date}
@@ -389,7 +389,7 @@ export default function AgendaSettings() {
             className="border border-line-strong rounded px-2 py-1.5 text-xs bg-transparent"
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_96px] gap-2 mt-2">
+        <div className="grid grid-cols-1 panel-md:grid-cols-[1fr_96px] gap-2 mt-2">
           <input
             value={blockForm.note}
             onChange={(event) => setBlockForm((current) => ({ ...current, note: event.target.value }))}
@@ -400,7 +400,7 @@ export default function AgendaSettings() {
             type="button"
             onClick={() => void handleCreateBlock()}
             disabled={saving}
-            className="bg-slate-900 text-white dark:text-slate-900 px-3 py-2 rounded text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-1"
+            className="bg-ink text-ink-inverse px-3 py-2 rounded text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-1"
           >
             <Icon.Plus /> Bloquear
           </button>
@@ -423,7 +423,7 @@ export default function AgendaSettings() {
                   <button
                     type="button"
                     onClick={() => void handleDeleteBlock(block)}
-                    className="text-red-600 p-1"
+                    className="text-state-danger p-1"
                     title="Eliminar bloqueo"
                   >
                     <Icon.Trash />

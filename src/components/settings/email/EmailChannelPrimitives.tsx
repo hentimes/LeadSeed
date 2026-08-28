@@ -23,13 +23,13 @@ export function formatStatusLabel(channel: EmailChannelSummary) {
 }
 
 export function ConnectionDot({ connected }: { connected: boolean }) {
-  return <span className={`inline-block h-2.5 w-2.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-red-500'}`} />;
+  return <span className={`inline-block h-2.5 w-2.5 rounded-full ${connected ? 'bg-state-success' : 'bg-state-danger'}`} />;
 }
 
 export function StatusBadge({ label, connected }: { label: string; connected: boolean }) {
   const tone = connected
-    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-    : 'border-red-200 bg-red-50 text-red-700';
+    ? 'border-state-success/25 bg-state-success-soft text-state-success'
+    : 'border-state-danger/25 bg-state-danger-soft text-state-danger';
 
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone}`}>
@@ -41,8 +41,8 @@ export function StatusBadge({ label, connected }: { label: string; connected: bo
 export function RowPill({ tone, children }: { tone: 'blue' | 'slate'; children: React.ReactNode }) {
   const styles =
     tone === 'blue'
-      ? 'border-blue-200 bg-blue-50 text-blue-700'
-      : 'border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800';
+      ? 'border-primary-soft-strong bg-primary-soft text-primary'
+      : 'border-line bg-surface-sunken text-ink-secondary';
 
   return <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles}`}>{children}</span>;
 }
@@ -76,27 +76,27 @@ export function ChannelEditor({
 }) {
   return (
     <div className="mt-2 rounded-lg border border-line bg-surface-muted p-2.5">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 panel-md:grid-cols-2">
         <input
           type="text"
           value={draft.channelName}
           onChange={(event) => onChange({ ...draft, channelName: event.target.value })}
           placeholder="Nombre del canal"
-          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-primary"
         />
         <input
           type="text"
           value={draft.fromName}
           onChange={(event) => onChange({ ...draft, fromName: event.target.value })}
           placeholder="Nombre remitente"
-          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-primary"
         />
         <input
           type="email"
           value={draft.fromEmail}
           onChange={(event) => onChange({ ...draft, fromEmail: event.target.value })}
           placeholder="correo@dominio.cl"
-          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-primary"
         />
         <input
           type="number"
@@ -105,15 +105,15 @@ export function ChannelEditor({
           value={draft.dailyLimit}
           onChange={(event) => onChange({ ...draft, dailyLimit: event.target.value })}
           placeholder="Limite diario"
-          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-primary"
         />
-        <div className="sm:col-span-2">
+        <div className="panel-md:col-span-2">
           <input
             type="password"
             value={draft.apiKey}
             onChange={(event) => onChange({ ...draft, apiKey: event.target.value })}
             placeholder="API key Resend"
-            className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-blue-500"
+            className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-primary"
           />
           <p className="mt-1 text-[10px] text-ink-secondary">
             Si editas y no quieres cambiar la clave, deja este campo vacio.
@@ -127,7 +127,7 @@ export function ChannelEditor({
             type="checkbox"
             checked={draft.isDefault}
             onChange={(event) => onChange({ ...draft, isDefault: event.target.checked })}
-            className="rounded border-line-strong text-blue-600 focus:ring-blue-500"
+            className="rounded-sm border-line accent-[var(--ls-primary)] focus:ring-1 focus:ring-primary"
           />
           Dejar como principal
         </label>
@@ -136,7 +136,7 @@ export function ChannelEditor({
           <button
             onClick={onSave}
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-primary px-3 py-1.5 text-micro font-semibold text-ink-inverse transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? 'Guardando...' : saveLabel}
           </button>

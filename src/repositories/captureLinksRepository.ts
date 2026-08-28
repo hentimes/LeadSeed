@@ -15,6 +15,8 @@ export interface CaptureLinkRow {
   visits: number | null;
   step1_completions: number | null;
   step2_completions: number | null;
+  /** Opcional: no existe hasta que se aplica la migracion que lo anade. */
+  last_visit_at?: string | null;
   capture_links_limit: number | null;
   created_at: string;
   updated_at: string;

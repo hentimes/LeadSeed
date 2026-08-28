@@ -3,6 +3,7 @@ import { Badge, IconButton } from '../../../design';
 import { Icon } from '../../../utils/icons';
 import type { CaptureLink } from '../../../types';
 import { formatPct, funnelShares } from '../../../utils/captureLinkFormat';
+import { formatearFechaHora, formatearTiempoRelativo } from '../../../utils/date';
 import CaptureLinkMenu from './CaptureLinkMenu';
 
 interface Props {
@@ -115,12 +116,33 @@ export default function CaptureLinkRow({
         </div>
       </div>
 
-      <p className="mt-1 truncate text-micro text-ink-muted tabular-nums">
-        {link.visits} visitas · {link.totalLeads} leads ·{' '}
-        <span className={link.closeRatePct > 0 ? 'text-state-success' : ''}>
-          {formatPct(link.closeRatePct)} cierre
-        </span>
-      </p>
+      {/*
+        La ultima visita aprovecha la linea que ya existia: cero pixeles de
+        alto nuevos. Se reserva sitio a la derecha y las cifras truncan antes
+        que ella, porque "cuando fue la ultima" es lo que no se puede deducir
+        de lo demas.
+
+        Sin dato no se pinta nada -ni un guion- y las cifras recuperan el
+        ancho completo. Eso cubre el hueco entre desplegar este codigo y
+        aplicar la migracion que anade el campo al rpc.
+      */}
+      <div className="mt-1 flex items-baseline gap-2">
+        <p className="min-w-0 flex-1 truncate text-micro text-ink-muted tabular-nums">
+          {link.visits} visitas · {link.totalLeads} leads ·{' '}
+          <span className={link.closeRatePct > 0 ? 'text-state-success' : ''}>
+            {formatPct(link.closeRatePct)} cierre
+          </span>
+        </p>
+        {link.lastVisitAt && (
+          <p
+            className="shrink-0 text-micro text-ink-muted tabular-nums"
+            title={`Última visita: ${formatearFechaHora(link.lastVisitAt)}`}
+          >
+            <span className="sr-only">Última visita: </span>
+            {formatearTiempoRelativo(link.lastVisitAt)}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

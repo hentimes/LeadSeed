@@ -1,65 +1,61 @@
 import { useEffect, useState } from 'react';
-import { getSettings, saveSettings } from '../../services/appSettingsService';
-import { Icon } from '../../utils/icons';
-import { Card } from '../../design';
+import { getSettings, patchSettings } from '../../services/appSettingsService';
+import { Select, SettingRow } from '../../design';
 
+/**
+ * A donde se abre un envio de WhatsApp.
+ *
+ * Era una `Card` de 96px con un icono verde de 40px, un titulo de seccion, un
+ * parrafo y un segmentado de dos botones cuyos rotulos -"WhatsApp Web
+ * (Pestaña)" y "App de Escritorio"- no caben juntos por debajo de 500px: uno
+ * de los dos se recortaba siempre.
+ *
+ * Es una eleccion entre dos valores que se guarda sola: eso es un selector,
+ * y cabe en una fila de 52px.
+ *
+ * Ademas vivia en "Apariencia", que es donde llevaba desde el principio por
+ * accidente. No es una preferencia visual; es por que canal sale el mensaje.
+ */
 export default function WhatsAppClientToggle() {
   const [preference, setPreference] = useState<'web' | 'app'>('web');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      const settings = await getSettings();
+    let activo = true;
+    void getSettings().then((settings) => {
+      if (!activo) return;
       setPreference(settings.whatsappClientPreference || 'web');
       setLoading(false);
-    })();
+    });
+    return () => {
+      activo = false;
+    };
   }, []);
 
-  const togglePreference = async () => {
-    const newPref = preference === 'web' ? 'app' : 'web';
-    setPreference(newPref);
-    const settings = await getSettings();
-    await saveSettings({ ...settings, whatsappClientPreference: newPref });
+  const cambiar = async (valor: 'web' | 'app') => {
+    setPreference(valor);
+    await patchSettings({ whatsappClientPreference: valor });
   };
 
   if (loading) return null;
 
   return (
-    <Card padding="lg" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-[8px] bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0">
-          {Icon.Phone()} 
-        </div>
-        <div>
-          <h3 className="text-section-title font-semibold text-ink tracking-tight">Cliente de WhatsApp</h3>
-          <p className="text-body text-ink-secondary text-ink-secondary mt-1">
-            Elige cómo quieres que se abran los chats al enviar mensajes.
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2 p-1 bg-surface-hover rounded-lg shrink-0">
-        <button
-          onClick={() => preference !== 'web' && togglePreference()}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            preference === 'web' 
-              ? 'bg-surface text-slate-900 shadow-sm' 
-              : 'text-ink-secondary hover:text-ink'
-          }`}
+    <SettingRow
+      label="Abrir WhatsApp en"
+      hint="Dónde se abren los chats al enviar un mensaje"
+      control={
+        <Select
+          compact
+          fullWidth={false}
+          aria-label="Cliente de WhatsApp"
+          value={preference}
+          onChange={(event) => void cambiar(event.target.value as 'web' | 'app')}
+          className="w-[140px]"
         >
-          WhatsApp Web (Pestaña)
-        </button>
-        <button
-          onClick={() => preference !== 'app' && togglePreference()}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-            preference === 'app' 
-              ? 'bg-surface text-slate-900 shadow-sm' 
-              : 'text-ink-secondary hover:text-ink'
-          }`}
-        >
-          App de Escritorio
-        </button>
-      </div>
-    </Card>
+          <option value="web">WhatsApp Web</option>
+          <option value="app">App de escritorio</option>
+        </Select>
+      }
+    />
   );
 }

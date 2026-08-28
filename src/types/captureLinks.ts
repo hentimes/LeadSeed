@@ -33,6 +33,15 @@ export interface CaptureLink {
   visits: number;
   step1Completions: number;
   step2Completions: number;
+  /**
+   * Cuando se registro la ultima visita, o `null`.
+   *
+   * `null` significa dos cosas distintas y quien lo pinta tiene que
+   * distinguirlas: que el link no ha recibido ninguna visita, o que el dato
+   * todavia no llega porque la migracion que lo anade al rpc no esta aplicada.
+   * Se desempata mirando `visits`.
+   */
+  lastVisitAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

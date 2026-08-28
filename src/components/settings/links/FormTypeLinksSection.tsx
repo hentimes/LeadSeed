@@ -1,4 +1,4 @@
-import { Badge, Card, EmptyState, IconButton, Panel, SectionHeader } from '../../../design';
+import { Badge, Button, EmptyState, Panel } from '../../../design';
 import { Icon } from '../../../utils/icons';
 import type { FormType } from '../../../types';
 import { useFormTypeLinks } from '../../../hooks/useFormTypeLinks';
@@ -20,6 +20,17 @@ interface Props {
  * El concepto de "link principal" y de cupos solo aplica a los tipos abiertos
  * a cualquier usuario: un tipo admin-only no tiene ni default ni limite, y
  * mostrar esa interfaz solo confundiria.
+ *
+ * ## Sin tarjeta ni encabezado propios
+ *
+ * El nombre del tipo lo pone ahora la cabecera plegable de `LinksSettings`, y
+ * el borde lo pone la caja de Canales. Los que habia aqui eran el tercer marco
+ * anidado.
+ *
+ * El boton de "nuevo link" baja al cuerpo por una razon concreta: la cabecera
+ * de `Section` es un `<button>` entero, y un boton dentro de otro boton no es
+ * HTML valido -el navegador rompe el arbol y el de dentro deja de ser
+ * alcanzable-.
  */
 export default function FormTypeLinksSection({ formType }: Props) {
   const links = useFormTypeLinks(formType);
@@ -27,42 +38,31 @@ export default function FormTypeLinksSection({ formType }: Props) {
   const cupos = links.canCreate ? 'neutral' : 'warning';
 
   return (
-    <Card padding="none">
-      <div className="px-3 pt-3">
-        <SectionHeader
-          icon={<Icon.Lists />}
-          title={formType.displayName}
-          actions={
-            <>
-              {links.showDefaultConcept && (
-                <Badge
-                  tone={cupos}
-                  className={links.canCreate ? '' : 'cursor-help'}
-                  // El aviso de limite ocupaba una linea propia permanente.
-                  // El dato es el mismo contador, solo que en ambar.
-                >
-                  {links.slotsText}
-                </Badge>
-              )}
-              <IconButton
-                size="sm"
-                variant="ghost"
-                label={
-                  links.canCreate
-                    ? `Nuevo link de ${formType.displayName}`
-                    : 'Alcanzaste el máximo de links de tu perfil'
-                }
-                icon={<Icon.Plus />}
-                disabled={!links.canCreate || links.saving}
-                onClick={links.openCreate}
-              />
-            </>
-          }
-        />
+    <div>
+      <div className="flex items-center justify-between gap-2 pb-2">
+        {links.showDefaultConcept ? (
+          <Badge tone={cupos} className={links.canCreate ? '' : 'cursor-help'}>
+            {links.slotsText}
+          </Badge>
+        ) : (
+          <span className="text-micro text-ink-muted">
+            {links.links.length} link{links.links.length === 1 ? '' : 's'}
+          </span>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          icon={<Icon.Plus />}
+          disabled={!links.canCreate || links.saving}
+          title={links.canCreate ? undefined : 'Alcanzaste el máximo de links de tu perfil'}
+          onClick={links.openCreate}
+        >
+          Nuevo link
+        </Button>
       </div>
 
       {links.error && (
-        <div className="px-3 pt-2">
+        <div className="pb-2">
           <Panel tone="danger">
             <div className="flex items-start gap-2">
               <p role="alert" className="min-w-0 flex-1 text-micro">
@@ -82,7 +82,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
       )}
 
       {links.message && (
-        <div className="px-3 pt-2">
+        <div className="pb-2">
           <Panel tone="success">
             <p aria-live="polite" className="text-micro">
               {links.message}
@@ -95,13 +95,13 @@ export default function FormTypeLinksSection({ formType }: Props) {
         {links.loading ? (
           // Tres huecos del alto real de una fila: la seccion no salta al
           // terminar de cargar.
-          <div className="animate-pulse px-2.5 pb-3">
+          <div className="animate-pulse">
             {[0, 1, 2].map((fila) => (
               <div key={fila} className="mb-1.5 h-[52px] rounded-md bg-surface-muted" />
             ))}
           </div>
         ) : links.links.length === 0 ? (
-          <div className="pb-2">
+          <div>
             <EmptyState
               icon={<Icon.Lists />}
               title="Sin links todavía"
@@ -109,7 +109,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
             />
           </div>
         ) : (
-          <ul className="divide-y divide-line-soft border-t border-line-soft">
+          <ul className="divide-y divide-line-soft overflow-hidden rounded-md border border-line">
             {links.links.map((link) => {
               const abierto = links.selectedLink?.id === link.id;
 
@@ -155,6 +155,6 @@ export default function FormTypeLinksSection({ formType }: Props) {
           onClose={links.closeForm}
         />
       )}
-    </Card>
+    </div>
   );
 }

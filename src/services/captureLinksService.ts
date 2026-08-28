@@ -54,6 +54,7 @@ function mapCaptureLinkRow(row: CaptureLinkRow): CaptureLink {
     visits: toNumber(row.visits),
     step1Completions: toNumber(row.step1_completions),
     step2Completions: toNumber(row.step2_completions),
+    lastVisitAt: row.last_visit_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

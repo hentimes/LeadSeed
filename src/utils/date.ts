@@ -47,3 +47,25 @@ export function formatearFechaLarga(valor: Date | string | null | undefined): st
   if (!d) return VACIO;
   return d.toLocaleDateString(IDIOMA, { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
+/**
+ * `ahora`, `hace 5 min`, `hace 3 h`, `hace 2 d`, y a partir de la semana la
+ * fecha corta.
+ *
+ * Nace en la cabecera del detalle de usuario de Admin, donde la ultima
+ * conexion se pintaba con `toLocaleString('es-CL')` entera: veintitantos
+ * caracteres en una linea de 240px para un dato del que solo interesa si fue
+ * hoy o hace un mes. Pasado el corte se devuelve la fecha, que a esa distancia
+ * ya es mas informativa que "hace 47 dias".
+ */
+export function formatearTiempoRelativo(valor: Date | string | null | undefined): string {
+  const d = comoFecha(valor);
+  if (!d) return VACIO;
+
+  const segundos = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (segundos < 60) return 'ahora';
+  if (segundos < 3600) return `hace ${Math.floor(segundos / 60)} min`;
+  if (segundos < 86400) return `hace ${Math.floor(segundos / 3600)} h`;
+  if (segundos < 604800) return `hace ${Math.floor(segundos / 86400)} d`;
+  return formatearFecha(d);
+}

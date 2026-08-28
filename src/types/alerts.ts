@@ -51,6 +51,40 @@ export interface AlertPreferences {
   appointmentLeadMinutes: number;
 }
 
+/**
+ * Las alertas, repartidas en dos familias.
+ *
+ * Siete filas de dos lineas son 420px: mas de una pantalla de panel lateral
+ * gastada en algo que se configura una vez y no se vuelve a mirar. Plegadas
+ * por familia, el reposo baja a ~100px y la cabecera de cada una dice cuantas
+ * tiene encendidas, que es el dato por el que se entra.
+ *
+ * Son dos y no tres a proposito: con "Agenda" aparte, esa familia tendria un
+ * solo elemento, y una seccion plegable de un item es ruido.
+ *
+ * Vive junto a `ALERT_TYPE_LABELS` para que anadir una alerta obligue a
+ * decidir su familia en el mismo archivo, en vez de dejarla fuera de las dos
+ * y que no se pinte en ningun sitio.
+ */
+export interface AlertFamily {
+  id: string;
+  title: string;
+  types: AlertType[];
+}
+
+export const ALERT_FAMILIES: AlertFamily[] = [
+  {
+    id: 'trabajo',
+    title: 'Tu trabajo',
+    types: ['new_lead', 'overdue_task', 'upcoming_appointment'],
+  },
+  {
+    id: 'conversaciones',
+    title: 'Conversaciones',
+    types: ['chat_reply', 'chat_mention', 'chat_announcement', 'support_message'],
+  },
+];
+
 export const ALERT_TYPE_LABELS: Record<AlertType, { title: string; description: string }> = {
   new_lead: {
     title: 'Nuevo lead',

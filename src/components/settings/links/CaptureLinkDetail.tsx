@@ -2,6 +2,7 @@ import { GroupLabel, IconButton } from '../../../design';
 import { Icon } from '../../../utils/icons';
 import type { CaptureLink, CaptureLinkStats } from '../../../types';
 import { formatPct } from '../../../utils/captureLinkFormat';
+import { formatearFechaHora, formatearTiempoRelativo } from '../../../utils/date';
 
 interface Props {
   id: string;
@@ -64,6 +65,25 @@ export default function CaptureLinkDetail({
           </div>
         ))}
       </div>
+
+      {/*
+        Fuera de la rejilla y no como septima metrica: es `grid-cols-3` y
+        `panel-md:grid-cols-6`, asi que un septimo azulejo deja un huerfano en
+        las dos ramas. Aqui son 16px y cabe la hora entera, que es lo que se
+        pidio, con el relativo al lado para situarla.
+
+        Con `visits > 0` y sin fecha no se dice "sin visitas" -seria mentira,
+        hay visitas contadas- sino nada: es el estado de "el rpc todavia no
+        devuelve el campo".
+      */}
+      {link.lastVisitAt ? (
+        <p className="mt-2 text-micro text-ink-muted">
+          Última visita: {formatearFechaHora(link.lastVisitAt)} ·{' '}
+          {formatearTiempoRelativo(link.lastVisitAt)}
+        </p>
+      ) : link.visits === 0 ? (
+        <p className="mt-2 text-micro text-ink-muted">Sin visitas todavía.</p>
+      ) : null}
 
       {showStats && (
         <div className="mt-3">

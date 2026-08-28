@@ -114,7 +114,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
       {expanded && (
         <div className="flex flex-col gap-4">
           {(message || error) && (
-            <div className={`text-xs px-3 py-2 rounded border ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
+            <div className={`text-xs px-3 py-2 rounded border ${error ? 'border-state-danger/25 bg-state-danger-soft text-state-danger' : 'border-state-success/25 bg-state-success-soft text-state-success'}`}>
               {error || message}
             </div>
           )}
@@ -141,7 +141,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
                   <button
                     disabled={saving}
                     onClick={() => void handleToggleActive(formType)}
-                    className={`text-xs font-semibold whitespace-nowrap ${formType.isActive ? 'text-red-600' : 'text-ink-secondary'}`}
+                    className={`text-xs font-semibold whitespace-nowrap ${formType.isActive ? 'text-state-danger' : 'text-ink-secondary'}`}
                   >
                     {formType.isActive ? 'Desactivar' : 'Reactivar'}
                   </button>
@@ -152,7 +152,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
 
           <div className="border-t border-line/80 pt-3 flex flex-col gap-2">
             <p className="text-xs font-bold text-ink-secondary">Registrar formulario nuevo</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 panel-md:grid-cols-2 gap-2">
               <input
                 value={form.slug}
                 onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
@@ -183,7 +183,7 @@ export default function FormTypeRegistryForm({ formTypes, onChanged }: Props) {
             <button
               onClick={() => void handleCreate()}
               disabled={saving}
-              className="bg-blue-600 text-white px-3 py-2 rounded text-xs font-semibold hover:bg-blue-700 disabled:opacity-40 flex items-center justify-center gap-2 self-start"
+              className="bg-primary text-ink-inverse px-3 py-2 rounded-md text-micro font-semibold hover:bg-primary-hover disabled:opacity-40 flex items-center justify-center gap-2 self-start"
             >
               <Icon.Plus />
               Registrar tipo

@@ -19,6 +19,7 @@ import { useAccountPassword } from '../../hooks/useAccountPassword';
 import { changeAvatar, saveProfileFields } from '../../services/profileService';
 import { getErrorMessage } from '../../utils/errorMessage';
 import PasswordDialog from './PasswordDialog';
+import { Badge, Button, Input, Notice, Section, SettingGroup, SettingRow, Switch, Textarea } from '../../design';
 
 const MAX_BIO = 140;
 
@@ -41,6 +42,7 @@ export default function AccountSettings() {
   const [dialogoAbierto, setDialogoAbierto] = useState(false);
   const [subiendoAvatar, setSubiendoAvatar] = useState(false);
   const ficheroRef = useRef<HTMLInputElement>(null);
+  const [comoEntrasAbierto, setComoEntrasAbierto] = useState(false);
 
   const esPro = hasFeature('premium_aesthetics') || isAdmin;
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
@@ -111,217 +113,176 @@ export default function AccountSettings() {
           : 'Sin configurar';
 
   return (
-    <div className="bg-transparent pt-2 animate-fade-in">
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-ink">Cuenta</h3>
-        <p className="text-xs text-ink-muted mt-1">Tus datos y la forma en que entras.</p>
-      </div>
-
-      <div className="max-w-md space-y-6">
-        {/* Tus datos */}
-        <section>
-          <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
-            Tus datos
-          </h4>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-surface-hover border border-line shrink-0">
+    <div className="flex flex-col gap-3">
+      <SettingGroup label="Tus datos">
+        <SettingRow
+          label={profile?.full_name || user?.email || 'Tu perfil'}
+          hint={subiendoAvatar ? 'Subiendo foto...' : 'Así te ven en la comunidad'}
+          control={
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-line bg-surface-hover">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="text-lg font-bold text-ink-muted">
+                  <span className="flex h-full w-full items-center justify-center text-body font-bold text-ink-muted">
                     {(profile?.full_name || user?.email || '?').charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink truncate">
-                  {profile?.full_name || user?.email}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => ficheroRef.current?.click()}
-                  disabled={subiendoAvatar}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary-soft rounded disabled:opacity-40"
-                >
-                  {subiendoAvatar ? 'Subiendo...' : 'Cambiar foto'}
-                </button>
-                <input
-                  ref={ficheroRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => void subirAvatar(e)}
-                />
-              </div>
-            </div>
-
-            <label className="block">
-              <span className="text-xs text-ink-secondary">Empresa</span>
+              <Button size="sm" onClick={() => ficheroRef.current?.click()} disabled={subiendoAvatar}>
+                Cambiar
+              </Button>
               <input
-                type="text"
-                value={company}
-                onChange={(e) => setCompanyEditada(e.target.value)}
-                maxLength={80}
-                placeholder="Dónde trabajas"
-                className="mt-1 w-full border-b border-line-strong px-1 py-1.5 text-sm bg-transparent text-ink placeholder:text-ink-muted focus:border-primary outline-none transition-colors"
+                ref={ficheroRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void subirAvatar(e)}
               />
-            </label>
+            </div>
+          }
+        />
 
-            <label className="block">
-              <div className="flex items-baseline justify-between">
-                <span className="text-xs text-ink-secondary">Descripción</span>
-                <span
-                  className={`text-[11px] ${bio.length === MAX_BIO ? 'text-state-danger font-semibold' : 'text-ink-muted'}`}
-                >
-                  {bio.length}/{MAX_BIO}
-                </span>
-              </div>
-              <textarea
-                value={bio}
-                onChange={(e) => setBioEditada(e.target.value)}
-                rows={2}
-                maxLength={MAX_BIO}
-                placeholder="Una línea sobre ti"
-                className="mt-1 w-full rounded-lg border border-line px-2.5 py-2 text-sm bg-surface-muted text-ink placeholder:text-ink-muted focus:border-primary focus:ring-1 focus:ring-primary-soft outline-none resize-none transition-colors"
-              />
-            </label>
+        <SettingRow
+          label="Empresa"
+          stacked
+          control={
+            <Input
+              type="text"
+              value={company}
+              onChange={(e) => setCompanyEditada(e.target.value)}
+              maxLength={80}
+              placeholder="Dónde trabajas"
+              aria-label="Empresa"
+            />
+          }
+        />
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => void guardar()}
-                disabled={!sucio || guardando}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
+        <SettingRow
+          label="Descripción"
+          badge={
+            <span
+              className={`text-meta tabular-nums ${bio.length === MAX_BIO ? 'font-semibold text-state-danger' : 'text-ink-muted'}`}
+            >
+              {bio.length}/{MAX_BIO}
+            </span>
+          }
+          stacked
+          control={
+            <Textarea
+              value={bio}
+              onChange={(e) => setBioEditada(e.target.value)}
+              rows={2}
+              maxLength={MAX_BIO}
+              placeholder="Una línea sobre ti"
+              aria-label="Descripción"
+            />
+          }
+        />
+
+        {/*
+          El unico boton de guardar que sobrevive en Configuracion, y solo
+          aparece cuando hay algo que guardar. Empresa y descripcion son texto
+          libre: guardarlas al salir del campo dispararia una escritura por
+          cada vez que el foco pasa de largo.
+        */}
+        {sucio && (
+          <SettingRow
+            label="Cambios sin guardar"
+            control={
+              <Button size="sm" variant="primary" onClick={() => void guardar()} disabled={guardando}>
                 {guardando ? 'Guardando...' : 'Guardar'}
-              </button>
-              {aviso && (
-                <span
-                  className={`text-xs ${aviso.tone === 'ok' ? 'text-state-success' : 'text-state-danger'}`}
-                >
-                  {aviso.text}
-                </span>
-              )}
-            </div>
+              </Button>
+            }
+          />
+        )}
+
+        {/*
+          El aviso va en un `Notice` y no como rotulo tenido de la fila: el
+          rotulo de `SettingRow` fija su propio color, asi que un
+          `text-state-danger` en el contenedor no llegaba a pintarlo. El unico
+          aviso de error de esta pantalla salia en negro.
+        */}
+        {aviso && (
+          <div className="px-3 py-2">
+            <Notice tone={aviso.tone === 'error' ? 'danger' : 'success'} onDismiss={() => setAviso(null)}>
+              {aviso.text}
+            </Notice>
           </div>
-        </section>
+        )}
+      </SettingGroup>
 
-        {/* Comunidad */}
-        <section>
-          <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
-            En la comunidad
-          </h4>
+      <SettingGroup label="En la comunidad">
+        <SettingRow
+          label="Marco premium"
+          hint="Destaca tu perfil en la comunidad"
+          badge={esPro ? undefined : <Badge tone="warning">PRO</Badge>}
+          control={
+            esPro ? (
+              <Switch
+                label="Marco premium"
+                checked={profile?.show_premium_frame || false}
+                onChange={(e) => void alternar('show_premium_frame', e.target.checked)}
+              />
+            ) : undefined
+          }
+        />
+        <SettingRow
+          label="Modo fantasma"
+          hint="Oculta tu estado de conexión"
+          badge={esPro ? undefined : <Badge tone="warning">PRO</Badge>}
+          control={
+            esPro ? (
+              <Switch
+                label="Modo fantasma"
+                checked={profile?.is_invisible || false}
+                onChange={(e) => void alternar('is_invisible', e.target.checked)}
+              />
+            ) : undefined
+          }
+        />
+      </SettingGroup>
 
-          <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
-            <Interruptor
-              titulo="Marco premium"
-              detalle="Destaca tu perfil en la comunidad"
-              activo={profile?.show_premium_frame || false}
-              esPro={esPro}
-              onChange={(v) => void alternar('show_premium_frame', v)}
+      <SettingGroup>
+        <Section
+          title="Cómo entras"
+          badge={<Badge tone={cuenta.tienePassword ? 'neutral' : 'warning'}>{estadoPassword}</Badge>}
+          isOpen={comoEntrasAbierto}
+          onToggle={() => setComoEntrasAbierto((abierto) => !abierto)}
+        >
+          <div className="overflow-hidden rounded-md border border-line divide-y divide-line">
+            <SettingRow
+              label="Correo"
+              control={<span className="text-micro text-ink">{user?.email}</span>}
             />
-            <Interruptor
-              titulo="Modo fantasma"
-              detalle="Oculta tu estado de conexión"
-              activo={profile?.is_invisible || false}
-              esPro={esPro}
-              onChange={(v) => void alternar('is_invisible', v)}
+            <SettingRow
+              label="Google"
+              control={
+                <span className="text-micro text-ink">{cuenta.usaGoogle ? 'Conectado' : 'No conectado'}</span>
+              }
+            />
+            <SettingRow
+              label="Contraseña"
+              hint={
+                cuenta.tienePassword === false && cuenta.usaGoogle
+                  ? 'Solo entras con Google; con contraseña podrás entrar también con tu correo'
+                  : undefined
+              }
+              control={
+                <div className="flex items-center gap-2">
+                  <span className="text-micro text-ink">{estadoPassword}</span>
+                  <Button size="sm" onClick={() => setDialogoAbierto(true)} disabled={cuenta.step === 'cargando'}>
+                    {cuenta.tienePassword ? 'Cambiar' : 'Crear'}
+                  </Button>
+                </div>
+              }
             />
           </div>
-        </section>
-
-        {/* Como entras */}
-        <section>
-          <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider mb-3">
-            Cómo entras
-          </h4>
-
-          <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2.5">
-              <span className="text-xs text-ink-secondary">Correo</span>
-              <span className="text-xs text-ink font-medium truncate ml-3">{user?.email}</span>
-            </div>
-
-            <div className="flex items-center justify-between px-3 py-2.5">
-              <span className="text-xs text-ink-secondary">Google</span>
-              <span className="text-xs text-ink font-medium">
-                {cuenta.usaGoogle ? 'Conectado' : 'No conectado'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between px-3 py-2.5">
-              <span className="text-xs text-ink-secondary">Contraseña</span>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-ink font-medium">{estadoPassword}</span>
-                <button
-                  type="button"
-                  onClick={() => setDialogoAbierto(true)}
-                  disabled={cuenta.step === 'cargando'}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary-soft rounded disabled:opacity-40"
-                >
-                  {cuenta.tienePassword ? 'Cambiar' : 'Crear'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {cuenta.tienePassword === false && cuenta.usaGoogle && (
-            <p className="text-[11px] text-ink-muted leading-relaxed mt-2">
-              Ahora entras solo con Google. Con una contraseña podrás entrar también con tu correo.
-            </p>
-          )}
-        </section>
-      </div>
+        </Section>
+      </SettingGroup>
 
       {dialogoAbierto && (
         <PasswordDialog cuenta={cuenta} onClose={() => setDialogoAbierto(false)} />
-      )}
-    </div>
-  );
-}
-
-/**
- * Fila con interruptor.
- *
- * Se extrae porque las dos filas eran identicas salvo el texto, y en el modal
- * anterior estaban duplicadas enteras, incluida la cadena de clases del switch.
- */
-function Interruptor({
-  titulo,
-  detalle,
-  activo,
-  esPro,
-  onChange,
-}: {
-  titulo: string;
-  detalle: string;
-  activo: boolean;
-  esPro: boolean;
-  onChange: (valor: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2.5 gap-3">
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-ink">{titulo}</p>
-        <p className="text-[11px] text-ink-muted">{detalle}</p>
-      </div>
-      {esPro ? (
-        <label className="relative inline-flex items-center cursor-pointer shrink-0">
-          <input
-            type="checkbox"
-            className="sr-only peer"
-            checked={activo}
-            onChange={(e) => onChange(e.target.checked)}
-            aria-label={titulo}
-          />
-          <div className="w-9 h-5 bg-surface-sunken rounded-full peer peer-checked:bg-primary peer-focus:ring-2 peer-focus:ring-primary-soft after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border after:border-line-strong after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-        </label>
-      ) : (
-        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-state-warning-soft text-state-warning rounded shrink-0">
-          PRO
-        </span>
       )}
     </div>
   );
