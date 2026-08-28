@@ -15,9 +15,7 @@ import {
   fetchAdminObservedAppointmentRows,
   fetchAdminTelemetryRows,
   fetchAdminUserLeadRows,
-  fetchAdminUserRecentLeadRows,
   fetchAdminUserTemplateRows,
-  fetchAdminUserTemplateTypeRows,
   fetchAllProfiles,
   fetchHelperProfiles,
   fetchHelperRequirementRows,
@@ -116,6 +114,24 @@ export async function assignRequirementToHelper(requirementId: string, helperId:
   await updateRequirementRow(requirementId, { helper_id: helperId, status: 'in_progress' });
 }
 
+/**
+ * Una plantilla vista desde Admin.
+ *
+ * Es la plantilla de dominio mas su canal. `WhatsAppTemplate` no lo lleva
+ * porque en la pantalla del propio usuario el canal ya lo dice la pestana en
+ * la que esta; aca no hay pestana, se listan las tres juntas.
+ */
+export interface ObservedTemplate {
+  id: string;
+  nombre: string;
+  contenido: string;
+  templateListIds: number[];
+  leadIds: string[];
+  leadListIds: number[];
+  createdAt: string;
+  tipo?: string;
+}
+
 export async function loadAdminUserBase(userId: string, currentUserId?: string) {
   const isSelfObservation = !!currentUserId && currentUserId === userId;
 
@@ -140,7 +156,7 @@ export async function loadAdminUserBase(userId: string, currentUserId?: string) 
 
   return {
     leads: leadRows.map((row: LeadRow) => mapLeadRowToDomain(row)),
-    templates: templateRows.map((row: AdminTemplateRow) => ({
+    templates: templateRows.map((row: AdminTemplateRow): ObservedTemplate => ({
       id: row.id,
       nombre: row.name,
       contenido: row.content,
@@ -148,6 +164,11 @@ export async function loadAdminUserBase(userId: string, currentUserId?: string) 
       leadIds: row.lead_ids || [],
       leadListIds: row.lead_list_ids || [],
       createdAt: row.created_at || new Date(0).toISOString(),
+      // El canal viaja con la plantilla. `loadAdminUserInventory` existia solo
+      // para contar cuantas hay de cada uno, y llamaba al MISMO rpc que esta
+      // funcion (`list_admin_user_templates`) para quedarse con el campo
+      // `type` y tirar el resto: dos consultas identicas por usuario.
+      tipo: row.type,
     })),
   };
 }
@@ -205,25 +226,6 @@ export async function transferAdminUserAssets(targetUserId: string, leadIds: str
   if (templateIds.length > 0) await transferAdminUserTemplates(targetUserId, templateIds);
 }
 
-export async function loadAdminUserInventory(userId: string) {
-  const [leadRows, templateRows] = await Promise.all([
-    fetchAdminUserRecentLeadRows(userId),
-    fetchAdminUserTemplateTypeRows(userId),
-  ]);
-
-  const counts = { whatsapp: 0, email: 0, call: 0 };
-  for (const row of templateRows as Array<{ type?: string }>) {
-    if (row.type === 'whatsapp') counts.whatsapp += 1;
-    else if (row.type === 'email') counts.email += 1;
-    else if (row.type === 'call') counts.call += 1;
-  }
-
-  return {
-    leads: leadRows.map((row: LeadRow) => mapLeadRowToDomain(row)),
-    templatesCount: counts,
-  };
-}
-
 export async function loadAdminUserTelemetry(userId: string) {
   return fetchAdminTelemetryRows(userId);
 }
@@ -232,12 +234,17 @@ export async function loadAdminHelperStats(userId: string) {
   return fetchHelperRequirementRows(userId);
 }
 
-export async function loadAdminUserHeatmap(selectedUser: Profile) {
-  const [profiles, messages] = await Promise.all([fetchAllProfiles(), fetchInteractionMessageRows(selectedUser.id)]);
+/**
+ * Recibe el id y no el perfil entero: el resto del perfil no se usaba, y
+ * pedirlo obligaba al componente a depender del objeto completo, que cambia de
+ * identidad en cada actualizacion de la lista y disparaba la consulta de nuevo.
+ */
+export async function loadAdminUserHeatmap(observedUserId: string) {
+  const [profiles, messages] = await Promise.all([fetchAllProfiles(), fetchInteractionMessageRows(observedUserId)]);
   const interactionMap: Record<string, { count: number; lastMsg: string }> = {};
 
   for (const msg of messages as InteractionMessageRow[]) {
-    const otherUserId = msg.sender_id === selectedUser.id ? msg.receiver_id : msg.sender_id;
+    const otherUserId = msg.sender_id === observedUserId ? msg.receiver_id : msg.sender_id;
     if (!otherUserId) continue;
     if (!interactionMap[otherUserId]) {
       interactionMap[otherUserId] = { count: 0, lastMsg: msg.created_at };

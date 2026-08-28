@@ -221,23 +221,6 @@ export async function transferAdminUserTemplates(targetUserId: string, templateI
   if (error) throw error;
 }
 
-export async function fetchAdminUserRecentLeadRows(userId: string): Promise<LeadRow[]> {
-  const { data, error } = await supabase.rpc('list_admin_user_leads', {
-    p_observed_user_id: userId,
-    p_limit: 50,
-  });
-  if (error) throw error;
-  return (data ?? []) as LeadRow[];
-}
-
-export async function fetchAdminUserTemplateTypeRows(userId: string): Promise<Array<Pick<AdminTemplateRow, 'type'>>> {
-  const { data, error } = await supabase.rpc('list_admin_user_templates', {
-    p_observed_user_id: userId,
-  });
-  if (error) throw error;
-  return ((data ?? []) as AdminTemplateRow[]).map((row) => ({ type: row.type }));
-}
-
 export async function fetchAdminTelemetryRows(userId: string): Promise<AdminTelemetryRow[]> {
   const { data } = await supabase
     .from('user_telemetry')

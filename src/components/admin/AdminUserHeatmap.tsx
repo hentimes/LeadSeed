@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Icon } from '../../utils/icons';
 import type { Profile } from '../../types';
 import { loadAdminUserHeatmap } from '../../services/adminService';
-import { formatearFecha } from '../../utils/date';
-
-interface Props {
-  selectedUser: Profile;
-}
+import { formatearTiempoRelativo } from '../../utils/date';
+import AdminUserAvatar from './AdminUserAvatar';
+import AdminSkeleton from './AdminSkeleton';
+import { Block } from '../../design';
 
 interface HeatmapEntry {
   profile: Profile;
@@ -14,84 +12,76 @@ interface HeatmapEntry {
   lastInteraction: string;
 }
 
-export default function AdminUserHeatmap({ selectedUser }: Props) {
+/**
+ * Con quien habla mas por el chat interno.
+ *
+ * Era una pestana llamada "Heatmap" -nombre que no le dice nada al admin- con
+ * cinco filas dentro de una caja naranja, y el numero de mensajes pintado
+ * sobre cinco tonos de naranja escritos a mano.
+ *
+ * La comparacion se conserva, pero como **ancho de barra**, que se lee sin
+ * leyenda, y con el color de marca en vez de una paleta que no existe en el
+ * resto del producto.
+ */
+export default function AdminUserHeatmap({ selectedUser }: { selectedUser: Profile }) {
+  const observedUserId = selectedUser.id;
+
   const [heatmap, setHeatmap] = useState<HeatmapEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadHeatmap = async () => {
+    const cargar = async () => {
       setLoading(true);
-      const nextHeatmap = await loadAdminUserHeatmap(selectedUser);
+      const siguiente = await loadAdminUserHeatmap(observedUserId);
       if (!isMounted) return;
-      setHeatmap(nextHeatmap as HeatmapEntry[]);
+      setHeatmap(siguiente as HeatmapEntry[]);
       setLoading(false);
     };
 
-    void loadHeatmap();
+    void cargar();
     return () => {
       isMounted = false;
     };
-  }, [selectedUser.id]);
+  }, [observedUserId]);
 
-  if (loading) {
-    return <div className="p-8 text-center text-ink-muted animate-pulse">Cargando mapa de interacciones...</div>;
-  }
+  const maximo = heatmap.reduce((mayor, entrada) => Math.max(mayor, entrada.messageCount), 0);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="text-orange-500 text-xl">{Icon.ChartPie()}</div>
-          <h3 className="text-lg font-bold text-ink">Top 5: Conexiones Frecuentes</h3>
-        </div>
-        <p className="text-sm text-ink-secondary mb-6">
-          Personas con las que <strong>{selectedUser.full_name || selectedUser.email}</strong> intercambia mas mensajes internos.
-        </p>
-
-        {heatmap.length === 0 ? (
-          <div className="bg-surface dark:backdrop-blur-md rounded-lg border border-orange-100 p-8 text-center">
-            <div className="text-4xl text-ink-muted flex justify-center mb-3">{Icon.Messages()}</div>
-            <p className="text-sm text-ink-muted">Este usuario aun no registra interacciones en el chat interno.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {heatmap.map((entry, index) => {
-              const heatOpacities = ['bg-orange-500', 'bg-orange-400', 'bg-orange-300', 'bg-orange-200', 'bg-orange-100'];
-              const heatColor = heatOpacities[index] || 'bg-gray-100';
-              const textColor = index < 2 ? 'text-white' : 'text-slate-700';
-
-              return (
-                <div key={entry.profile.id} className="flex items-center bg-surface dark:backdrop-blur-md border border-line rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex-1 flex items-center gap-3">
-                    <div className="relative">
-                      {entry.profile.avatar_url ? (
-                        <img src={entry.profile.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full border border-line" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                          {entry.profile.email.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                        #{index + 1}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-ink">{entry.profile.full_name || entry.profile.email.split('@')[0]}</p>
-                      <p className="text-xs text-ink-muted">Ultima int: {formatearFecha(entry.lastInteraction)}</p>
-                    </div>
-                  </div>
-
-                  <div className={`w-24 text-center px-3 py-2 rounded-lg font-black text-sm ${heatColor} ${textColor}`}>
-                    {entry.messageCount}
-                  </div>
+    <Block title="Con quién habla" count={heatmap.length > 0 ? `top ${heatmap.length}` : undefined}>
+      {loading ? (
+        <AdminSkeleton rows={2} />
+      ) : heatmap.length === 0 ? (
+        <p className="text-micro text-ink-muted">Sin interacciones en el chat interno.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {heatmap.map((entrada) => (
+            <li key={entrada.profile.id} className="flex min-w-0 items-center gap-2">
+              <AdminUserAvatar profile={entrada.profile} />
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-baseline justify-between gap-2">
+                  <span className="min-w-0 truncate text-micro font-medium text-ink">
+                    {entrada.profile.full_name || entrada.profile.email.split('@')[0]}
+                  </span>
+                  <span
+                    className="shrink-0 text-micro tabular-nums text-ink-muted"
+                    title={`Última interacción: ${formatearTiempoRelativo(entrada.lastInteraction)}`}
+                  >
+                    {entrada.messageCount}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${maximo > 0 ? Math.round((entrada.messageCount / maximo) * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Block>
   );
 }

@@ -16,8 +16,9 @@ import {
   type SupportMessage as PrivateMessage,
 } from '../../services/supportService';
 import { getErrorMessage } from '../../utils/errorMessage';
-import { Button, IconButton, Input } from '../../design';
+import { Button, IconButton, Input, Notice } from '../../design';
 import { Card } from '../../design';
+import AdminSkeleton from './AdminSkeleton';
 import { formatearFecha, formatearHora } from '../../utils/date';
 
 function formatMessageDate(dateStr: string) {
@@ -49,6 +50,12 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [adminId, setAdminId] = useState<string | null>(null);
+  /**
+   * Lo que antes decia un `alert()` del navegador: que se envio la senal de
+   * cierre, o que el mensaje no salio. Un dialogo modal para eso obliga a un
+   * clic para seguir escribiendo, y tapa el chat que lo explica.
+   */
+  const [aviso, setAviso] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const controlChannelRef = useRef<RealtimeChannel | null>(null);
   const messageChannelRef = useRef<RealtimeChannel | null>(null);
@@ -75,6 +82,15 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
         const userFirstName = selectedUser.full_name?.split(' ')[0] || selectedUser.email?.split('@')[0] || 'cliente';
         setNewMessage(`Hola ${userFirstName}, mi nombre es ${agentFirstName} y voy a ayudarte con tu requerimiento ${activeRequirement.ticket_code}.`);
       }
+
+      /*
+       * Segundo control de montaje, y no es de mas: entre el `await` anterior
+       * y esta linea el admin pudo haber cambiado de conversacion. Si lo hizo,
+       * la limpieza de esta instancia ya corrio -con los refs todavia vacios,
+       * porque el canal no existia- y crear el canal ahora lo dejaria suscrito
+       * para siempre, ademas de pisar el ref del chat nuevo.
+       */
+      if (!isMounted) return;
 
       const messageChannel = createTypingControlChannel(`support_admin_${selectedUser.id}_${Date.now()}`);
       messageChannelRef.current = messageChannel;
@@ -129,6 +145,22 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
       isMounted = false;
       if (messageChannelRef.current) closeTypingControlChannel(messageChannelRef.current);
       if (controlChannelRef.current) closeTypingControlChannel(controlChannelRef.current);
+
+      /*
+       * Los refs se vacian y el temporizador de "escribiendo" se cancela.
+       *
+       * Sin esto: escribir en el chat de A arma un temporizador de 2s que al
+       * vencer manda `TYPING:false` por `controlChannelRef.current`. Si el
+       * admin cambia a B antes de que venza, ese ref ya apunta al canal de B,
+       * asi que el aviso se emitia en una conversacion que no lo habia
+       * provocado.
+       */
+      messageChannelRef.current = null;
+      controlChannelRef.current = null;
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
     };
   }, [activeRequirement, currentUserProfile?.email, currentUserProfile?.full_name, selectedUser.email, selectedUser.full_name, selectedUser.id]);
 
@@ -143,7 +175,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
       event: 'CLOSE_CHAT',
       payload: { message: 'Admin cerro el chat' },
     });
-    alert('Senal de cierre enviada al usuario.');
+    setAviso('Señal de cierre enviada al usuario.');
   };
 
   const handleTyping = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,33 +232,49 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
       });
     } catch (error: unknown) {
       console.error('Error enviando mensaje:', error);
-      alert('Error al enviar el mensaje: ' + getErrorMessage(error, 'Error desconocido'));
+      setAviso('No se pudo enviar el mensaje: ' + getErrorMessage(error, 'Error desconocido'));
     }
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-ink-muted">Cargando historial de chat...</div>;
+    return (
+      <div className="p-3">
+        <AdminSkeleton rows={4} />
+      </div>
+    );
   }
 
+  /*
+   * El alto era `h-[600px]` fijo dentro de un panel que mide lo que mida la
+   * ventana: en una pantalla baja el compositor quedaba por debajo del borde y
+   * no habia forma de escribir. Ahora ocupa el alto que le den.
+   */
   return (
-    <div className="w-full h-[600px]">
-      <Card className="w-full h-full flex flex-col overflow-hidden">
-        <div className="bg-surface border-b border-line p-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-bold text-lg text-ink">Chat Maestro</h2>
-            <p className="text-xs text-ink-secondary">En vivo con {selectedUser.full_name || selectedUser.email}</p>
-          </div>
-          <Button variant="danger" onClick={closeUserChat}>
-            Cerrar Chat al Usuario
+    <div className="h-full min-h-0 w-full">
+      <Card padding="none" className="flex h-full w-full flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-muted px-3 py-1.5">
+          <span className="min-w-0 truncate text-micro text-ink-muted">
+            Chat en vivo con {selectedUser.full_name || selectedUser.email}
+          </span>
+          <Button size="sm" variant="ghost-danger" onClick={closeUserChat}>
+            Cerrar chat
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#e5ddd5]">
+        {aviso && (
+          <div className="shrink-0 px-3 pt-2">
+            <Notice tone="info" onDismiss={() => setAviso('')}>
+              {aviso}
+            </Notice>
+          </div>
+        )}
+
+        <div className="flex-1 space-y-3 overflow-y-auto bg-surface-muted p-3">
           {messages.map((message, index) => {
             if (message.isSystem) {
               return (
                 <div key={message.id} className="flex justify-center my-2">
-                  <span className="bg-yellow-100 text-yellow-800 text-[11px] px-3 py-1 rounded-lg shadow-sm font-medium">
+                  <span className="rounded-md bg-state-warning-soft px-2.5 py-1 text-micro font-medium text-state-warning">
                     {message.message}
                   </span>
                 </div>
@@ -241,16 +289,21 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
               <div key={message.id}>
                 {showDate && (
                   <div className="flex justify-center mb-4 mt-2">
-                    <span className="bg-surface text-ink-muted text-[11px] font-bold px-3 py-1 rounded-lg uppercase shadow-sm">
+                    <span className="rounded-md bg-surface px-2.5 py-1 text-micro font-bold uppercase text-ink-muted shadow-card">
                       {formatMessageDate(message.created_at)}
                     </span>
                   </div>
                 )}
                 <div className={`flex flex-col max-w-[80%] ${isMine ? 'self-end items-end ml-auto' : 'self-start items-start'}`}>
-                  <div className={`px-3 pt-2 pb-1.5 rounded-xl text-[14px] shadow-sm leading-relaxed ${isMine ? 'bg-[#dcf8c6] text-ink rounded-tr-none' : 'bg-surface text-ink rounded-tl-none border border-line'}`}>
-                    {!isMine && <div className="text-xs font-bold text-indigo-500 mb-1">{selectedUser.full_name || selectedUser.email.split('@')[0]}</div>}
-                    <div className="break-all whitespace-pre-wrap">{message.message}</div>
-                    <div className="text-[10px] mt-1 flex items-center justify-end gap-1 text-ink-muted">
+                  {/* Las burbujas usaban el verde y el beige de WhatsApp
+                      (`#dcf8c6`, `#e5ddd5`). Este no es un chat de WhatsApp: es
+                      el soporte interno del producto, y esos dos literales eran
+                      ademas los unicos colores de toda la extension que no
+                      cambiaban en modo oscuro. */}
+                  <div className={`rounded-lg px-3 pb-1.5 pt-2 text-body leading-relaxed shadow-card ${isMine ? 'rounded-tr-none bg-primary-soft-strong text-ink' : 'rounded-tl-none border border-line bg-surface text-ink'}`}>
+                    {!isMine && <div className="mb-1 text-micro font-bold text-primary">{selectedUser.full_name || selectedUser.email.split('@')[0]}</div>}
+                    <div className="whitespace-pre-wrap break-words">{message.message}</div>
+                    <div className="mt-1 flex items-center justify-end gap-1 text-micro text-ink-muted">
                       {formatMessageTime(message.created_at)}
                     </div>
                   </div>
@@ -261,7 +314,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
 
           {isUserTyping && (
             <div className="flex justify-start mb-4">
-              <div className="bg-surface border border-line text-ink-muted rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm text-xs italic">
+              <div className="rounded-lg rounded-tl-none border border-line bg-surface px-3 py-2 text-micro italic text-ink-muted shadow-card">
                 Escribiendo...
               </div>
             </div>
@@ -269,7 +322,7 @@ export default function AdminSupportChat({ selectedUser, activeRequirement }: { 
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} className="p-4 bg-surface border-t border-line flex gap-2">
+        <form onSubmit={handleSend} className="flex shrink-0 gap-2 border-t border-line bg-surface p-3">
           {/* El campo declaraba `input-standard`, una clase que no existe en
               ningun CSS del proyecto: estaba sin borde, sin alto y sin padding.
               Pasa a la primitiva, que ademas mide 34px igual que el boton. */}
