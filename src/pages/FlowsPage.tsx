@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, EmptyState, IconButton } from '../design';
+import { getPlatform } from '../platform/registry';
+import { Button, Card, EmptyState, IconButton, SegmentedControl } from '../design';
 import { Icon } from '../utils/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useMessageFlows } from '../hooks/useMessageFlows';
@@ -40,12 +41,28 @@ export default function FlowsPage() {
 
   // Un solo reloj para toda la pantalla: si cada fila leyera el suyo, dos filas
   // podrian discrepar sobre si algo esta atrasado.
-  const [ahora] = useState(() => new Date());
+  /*
+   * Un solo reloj para toda la pantalla: si cada fila leyera el suyo, dos filas
+   * podrian discrepar sobre si algo esta atrasado.
+   *
+   * Se renueva con cada recarga de la cola y no solo al montar. Estaba
+   * congelado en el primer render, y un panel lateral queda abierto dias: a
+   * partir de la medianoche siguiente "Toca hoy" y "Atrasado 2d" pasaban a
+   * mentir, sin que nada lo delatara.
+   */
+  const [ahora, setAhora] = useState(() => new Date());
 
   useEffect(() => {
+    setAhora(new Date());
     flujos.recargarCola();
     flujos.getAll().then(setLista);
   }, [flujos.refreshKey]);
+
+  /** Cuantos pasos tocan hoy o estan atrasados: el numero que va en la barra. */
+  const pendientes = flujos.cola.length;
+
+  /** Las vistas profundas traen su propio "Volver" y no pintan la barra. */
+  const esVistaDeLista = vista === 'hoy' || vista === 'flujos';
 
   const abrirEditor = async (flujo: MessageFlow | null) => {
     setEditando(flujo);
@@ -79,31 +96,46 @@ export default function FlowsPage() {
   };
 
   const omitir = async (fila: PendingFlowStep) => {
-    if (!confirm(`¿Omitir este paso para ${fila.leadName}? Pasara directo al siguiente.`)) return;
+    if (!(await getPlatform().dialogs.confirm(`¿Omitir este paso para ${fila.leadName}? Pasa directo al siguiente y lo omitido no se puede volver a programar.`))) return;
     await flujos.omitirPaso(fila.progressId);
     setAviso(`Paso omitido para ${fila.leadName}.`);
   };
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <div role="tablist" aria-label="Vista" className="flex border-b border-line">
-        {(['hoy', 'flujos'] as Vista[]).map((v) => (
-          <button
-            key={v}
-            role="tab"
-            type="button"
-            aria-selected={vista === v}
-            onClick={() => setVista(v)}
-            className={`flex-1 border-b-2 px-2 py-2 text-body transition-colors ${
-              vista === v
-                ? 'border-primary font-semibold text-ink'
-                : 'border-transparent font-medium text-ink-secondary hover:text-ink'
-            }`}
-          >
-            {v === 'hoy' ? 'Hoy' : `Flujos${lista.length > 0 ? ` · ${lista.length}` : ''}`}
-          </button>
-        ))}
-      </div>
+      {/*
+        NIVEL 2, y solo cuando tiene una posicion valida.
+
+        Era una fila de pestanas con `border-b-2 border-primary`, o sea el mismo
+        dibujo que `PageTabs`, que esta justo encima. Ahora es el carril hundido
+        que ya usan Enviar y Plantillas: el subrayado morado queda reservado al
+        nivel 1.
+
+        Dos cosas mas, que no son de estilo:
+
+        1. **El contador se muda a "Hoy".** Decia `Flujos · 3`, que es cuantos
+           flujos tenes: inventario, no urgencia. Nadie abre esta pantalla para
+           saber eso. El numero que importa es cuantos pasos te tocan hoy.
+
+        2. **No se dibuja en las vistas profundas.** En detalle, editor e
+           inscribir ninguna de las dos opciones esta activa, asi que se pintaba
+           un control de navegacion que no decia donde estabas. Un
+           `radiogroup` sin ninguna posicion puesta es una mentira semantica.
+           Esas vistas ya traen su propio "Volver".
+      */}
+      {esVistaDeLista && (
+        <div className="flex justify-end">
+        <SegmentedControl
+          label="Vista"
+          value={vista === 'hoy' ? 'hoy' : 'flujos'}
+          onChange={(v) => setVista(v)}
+          options={[
+            { value: 'hoy', label: pendientes > 0 ? `Hoy · ${pendientes}` : 'Hoy' },
+            { value: 'flujos', label: 'Flujos' },
+          ]}
+        />
+        </div>
+      )}
 
       {/* Region viva: los cambios de estado tienen que anunciarse, no solo
           verse. Quien usa lector de pantalla no esta mirando la fila que
@@ -137,7 +169,15 @@ export default function FlowsPage() {
           flujo={viendo}
           pasos={pasosViendo}
           refreshKey={flujos.refreshKey}
-          onVolver={() => setVista('flujos')}
+          /*
+            Se limpia `viendo` al salir del detalle. Sin esto quedaba colgado, y
+            como el "Volver" de Inscribir decide a donde ir con `viendo ? ...`,
+            pasaba lo siguiente: abris el detalle del flujo A, volves, tocas
+            "Inscribir" en la fila del flujo B, y al volver aterrizas en el
+            detalle del flujo A. Un estado de una pantalla que ya cerraste
+            decidiendo la navegacion de otra.
+          */
+          onVolver={() => { setViendo(null); setVista('flujos'); }}
           onEditar={() => abrirEditor(viendo)}
           onInscribir={() => { setInscribiendoEn(viendo); setVista('inscribir'); }}
           onPausar={async (activo) => {
@@ -175,7 +215,7 @@ export default function FlowsPage() {
         />
       ) : lista.length === 0 ? (
         <EmptyState
-          title="Todavia no tienes flujos"
+          title="Todavía no tenés flujos"
           description="Un flujo es una secuencia: el paso 1 hoy, el 2 a los tres dias. LeadSeed te avisa el dia que toca; tu decides si se envia."
           action={<Button variant="primary" onClick={() => abrirEditor(null)}>Crear el primero</Button>}
         />
@@ -215,7 +255,7 @@ export default function FlowsPage() {
                   variant="ghost-danger"
                   className="shrink-0"
                   onClick={async () => {
-                    if (!confirm(`¿Eliminar el flujo ${flujo.name}?`)) return;
+                    if (!(await getPlatform().dialogs.confirm(`¿Eliminar el flujo ${flujo.name}? Los leads inscritos dejan de recibir sus pasos pendientes.`))) return;
                     try {
                       await flujos.remove(flujo.id);
                       setAviso(`Flujo ${flujo.name} eliminado.`);

@@ -69,7 +69,7 @@ export function FlowTodayList({ cola, ahora, onDespachar, onOmitir, onIrAFlujos 
                       </span>
                       <span
                         className={`shrink-0 text-micro font-medium ${
-                          atraso > 0 ? 'text-state-warning' : 'text-ink-muted'
+                          atraso > 0 ? 'text-state-warning-ink' : 'text-ink-muted'
                         }`}
                       >
                         {atraso > 0 ? `Atrasado ${atraso}d` : 'Toca hoy'}

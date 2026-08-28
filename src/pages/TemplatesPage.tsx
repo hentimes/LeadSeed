@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getPlatform } from '../platform/registry';
 import {
   useWhatsAppTemplates, useWhatsAppTemplateLists,
   useEmailTemplates, useEmailTemplateLists,
@@ -9,8 +10,8 @@ import type { AnyTemplate, AnyTemplateList, EditableTemplate } from '../types';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
 import { Icon } from '../utils/icons';
-import { Button, Card, IconButton, Input, Modal, EmptyState } from '../design';
-import { ChannelTabs } from '../components/templates/ChannelTabs';
+import { Button, Card, IconButton, Input, Modal, EmptyState, LoadError, Skeleton } from '../design';
+import { ChannelSegmented } from '../components/channels/ChannelSegmented';
 import { CategoryManagerModal } from '../components/templates/CategoryManagerModal';
 import { ReasonManagerModal } from '../components/templates/ReasonManagerModal';
 import { SendHistoryDisclosure } from '../components/send/SendHistoryDisclosure';
@@ -76,6 +77,8 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   // de que hook vienen, no el tipo.
   const [templates, setTemplates] = useState<AnyTemplate[]>([]);
   const [tplLists, setTplLists] = useState<AnyTemplateList[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [fallo, setFallo] = useState(false);
   const [editing, setEditing] = useState<EditableTemplate | null>(null);
   const [saving, setSaving] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -105,11 +108,11 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     e.preventDefault();
     const text = normalizeReasonText(reasonText);
     if (text === null) {
-      setReasonError(`Escribe un motivo de hasta ${MAX_REASON_LENGTH} caracteres.`);
+      setReasonError(`Escribí un motivo de hasta ${MAX_REASON_LENGTH} caracteres.`);
       return;
     }
     if (isDuplicateReason(text, reasons)) {
-      setReasonError('Ese motivo ya esta en la lista.');
+      setReasonError('Ese motivo ya está en la lista.');
       return;
     }
     setReasonError('');
@@ -120,20 +123,37 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const handleDeleteReason = async (id: number) => {
     // Las plantillas que lo tuvieran como valor por defecto lo pierden, pero no
     // se rompen: la columna es `on delete set null`.
-    if (!confirm('¿Eliminar este motivo? Las plantillas que lo usaran por defecto quedaran sin motivo.')) return;
+    if (!(await getPlatform().dialogs.confirm('¿Eliminar este motivo? Las plantillas que lo usaran por defecto quedarán sin motivo.'))) return;
     await borrarMotivo(id);
   };
 
+  /*
+   * `cargando` arranca en true. Antes no existia: mientras la red respondia,
+   * `templates` era `[]` y la pantalla afirmaba "todavia no tenes plantillas",
+   * con su boton de crear. Un fallo de red se veia exactamente igual que una
+   * cuenta nueva, y quien lo leia creia que habia perdido su trabajo.
+   */
   const load = async () => {
-    if (tab === 'whatsapp') {
-      setTemplates(await waT.getAll());
-      setTplLists(await waL.getAll());
-    } else if (tab === 'email') {
-      setTemplates(await emT.getAll());
-      setTplLists(await emL.getAll());
-    } else {
-      setTemplates(await caT.getAll());
-      setTplLists(await caL.getAll());
+    setCargando(true);
+    setFallo(false);
+
+    // Las dos consultas van en paralelo: la segunda no depende de la primera.
+    const fuente =
+      tab === 'whatsapp'
+        ? ([waT, waL] as const)
+        : tab === 'email'
+          ? ([emT, emL] as const)
+          : ([caT, caL] as const);
+
+    try {
+      const [plantillas, listas] = await Promise.all([fuente[0].getAll(), fuente[1].getAll()]);
+      setTemplates(plantillas);
+      setTplLists(listas);
+    } catch (error) {
+      console.error('[plantillas] no se pudieron cargar', error);
+      setFallo(true);
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -142,6 +162,17 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     setEditing(null);
     setSelectedIds(new Set());
     setBusqueda('');
+    /*
+     * El filtro de categoria tambien se limpia, y esto era un bug.
+     *
+     * Las categorias son POR CANAL: cada uno tiene su propio catalogo. Al
+     * cambiar de canal el id filtrado dejaba de existir, asi que la lista
+     * quedaba filtrada por una categoria de otro canal -practicamente vacia- y
+     * ademas ninguna ficha se pintaba activa, porque "Todas" solo se marca con
+     * `filterCatId === null`. O sea: pocas plantillas o ninguna, y nada en
+     * pantalla explicando por que.
+     */
+    setFilterCatId(null);
   }, [tab]);
 
 
@@ -155,7 +186,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   };
 
   const handleDeleteCategory = async (id: number) => {
-    if (!confirm('¿Eliminar esta categoría?')) return;
+    if (!(await getPlatform().dialogs.confirm('¿Eliminar esta categoría? Las plantillas que la tuvieran salen de ella. No se borra ninguna plantilla.'))) return;
     if (tab === 'whatsapp') await waL.remove(id); 
     else if (tab === 'email') await emL.remove(id);
     else await caL.remove(id);
@@ -182,7 +213,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar esta plantilla?')) return;
+    if (!(await getPlatform().dialogs.confirm('¿Eliminar esta plantilla? No se puede deshacer.'))) return;
     if (tab === 'whatsapp') await waT.remove(id); 
     else if (tab === 'email') await emT.remove(id);
     else await caT.remove(id);
@@ -193,7 +224,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`¿Eliminar ${selectedIds.size} plantillas?`)) return;
+    if (!(await getPlatform().dialogs.confirm(`¿Eliminar ${selectedIds.size} plantillas? No se puede deshacer.`))) return;
     for (const id of selectedIds) {
       if (tab === 'whatsapp') await waT.remove(id); 
       else if (tab === 'email') await emT.remove(id);
@@ -261,6 +292,13 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
   const canalLabel = tab === 'whatsapp' ? 'WhatsApp' : tab === 'email' ? 'Email' : 'Llamadas';
   const nombreItem = tab === 'call' ? 'guion' : 'plantilla';
+  /*
+   * El plural va escrito y no se arma con `${nombreItem}s`: eso producia
+   * "guions". En español la regla depende de la terminacion, asi que componer
+   * plurales concatenando una ese falla en cuanto la palabra no termina en
+   * vocal.
+   */
+  const plural = tab === 'call' ? 'guiones' : 'plantillas';
 
   const buscadas = busqueda.trim()
     ? filtered.filter((t) => {
@@ -277,7 +315,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     // padre y la pagina entera se desborda hacia la derecha, que es lo que
     // pasaba aunque los textos tuvieran `truncate`.
     <div className="flex min-w-0 flex-col gap-3">
-      <ChannelTabs active={tab} onChange={setTab} />
+      <ChannelSegmented active={tab} onChange={setTab} label="Canal de las plantillas" />
 
       {/* Una sola fila: buscar, crear, y el resto detras del menu. Antes eran
           cuatro controles con etiquetas largas que se partian en tres filas. */}
@@ -299,7 +337,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
         <div className="relative">
           <IconButton
             icon={<Icon.More />}
-            label="Mas opciones"
+            label="Más opciones"
             aria-expanded={menuAbierto}
             onClick={() => setMenuAbierto(!menuAbierto)}
           />
@@ -307,7 +345,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
             <>
               <button
                 type="button"
-                aria-label="Cerrar menu"
+                aria-label="Cerrar menú"
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setMenuAbierto(false)}
               />
@@ -334,11 +372,17 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
         </div>
       </div>
 
-      {/* Filtro por categoria: fichas con scroll propio, no un desplegable.
-          Un `select` reserva el ancho de su opcion mas larga y empujaba la
-          pagina. */}
+      {/* Filtro por categoria: fichas, no un desplegable. Un `select` reserva
+          el ancho de su opcion mas larga y empujaba la pagina.
+
+          Se envuelven en vez de desplazarse. Tenian scroll horizontal propio,
+          pero los scrollbars estan ocultos globalmente en `index.css`: las
+          categorias que no entraban desaparecian por el borde sin ninguna
+          pista de que hubiera mas. Son datos del usuario, de cantidad y largo
+          imprevisibles, asi que no hay ancho que garantice que quepan en una
+          linea; lo unico que se puede prometer es que ninguna se pierda. */}
       {categoriasConId.length > 0 && (
-        <div className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-0.5">
+        <div className="-mx-1 flex min-w-0 flex-wrap gap-1.5 px-1 pb-0.5">
           <FiltroChip activo={filterCatId === null} onClick={() => setFilterCatId(null)}>
             Todas
           </FiltroChip>
@@ -355,17 +399,37 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
         </div>
       )}
 
-      {buscadas.length === 0 ? (
+      {cargando ? (
+        <Card padding="none">
+          <ul className="min-w-0 divide-y divide-line-soft">
+            {[0, 1, 2, 3].map((i) => (
+              <li key={i} className="flex items-center gap-3 p-3">
+                <Skeleton shape="block" width="34px" height="34px" />
+                <span className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton width="52%" height="11px" />
+                  <Skeleton width="78%" height="9px" />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : fallo ? (
+        <LoadError
+          title={`No pudimos cargar tus ${plural}`}
+          description="Revisá la conexión y volvé a intentar."
+          onRetry={() => void load()}
+        />
+      ) : buscadas.length === 0 ? (
         <EmptyState
           title={
             busqueda.trim()
-              ? `Ningun resultado para "${busqueda.trim()}"`
-              : `Aun no tienes ${nombreItem}s de ${canalLabel}`
+              ? `Ningún resultado para "${busqueda.trim()}"`
+              : `Todavía no tenés ${plural} de ${canalLabel}`
           }
           description={
             busqueda.trim()
               ? undefined
-              : `Un${tab === 'call' ? ' guion' : 'a plantilla'} es un mensaje con huecos: escribes {nombre} y al enviar se completa con el de cada lead.`
+              : `Un${tab === 'call' ? ' guion' : 'a plantilla'} es un mensaje con huecos: escribís {nombre} y al enviar se completa con el de cada lead.`
           }
         />
       ) : (
@@ -405,12 +469,30 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
                         {(t.templateListIds || []).map((lid: number) => {
                           const cat = tplLists.find((c) => c.id === lid);
                           return cat ? (
+                            /*
+                              Punto de color + nombre en tinta normal.
+
+                              Era texto blanco sobre el color que elige el
+                              usuario, y eso fallaba AA con TODA la paleta, no
+                              con algun caso raro: amarillo 2.15:1, verde
+                              2.54:1, azul 3.68:1, rojo 3.76:1, morado 4.23:1.
+                              Ninguno llega a 4.5, y encima a 10px.
+
+                              El color pasa a ser refuerzo y el nombre lo porta
+                              el texto: es la misma regla del glifo de canal, y
+                              lo que ya hacen las fichas de filtro dos bloques
+                              mas arriba. El componente estaba discrepando
+                              consigo mismo.
+                            */
                             <span
                               key={lid}
-                              className="max-w-full truncate rounded px-1.5 py-0 text-micro text-white"
-                              style={{ backgroundColor: cat.color }}
+                              className="flex min-w-0 items-center gap-1 text-micro text-ink-secondary"
                             >
-                              {cat.name}
+                              <span
+                                className="h-2 w-2 shrink-0 rounded-full"
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              <span className="truncate">{cat.name}</span>
                             </span>
                           ) : null;
                         })}

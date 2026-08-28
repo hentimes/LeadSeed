@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Field, IconButton, Input, Select } from '../../design';
 import { Icon } from '../../utils/icons';
-import { ChannelTabs } from '../templates/ChannelTabs';
+import { ChannelSegmented } from '../channels/ChannelSegmented';
+import { CHANNELS } from '../send/channels';
 import { fetchTemplatesByType } from '../../services/templatesService';
 import { validarFlujo } from '../../services/messageFlowsService';
 import type { FlowChannel, MessageFlow, MessageFlowStep } from '../../types';
@@ -102,18 +103,37 @@ export function FlowEditor({ flujo, pasosIniciales, onGuardar, onCancelar }: Pro
         />
       </Field>
 
-      <Field
-        label="Canal"
-        hint={
-          canalBloqueado
-            ? 'No se puede cambiar con pasos creados: las plantillas son de un canal. Quita los pasos para cambiarlo.'
-            : 'WhatsApp abre el chat con el mensaje escrito. LeadSeed no puede confirmar que se envio ni que llego.'
-        }
-      >
-        <div className={canalBloqueado ? 'pointer-events-none opacity-60' : ''}>
-          <ChannelTabs active={canal} onChange={setCanal} />
+      {/*
+        Con pasos creados el canal no se puede cambiar, y eso ahora se dice
+        sacando el control, no atenuandolo.
+
+        Antes era `pointer-events-none opacity-60`. Las dos mitades estaban mal:
+        `pointer-events-none` bloquea el raton pero NO saca del orden de
+        tabulacion, asi que se llegaba con Tab y se cambiaba el canal con Enter
+        -justo lo que el aviso decia estar impidiendo-, y dejaba cada paso
+        apuntando a una plantilla de otro canal. Y el 60% de opacidad hundia el
+        contraste del texto que explica por que no se puede.
+
+        Bloqueado de verdad es que el control no exista. La fila plana dice el
+        canal puesto, a contraste pleno, y que hay que hacer para cambiarlo.
+      */}
+      {canalBloqueado ? (
+        <div className="rounded-md border border-line bg-surface px-3 py-2">
+          <p className="text-meta font-medium text-ink-secondary">Canal</p>
+          <p className="text-body font-medium text-ink">{CHANNELS[canal].label}</p>
+          <p className="mt-0.5 text-meta text-ink-secondary">
+            No se puede cambiar con pasos creados: las plantillas son de un canal. Quitá los
+            pasos para cambiarlo.
+          </p>
         </div>
-      </Field>
+      ) : (
+        <Field
+          label="Canal"
+          hint="WhatsApp abre el chat con el mensaje escrito. LeadSeed no puede confirmar que se envió ni que llegó."
+        >
+          <ChannelSegmented active={canal} onChange={setCanal} label="Canal del flujo" />
+        </Field>
+      )}
 
       <div className="flex min-w-0 flex-col gap-1.5">
         <span className="text-micro font-bold uppercase tracking-wider text-ink-muted">Pasos</span>

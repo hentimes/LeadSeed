@@ -54,6 +54,8 @@ const TEXTURA_WHATSAPP = `url("data:image/svg+xml;charset=utf-8,${encodeURICompo
 
 export default function TemplateEditor({ template, type, categories = [], reasons = [], onSave, onCancel }: Props) {
   const [nombre, setNombre] = useState('');
+  /** El desplegable de categorias arranca cerrado: casi siempre ya estan puestas. */
+  const [categoriasAbiertas, setCategoriasAbiertas] = useState(false);
   const [contenido, setContenido] = useState('');
   const [asunto, setAsunto] = useState('');
   const [isHtml, setIsHtml] = useState(false);
@@ -332,37 +334,99 @@ export default function TemplateEditor({ template, type, categories = [], reason
       )}
 
       <div className="pt-2">
-        <label className="block text-sm font-medium text-ink-secondary mb-1">Categorías</label>
-        <div className="flex flex-wrap gap-1">
-          {categories.map((c) => {
-            const on = selectedCategories.has(c.id);
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => {
-                  const n = new Set(selectedCategories);
-                  if (n.has(c.id)) n.delete(c.id);
-                  else n.add(c.id);
-                  setSelectedCategories(n);
-                }}
-                className={`px-2 py-1 rounded-full text-xs border ${on ? 'text-white border-transparent' : 'text-ink-secondary border-line-strong'}`}
-                style={on ? { backgroundColor: c.color } : {}}
+        {/*
+          CATEGORIAS, COMO DESPLEGABLE CONTENIDO.
+
+          Eran todas las fichas a la vista, envueltas en varias lineas: con
+          muchas categorias empujaban el pie del formulario fuera de la pantalla.
+
+          El panel se abre EN EL FLUJO, no con `absolute`. Es a proposito: un
+          panel flotante dentro de un modal es justo lo que se acaba de arreglar
+          en `VariableDropdown`, que se salia por el borde. Abriendo en el flujo
+          el problema no puede existir -empuja el contenido en vez de flotar
+          sobre el- y el modal ya scrollea.
+
+          El relleno de la ficha activa es el morado de marca y no el color de la
+          categoria: blanco sobre los colores del catalogo daba entre 2.15:1 y
+          4.23:1, o sea que FALLABA con los cinco. El color pasa al punto, que
+          es refuerzo y no portador del dato.
+        */}
+        <span className="mb-1 block text-meta font-medium text-ink-secondary">Categorías</span>
+
+        {categories.length === 0 ? (
+          <p className="text-micro text-ink-muted">
+            No hay categorías todavía. Se crean desde el menú de Plantillas.
+          </p>
+        ) : (
+          <div className="rounded-md border border-line bg-surface">
+            <button
+              type="button"
+              onClick={() => setCategoriasAbiertas((estaba) => !estaba)}
+              aria-expanded={categoriasAbiertas}
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"
+            >
+              <span className="min-w-0 truncate text-body text-ink">
+                {selectedCategories.size === 0
+                  ? 'Sin categoría'
+                  : categories
+                      .filter((c) => selectedCategories.has(c.id))
+                      .map((c) => c.name)
+                      .join(', ')}
+              </span>
+              <span
+                className={`shrink-0 text-ink-muted transition-transform [&_svg]:h-3 [&_svg]:w-3 ${
+                  categoriasAbiertas ? 'rotate-180' : ''
+                }`}
               >
-                {c.name}
-              </button>
-            );
-          })}
-          {categories.length === 0 && <span className="text-xs text-ink-muted">No hay categorías disponibles. Créalas afuera.</span>}
-        </div>
+                <Icon.ChevronDown />
+              </span>
+            </button>
+
+            {categoriasAbiertas && (
+              <div className="max-h-40 overflow-y-auto border-t border-line-soft">
+                {categories.map((c) => {
+                  const on = selectedCategories.has(c.id);
+                  return (
+                    <label
+                      key={c.id}
+                      className="flex min-h-[36px] cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-surface-hover"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={() => {
+                          const n = new Set(selectedCategories);
+                          if (n.has(c.id)) n.delete(c.id);
+                          else n.add(c.id);
+                          setSelectedCategories(n);
+                        }}
+                        className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded-sm border-line accent-[var(--ls-primary)]"
+                      />
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full border border-line-soft"
+                        style={{ backgroundColor: c.color }}
+                      />
+                      <span className="min-w-0 truncate text-body text-ink">{c.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" variant="primary">
-          {template?.id ? 'Actualizar' : 'Crear Plantilla'}
-        </Button>
+      {/*
+        A la derecha, y la accion principal la ultima: es el orden de lectura, y
+        deja el boton que confirma bajo el pulgar, del lado por el que se cierra
+        el dialogo. Antes iban a la izquierda y con la accion primero.
+      */}
+      <div className="flex justify-end gap-2 pt-2">
         <Button type="button" onClick={onCancel}>
           Cancelar
+        </Button>
+        <Button type="submit" variant="primary">
+          {template?.id ? 'Actualizar' : 'Crear plantilla'}
         </Button>
       </div>
     </form>
