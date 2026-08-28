@@ -1,10 +1,11 @@
-import { MAX_LIST_DESCRIPTION, type LeadList } from '../types';
+import { MAX_LIST_DESCRIPTION, MAX_LIST_NAME, type LeadList } from '../types';
 import {
   createLeadList,
   deleteLeadListRow,
   fetchLeadListRows,
   type LeadListRow,
   updateLeadList,
+  updateLeadListsColor,
 } from '../repositories/listsRepository';
 import { STATE } from '../design/colors';
 
@@ -29,6 +30,18 @@ function normalizarDescripcion(valor: string | undefined): string | null {
   return limpia || null;
 }
 
+/**
+ * Recorta el nombre al limite antes de enviarlo.
+ *
+ * El nombre solo tenia el `maxLength` del formulario, que se salta cualquier
+ * camino que no sea ese formulario -una importacion, la API, un script-. Desde
+ * la migracion 129 la base tambien lo limita, asi que sin este recorte un
+ * nombre largo fallaria con un error de Postgres que no le dice nada a nadie.
+ */
+function normalizarNombre(valor: string): string {
+  return valor.trim().slice(0, MAX_LIST_NAME);
+}
+
 export async function fetchLeadLists(userId: string): Promise<LeadList[]> {
   return (await fetchLeadListRows(userId)).map(mapRowToLeadList);
 }
@@ -36,7 +49,7 @@ export async function fetchLeadLists(userId: string): Promise<LeadList[]> {
 export async function saveLeadList(userId: string, list: LeadList): Promise<number> {
   if (list.id) {
     await updateLeadList(list.id, {
-      name: list.name,
+      name: normalizarNombre(list.name),
       color: list.color,
       description: normalizarDescripcion(list.description),
       updated_at: new Date().toISOString(),
@@ -46,10 +59,15 @@ export async function saveLeadList(userId: string, list: LeadList): Promise<numb
 
   return createLeadList({
     user_id: userId,
-    name: list.name,
+    name: normalizarNombre(list.name),
     color: list.color,
     description: normalizarDescripcion(list.description),
   });
+}
+
+/** Pinta varias listas del mismo color. Ver `updateLeadListsColor`. */
+export async function updateListsColor(ids: number[], color: string): Promise<void> {
+  await updateLeadListsColor(ids, color);
 }
 
 export async function deleteLeadList(id: number): Promise<void> {

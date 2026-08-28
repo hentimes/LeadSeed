@@ -24,6 +24,20 @@ export async function fetchLeadListRows(userId: string): Promise<LeadListRow[]> 
   return data as LeadListRow[];
 }
 
+/**
+ * Cambia el color de varias listas de una vez.
+ *
+ * Una sola sentencia y no un `Promise.all` de `saveLeadList`: esa version haria
+ * N viajes, reenviaria el nombre y la descripcion de cada lista sin necesidad, y
+ * podria dejar la mitad cambiada si una fallara a mitad de camino.
+ */
+export async function updateLeadListsColor(ids: number[], color: string): Promise<void> {
+  if (ids.length === 0) return;
+
+  const { error } = await supabase.from(LEAD_LISTS_TABLE).update({ color }).in('id', ids);
+  if (error) throw error;
+}
+
 export async function updateLeadList(id: number, payload: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.from(LEAD_LISTS_TABLE).update(payload).eq('id', id);
   if (error) {

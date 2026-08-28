@@ -92,3 +92,33 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
     console.error("Error saving remote settings:", describeError(e));
   }
 }
+
+/**
+ * Cola de escrituras de ajustes.
+ *
+ * `getSettings` es una consulta de red, no una lectura local, asi que el
+ * patron `leer -> mezclar -> escribir` que usan los ajustes **no es atomico**.
+ * Con un solo boton de guardar eso no se notaba: habia una escritura por
+ * pantalla. Al pasar cada control a guardarse solo, en la pestana General hay
+ * cinco que escriben por su cuenta, y tabular de "WhatsApp/dia" a "Emails/dia"
+ * basta para solaparlas: las dos leen el mismo estado anterior y la segunda
+ * pisa el numero que acababa de guardar la primera.
+ *
+ * Encadenar las escrituras en una sola promesa hace que cada una lea lo que
+ * dejo la anterior. No arregla dos pestanas del navegador escribiendo a la
+ * vez -eso pide un patch en el servidor-, pero si el caso real, que es un
+ * usuario tabulando entre campos vecinos.
+ */
+let colaDeAjustes: Promise<unknown> = Promise.resolve();
+
+export function patchSettings(patch: Partial<AppSettings>): Promise<void> {
+  const siguiente = colaDeAjustes.then(async () => {
+    const actuales = await getSettings();
+    await saveSettings({ ...actuales, ...patch });
+  });
+
+  // La cola no se rompe si una escritura falla: la siguiente debe intentarlo
+  // igual, en vez de quedarse esperando a una promesa ya rechazada.
+  colaDeAjustes = siguiente.catch(() => undefined);
+  return siguiente;
+}

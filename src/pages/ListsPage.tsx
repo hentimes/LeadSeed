@@ -8,40 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 import ListLeadsTable from '../components/lists/ListLeadsTable';
 import { SmartListSettingsModal } from '../components/lists/SmartListSettingsModal';
 import ListDescription from '../components/lists/ListDescription';
-import { MAX_LIST_DESCRIPTION } from '../types';
+import CreateListRow from '../components/lists/CreateListRow';
 import { SMART_LIST_DEFS, getSmartListLeads } from '../utils/smartLists';
 import { getSettings, saveSettings } from '../services/appSettingsService';
-import { Button, IconButton } from '../design';
 
-const AVAILABLE_COLORS = [
-  // Página 1: Alta Variedad (Claros y Primarios)
-  { hex: '#FFFFFF', name: 'Blanco' },
-  { hex: '#EF4444', name: 'Rojo Claro' },
-  { hex: '#22C55E', name: 'Verde Claro' },
-  { hex: '#3B82F6', name: 'Azul Claro' },
-  { hex: '#FBBF24', name: 'Amarillo' },
-  
-  // Página 2: Alta Variedad (Oscuros y Secundarios)
-  { hex: '#000000', name: 'Negro' },
-  { hex: '#991B1B', name: 'Rojo Oscuro' },
-  { hex: '#166534', name: 'Verde Oscuro' },
-  { hex: '#1E40AF', name: 'Azul Oscuro' },
-  { hex: '#F97316', name: 'Naranja' },
-  
-  // Página 3: Alta Variedad (Claros y Terciarios)
-  { hex: '#94A3B8', name: 'Gris Claro' },
-  { hex: '#EC4899', name: 'Rosado Claro' },
-  { hex: '#06B6D4', name: 'Cyan Claro' },
-  { hex: '#14B8A6', name: 'AquaMarina Claro' },
-  { hex: '#A855F7', name: 'Morado Claro' },
-  
-  // Página 4: Alta Variedad (Oscuros y Terciarios)
-  { hex: '#475569', name: 'Gris Oscuro' },
-  { hex: '#BE185D', name: 'Rosado Oscuro' },
-  { hex: '#155E75', name: 'Cyan Oscuro' },
-  { hex: '#0F766E', name: 'AquaMarina Oscuro' },
-  { hex: '#6B21A8', name: 'Morado Oscuro' }
-];
 
 type UnifiedList = {
   id: string | number;
@@ -54,7 +24,7 @@ type UnifiedList = {
 
 export default function ListsPage() {
   const { hasFeature } = useAuth();
-  const { getAll: getLists, save, remove: removeList } = useLists();
+  const { getAll: getLists, save, remove: removeList, setColor: setListsColor } = useLists();
   const { getAll: getLeads, getDeleted, addToList, removeFromList, remove: deleteLead } = useLeads();
   
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -68,10 +38,7 @@ export default function ListsPage() {
   
   const [showSmartSettings, setShowSmartSettings] = useState(false);
   
-  const [newListName, setNewListName] = useState('');
-  const [newListDescription, setNewListDescription] = useState('');
-  const [newListColor, setNewListColor] = useState('#6C4CF6');
-  const [colorPageIndex, setColorPageIndex] = useState(0);
+
   
   // Drag and Drop state
   const [draggedListId, setDraggedListId] = useState<string | number | null>(null);
@@ -118,23 +85,23 @@ export default function ListsPage() {
     setShowSmartSettings(false);
   };
 
-  const handleCreateList = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newListName.trim()) return;
-    
+  /*
+   * Lanza en vez de avisar por su cuenta: `CreateListRow` es quien tiene el
+   * sitio para mostrar el motivo, debajo del campo. Antes esto era un
+   * `alert()`, que en un panel de 320px tapa la extension entera.
+   */
+  /** Pinta varias listas de una vez desde la configuracion. */
+  const handleApplyColor = async (ids: number[], color: string) => {
+    await setListsColor(ids, color);
+    load();
+  };
+
+  const handleCreateList = async ({ name, color }: { name: string; color: string }) => {
     if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
-      alert(' Límite Alcanzado: El Plan Free solo permite crear 2 listas. Actualiza al Plan Pro para crear listas ilimitadas.');
-      return;
+      throw new Error('El plan Free permite 2 listas. Pasá a Pro para crear las que quieras.');
     }
 
-    await save({
-      name: newListName.trim(),
-      color: newListColor,
-      createdAt: '',
-      description: newListDescription.trim() || undefined,
-    });
-    setNewListName('');
-    setNewListDescription('');
+    await save({ name, color, createdAt: '' });
     load();
   };
 
@@ -318,31 +285,65 @@ export default function ListsPage() {
       >
         <div
           onClick={() => { setExpandedId(isExpanded ? null : list.id); setSelectedLeadIds(new Set()); setLeadSearch(''); }}
-          className={`flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-surface-muted ${insideGroup ? 'pl-10' : ''}`}
+          /*
+            Alto fijo para TODAS las filas.
+
+            Las listas propias se veian mas gruesas que las automaticas, y la
+            causa no era la descripcion -`text-meta` es mas bajo que el nombre-:
+            era el tacho, que solo se pinta cuando la lista NO es automatica.
+            Con su relleno y su icono medía unos 32px, mas que ningun otro hijo
+            de la fila, asi que estiraba solo las filas donde existia. Se veia
+            como dos densidades distintas en la misma lista sin ningun motivo.
+
+            `min-h` con `items-center` en vez de `py` suelto: asi la altura la
+            fija la fila y no el hijo mas alto que le toque, y deja de depender
+            de que controles aparezcan en cada caso.
+          */
+          className={`flex min-h-[44px] items-center justify-between gap-2 px-5 py-1.5 cursor-pointer hover:bg-surface-muted ${insideGroup ? 'pl-10' : ''}`}
         >
-          <div className="flex items-center gap-3">
-            <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: list.color }} />
-            <span className="flex flex-col min-w-0">
-              <span className="font-medium text-[13px] text-ink dark:text-slate-200 flex items-center gap-2">
-                {list.name}
-                {list.isSmart && <span className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">Automática</span>}
-              </span>
-              <ListDescription
-                description={list.description}
-                editable={!list.isSmart}
-                listName={list.name}
-                onSave={(descripcion) => handleSaveDescription(list, descripcion)}
-              />
+          {/*
+            Todo en una linea: punto, nombre, descripcion y contador.
+ 
+            El nombre se topa al 45% para que la descripcion tenga sitio; sin
+            ese tope, un nombre largo se lo comeria entero y la descripcion no
+            se veria nunca. Cada tramo lleva `min-w-0` porque un hijo de flex
+            no se encoge por debajo de su contenido salvo que se le diga.
+          */}
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span
+              className="h-3 w-3 shrink-0 rounded-full shadow-sm"
+              style={{ backgroundColor: list.color }}
+            />
+
+            <span className="min-w-0 max-w-[45%] truncate text-body font-medium text-ink">
+              {list.name}
             </span>
-            <span className="bg-surface-hover text-ink-secondary text-[10px] px-2 py-0.5 rounded-md font-semibold border border-line dark:border-slate-600 shrink-0">{leads.length} leads</span>
+
+            {list.isSmart && (
+              <span className="shrink-0 rounded border border-accent-border bg-accent-soft px-1.5 py-0.5 text-micro font-bold uppercase tracking-wider text-accent">
+                Automática
+              </span>
+            )}
+
+            <ListDescription
+              description={list.description}
+              editable={!list.isSmart}
+              listName={list.name}
+              onSave={(descripcion) => handleSaveDescription(list, descripcion)}
+              className="min-w-0 flex-1"
+            />
+
+            <span className="shrink-0 rounded-md border border-line bg-surface-hover px-2 py-0.5 text-micro font-semibold text-ink-secondary">
+              {leads.length} leads
+            </span>
           </div>
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {insideGroup && (
-               <button onClick={(e) => { e.stopPropagation(); handleRemoveFromGroup(list.id); }} className="text-ink-muted hover:text-orange-500 p-1.5 rounded-md hover:bg-orange-50 text-[11px] font-medium" title="Sacar de la carpeta" aria-label={`Sacar ${list.name} de la carpeta`}>Sacar</button>
+               <button onClick={(e) => { e.stopPropagation(); handleRemoveFromGroup(list.id); }} className="flex h-7 shrink-0 items-center rounded-md px-2 text-micro font-medium text-ink-muted transition-colors hover:bg-orange-50 hover:text-orange-500" title="Sacar de la carpeta" aria-label={`Sacar ${list.name} de la carpeta`}>Sacar</button>
             )}
             {!list.isSmart && (
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id as number); }} className="text-ink-muted hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Eliminar lista" aria-label={`Eliminar la lista ${list.name}`}>
+              <button onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id as number); }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 [&_svg]:h-3.5 [&_svg]:w-3.5" title="Eliminar lista" aria-label={`Eliminar la lista ${list.name}`}>
                 {Icon.Trash()}
               </button>
             )}
@@ -414,58 +415,12 @@ export default function ListsPage() {
   return (
     <div className="pb-20">
       
-      {/* Header and Creation Row */}
-      <div className="flex gap-2 mb-5 items-center">
-         <form onSubmit={handleCreateList} className="flex gap-2 bg-surface border border-line p-1 rounded-md shadow-sm items-center">
-            <input 
-              type="text" 
-              placeholder="Nueva Lista (Ej: Prioritarios)" 
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-transparent outline-none flex-1 min-w-[160px]"
-            />
-            {/* Opcional: crear una lista no deberia obligar a describirla. */}
-            <input
-              type="text"
-              placeholder="De que va (opcional)"
-              value={newListDescription}
-              onChange={(e) => setNewListDescription(e.target.value)}
-              maxLength={MAX_LIST_DESCRIPTION}
-              aria-label="Descripcion de la lista nueva"
-              className="px-3 py-1.5 text-[13px] bg-transparent outline-none border-l border-line min-w-[150px] flex-1 text-ink-secondary placeholder:text-ink-muted"
-            />
-            <div className="flex gap-1.5 items-center px-3 border-l border-line">
-              {AVAILABLE_COLORS.slice(colorPageIndex * 5, colorPageIndex * 5 + 5).map(c => (
-                <button 
-                  key={c.hex}
-                  type="button" 
-                  onClick={() => setNewListColor(c.hex)}
-                  className={`w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/10 transition-all ${newListColor === c.hex ? 'ring-2 ring-offset-1 ring-slate-400 scale-110' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                  style={{ backgroundColor: c.hex }}
-                  title={c.name}
-                />
-              ))}
-              <button 
-                type="button"
-                onClick={() => setColorPageIndex((prev) => (prev + 1) % (AVAILABLE_COLORS.length / 5))}
-                className="w-5 h-5 ml-1.5 flex items-center justify-center text-ink-muted hover:text-ink-secondary hover:bg-surface-hover rounded-full transition-colors"
-                title="Siguientes colores"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
-            </div>
-            <Button type="submit" variant="primary" size="sm" className="ml-1">
-               + Crear
-            </Button>
-         </form>
-
-         <IconButton
-            label="Configurar Listas Inteligentes"
-            icon={Icon.Settings()}
-            className="ml-auto"
-            onClick={() => setShowSmartSettings(true)}
-         />
-      </div>
+      <CreateListRow
+        existingNames={lists.map((lista) => lista.name)}
+        existingColors={lists.map((lista) => lista.color)}
+        onCreate={handleCreateList}
+        onOpenSettings={() => setShowSmartSettings(true)}
+      />
 
       <div className="bg-[#ffffff] dark:bg-slate-800 rounded-md shadow-sm border border-line dark:border-slate-700 overflow-hidden">
          {renderedItems.groups.map(group => (
@@ -514,7 +469,9 @@ export default function ListsPage() {
       {showSmartSettings && settings && (
          <SmartListSettingsModal 
             activeSmartLists={settings.activeSmartLists || []}
+            lists={lists}
             onSave={handleSaveSmartSettings}
+            onApplyColor={handleApplyColor}
             onClose={() => setShowSmartSettings(false)}
          />
       )}

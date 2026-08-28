@@ -2,7 +2,12 @@ import { useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import type { LeadList } from '../types';
 import { useRealtimeRefresh } from './useRealtimeRefresh';
-import { deleteLeadList, fetchLeadLists, saveLeadList } from '../services/listsService';
+import {
+  deleteLeadList,
+  fetchLeadLists,
+  saveLeadList,
+  updateListsColor,
+} from '../services/listsService';
 
 export function useLists() {
   const { user } = useAuth();
@@ -27,5 +32,15 @@ export function useLists() {
     triggerRefresh();
   }, [triggerRefresh, user]);
 
-  return { getAll, save, remove, refreshKey };
+  /** Pinta varias listas del mismo color en una sola consulta. */
+  const setColor = useCallback(
+    async (ids: number[], color: string): Promise<void> => {
+      if (!user) return;
+      await updateListsColor(ids, color);
+      triggerRefresh();
+    },
+    [triggerRefresh, user]
+  );
+
+  return { getAll, save, remove, setColor, refreshKey };
 }

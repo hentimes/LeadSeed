@@ -1,7 +1,7 @@
 /**
  * La descripcion de una lista: se ve, y se edita en el sitio.
  *
- * No abre un modal ni lleva a otra pantalla porque son 25 caracteres: montar un
+ * No abre un modal ni lleva a otra pantalla porque son 30 caracteres: montar un
  * dialogo para eso cuesta mas atencion del usuario que el propio texto. Se
  * pulsa, se escribe y se guarda con Intro.
  *
@@ -19,9 +19,17 @@ interface Props {
   onSave: (description: string) => Promise<void>;
   /** Para el texto accesible de los controles. */
   listName: string;
+  /** El ancho lo decide quien lo monta: comparte linea con nombre y contador. */
+  className?: string;
 }
 
-export default function ListDescription({ description, editable, onSave, listName }: Props) {
+export default function ListDescription({
+  description,
+  editable,
+  onSave,
+  listName,
+  className = '',
+}: Props) {
   const [editando, setEditando] = useState(false);
   const [valor, setValor] = useState(description || '');
   const [guardando, setGuardando] = useState(false);
@@ -70,7 +78,7 @@ export default function ListDescription({ description, editable, onSave, listNam
 
   if (!editable) {
     return description ? (
-      <span className="text-[11px] text-ink-muted truncate">{description}</span>
+      <span className={`truncate text-meta italic text-ink-muted ${className}`}>{description}</span>
     ) : null;
   }
 
@@ -114,15 +122,30 @@ export default function ListDescription({ description, editable, onSave, listNam
           ? `Editar la descripcion de ${listName}`
           : `Anadir una descripcion a ${listName}`
       }
-      className={`text-[11px] truncate max-w-[180px] rounded px-1 -mx-1 hover:bg-surface-hover focus:outline-none focus:ring-1 focus:ring-primary-soft ${
+      /*
+       * El ancho lo decide quien lo monta con `className`, no este componente:
+       * ahora comparte linea con el nombre y el contador, y un `max-w` fijo
+       * aca le impediria aprovechar el sitio que quede.
+       *
+       * Cursiva y tono mas claro tambien CON descripcion: en una sola linea
+       * junto al nombre, es lo que distingue una cosa de la otra.
+       */
+      /*
+        `text-left` no es decorativo: en las listas editables esto es un
+        `<button>`, y un boton centra su texto por defecto. Como ocupa todo el
+        ancho sobrante, la descripcion aparecia flotando en el medio de la fila
+        en vez de junto al nombre. En las no editables es un `<span>` y el
+        problema no se veia, lo que lo hacia mas dificil de encontrar.
+      */
+      className={`truncate rounded px-1 -mx-1 text-left text-meta italic hover:bg-surface-hover focus:outline-none focus:ring-1 focus:ring-focus ${
         description
           ? 'text-ink-muted'
           : // Sin descripcion el invitador solo aparece al pasar por encima:
             // una fila de "anadir descripcion" repetida en cada lista es ruido.
-            'text-ink-muted/0 group-hover:text-ink-muted/70 italic'
-      }`}
+            'text-ink-muted/0 group-hover:text-ink-muted/70'
+      } ${className}`}
     >
-      {description || 'anadir descripcion'}
+      {description || 'añadir descripción'}
     </button>
   );
 }
