@@ -7,7 +7,7 @@ import {
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
   faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
   faCrown, faUser, faUserSlash, faBell, faCommentDots, faArrowRight, faFilter,
-  faLightbulb, faLayerGroup, faCalendarDays, faShareNodes
+  faLightbulb, faLayerGroup, faCalendarDays, faShareNodes, faCircleQuestion
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -56,6 +56,14 @@ export const Icon = {
   Plus: () => <I icon={faPlus} className="text-xs" />,
   Close: () => <I icon={faTimes} className="text-xs" />,
   Help: () => <I icon={faQuestion} className="text-sm" />,
+  /**
+   * Interrogacion DENTRO de un circulo.
+   *
+   * `Help` es un signo de interrogacion pelado, y suelto a 18px junto a iconos
+   * con silueta -un globo de chat, una campana, una diana- se ve como un
+   * caracter de texto que se colo, no como parte del juego.
+   */
+  HelpCircle: () => <I icon={faCircleQuestion} className="text-sm" />,
   Restore: () => <I icon={faRotateLeft} className="text-xs" />,
   ArrowLeft: () => <I icon={faArrowLeft} className="text-xs" />,
   ArrowRight: () => <I icon={faArrowRight} className="text-sm" />,

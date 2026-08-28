@@ -32,6 +32,20 @@ interface ModalProps {
   maxWidth?: string;
   /** Etiqueta accesible del dialogo. */
   label?: string;
+  /**
+   * Donde se apoya el panel.
+   *
+   * `center` es lo de siempre y sigue siendo el defecto. `top` lo ancla a una
+   * altura fija.
+   *
+   * Sirve para los dialogos que cambian de alto sin cerrarse -los que tienen
+   * pestanas dentro-. Centrado, cada alto da un tope distinto: al pasar de una
+   * pestana larga a una corta el panel entero se reacomoda de golpe y se lee
+   * como un salto, aunque solo haya cambiado el contenido. Anclado arriba, la
+   * cabecera y las pestanas se quedan donde estaban y solo crece o se encoge el
+   * borde de abajo, que es lo unico que de verdad cambio.
+   */
+  align?: 'center' | 'top';
 }
 
 /** Contenedores que hacen scroll detras del modal y hay que congelar. */
@@ -68,7 +82,7 @@ function focusablesDe(contenedor: HTMLElement): HTMLElement[] {
   );
 }
 
-export function Modal({ onClose, children, maxWidth = '460px', label }: ModalProps) {
+export function Modal({ onClose, children, maxWidth = '460px', label, align = 'center' }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -130,14 +144,19 @@ export function Modal({ onClose, children, maxWidth = '460px', label }: ModalPro
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-4 backdrop-blur-sm"
+      className={`fixed inset-0 z-[200] flex justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-4 backdrop-blur-sm ${
+        align === 'top' ? 'items-start pt-12' : 'items-center'
+      }`}
     >
-      {/* my-auto centra el panel cuando entra, y lo deja crecer hacia abajo
-          con scroll propio cuando no cabe, en vez de recortarse. */}
+      {/* Centrado, `my-auto` centra el panel al entrar y lo deja crecer hacia
+          abajo con scroll propio cuando no cabe, en vez de recortarse. Anclado
+          arriba no se aplica: ahi el tope lo fija el contenedor. */}
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative my-auto flex max-h-full w-full flex-col overflow-y-auto rounded-[8px] border border-line bg-surface shadow-2xl animate-scale-in outline-none"
+        className={`relative flex max-h-full w-full flex-col overflow-y-auto rounded-[8px] border border-line bg-surface shadow-2xl animate-scale-in outline-none ${
+          align === 'top' ? '' : 'my-auto'
+        }`}
         style={{ maxWidth }}
       >
         {children}

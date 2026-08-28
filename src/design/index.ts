@@ -14,9 +14,14 @@
 export { Card, Panel } from './Surface';
 export { Button, IconButton } from './Button';
 export { Badge } from './Badge';
-export { PageShell, SectionHeader, EmptyState } from './PageShell';
+export { Avatar, AvatarStack } from './Avatar';
+export { Chip, SegmentedControl, CountBadge } from './Chip';
+export { Skeleton } from './Skeleton';
+export { PageShell, SectionHeader, EmptyState, LoadError } from './PageShell';
 export { Field, Input, Textarea, Select, Checkbox } from './Field';
 export { PageTitle, SectionTitle, CardTitle, GroupLabel, Body, Hint } from './Text';
 export { Modal } from './Modal';
+export { Section, Block, Notice } from './Section';
+export { Switch, SettingRow, SettingGroup } from './SettingRow';
 export { ListPanel, ListRow, ListPagination, clasesDeFila, tonoDeFila } from './ListPanel';
 export type { ListDensity } from './ListPanel';

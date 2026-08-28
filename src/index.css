@@ -67,6 +67,53 @@
 
 }
 
+/**
+ * FOCO VISIBLE
+ *
+ * Existe desde el 2026-08-25. Hasta entonces no habia ninguna regla global de
+ * foco: `@tailwind base` quita el `outline` que trae el navegador, y solo dos
+ * o tres controles del producto dibujaban su propio anillo. El resto -las
+ * decenas de botones de solo icono del chat, las tarjetas del feed, los chips
+ * de categoria- no daban NINGUNA pista de donde estaba el teclado. Eso es un
+ * incumplimiento de WCAG 2.2 AA 2.4.7 en toda la extension, no solo aca.
+ *
+ * Se usa `:focus-visible` y no `:focus` a proposito: el navegador solo lo
+ * activa cuando el foco llego por teclado, asi que hacer clic en un boton con
+ * el mouse no deja un anillo pegado.
+ *
+ * `outline` y no `box-shadow`: el outline no participa del layout ni lo
+ * recorta un `overflow-hidden` del contenedor, que es justo lo que pasaria en
+ * las filas de la lista de mensajes.
+ */
+:focus-visible {
+  outline: 2px solid var(--ls-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--ls-radius-sm);
+}
+
+/**
+ * MOVIMIENTO REDUCIDO
+ *
+ * El sistema operativo tiene una casilla para pedir que las interfaces no se
+ * muevan; la usa gente con vestibulopatias o sensible al mareo. Este archivo
+ * definia ocho animaciones y ninguna la miraba.
+ *
+ * Se anulan por duracion en vez de por `animation: none` porque varias
+ * animaciones del producto terminan en `forwards`: quitarlas del todo dejaria
+ * el elemento en su estado inicial (opacidad 0, o sea invisible) en vez de en
+ * el final.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Ocultar scrollbars globalmente pero permitir el scroll */
 * {
   -ms-overflow-style: none;  /* IE and Edge */

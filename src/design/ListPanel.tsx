@@ -276,7 +276,20 @@ interface ListRowProps {
   className?: string;
 }
 
-/** Una fila, para las listas que no son tablas. */
+/**
+ * Una fila, para las listas que no son tablas.
+ *
+ * ## Por que una fila con `onClick` recibe rol y foco
+ *
+ * Un `<div onClick>` no es un boton: no entra en el orden de tabulacion, no
+ * responde a Enter ni a la barra espaciadora, y un lector de pantalla lo
+ * anuncia como texto suelto. Como abrir una fila es **la** forma de pasar de la
+ * lista al detalle en media extension -usuarios, planes, tickets, leads-, sin
+ * esto esas pantallas no se pueden recorrer sin raton.
+ *
+ * Solo aplica cuando hay `onClick`: una fila que no lleva a ningun sitio no
+ * debe robar una parada de tabulacion.
+ */
 export function ListRow({
   as: Etiqueta = 'div',
   density = 'normal',
@@ -286,9 +299,27 @@ export function ListRow({
   className = '',
   ...resto
 }: ListRowProps) {
+  const esClicable = Etiqueta === 'div' && typeof resto.onClick === 'function';
+
+  const accesible = esClicable
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        onKeyDown: (evento: React.KeyboardEvent<HTMLElement>) => {
+          if (evento.key !== 'Enter' && evento.key !== ' ') return;
+          // La barra espaciadora scrollea la pagina si no se corta aqui.
+          evento.preventDefault();
+          resto.onClick?.();
+        },
+      }
+    : {};
+
   return (
     <Etiqueta
-      className={`flex min-w-0 items-center gap-2 ${clasesDeFila({ density, isSelected, isUnread })} ${className}`}
+      className={`flex min-w-0 items-center gap-2 outline-none focus-visible:ring-1 focus-visible:ring-focus ${clasesDeFila(
+        { density, isSelected, isUnread },
+      )} ${className}`}
+      {...accesible}
       {...resto}
     >
       {children}

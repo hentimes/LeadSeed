@@ -89,6 +89,16 @@ export default {
          * controles.
          */
         focus: conAlfa('--ls-focus-ring'),
+        /**
+         * Enfasis: fijado, anuncio, destacado, mencion a publicacion.
+         * Ver el bloque ENFASIS de tokens.css para por que no es state-warning.
+         */
+        accent: {
+          DEFAULT: conAlfa('--ls-accent'),
+          strong: conAlfa('--ls-accent-strong'),
+          soft: conAlfa('--ls-accent-soft'),
+          border: conAlfa('--ls-accent-border'),
+        },
         ink: {
           DEFAULT: conAlfa('--ls-text'),
           secondary: conAlfa('--ls-text-secondary'),
@@ -113,6 +123,7 @@ export default {
           'success-soft': conAlfa('--ls-success-soft'),
           warning: conAlfa('--ls-warning'),
           'warning-soft': conAlfa('--ls-warning-soft'),
+          'warning-ink': conAlfa('--ls-warning-ink'),
           danger: conAlfa('--ls-danger'),
           'danger-soft': conAlfa('--ls-danger-soft'),
           info: conAlfa('--ls-info'),
@@ -130,6 +141,7 @@ export default {
         md: 'var(--ls-radius-md)',
         lg: 'var(--ls-radius-lg)',
         xl: 'var(--ls-radius-xl)',
+        '2xl': 'var(--ls-radius-2xl)',
         // Alias heredados.
         std: 'var(--ls-radius-md)',
         card: 'var(--ls-radius-md)',
@@ -140,6 +152,7 @@ export default {
       },
       boxShadow: {
         card: 'var(--ls-shadow-card)',
+        bar: 'var(--ls-shadow-bar)',
         float: 'var(--ls-shadow-float)',
         sticky: 'var(--ls-shadow-sticky)',
         std: 'var(--ls-shadow-card)',
@@ -163,6 +176,20 @@ export default {
          * esta escala se nombra por funcion -`card-title`, `body`, `micro`-, no
          * por talla.
          */
+        /*
+         * El texto de una burbuja de chat: 12px.
+         *
+         * `--ls-text-sm` vivia en tokens.css sin estar expuesto, o sea que era
+         * inalcanzable desde una clase. Se expone ahora porque el chat necesita
+         * el escalon intermedio: `body` (13) hacia las burbujas mas altas de lo
+         * necesario y `meta` (11) es el registro de un dato secundario, no el
+         * del contenido principal de la pantalla.
+         *
+         * Se nombra por funcion y no por talla, como el resto de la escala, y
+         * NO se mapea a `text-sm`, que ya existe en Tailwind valiendo 14px:
+         * pisarla encogeria en silencio todos sus usos actuales.
+         */
+        chat: ['var(--ls-text-sm)', { lineHeight: '1.4' }],
         meta: ['var(--ls-text-xs)', { lineHeight: '1.35' }],
         micro: ['var(--ls-text-micro)', { lineHeight: '1.3' }],
       },
@@ -172,6 +199,7 @@ export default {
       height: {
         control: 'var(--ls-control-height)',
         'control-sm': 'var(--ls-control-height-sm)',
+        'control-lg': 'var(--ls-control-height-lg)',
       },
       width: {
         control: 'var(--ls-control-height)',
@@ -179,6 +207,7 @@ export default {
       },
       transitionTimingFunction: {
         spring: 'var(--ls-easing)',
+        magnet: 'var(--ls-easing-magnet)',
       },
     },
   },

@@ -104,6 +104,47 @@ export function SectionHeader({
 }
 
 /**
+ * NO SE PUDO CARGAR
+ *
+ * Distinto del estado vacio, y esa distincion es el motivo de que exista.
+ *
+ * Las paginas de Mensajes cargaban con `useState([])` y sin `catch`: mientras
+ * la red respondia -o cuando fallaba- la lista estaba vacia y la pantalla
+ * afirmaba "Todavia no tenes plantillas", con su boton de crear. Es la peor
+ * variante del parpadeo: no dice "esperá", dice "no tenés nada", y quien lo lee
+ * cree que perdio su trabajo.
+ *
+ * Un fallo de red y una cuenta nueva no se pueden ver igual.
+ */
+export function LoadError({
+  title = 'No pudimos cargar esto',
+  description = 'Puede ser un problema de conexión momentáneo.',
+  onRetry,
+}: {
+  title?: string;
+  description?: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div
+      role="alert"
+      className="flex flex-col items-center justify-center rounded-md border border-state-danger/25 bg-state-danger-soft px-4 py-8 text-center"
+    >
+      <p className="text-body font-semibold text-ink">{title}</p>
+      <p className="mt-1 text-micro text-ink-secondary">{description}</p>
+
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-3 h-control-sm rounded-md bg-surface px-3 text-meta font-semibold text-ink shadow-sm transition-colors hover:bg-surface-hover"
+      >
+        Reintentar
+      </button>
+    </div>
+  );
+}
+
+/**
  * Estado vacio unificado. Cada seccion tenia el suyo con distinto
  * tamano de icono, color y jerarquia.
  */
