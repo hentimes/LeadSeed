@@ -1,27 +1,17 @@
 import type { Page } from '../types';
-import { Icon } from '../utils/icons';
 import { primaryRoutes, secondaryRoutes, type RouteDef } from './routes';
-import type { ReactNode } from 'react';
-
-export interface RailSubmenuItem {
-  page: Page;
-  label: string;
-  hash?: string;
-}
-
-export interface RailSubmenuDef {
-  id: string;
-  label: string;
-  icon: () => ReactNode;
-  items: RailSubmenuItem[];
-}
 
 export interface RailGroupDef {
   id: string;
   /** Rotulo del grupo. Solo se pinta con el rail expandido. */
   label: string;
   pages: Page[];
-  submenu?: RailSubmenuDef;
+  /**
+   * Grupos de paginas con barra horizontal (ver `pageTabGroups.ts`). El rail
+   * pinta **una** entrada por grupo, que lleva a su pagina de entrada; las
+   * hermanas se alcanzan desde la barra de arriba.
+   */
+  groups?: string[];
   /** El ultimo grupo se ancla abajo para que Ajustes nunca quede fuera. */
   pinnedBottom?: boolean;
 }
@@ -31,24 +21,24 @@ export interface RailGroupDef {
  * grupos del rail. Separarlo evita que `routes.ts` cargue con decisiones de
  * presentacion, que es lo que empezaba a pasar en `NavigationDrawer`.
  *
- * `send`, `templates` y `flows` no aparecen sueltos: viven dentro del submenu
- * Mensajes. Igual `settings`, que se abre por sus siete secciones.
+ * ## Los dos submenus que habia
+ *
+ * El rail tenia dos desplegables anclados a su borde: "Ajustes", con las seis
+ * secciones de Configuracion, y "Mensajes", con Enviar, Plantillas y Flujos.
+ * Los dos desaparecen, y por el mismo motivo: **las dos pantallas ya pintan
+ * esos destinos como pestanas arriba**. Un panel flotante de 200px con velo y
+ * gestion de foco para ahorrar un toque, repitiendo unos nombres que estan a
+ * la vista dos centimetros mas alla, es trabajo que no compra nada.
+ *
+ * Ajustes pasa a ser una entrada normal -`settings` ya era una ruta con icono
+ * y atajo- y Mensajes una entrada de grupo.
  */
 export const railGroups: RailGroupDef[] = [
   {
     id: 'principal',
     label: 'Principal',
     pages: ['dashboard', 'leads', 'lists'],
-    submenu: {
-      id: 'messages',
-      label: 'Mensajes',
-      icon: Icon.Messages,
-      items: [
-        { page: 'send', label: 'Enviar' },
-        { page: 'templates', label: 'Plantillas' },
-        { page: 'flows', label: 'Flujos' },
-      ],
-    },
+    groups: ['messages'],
   },
   {
     id: 'analitica',
@@ -63,23 +53,8 @@ export const railGroups: RailGroupDef[] = [
   {
     id: 'sistema',
     label: 'Sistema',
-    pages: ['admin'],
+    pages: ['settings', 'admin'],
     pinnedBottom: true,
-    submenu: {
-      id: 'settings',
-      label: 'Ajustes',
-      icon: Icon.Settings,
-      items: [
-        { page: 'settings', label: 'Apariencia', hash: '#display' },
-        { page: 'settings', label: 'Datos', hash: '#data' },
-        { page: 'settings', label: 'Email', hash: '#email' },
-        { page: 'settings', label: 'Links', hash: '#links' },
-        { page: 'settings', label: 'Config agenda', hash: '#agenda' },
-        { page: 'settings', label: 'Metas', hash: '#goals' },
-        { page: 'settings', label: 'Cuenta', hash: '#cuenta' },
-        { page: 'settings', label: 'Ayuda VIP', hash: '#support' },
-      ],
-    },
   },
 ];
 

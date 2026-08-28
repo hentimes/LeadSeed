@@ -68,39 +68,40 @@ describe('NavigationRail', () => {
     expect(screen.getByRole('button', { name: 'Chat, cuenta suspendida' })).toBeTruthy();
   });
 
-  it('abre el submenu como lista y deja el boton marcado como expandido', () => {
-    montar();
-    const boton = screen.getByRole('button', { name: 'Mensajes' });
-    expect(boton.getAttribute('aria-expanded')).toBe('false');
-
-    fireEvent.click(boton);
-
-    expect(boton.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Plantillas' })).toBeTruthy();
-  });
-
-  it('navega a la seccion de ajustes con su hash', () => {
+  /*
+   * Las cuatro pruebas que habia aqui verificaban el submenu flotante del
+   * rail. Ese submenu ya no existe: sus destinos se pintan como pestanas en la
+   * propia pagina. Lo que queda por comprobar es lo que lo sustituye.
+   */
+  it('la entrada de un grupo lleva a su pagina de entrada', () => {
     const { onNavigate } = montar();
-    fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Metas' }));
-
-    expect(window.location.hash).toBe('#goals');
-    expect(onNavigate).toHaveBeenCalledWith('settings');
+    fireEvent.click(screen.getByRole('button', { name: 'Mensajes' }));
+    expect(onNavigate).toHaveBeenCalledWith('send');
   });
 
   /*
-   * El cajon anterior comparaba contra `window.location.hash` durante el
-   * render sin escuchar `hashchange`, asi que el resaltado se quedaba en la
-   * seccion anterior.
+   * El resaltado es del GRUPO, no de la pagina. Estando en Flujos, una entrada
+   * que resaltara por pagina o no marcaria nada, o marcaria "Enviar" mientras
+   * miras otra cosa.
    */
-  it('sigue el hash cuando cambia fuera del rail', () => {
-    montar({ currentPage: 'settings' });
+  it('marca el grupo desde cualquiera de sus paginas', () => {
+    montar({ currentPage: 'flows' });
+    expect(screen.getByRole('button', { name: 'Mensajes' }).getAttribute('aria-current')).toBe('page');
+  });
+
+  it('Ajustes es una entrada normal y navega sin hash', () => {
+    const { onNavigate } = montar();
     fireEvent.click(screen.getByRole('button', { name: 'Ajustes' }));
 
-    window.location.hash = '#data';
-    fireEvent(window, new HashChangeEvent('hashchange'));
+    expect(onNavigate).toHaveBeenCalledWith('settings');
+    // El hash lo escribe ahora la propia pagina al elegir pestana. Que el rail
+    // no lo toque es lo que permite volver a la seccion donde lo dejaste.
+    expect(window.location.hash).toBe('');
+  });
 
-    expect(screen.getByRole('button', { name: 'Datos' }).getAttribute('aria-current')).toBe('page');
+  it('marca Ajustes cuando es la pagina actual', () => {
+    montar({ currentPage: 'settings' });
+    expect(screen.getByRole('button', { name: 'Ajustes' }).getAttribute('aria-current')).toBe('page');
   });
 
   it('el rail se puede expandir y contraer', () => {
@@ -114,16 +115,13 @@ describe('NavigationRail', () => {
     expect(contraer.getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('el submenu se cierra con Escape sin contraer el rail', () => {
+  it('Escape contrae el rail expandido', () => {
     montar();
     fireEvent.click(screen.getByRole('button', { name: 'Expandir el menú' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Mensajes' }));
-    expect(screen.getByRole('button', { name: 'Plantillas' })).toBeTruthy();
 
     fireEvent.keyDown(document, { key: 'Escape' });
 
-    expect(screen.queryByRole('button', { name: 'Plantillas' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Contraer el menú' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Expandir el menú' })).toBeTruthy();
   });
 
   it('al navegar deja el rail contraido', () => {

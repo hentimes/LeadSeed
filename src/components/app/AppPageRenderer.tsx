@@ -4,6 +4,8 @@ import type { ColumnDef } from '../../types';
 import type { Page } from '../../types';
 import AppStatusScreen from './AppStatusScreen';
 import { PageShell } from '../../design';
+import PageTabs from '../layout/PageTabs';
+import { grupoDePagina } from '../../config/pageTabGroups';
 
 const LeadsPage = lazy(() => import('../../pages/LeadsPage'));
 const ListsPage = lazy(() => import('../../pages/ListsPage'));
@@ -76,6 +78,14 @@ const PAGE_HEADER: Partial<Record<Page, { title: string; description?: string }>
 const PAGE_FILL_HEIGHT: Partial<Record<Page, boolean>> = {
   chat: true,
   community: true,
+  /*
+   * Admin se suma el 2026-08-24. Es un master-detail: la lista y el detalle
+   * scrollean cada uno por su cuenta, y para eso el contenedor tiene que medir
+   * lo que hay disponible. Sin esto, el `h-full` que ya escribia AdminLayout se
+   * resolvia contra un padre de alto automatico -o sea, no hacia nada- y la
+   * pagina crecia hacia abajo hasta donde llegara la lista de usuarios.
+   */
+  admin: true,
 };
 
 interface HighlightTemplate {
@@ -250,6 +260,16 @@ export default function AppPageRenderer({
       pageContent = <LeadsPage compactMode={compactMode} visibleCols={visibleCols} />;
   }
 
+  /*
+   * La barra del grupo se pinta aca y no en cada pagina.
+   *
+   * Este componente ya decide el ancho, el encabezado y la altura de cada
+   * seccion; poner la barra en las tres paginas del grupo serian tres copias
+   * y tres oportunidades de que se desalineen. Va dentro del `PageShell` para
+   * que herede su ancho maximo y su relleno.
+   */
+  const grupo = grupoDePagina(page);
+
   return (
     <PageSuspense>
       <PageShell
@@ -258,6 +278,14 @@ export default function AppPageRenderer({
         title={PAGE_HEADER[page]?.title}
         description={PAGE_HEADER[page]?.description}
       >
+        {grupo && (
+          <PageTabs
+            group={grupo}
+            currentPage={page}
+            onNavigate={onNavigate}
+            hasFeature={hasFeature}
+          />
+        )}
         {pageContent}
       </PageShell>
     </PageSuspense>

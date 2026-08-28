@@ -7,13 +7,22 @@ interface Props {
   currentPage: Page;
 }
 
+/*
+ * Las tres paginas del grupo Mensajes comparten titulo: la barra de pestanas
+ * de debajo dice en cual estas. Antes cada una traia el suyo -"Envio Masivo",
+ * "Plantillas de Mensaje", "Flujos de Mensajes"-, que era un tercer
+ * vocabulario para los mismos tres destinos, distinto del rail y del submenu.
+ *
+ * Es lo mismo que ya hace Configuracion: arriba el nombre de la seccion,
+ * debajo el de la subseccion.
+ */
 const PAGE_TITLES: Record<Page, string> = {
   dashboard: 'Panel Analítico',
   leads: 'Gestión de Leads',
   lists: 'Listas y Cargas',
-  templates: 'Plantillas de Mensaje',
-  flows: 'Flujos de Mensajes',
-  send: 'Envío Masivo',
+  templates: 'Mensajes',
+  flows: 'Mensajes',
+  send: 'Mensajes',
   history: 'Historial de Envíos',
   tasks: 'Mis Tareas',
   pipeline: 'Pipeline Comercial',
@@ -30,7 +39,7 @@ export default function Header({ onToggleUserMenu, currentPage }: Props) {
   const pageTitle = PAGE_TITLES[currentPage];
 
   return (
-    <header className="h-[64px] shrink-0 bg-surface dark:bg-slate-900 border-b border-line dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 relative">
+    <header className="h-[64px] shrink-0 bg-surface dark:bg-slate-900 border-b border-line dark:border-slate-800 flex items-center justify-between px-4 z-30 relative">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {pageTitle ? (

@@ -1,18 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  railGroups,
-  routesForPages,
-  type RailSubmenuDef,
-  type RailSubmenuItem,
-} from '../../config/navigationGroups';
+import { railGroups, routesForPages } from '../../config/navigationGroups';
+import { grupoDePagina, pageTabGroups } from '../../config/pageTabGroups';
+import { primaryRoutes, secondaryRoutes } from '../../config/routes';
 import type { Page } from '../../types';
 import { Icon } from '../../utils/icons';
 import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
-import { useLocationHash, setLocationHash } from './useLocationHash';
 import { useNavigationRailState } from './useNavigationRailState';
 import NavigationRailItem from './NavigationRailItem';
-import NavigationRailFlyout from './NavigationRailFlyout';
 
 interface Props {
   currentPage: Page;
@@ -22,16 +17,17 @@ interface Props {
   isChatBanned?: boolean;
 }
 
-interface FlyoutAbierto {
-  def: RailSubmenuDef;
-  anchorTop: number;
-  /** Distancia del borde derecho de la ventana al borde izquierdo del rail. */
-  offsetRight: number;
-  autoFocus: boolean;
-}
-
 /**
  * Rail de navegacion fijo en el borde derecho.
+ *
+ * ## Sin submenus
+ *
+ * Tenia dos desplegables propios -Ajustes y Mensajes- anclados a su borde, con
+ * velo, posicionamiento calculado a mano y gestion de foco. Los dos destinos
+ * que abrian pintan hoy sus secciones como pestanas en la propia pagina, asi
+ * que el desplegable solo repetia unos nombres que ya estaban a la vista. Al
+ * quitarlos se van con ellos `NavigationRailFlyout`, el estado del panel
+ * abierto y la escucha del hash que hacia falta para resaltar sus hijos.
  *
  * ## Por que el estado expandido flota
  *
@@ -51,14 +47,8 @@ export default function NavigationRail({
 }: Props) {
   const { hasFeature } = useAuth();
   const { isExpanded, toggle, collapse } = useNavigationRailState();
-  const hash = useLocationHash();
-  const [flyout, setFlyout] = useState<FlyoutAbierto | null>(null);
   const navRef = useRef<HTMLElement>(null);
 
-  const cerrarFlyout = useCallback(() => setFlyout(null), []);
-
-  // Escape contrae el rail. La pila de `useCloseOnEscape` se encarga de que,
-  // con un submenu abierto, el primer Escape lo cierre a el y no al rail.
   useCloseOnEscape(collapse, isExpanded);
 
   useEffect(() => {
@@ -73,31 +63,28 @@ export default function NavigationRail({
     return () => document.removeEventListener('keydown', alPulsar);
   }, [toggle]);
 
-  const esItemActivo = useCallback(
-    (item: RailSubmenuItem) => currentPage === item.page && (!item.hash || hash === item.hash),
-    [currentPage, hash],
-  );
-
-  const navegar = (page: Page, destino?: string) => {
-    if (destino) setLocationHash(destino);
-    cerrarFlyout();
+  const navegar = (page: Page) => {
     collapse();
     onNavigate(page);
   };
 
-  const alternarFlyout = (def: RailSubmenuDef, evento: MouseEvent<HTMLButtonElement>) => {
-    if (flyout?.def.id === def.id) {
-      cerrarFlyout();
-      return;
-    }
-    const rect = evento.currentTarget.getBoundingClientRect();
-    // El ancho del rail lo fija `--ls-rail-width` en CSS, asi que el submenu
-    // se ancla midiendo el rail y no repitiendo el numero aqui.
-    const anchoRail = navRef.current?.getBoundingClientRect().width ?? 0;
-    // `detail === 0` es un click disparado por Enter o Espacio: solo entonces
-    // se lleva el foco dentro del submenu, para no robarselo a quien usa raton.
-    setFlyout({ def, anchorTop: rect.top, offsetRight: anchoRail, autoFocus: evento.detail === 0 });
-  };
+  const rutas = [...primaryRoutes, ...secondaryRoutes];
+
+  /**
+   * Un grupo se pinta si el usuario tiene **alguna** de sus paginas.
+   *
+   * Sin ninguna, la entrada llevaria a una pantalla de "no incluido en tu
+   * plan" y nada mas: eso es una entrada de rail que no navega a ningun sitio.
+   */
+  const gruposVisibles = (ids: string[] = []) =>
+    pageTabGroups
+      .filter((grupo) => ids.includes(grupo.id))
+      .filter((grupo) =>
+        grupo.pages.some((page) => {
+          const route = rutas.find((candidata) => candidata.page === page);
+          return route && (!route.requiredFeature || hasFeature(route.requiredFeature));
+        }),
+      );
 
   const contadorDe = (page: Page): number => {
     if (page === 'tasks') return taskCount ?? 0;
@@ -133,7 +120,8 @@ export default function NavigationRail({
       >
         <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-1">
           {grupos.map((grupo) => {
-            if (grupo.routes.length === 0 && !grupo.submenu) return null;
+            const grupos = gruposVisibles(grupo.groups);
+            if (grupo.routes.length === 0 && grupos.length === 0) return null;
 
             return (
               <div
@@ -161,18 +149,22 @@ export default function NavigationRail({
                   />
                 ))}
 
-                {grupo.submenu && (
+                {/*
+                  La entrada de un grupo no puede ser la ruta de su pagina de
+                  entrada: estando en Flujos, una entrada "Enviar" o no
+                  resaltaria nada, o resaltaria diciendo un nombre que no es el
+                  de la pantalla que estas viendo. Resalta por grupo.
+                */}
+                {grupos.map((definicion) => (
                   <NavigationRailItem
-                    label={grupo.submenu.label}
-                    icon={grupo.submenu.icon}
-                    isActive={grupo.submenu.items.some(esItemActivo)}
+                    key={definicion.id}
+                    label={definicion.label}
+                    icon={Icon.Messages}
+                    isActive={grupoDePagina(currentPage)?.id === definicion.id}
                     isExpanded={isExpanded}
-                    ariaExpanded={flyout?.def.id === grupo.submenu.id}
-                    ariaControls={`rail-submenu-${grupo.submenu.id}`}
-                    trailing={<span className="ml-auto text-ink-muted">{Icon.ArrowLeft()}</span>}
-                    onClick={(evento) => alternarFlyout(grupo.submenu as RailSubmenuDef, evento)}
+                    onClick={() => navegar(definicion.landing)}
                   />
-                )}
+                ))}
               </div>
             );
           })}
@@ -195,19 +187,6 @@ export default function NavigationRail({
         </button>
       </nav>
 
-      {flyout && (
-        <NavigationRailFlyout
-          id={`rail-submenu-${flyout.def.id}`}
-          label={flyout.def.label}
-          items={flyout.def.items}
-          anchorTop={flyout.anchorTop}
-          offsetRight={flyout.offsetRight}
-          autoFocus={flyout.autoFocus}
-          isItemActive={esItemActivo}
-          onSelect={navegar}
-          onClose={cerrarFlyout}
-        />
-      )}
     </>
   );
 }
