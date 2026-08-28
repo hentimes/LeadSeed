@@ -1,44 +1,38 @@
+import { ChatIcon } from './ChatIcons';
+import { formatearFechaHora } from '../../utils/date';
+
 interface ChatFrozenBannerProps {
   frozenUntil: string;
   isStaff: boolean;
   onUnfreeze: () => void;
 }
 
-const LockIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-);
-
 /**
  * Reemplaza el composer mientras la sala esta pausada. El staff sigue
  * viendo el composer normal (puede seguir escribiendo) ademas de esto, con
  * la opcion de reanudar antes de tiempo.
+ *
+ * El ambar viene de `--ls-accent` desde el 2026-08-25. Antes eran seis clases
+ * `amber-*` de Tailwind con su `dark:` al lado, y la segunda linea
+ * (`text-amber-700/80`) daba 2.9:1 sobre su propio fondo: por debajo de AA.
  */
 export default function ChatFrozenBanner({ frozenUntil, isStaff, onUnfreeze }: ChatFrozenBannerProps) {
-  const when = new Date(frozenUntil).toLocaleString([], {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
   return (
-    <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-500/10 border-t border-amber-200 dark:border-amber-500/30">
-      <span className="text-amber-600 dark:text-amber-400 flex-shrink-0">
-        <LockIcon />
+    <div className="flex items-center gap-3 border-t border-accent-border bg-accent-soft p-3">
+      <span className="shrink-0 text-accent">
+        <ChatIcon.Lock className="h-5 w-5" />
       </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">El chat está pausado</p>
-        <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
-          Vuelve a estar disponible el {when}.
-        </p>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-meta font-semibold text-accent-strong">La sala está pausada</p>
+        <p className="text-micro text-accent">Se reabre el {formatearFechaHora(frozenUntil)}.</p>
       </div>
+
       {isStaff && (
         <button
           type="button"
           onClick={onUnfreeze}
-          className="text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline flex-shrink-0"
+          className="shrink-0 text-meta font-semibold text-accent-strong hover:underline"
         >
           Reanudar ahora
         </button>

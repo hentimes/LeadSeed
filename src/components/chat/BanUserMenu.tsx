@@ -20,7 +20,7 @@ export default function BanUserMenu({ userName, onCancel, onConfirm }: BanUserMe
   const [hours, setHours] = useState<number | null>(24);
 
   const fieldClass =
-    'w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-ink dark:text-gray-100 outline-none focus:ring-2 focus:ring-primary-soft';
+    'w-full rounded-xl border border-line bg-surface px-3 py-2 text-body text-ink outline-none transition-colors focus:border-focus';
 
   return (
     <Modal onClose={onCancel} maxWidth="360px" label={`Banear a ${userName}`}>

@@ -33,6 +33,9 @@ import ConfirmDangerModal from './ConfirmDangerModal';
 import ChatFrozenBanner from './ChatFrozenBanner';
 import ChatComposer from './ChatComposer';
 import ChatMessageList from './ChatMessageList';
+import ChatRoomSkeleton from './ChatRoomSkeleton';
+import { ChatIcon } from './ChatIcons';
+import { Button, EmptyState } from '../../design';
 import {
   MAX_CHAT_MESSAGE_DISPLAY_LENGTH as MAX_LENGTH,
   cleanChatRoomMessages,
@@ -45,6 +48,7 @@ import {
 import { getErrorMessage } from '../../utils/errorMessage';
 import { buildAttachmentFingerprint, usePendingAttachment } from '../../hooks/usePendingAttachment';
 import { useChatScroll } from '../../hooks/useChatScroll';
+import { useChatReactions } from '../../hooks/useChatReactions';
 
 interface ChatRoomProps {
   roomId?: string; // Si es undefined, carga "General"
@@ -63,7 +67,6 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   const [roomOverride, setRoomOverride] = useState<ChatRoomType | null>(null);
   const moderation = useChatModeration();
   const reportedMessages = useReportedMessages(isStaff);
-  const [reportMenuFor, setReportMenuFor] = useState<string | null>(null);
   const { ban: myBan, loading: banLoading } = useChatBanStatus();
   const [banTarget, setBanTarget] = useState<{ id: string; label: string } | null>(null);
   const [activeTab, setActiveTab] = useState<ChatTab>('messages');
@@ -72,7 +75,13 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   const [showEmojis, setShowEmojis] = useState(false);
   const [profileUser, setProfileUser] = useState<{ id: string; label: string; avatarUrl?: string } | null>(null);
   const dm = useDirectMessageSessions(user?.id);
-  const [pinMenuFor, setPinMenuFor] = useState<string | null>(null);
+  /*
+   * Un unico estado para los tres menus de mensaje (mas acciones, fijar,
+   * reportar), con el formato `${idDelMensaje}:${menu}`. Antes eran tres
+   * estados sueltos y cerrar uno al abrir otro dependia de acordarse de
+   * limpiar los otros dos a mano en cada sitio.
+   */
+  const [openMenuFor, setOpenMenuFor] = useState<string | null>(null);
   const [authorMenuFor, setAuthorMenuFor] = useState<string | null>(null);
   const guard = useMessageGuard();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
@@ -127,7 +136,38 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     onMentionClick?.(mention);
   };
 
-  const scroll = useChatScroll(messages.length);
+  /*
+   * `prefers-reduced-motion` es la casilla del sistema para pedir que las
+   * interfaces no se muevan. Se lee aca y no dentro de `useChatScroll` porque
+   * ese hook vive en la capa de dominio, donde el DOM esta prohibido por la
+   * frontera de portabilidad a movil. Se escucha el cambio, no solo el valor
+   * inicial: la preferencia se puede activar con la extension abierta.
+   */
+  const [animarElScroll, setAnimarElScroll] = useState(true);
+
+  useEffect(() => {
+    const consulta = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sincronizar = () => setAnimarElScroll(!consulta.matches);
+
+    sincronizar();
+    consulta.addEventListener('change', sincronizar);
+    return () => consulta.removeEventListener('change', sincronizar);
+  }, []);
+
+  const scroll = useChatScroll(messages.length, animarElScroll);
+
+  /*
+   * Se le pasan TODOS los mensajes cargados y no solo los visibles: filtrar por
+   * moderacion aca obligaria a mover ese calculo por encima de los returns
+   * tempranos, y traer las reacciones de un mensaje que esta oculto no cuesta
+   * nada -no se pintan- mientras que recalcular la lista en cada render de la
+   * sala si.
+   */
+  const reactions = useChatReactions(
+    room?.id,
+    user?.id,
+    messages.map((message) => message.id)
+  );
   const [sendError, setSendError] = useState('');
 
   // El unico gatillo para anunciar es escribir "@todos" al principio del
@@ -330,8 +370,18 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
     await performSend(draft, false);
   };
 
+  // Responder sin enfocar el campo obligaba a un clic extra para escribir.
+  const handleReply = (message: ChatMessage) => {
+    setReplyTo(message);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  };
+
   if (loading || banLoading) {
-    return <div className="flex items-center justify-center h-full text-ink-muted">Cargando sala...</div>;
+    return (
+      <div className="panel-container h-full overflow-hidden">
+        <ChatRoomSkeleton />
+      </div>
+    );
   }
 
   if (myBan) {
@@ -343,7 +393,20 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
   }
 
   if (!room) {
-    return <div className="flex items-center justify-center h-full text-red-500">Sala no encontrada</div>;
+    return (
+      <div className="panel-container flex h-full items-center justify-center">
+        <EmptyState
+          icon={<ChatIcon.Lock />}
+          title="No pudimos abrir la sala"
+          description="Puede ser un problema de conexión momentáneo."
+          action={
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          }
+        />
+      </div>
+    );
   }
 
   // Bloqueados y silenciados desaparecen de la sala compartida, sin importar
@@ -407,15 +470,16 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
         isStaff={isStaff}
         savedIds={savedIds}
         highlights={highlights}
+        reactionsByMessage={reactions.byMessage}
+        reactionsPending={reactions.pending}
+        onToggleReaction={(messageId, emoji) => void reactions.toggle(messageId, emoji)}
         moderation={moderation}
         dm={dm}
-        pinMenuFor={pinMenuFor}
-        setPinMenuFor={setPinMenuFor}
-        reportMenuFor={reportMenuFor}
-        setReportMenuFor={setReportMenuFor}
+        openMenuFor={openMenuFor}
+        setOpenMenuFor={setOpenMenuFor}
         authorMenuFor={authorMenuFor}
         setAuthorMenuFor={setAuthorMenuFor}
-        setReplyTo={setReplyTo}
+        setReplyTo={handleReply}
         setDeleteMessageTarget={setDeleteMessageTarget}
         setProfileUser={setProfileUser}
         handleMentionClick={handleMentionClick}
@@ -423,14 +487,22 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
         handlePin={handlePin}
       />
 
-      {/* Unread Badge Overlay */}
+      {/*
+        Aviso de mensajes sin leer. Era `bg-blue-500`, un azul generico ajeno a
+        la marca, y se anclaba en `bottom-20`: con el campo de escritura
+        colapsado quedaba flotando a media pantalla. `role="status"` para que
+        tambien se anuncie a quien no lo ve.
+      */}
       {!scroll.isAtBottom && scroll.unreadCount > 0 && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-20">
-          <button 
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center">
+          <button
+            type="button"
+            role="status"
             onClick={scroll.scrollToBottom}
-            className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1 transition-all"
+            className="animate-scale-in pointer-events-auto flex h-control-sm items-center gap-1.5 rounded-full bg-primary px-3 text-meta font-semibold text-ink-inverse shadow-float transition-colors hover:bg-primary-hover"
           >
-            Hay {scroll.unreadCount} {scroll.unreadCount === 1 ? 'mensaje por leer' : 'mensajes por leer'} ↓
+            {scroll.unreadCount} {scroll.unreadCount === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}
+            <ChatIcon.ArrowDown className="h-3.5 w-3.5" />
           </button>
         </div>
       )}

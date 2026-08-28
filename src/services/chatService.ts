@@ -1,3 +1,4 @@
+import { toggleChatReaction as toggleChatReactionRepo } from '../repositories/chatReactionsRepository';
 import {
   cleanChatRoomMessages as cleanChatRoomMessagesRepo,
   deleteChatMessage as deleteChatMessageRepo,
@@ -29,7 +30,7 @@ import {
   unsaveChatMessage,
   upsertChatRoomRead,
 } from '../repositories/chatRepository';
-import type { ChatMessage, ChatPinnedMessage, ChatRoom } from '../types';
+import type { ChatMessage, ChatPinnedMessage, ChatReactionEmoji, ChatRoom } from '../types';
 import type { ChatAttachment } from './chatAttachmentsService';
 
 /** Cuanto dura fijado un mensaje por defecto. Elegible en el futuro por UI. */
@@ -150,13 +151,41 @@ export async function freezeChatRoom(
     frozenBy,
     `El chat quedó pausado hasta ${formatFreezeUntil(frozenUntil)}.`,
     undefined,
+    true,
+    // De sistema: sigue avisando a quien no estaba conectado, pero se dibuja
+    // como una linea chiquita y no como un bloque a ancho completo. Una sala
+    // que se pausa y se reanuda un par de veces acumulaba cuatro bloques
+    // ambar que tapaban la conversacion.
     true
   );
 }
 
 export async function unfreezeChatRoom(roomId: string, unfrozenBy: string): Promise<void> {
   await unfreezeChatRoomRepo(roomId);
-  await insertChatMessage(roomId, unfrozenBy, 'El chat volvió a estar disponible.', undefined, true);
+  await insertChatMessage(
+    roomId,
+    unfrozenBy,
+    'El chat volvió a estar disponible.',
+    undefined,
+    true,
+    true
+  );
+}
+
+/**
+ * Pone o quita una reaccion a un mensaje.
+ *
+ * Envoltura fina sobre el repositorio: la regla de negocio -que solo se pueda
+ * reaccionar en nombre propio y solo con los tres emojis de la lista- la
+ * impone la base (politica RLS y CHECK de la migracion 119), no esta capa.
+ */
+export function toggleChatReaction(
+  messageId: string,
+  userId: string,
+  emoji: ChatReactionEmoji,
+  reacted: boolean
+): Promise<void> {
+  return toggleChatReactionRepo(messageId, userId, emoji, reacted);
 }
 
 export function subscribeToChatRoomUpdates(

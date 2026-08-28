@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from 'react';
  */
 export const AT_BOTTOM_THRESHOLD_PX = 50;
 
+
+
 /**
  * Auto-scroll de la sala y contador de mensajes sin leer.
  *
@@ -35,7 +37,23 @@ export interface ChatScroll {
   scrollToBottom(): void;
 }
 
-export function useChatScroll(messageCount: number): ChatScroll {
+/**
+ * @param messageCount  Cuantos mensajes hay; cada cambio dispara la decision.
+ * @param smoothScroll  Si el desplazamiento debe animarse.
+ *
+ * `smoothScroll` llega de fuera y no se consulta aqui a proposito. Quien lo
+ * decide es `prefers-reduced-motion`, la casilla del sistema operativo para
+ * pedir que las interfaces no se muevan; leerla es `window.matchMedia`, y este
+ * archivo esta en la capa de dominio, donde el DOM esta prohibido por la
+ * frontera de portabilidad a movil (ver eslint.config.js, DOMAIN_LAYERS). El
+ * componente que monta la sala si puede leerla, y es quien la pasa.
+ *
+ * Ojo: la regla de CSS de `index.css` no cubre esto. `scrollIntoView` con
+ * `behavior: 'smooth'` explicito le gana a `scroll-behavior` del CSS, asi que
+ * el guard tiene que estar tambien aca.
+ */
+export function useChatScroll(messageCount: number, smoothScroll = true): ChatScroll {
+  const behavior: ScrollBehavior = smoothScroll ? 'smooth' : 'auto';
   const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -53,14 +71,14 @@ export function useChatScroll(messageCount: number): ChatScroll {
   };
 
   const scrollToBottom = () => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    endRef.current?.scrollIntoView({ behavior });
     setIsAtBottom(true);
     setUnreadCount(0);
   };
 
   useEffect(() => {
     if (isAtBottom) {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      endRef.current?.scrollIntoView({ behavior });
     } else {
       setUnreadCount((previo) => previo + 1);
     }

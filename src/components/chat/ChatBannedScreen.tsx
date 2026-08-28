@@ -1,11 +1,17 @@
 import type { ChatUserBan } from '../../services/chatModerationService';
+import { formatearFechaHora } from '../../utils/date';
 
 interface ChatBannedScreenProps {
   ban: ChatUserBan;
 }
 
+/**
+ * La fecha usaba `toLocaleString([])` sin idioma: en un equipo configurado en
+ * ingles el dia y el mes salian dados vuelta. `formatearFechaHora` ya fija
+ * `es-CL` para todo el producto.
+ */
 function formatRemaining(bannedUntil: string | null): string {
-  if (!bannedUntil) return 'Baneo permanente.';
+  if (!bannedUntil) return 'El baneo no tiene fecha de fin.';
 
   const target = new Date(bannedUntil);
   const diffMs = target.getTime() - Date.now();
@@ -13,16 +19,12 @@ function formatRemaining(bannedUntil: string | null): string {
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const days = Math.floor(hours / 24);
+  const when = formatearFechaHora(bannedUntil);
 
-  const when = target.toLocaleString([], {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  if (days >= 1) return `Vuelve a estar habilitado el ${when} (en ${days} ${days === 1 ? 'día' : 'días'}).`;
-  return `Vuelve a estar habilitado el ${when} (en ${hours} ${hours === 1 ? 'hora' : 'horas'}).`;
+  if (days >= 1) {
+    return `Podés volver a escribir el ${when} (en ${days} ${days === 1 ? 'día' : 'días'}).`;
+  }
+  return `Podés volver a escribir el ${when} (en ${hours} ${hours === 1 ? 'hora' : 'horas'}).`;
 }
 
 export default function ChatBannedScreen({ ban }: ChatBannedScreenProps) {
@@ -36,11 +38,11 @@ export default function ChatBannedScreen({ ban }: ChatBannedScreenProps) {
 
       <h2 className="text-section-title font-semibold text-ink">Fuiste baneado del chat</h2>
 
-      <p className="text-sm text-ink-muted max-w-xs">
-        {ban.reason || 'Se te baneó por infringir las reglas de la sala.'}
+      <p className="text-body text-ink-muted max-w-xs">
+        {ban.reason || 'Te baneamos por infringir las reglas de la sala.'}
       </p>
 
-      <p className="text-xs font-semibold text-state-danger">{formatRemaining(ban.banned_until)}</p>
+      <p className="text-meta font-semibold text-state-danger">{formatRemaining(ban.banned_until)}</p>
     </div>
   );
 }

@@ -12,6 +12,28 @@ export interface ChatRoom {
   created_at: string;
 }
 
+/**
+ * Los tres emojis con los que se puede reaccionar. La lista es cerrada y la
+ * base la valida con un CHECK: ver la migracion 119.
+ */
+export const CHAT_REACTION_EMOJIS = ['👍', '👎', '❤️'] as const;
+
+export type ChatReactionEmoji = (typeof CHAT_REACTION_EMOJIS)[number];
+
+/**
+ * Reacciones de un mensaje, ya agregadas por emoji.
+ *
+ * Llega agregado y no como la lista cruda de filas a proposito: lo unico que
+ * necesita la interfaz es cuantos hay de cada uno y si reaccionaste vos. Traer
+ * una fila por persona haria que un mensaje con doscientos pulgares pesara
+ * doscientas filas en la respuesta para pintar un "200".
+ */
+export interface ChatReactionSummary {
+  emoji: ChatReactionEmoji;
+  count: number;
+  reactedByMe: boolean;
+}
+
 export interface ChatMessage {
   id: string;
   room_id: string;
@@ -19,6 +41,13 @@ export interface ChatMessage {
   content: string;
   reply_to_id?: string;
   is_announcement?: boolean;
+  /**
+   * Lo genero el sistema (pausa o reanudacion de sala), no una persona.
+   * Ortogonal a `is_announcement`: un mensaje de sistema tambien avisa a quien
+   * no estaba conectado, pero se dibuja como una linea chiquita en vez de un
+   * bloque. Ver la migracion 120.
+   */
+  is_system?: boolean;
   deleted_at?: string | null;
   deleted_by?: string | null;
   created_at: string;

@@ -26,7 +26,7 @@ export default function ConfirmDangerModal({
           <h2 className="text-section-title font-semibold text-ink">{title}</h2>
         </div>
 
-        <p className="text-sm text-ink-muted">{message}</p>
+        <p className="text-body text-ink-muted">{message}</p>
 
         <div className="flex justify-end gap-2 mt-1">
           <Button variant="ghost" onClick={onCancel}>

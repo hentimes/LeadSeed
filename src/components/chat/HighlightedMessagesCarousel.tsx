@@ -26,7 +26,7 @@ export default function HighlightedMessagesCarousel({
 
 
   if (highlights.length === 0) {
-    return <p className="text-sm text-ink-muted">Nadie destacó ningún mensaje todavía.</p>;
+    return <p className="text-body text-ink-muted">Nadie destacó ningún mensaje todavía.</p>;
   }
 
   // El indice puede quedar fuera de rango un render, entre que cambia la lista
@@ -39,23 +39,23 @@ export default function HighlightedMessagesCarousel({
   const hasMultiple = highlights.length > 1;
 
   return (
-    <div className="rounded-xl bg-surface-muted dark:bg-gray-800 p-2.5">
+    <div className="rounded-xl bg-surface-sunken p-2.5">
       <div className="flex items-center gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xs font-semibold text-ink dark:text-gray-200 truncate">
+            <span className="text-meta font-semibold text-ink truncate">
               {current.message?.user_profile?.full_name || 'Usuario'}
             </span>
             {hasMultiple && (
-              <span className="text-[10px] text-ink-muted flex-shrink-0">
+              <span className="text-micro text-ink-muted flex-shrink-0">
                 {indiceVisible + 1}/{highlights.length}
               </span>
             )}
           </div>
-          <p className="text-xs text-ink-muted truncate">
+          <p className="text-meta text-ink-muted truncate">
             {current.message ? toPlainText(current.message.content) : ''}
           </p>
-          <span className="text-[10px] text-ink-muted">
+          <span className="text-micro text-ink-muted">
             destacado por {current.highlighter?.full_name || 'alguien'}
           </span>
         </div>
@@ -64,7 +64,7 @@ export default function HighlightedMessagesCarousel({
           <button
             type="button"
             onClick={() => setIndex((prev) => (prev + 1) % highlights.length)}
-            className="p-1 rounded-full text-ink-muted hover:bg-white dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+            className="p-1 rounded-full text-ink-muted hover:bg-surface transition-colors flex-shrink-0"
             title="Ver siguiente destacado"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,7 +77,7 @@ export default function HighlightedMessagesCarousel({
       <button
         type="button"
         onClick={() => onRemove(current.message_id, current.highlighted_by)}
-        className="mt-1.5 text-[10px] font-semibold text-ink-muted hover:text-state-danger"
+        className="mt-1.5 text-micro font-semibold text-ink-muted hover:text-state-danger"
       >
         Quitar destacado
       </button>

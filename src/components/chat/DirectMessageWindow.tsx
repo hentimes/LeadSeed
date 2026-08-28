@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDirectMessages } from '../../hooks/useDirectMessages';
 import { useMessageGuard } from '../../hooks/useMessageGuard';
 import { MAX_CHAT_MESSAGE_DISPLAY_LENGTH as MAX_LENGTH } from '../../services/chatService';
+import { Skeleton } from '../../design';
 import { Icon } from '../../utils/icons';
 import EmojiPicker from './EmojiPicker';
 import FloatingWindow from './FloatingWindow';
@@ -32,7 +33,9 @@ export default function DirectMessageWindow({
   const [sendError, setSendError] = useState('');
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Mismo criterio que la sala: si el sistema pide no animar, se salta seco.
+    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    endRef.current?.scrollIntoView({ behavior: suave ? 'smooth' : 'auto' });
   }, [messages]);
 
   const handleSend = async (event: React.FormEvent) => {
@@ -63,11 +66,23 @@ export default function DirectMessageWindow({
 
   return (
     <FloatingWindow title={userName} onClose={onClose} onMinimize={onMinimize} cascadeIndex={cascadeIndex}>
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-surface-muted dark:bg-gray-950">
-        {loading && <p className="text-center text-xs text-ink-muted">Cargando conversación...</p>}
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-surface-muted">
+        {loading && (
+          <div role="status" aria-label="Cargando la conversación" className="space-y-2 pt-1">
+            {[
+              { propio: false, ancho: '62%' },
+              { propio: true, ancho: '48%' },
+              { propio: false, ancho: '74%' },
+            ].map((linea, indice) => (
+              <div key={indice} className={`flex ${linea.propio ? 'justify-end' : 'justify-start'}`}>
+                <Skeleton shape="block" width={linea.ancho} height="30px" />
+              </div>
+            ))}
+          </div>
+        )}
 
         {!loading && messages.length === 0 && (
-          <p className="text-center text-xs text-ink-muted mt-6">
+          <p className="text-center text-meta text-ink-muted mt-6">
             Todavía no hay mensajes con {userName}.
           </p>
         )}
@@ -78,15 +93,15 @@ export default function DirectMessageWindow({
           return (
             <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`min-w-0 max-w-[85%] px-3 py-2 text-[13px] break-words break-all shadow-sm ${
+                className={`min-w-0 max-w-[85%] px-3 py-2 text-body break-words break-all shadow-sm ${
                   isOwn
                     ? 'bg-primary text-white rounded-2xl rounded-tr-sm'
-                    : 'bg-surface text-ink dark:text-gray-100 border border-line dark:border-gray-700 rounded-2xl rounded-tl-sm'
+                    : 'bg-surface text-ink border border-line rounded-2xl rounded-tl-sm'
                 }`}
               >
                 {message.message}
                 <span
-                  className={`block mt-0.5 text-[10px] ${isOwn ? 'text-white/70' : 'text-ink-muted'}`}
+                  className={`block mt-0.5 text-micro ${isOwn ? 'text-white/70' : 'text-ink-muted'}`}
                 >
                   {formatearHora(message.created_at)}
                 </span>
@@ -100,10 +115,10 @@ export default function DirectMessageWindow({
 
       <form
         onSubmit={handleSend}
-        className="relative p-2 border-t border-line dark:border-gray-700 bg-surface"
+        className="relative p-2 border-t border-line bg-surface"
       >
         {(guard.blockedReason || sendError) && (
-          <p className="mb-1.5 px-1 text-[11px] font-medium text-state-danger">
+          <p className="mb-1.5 px-1 text-meta font-medium text-state-danger">
             {guard.blockedReason || sendError}
           </p>
         )}
@@ -131,13 +146,13 @@ export default function DirectMessageWindow({
             }}
             maxLength={MAX_LENGTH}
             placeholder="Escribí un mensaje..."
-            className="flex-1 min-w-0 rounded-full border border-line dark:border-gray-700 bg-surface px-3 py-1.5 text-[13px] text-ink dark:text-gray-100 outline-none focus:ring-2 focus:ring-primary-soft"
+            className="flex-1 min-w-0 rounded-full border border-line bg-surface px-3 py-1.5 text-body text-ink outline-none transition-colors focus:border-focus"
           />
 
           <button
             type="button"
             onClick={() => setShowEmojis((prev) => !prev)}
-            className="p-1.5 rounded-full text-ink-muted hover:bg-surface-muted dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+            className="p-1.5 rounded-full text-ink-muted hover:bg-surface-hover transition-colors flex-shrink-0"
             title="Emoticones"
           >
             <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,3 +1,5 @@
+import { CountBadge } from '../../design';
+import { ChatIcon } from './ChatIcons';
 import DmAvatarStrip from './DmAvatarStrip';
 import type { DmSession } from '../../types';
 
@@ -17,17 +19,50 @@ interface ChatTabsProps {
   isFrozen?: boolean;
 }
 
-const BookmarkIcon = () => (
-  <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4-7 4V5z" />
-  </svg>
-);
-
-const LockIcon = () => (
-  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-);
+/**
+ * Barra superior de la sala.
+ *
+ * Llevaba `bg-white dark:bg-gray-800` y `border-gray-700`: colores literales
+ * que no siguen a la ficha. Ahora es `bg-surface` sobre `border-line`, y se le
+ * quito la sombra: borde MAS sombra duplicaban la misma separacion.
+ *
+ * El chip de la sala gana un chevron. Antes parecia solo un titulo, asi que la
+ * informacion que hay detras -descripcion, reglas, integrantes, destacados,
+ * baneados- no la encontraba nadie.
+ */
+function BotonDePanel({
+  active,
+  onClick,
+  label,
+  count,
+  tone = 'primary',
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  tone?: 'primary' | 'danger';
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={`${label} (${count})`}
+      aria-label={`${label}, ${count}`}
+      className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
+        active
+          ? 'bg-primary text-ink-inverse'
+          : 'bg-surface-sunken text-ink-muted hover:text-ink'
+      }`}
+    >
+      {children}
+      {!active && <CountBadge count={count} tone={tone} />}
+    </button>
+  );
+}
 
 export default function ChatTabs({
   active,
@@ -43,81 +78,61 @@ export default function ChatTabs({
   isFrozen = false,
 }: ChatTabsProps) {
   return (
-    <div className="px-4 py-3 bg-white dark:bg-gray-800 border-b border-line dark:border-gray-700 flex justify-between items-center gap-2 z-10 shadow-sm">
+    <div className="z-10 flex items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2">
       {/* Chip de sala: el conteo de conectados vive solo aca, no se repite
           en ningun otro icono de la barra. */}
       <button
         type="button"
         onClick={onOpenRoomInfo}
         title="Ver información de la sala"
-        className="group flex items-center gap-2 rounded-lg -ml-1.5 px-1.5 py-1 hover:bg-surface-muted dark:hover:bg-gray-700/60 transition-colors"
+        aria-label={`Información de la sala ${roomName}`}
+        className="group -ml-1 flex min-w-0 items-center gap-2 rounded-lg px-1 py-1 transition-colors hover:bg-surface-hover"
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-soft dark:bg-primary/20 text-primary text-sm font-bold flex-shrink-0">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-meta font-bold text-primary">
           #
         </span>
-        <span className="flex flex-col items-start leading-tight min-w-0">
-          <span className="flex items-center gap-1 text-sm font-semibold text-ink dark:text-gray-100 group-hover:text-primary transition-colors max-w-[140px]">
+
+        <span className="flex min-w-0 flex-col items-start leading-tight">
+          <span className="flex min-w-0 items-center gap-1 text-meta font-semibold text-ink transition-colors group-hover:text-primary">
             <span className="truncate">{roomName}</span>
             {isFrozen && (
-              <span className="text-amber-600 dark:text-amber-400 flex-shrink-0" title="Chat pausado">
-                <LockIcon />
+              <span className="shrink-0 text-accent" title="Sala pausada">
+                <ChatIcon.Lock className="h-3 w-3" />
               </span>
             )}
+            <ChatIcon.Chevron className="h-3 w-3 shrink-0 text-ink-muted" />
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-ink-muted">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+
+          <span className="flex items-center gap-1 text-micro text-ink-muted">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-state-success" />
             {onlineCount} conectado{onlineCount === 1 ? '' : 's'}
           </span>
         </span>
       </button>
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
         <DmAvatarStrip sessions={dmSessions} onToggle={onToggleDmSession} />
 
         {isStaff && (
-          <button
-            type="button"
+          <BotonDePanel
+            active={active === 'reports'}
             onClick={() => onChange(active === 'reports' ? 'messages' : 'reports')}
-            aria-pressed={active === 'reports'}
-            title={`Reportes pendientes (${pendingReportCount})`}
-            className={`relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
-              active === 'reports'
-                ? 'bg-primary text-white'
-                : 'bg-surface-muted dark:bg-gray-700 text-ink-muted hover:text-ink dark:hover:text-gray-200'
-            }`}
+            label="Reportes pendientes"
+            count={pendingReportCount}
+            tone="danger"
           >
-            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-
-            {pendingReportCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-gray-800">
-                {pendingReportCount > 99 ? '99+' : pendingReportCount}
-              </span>
-            )}
-          </button>
+            <ChatIcon.Flag className="h-[17px] w-[17px]" />
+          </BotonDePanel>
         )}
 
-        {/* Guardados: icono de marcador. */}
-        <button
-          type="button"
+        <BotonDePanel
+          active={active === 'saved'}
           onClick={() => onChange(active === 'saved' ? 'messages' : 'saved')}
-          aria-pressed={active === 'saved'}
-          title={`Mensajes guardados (${savedCount})`}
-          className={`relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
-            active === 'saved'
-              ? 'bg-primary text-white'
-              : 'bg-surface-muted dark:bg-gray-700 text-ink-muted hover:text-ink dark:hover:text-gray-200'
-          }`}
+          label="Mensajes guardados"
+          count={savedCount}
         >
-          <BookmarkIcon />
-
-          {savedCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-gray-800">
-              {savedCount > 99 ? '99+' : savedCount}
-            </span>
-          )}
-        </button>
+          <ChatIcon.Bookmark className="h-[17px] w-[17px]" filled={active === 'saved'} />
+        </BotonDePanel>
       </div>
     </div>
   );

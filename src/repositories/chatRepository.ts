@@ -143,7 +143,7 @@ export async function fetchReplyMessageById(messageId: string): Promise<ChatMess
 const ATTACHMENTS_EMBED =
   'attachments:chat_message_attachments(id, message_id, room_id, uploader_id, kind, storage_path, file_name, mime_type, size_bytes, width, height, created_at)';
 
-const MESSAGE_SELECT = `id, room_id, user_id, content, reply_to_id, is_announcement, deleted_at, deleted_by, created_at, ${USER_PROFILE_EMBED}, ${ATTACHMENTS_EMBED}`;
+const MESSAGE_SELECT = `id, room_id, user_id, content, reply_to_id, is_announcement, is_system, deleted_at, deleted_by, created_at, ${USER_PROFILE_EMBED}, ${ATTACHMENTS_EMBED}`;
 
 /** Ultimos mensajes de la sala, del mas viejo al mas nuevo. */
 export async function fetchRoomMessages(roomId: string, limit = 100): Promise<ChatMessage[]> {
@@ -191,7 +191,12 @@ export async function insertChatMessage(
   userId: string,
   content: string,
   replyToId?: string,
-  isAnnouncement = false
+  isAnnouncement = false,
+  /**
+   * Lo genera el sistema, no una persona. Sigue siendo un anuncio a efectos de
+   * aviso, pero se dibuja como una linea chiquita. Ver la migracion 120.
+   */
+  isSystem = false
 ): Promise<string> {
   const { data, error } = await supabase
     .from('chat_messages')
@@ -201,6 +206,7 @@ export async function insertChatMessage(
       content,
       reply_to_id: replyToId || null,
       is_announcement: isAnnouncement,
+      is_system: isSystem,
     })
     .select('id')
     .single();

@@ -1,16 +1,36 @@
 import { useState } from 'react';
-import { Button, Modal } from '../../design';
+import { Button, EmptyState, IconButton, Modal, SegmentedControl } from '../../design';
 import { updateChatRoomInfo } from '../../services/chatService';
 import { useOnlineDirectory } from '../../hooks/useOnlineDirectory';
 import { useActiveBans } from '../../hooks/useActiveBans';
 import { useRoomAttachments } from '../../hooks/useRoomAttachments';
 import { attachmentPublicUrl } from '../../services/chatAttachmentsService';
 import { formatFileSize } from '../../utils/formatFileSize';
+import { formatearFechaHora } from '../../utils/date';
+import { Icon } from '../../utils/icons';
+import { ChatIcon } from './ChatIcons';
 import ChatMembersPanel, { type ChatMemberTarget } from './ChatMembersPanel';
 import HighlightedMessagesCarousel from './HighlightedMessagesCarousel';
 import AttachmentLightbox from './AttachmentLightbox';
+import RoomInfoTabs, { type RoomInfoTab } from './RoomInfoTabs';
 import type { ChatRoom } from '../../types';
 import type { ChatHighlightedMessage } from '../../services/chatModerationService';
+
+/**
+ * INFORMACION DE LA SALA
+ *
+ * Antes era todo apilado en vertical dentro de un modal con scroll:
+ * descripcion y reglas en un bloque, archivos, destacados, conectados (con su
+ * PROPIO scroll dentro del scroll del modal) y baneos. En un panel angosto eso
+ * obligaba a recorrer casi mil pixeles para llegar al ultimo bloque, y nadie
+ * llegaba.
+ *
+ * Ahora son cinco secciones detras de una barra horizontal de una sola linea.
+ * La altura del cuerpo es FIJA y no minima: es lo unico que garantiza que
+ * cambiar de pestana no haga saltar el modal ni mueva el foco de sitio.
+ */
+
+type SeccionId = 'descripcion' | 'reglas' | 'archivos' | 'destacados' | 'conectados';
 
 interface RoomInfoModalProps {
   room: ChatRoom;
@@ -24,12 +44,6 @@ interface RoomInfoModalProps {
   onMemberSearchChange: (value: string) => void;
   onOpenProfile: (target: ChatMemberTarget) => void;
   onOpenDirectMessage: (target: ChatMemberTarget) => void;
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-micro font-bold uppercase tracking-wider text-ink-muted mb-2">{children}</h3>
-  );
 }
 
 export default function RoomInfoModal({
@@ -48,7 +62,9 @@ export default function RoomInfoModal({
   const { count: onlineCount } = useOnlineDirectory();
   const activeBans = useActiveBans(isStaff);
   const attachments = useRoomAttachments(room.id);
-  const [filesTab, setFilesTab] = useState<'images' | 'files'>('images');
+
+  const [seccion, setSeccion] = useState<SeccionId>('descripcion');
+  const [tipoDeArchivo, setTipoDeArchivo] = useState<'images' | 'files'>('images');
   const [expandedImage, setExpandedImage] = useState<{ src: string; alt: string } | null>(null);
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState(room.description || '');
@@ -56,7 +72,7 @@ export default function RoomInfoModal({
   const [saving, setSaving] = useState(false);
 
   const fieldClass =
-    'w-full resize-none rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-ink dark:text-gray-100 outline-none focus:ring-2 focus:ring-primary-soft';
+    'w-full resize-none rounded-lg border border-line bg-surface px-3 py-2 text-body text-ink outline-none transition-colors focus:border-focus';
 
   const handleSave = async () => {
     setSaving(true);
@@ -69,112 +85,165 @@ export default function RoomInfoModal({
     }
   };
 
+  const tabs: RoomInfoTab[] = [
+    { id: 'descripcion', label: 'Descripción', icon: <ChatIcon.Document /> },
+    { id: 'reglas', label: 'Reglas', icon: <ChatIcon.Shield /> },
+    {
+      id: 'archivos',
+      label: 'Archivos',
+      icon: <ChatIcon.Paperclip />,
+      count: attachments.images.length + attachments.files.length,
+    },
+    { id: 'destacados', label: 'Destacados', icon: <ChatIcon.Star />, count: highlights.length },
+    { id: 'conectados', label: 'Conectados', icon: <Icon.Users />, count: onlineCount },
+  ];
+
+  /** Botón de editar, compartido por Descripción y Reglas. */
+  const botonEditar = isStaff && !editing && (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="text-meta font-semibold text-primary hover:underline"
+    >
+      Editar
+    </button>
+  );
+
+  const formularioDeEdicion = (
+    <div className="flex flex-col gap-2">
+      <textarea
+        value={seccion === 'reglas' ? rules : description}
+        onChange={(e) =>
+          seccion === 'reglas' ? setRules(e.target.value) : setDescription(e.target.value)
+        }
+        placeholder={seccion === 'reglas' ? 'Reglas de la sala…' : '¿De qué se trata esta sala?'}
+        aria-label={seccion === 'reglas' ? 'Reglas de la sala' : 'Descripción de la sala'}
+        rows={6}
+        className={fieldClass}
+      />
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+          Cancelar
+        </Button>
+        <Button variant="primary" size="sm" onClick={() => void handleSave()} disabled={saving}>
+          {saving ? 'Guardando…' : 'Guardar'}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
-    <Modal onClose={onClose} maxWidth="420px" label={`Información de ${room.name}`}>
-      <div className="flex flex-col max-h-[80vh]">
-        <div className="flex items-start justify-between gap-3 p-5 border-b border-line dark:border-gray-700">
+    /*
+      480 y no 420: es el ancho con el que los cinco rotulos de las pestanas
+      entran escritos a partir de `panel-lg`. Ver el calculo en RoomInfoTabs.
+    */
+    <Modal onClose={onClose} maxWidth="480px" label={`Información de ${room.name}`}>
+      <div className="flex flex-col">
+        <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
           <div className="min-w-0">
-            <h2 className="text-section-title font-semibold text-ink"># {room.name}</h2>
-            <p className="text-xs text-ink-muted mt-0.5">{onlineCount} conectados ahora</p>
+            <h2 className="truncate text-section-title font-semibold text-ink"># {room.name}</h2>
+            <p className="mt-0.5 flex items-center gap-1 text-micro text-ink-muted">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-state-success" />
+              {onlineCount} conectado{onlineCount === 1 ? '' : 's'}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-shrink-0 p-1.5 rounded-full text-ink-muted hover:bg-surface-muted dark:hover:bg-gray-700 hover:text-ink transition-colors"
-            title="Cerrar"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+
+          <IconButton icon={<Icon.Close />} label="Cerrar" onClick={onClose} size="sm" />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          <section>
-            <div className="flex items-center justify-between mb-2">
-              <SectionTitle>Descripción y reglas</SectionTitle>
-              {isStaff && !editing && (
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  className="text-[11px] font-semibold text-primary hover:underline"
-                >
-                  Editar
-                </button>
-              )}
-            </div>
+        <div className="px-4">
+          <RoomInfoTabs
+            tabs={tabs}
+            active={seccion}
+            onChange={(id) => {
+              setSeccion(id as SeccionId);
+              setEditing(false);
+            }}
+          />
+        </div>
 
-            {editing ? (
-              <div className="flex flex-col gap-2">
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="¿De qué se trata esta sala?"
-                  rows={2}
-                  className={fieldClass}
-                />
-                <textarea
-                  value={rules}
-                  onChange={(e) => setRules(e.target.value)}
-                  placeholder="Reglas de la sala..."
-                  rows={3}
-                  className={fieldClass}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-                    Cancelar
-                  </Button>
-                  <Button variant="primary" size="sm" onClick={() => void handleSave()} disabled={saving}>
-                    {saving ? 'Guardando...' : 'Guardar'}
-                  </Button>
-                </div>
-              </div>
-            ) : (
+        {/*
+          Altura fija, no `min-h`: con una altura que dependa del contenido, ir
+          de "Conectados" (larga) a "Reglas" (corta) encoge el modal de golpe y
+          el cursor queda apuntando a otra cosa.
+        */}
+        <div
+          role="tabpanel"
+          id={`panel-${seccion}`}
+          aria-labelledby={`tab-${seccion}`}
+          tabIndex={0}
+          className="h-[300px] overflow-y-auto px-4 pb-4 panel-md:h-[380px]"
+        >
+          {seccion === 'descripcion' &&
+            (editing ? (
+              formularioDeEdicion
+            ) : room.description ? (
               <>
-                <p className="text-sm text-ink dark:text-gray-200 whitespace-pre-wrap">
-                  {room.description || 'Sin descripción todavía.'}
+                <div className="mb-1 flex justify-end">{botonEditar}</div>
+                <p className="whitespace-pre-wrap break-words text-body text-ink">
+                  {room.description}
                 </p>
-                {room.rules && (
-                  <p className="text-sm text-ink-muted whitespace-pre-wrap mt-2 border-l-2 border-line dark:border-gray-700 pl-2">
-                    {room.rules}
-                  </p>
-                )}
               </>
-            )}
-          </section>
+            ) : (
+              <EmptyState
+                icon={<ChatIcon.Document />}
+                title="Sin descripción"
+                description="Esta sala todavía no tiene descripción."
+                action={botonEditar || undefined}
+              />
+            ))}
 
-          <section>
-            <div className="flex items-center justify-between mb-2">
-              <SectionTitle>Archivos</SectionTitle>
-              <div className="flex items-center gap-1 rounded-full bg-surface-muted dark:bg-gray-800 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setFilesTab('images')}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                    filesTab === 'images'
-                      ? 'bg-white dark:bg-gray-900 text-ink dark:text-gray-100 shadow-sm'
-                      : 'text-ink-muted'
-                  }`}
-                >
-                  Imágenes ({attachments.images.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilesTab('files')}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                    filesTab === 'files'
-                      ? 'bg-white dark:bg-gray-900 text-ink dark:text-gray-100 shadow-sm'
-                      : 'text-ink-muted'
-                  }`}
-                >
-                  Archivos ({attachments.files.length})
-                </button>
-              </div>
+          {seccion === 'reglas' &&
+            (editing ? (
+              formularioDeEdicion
+            ) : room.rules ? (
+              <>
+                <div className="mb-1 flex justify-end">{botonEditar}</div>
+                <p className="whitespace-pre-wrap break-words rounded-r-md border-l-2 border-accent-border bg-accent-soft py-2 pl-2 pr-2 text-body text-ink">
+                  {room.rules}
+                </p>
+              </>
+            ) : (
+              <EmptyState
+                icon={<ChatIcon.Shield />}
+                title="Sin reglas"
+                description="El staff todavía no publicó reglas para esta sala."
+                action={botonEditar || undefined}
+              />
+            ))}
+
+          {/*
+            El selector Imagenes/Docs NO va en la barra de pestanas: ahi tendria
+            que ir dentro del `<button>` de la pestana activa, y un boton dentro
+            de otro boton es HTML invalido -el navegador lo reacomoda- y deja el
+            control inalcanzable con teclado.
+
+            Va aca, dentro de la seccion, y por eso no es una fila permanente:
+            solo existe en Archivos. Como la altura del cuerpo es fija, aparecer
+            no mueve nada de sitio.
+          */}
+          {seccion === 'archivos' && (
+            <div className="sticky top-0 z-10 -mx-4 mb-2 bg-surface px-4 pb-2">
+              <SegmentedControl
+                label="Tipo de archivo"
+                value={tipoDeArchivo}
+                onChange={setTipoDeArchivo}
+                options={[
+                  { value: 'images', label: `Imágenes ${attachments.images.length}` },
+                  { value: 'files', label: `Docs ${attachments.files.length}` },
+                ]}
+              />
             </div>
+          )}
 
-            {filesTab === 'images' ? (
+          {seccion === 'archivos' &&
+            (tipoDeArchivo === 'images' ? (
               attachments.images.length === 0 ? (
-                <p className="text-sm text-ink-muted">Todavía no se compartieron imágenes.</p>
+                <EmptyState
+                  icon={<ChatIcon.Paperclip />}
+                  title="Sin imágenes"
+                  description="Las que se compartan en la sala aparecen acá."
+                />
               ) : (
                 <div className="grid grid-cols-4 gap-1.5">
                   {attachments.images.map((image) => (
@@ -182,15 +251,19 @@ export default function RoomInfoModal({
                       key={image.id}
                       type="button"
                       onClick={() =>
-                        setExpandedImage({ src: attachmentPublicUrl(image.storage_path), alt: image.file_name })
+                        setExpandedImage({
+                          src: attachmentPublicUrl(image.storage_path),
+                          alt: image.file_name,
+                        })
                       }
-                      className="aspect-square rounded-lg overflow-hidden bg-surface-muted dark:bg-gray-900 border border-line dark:border-gray-700"
                       title={image.file_name}
+                      aria-label={`Ampliar ${image.file_name}`}
+                      className="aspect-square overflow-hidden rounded-lg border border-line bg-surface-sunken"
                     >
                       <img
                         src={attachmentPublicUrl(image.storage_path)}
                         alt={image.file_name}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                       />
                     </button>
@@ -198,7 +271,11 @@ export default function RoomInfoModal({
                 </div>
               )
             ) : attachments.files.length === 0 ? (
-              <p className="text-sm text-ink-muted">Todavía no se compartieron archivos.</p>
+              <EmptyState
+                icon={<ChatIcon.Document />}
+                title="Sin archivos"
+                description="Los adjuntos de la sala aparecen acá."
+              />
             ) : (
               <div className="space-y-1.5">
                 {attachments.files.map((file) => (
@@ -208,81 +285,96 @@ export default function RoomInfoModal({
                     target="_blank"
                     rel="noreferrer"
                     download={file.file_name}
-                    className="flex items-center gap-2.5 rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 hover:border-primary/40 transition-colors"
+                    className="flex items-center gap-2.5 rounded-lg border border-line bg-surface px-3 py-2 transition-colors hover:border-primary"
                   >
-                    <span className="flex-1 min-w-0 text-xs font-medium text-ink dark:text-gray-100 truncate">
+                    <span className="shrink-0 text-ink-muted">
+                      <ChatIcon.Document />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-meta font-medium text-ink">
                       {file.file_name}
                     </span>
-                    <span className="text-[10px] text-ink-muted flex-shrink-0">
+                    <span className="shrink-0 text-micro text-ink-muted">
                       {formatFileSize(file.size_bytes)}
                     </span>
                   </a>
                 ))}
               </div>
-            )}
+            ))}
 
-            {expandedImage && (
-              <AttachmentLightbox
-                src={expandedImage.src}
-                alt={expandedImage.alt}
-                onClose={() => setExpandedImage(null)}
+          {seccion === 'destacados' &&
+            (highlights.length === 0 ? (
+              <EmptyState
+                icon={<ChatIcon.Star />}
+                title="Sin destacados"
+                description="Acá aparecen los mensajes que alguien marcó como importantes."
               />
-            )}
-          </section>
+            ) : (
+              <HighlightedMessagesCarousel highlights={highlights} onRemove={onRemoveHighlight} />
+            ))}
 
-          <section>
-            <SectionTitle>Mensajes destacados ({highlights.length})</SectionTitle>
-            <HighlightedMessagesCarousel highlights={highlights} onRemove={onRemoveHighlight} />
-          </section>
+          {seccion === 'conectados' && (
+            <div className="flex h-full flex-col gap-3">
+              {/* `h-full` en vez del alto fijo que tenia: antes era un panel de
+                  236px con su propio scroll DENTRO del scroll del modal. */}
+              <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-line">
+                <ChatMembersPanel
+                  currentUserId={currentUserId}
+                  search={memberSearch}
+                  onSearchChange={onMemberSearchChange}
+                  onOpenProfile={onOpenProfile}
+                  onOpenDirectMessage={onOpenDirectMessage}
+                />
+              </div>
 
-          <section>
-            <SectionTitle>Conectados ({onlineCount})</SectionTitle>
-            <div className="h-[236px] rounded-xl border border-line dark:border-gray-700 overflow-hidden">
-              <ChatMembersPanel
-                currentUserId={currentUserId}
-                search={memberSearch}
-                onSearchChange={onMemberSearchChange}
-                onOpenProfile={onOpenProfile}
-                onOpenDirectMessage={onOpenDirectMessage}
-              />
-            </div>
-          </section>
+              {/* Los baneos no son una sexta pestana: son gente que NO esta en
+                  la sala, y solo los ve el staff. Van al pie de conectados. */}
+              {isStaff && activeBans.bans.length > 0 && (
+                <div className="shrink-0 border-t border-line-soft pt-2">
+                  <h3 className="mb-1.5 text-micro font-bold uppercase tracking-wider text-ink-muted">
+                    Baneos activos ({activeBans.bans.length})
+                  </h3>
 
-          {isStaff && (
-            <section>
-              <SectionTitle>Baneos activos ({activeBans.bans.length})</SectionTitle>
-              {activeBans.bans.length === 0 ? (
-                <p className="text-sm text-ink-muted">No hay usuarios baneados ahora.</p>
-              ) : (
-                <div className="space-y-2">
-                  {activeBans.bans.map((ban) => (
-                    <div
-                      key={ban.id}
-                      className="flex items-center justify-between gap-2 rounded-xl bg-state-danger-soft px-3 py-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-state-danger truncate">{ban.userName}</p>
-                        <p className="text-[10px] text-ink-muted truncate">
-                          {ban.banned_until
-                            ? `Hasta ${new Date(ban.banned_until).toLocaleString()}`
-                            : 'Permanente'}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => void activeBans.lift(ban.id)}
-                        className="text-[11px] font-semibold text-primary hover:underline flex-shrink-0"
+                  <div className="space-y-1.5">
+                    {activeBans.bans.map((ban) => (
+                      <div
+                        key={ban.id}
+                        className="flex items-center justify-between gap-2 rounded-lg bg-state-danger-soft px-2.5 py-1.5"
                       >
-                        Levantar
-                      </button>
-                    </div>
-                  ))}
+                        <div className="min-w-0">
+                          <p className="truncate text-meta font-semibold text-state-danger">
+                            {ban.userName}
+                          </p>
+                          <p className="truncate text-micro text-ink-muted">
+                            {ban.banned_until
+                              ? `Hasta ${formatearFechaHora(ban.banned_until)}`
+                              : 'Sin fecha de fin'}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => void activeBans.lift(ban.id)}
+                          className="shrink-0 text-meta font-semibold text-primary hover:underline"
+                        >
+                          Levantar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-            </section>
+            </div>
           )}
         </div>
       </div>
+
+      {expandedImage && (
+        <AttachmentLightbox
+          src={expandedImage.src}
+          alt={expandedImage.alt}
+          onClose={() => setExpandedImage(null)}
+        />
+      )}
     </Modal>
   );
 }

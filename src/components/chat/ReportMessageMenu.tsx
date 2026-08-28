@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useFlipOnOverflow } from '../../hooks/useFlipOnOverflow';
-import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
+import ChatMenuSurface from './ChatMenuSurface';
 
 const REASON_MAX_LENGTH = 40;
 
@@ -11,53 +10,52 @@ interface ReportMessageMenuProps {
 }
 
 export default function ReportMessageMenu({ onSubmit, onClose, align = 'right' }: ReportMessageMenuProps) {
-  useCloseOnEscape(onClose);
   const [reason, setReason] = useState('');
-  const { ref, openUpward } = useFlipOnOverflow<HTMLDivElement>();
 
   return (
-    <>
-      <div className="fixed inset-0 z-20" onClick={onClose} aria-hidden="true" />
+    <ChatMenuSurface
+      onClose={onClose}
+      align={align}
+      width="w-56"
+      label="Reportar mensaje"
+      className="p-2.5"
+    >
+      <p className="mb-1.5 text-micro font-bold uppercase tracking-wider text-ink-muted">
+        Reportar mensaje
+      </p>
 
-      <div
-        ref={ref}
-        className={`absolute z-30 w-56 rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg p-2.5 ${
-          align === 'right' ? 'right-0' : 'left-0'
-        } ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'}`}
-      >
-        <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-1.5">
-          Reportar mensaje
-        </p>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Motivo (opcional)"
-          rows={2}
-          maxLength={REASON_MAX_LENGTH}
-          className="w-full resize-none rounded-lg border border-line dark:border-gray-700 bg-surface-muted dark:bg-gray-900 px-2 py-1.5 text-xs text-ink dark:text-gray-100 outline-none focus:ring-1 focus:ring-primary"
-        />
-        <div className="flex justify-between items-center mt-1">
-          <span className="text-[10px] text-ink-muted">
-            {reason.length}/{REASON_MAX_LENGTH}
-          </span>
-        </div>
-        <div className="flex justify-end gap-2 mt-1">
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="¿Por qué lo reportás? (opcional)"
+        aria-label="Motivo del reporte"
+        rows={2}
+        maxLength={REASON_MAX_LENGTH}
+        className="w-full resize-none rounded-lg border border-line bg-surface-sunken px-2 py-1.5 text-meta text-ink outline-none transition-colors focus:border-focus"
+      />
+
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="text-micro text-ink-muted">
+          {reason.length}/{REASON_MAX_LENGTH}
+        </span>
+
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="text-[11px] font-semibold text-ink-muted hover:text-ink"
+            className="text-meta font-semibold text-ink-muted transition-colors hover:text-ink"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={() => onSubmit(reason.trim())}
-            className="text-[11px] font-semibold text-state-danger hover:underline"
+            className="text-meta font-semibold text-state-danger hover:underline"
           >
             Reportar
           </button>
         </div>
       </div>
-    </>
+    </ChatMenuSurface>
   );
 }

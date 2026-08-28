@@ -1,5 +1,4 @@
-import { useFlipOnOverflow } from '../../hooks/useFlipOnOverflow';
-import { useCloseOnEscape } from '../../hooks/useCloseOnEscape';
+import ChatMenuSurface, { ChatMenuItem, ChatMenuLabel } from './ChatMenuSurface';
 
 interface PinDurationMenuProps {
   onSelect: (hours: number) => void;
@@ -15,33 +14,14 @@ const OPTIONS: { label: string; hours: number }[] = [
 ];
 
 export default function PinDurationMenu({ onSelect, onClose, align = 'right' }: PinDurationMenuProps) {
-  useCloseOnEscape(onClose);
-  const { ref, openUpward } = useFlipOnOverflow<HTMLDivElement>();
-
   return (
-    <>
-      <div className="fixed inset-0 z-20" onClick={onClose} aria-hidden="true" />
-
-      <div
-        ref={ref}
-        className={`absolute z-30 w-36 rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden ${
-          align === 'right' ? 'right-0' : 'left-0'
-        } ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'}`}
-      >
-        <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-muted">
-          Fijar por
-        </p>
-        {OPTIONS.map((option) => (
-          <button
-            key={option.hours}
-            type="button"
-            onClick={() => onSelect(option.hours)}
-            className="w-full text-left px-3 py-1.5 text-xs text-ink dark:text-gray-100 hover:bg-surface-muted dark:hover:bg-gray-700 transition-colors"
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </>
+    <ChatMenuSurface onClose={onClose} align={align} width="w-36" label="Duración del fijado">
+      <ChatMenuLabel>Fijar por</ChatMenuLabel>
+      {OPTIONS.map((option) => (
+        <ChatMenuItem key={option.hours} onClick={() => onSelect(option.hours)}>
+          {option.label}
+        </ChatMenuItem>
+      ))}
+    </ChatMenuSurface>
   );
 }

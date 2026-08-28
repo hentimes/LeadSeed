@@ -23,14 +23,14 @@ export default function FreezeDurationMenu({ roomName, onCancel, onConfirm }: Fr
   return (
     <Modal onClose={onCancel} maxWidth="360px" label={`Pausar ${roomName}`}>
       <div className="flex flex-col gap-3 p-5">
-        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+        <div className="flex items-center gap-2 text-accent">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <h2 className="text-section-title font-semibold text-ink">Pausar el chat</h2>
         </div>
 
-        <p className="text-sm text-ink-muted">
+        <p className="text-body text-ink-muted">
           Mientras dure la pausa, nadie va a poder escribir en <strong># {roomName}</strong> salvo
           administradores y helpers.
         </p>
@@ -40,7 +40,7 @@ export default function FreezeDurationMenu({ roomName, onCancel, onConfirm }: Fr
           <select
             value={hours}
             onChange={(e) => setHours(Number(e.target.value))}
-            className="w-full rounded-xl border border-line dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-ink dark:text-gray-100 outline-none focus:ring-2 focus:ring-primary-soft"
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-body text-ink outline-none transition-colors focus:border-focus"
           >
             {OPTIONS.map((option) => (
               <option key={option.hours} value={option.hours}>
