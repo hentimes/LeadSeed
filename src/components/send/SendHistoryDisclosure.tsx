@@ -31,8 +31,11 @@ export function SendHistoryDisclosure({ log, templateName }: { log: SendLog[]; t
               <Icon.Check />
             </span>
             <span className="min-w-0 flex-1 truncate text-micro text-ink">{entry.leadName}</span>
+            {/* `panel-sm` y no `sm`: el `sm` de Tailwind arranca en 640px y este
+                panel no llega, asi que el nombre de la plantilla no se habia
+                pintado NUNCA desde que se escribio. */}
             {templateName && (
-              <span className="hidden max-w-[100px] truncate text-micro text-ink-muted sm:block">
+              <span className="hidden max-w-[100px] truncate text-micro text-ink-muted panel-sm:block">
                 {templateName}
               </span>
             )}

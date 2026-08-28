@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type {
   EmailAttachment,
   EmailDeliveryChannelOption,
@@ -20,10 +20,13 @@ import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { listChannels } from '../../services/emailChannelsService';
 import { Button, Field, Modal, Select } from '../../design';
-import { SendStep } from './SendStep';
+import { SendStep, SendRequisito } from './SendStep';
+import type { SendActionState } from './channels';
+import { useSendAction } from './useSendAction';
 import { puedeRecibirPor } from '../../utils/leadContacto';
 import { TemplatePicker } from './TemplatePicker';
-import { RecipientPicker, RecipientCount } from './RecipientPicker';
+import { RecipientSheet } from './RecipientSheet';
+import { RecipientSummaryRow } from './RecipientSummaryRow';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
 import { getPlatform } from '../../platform/registry';
@@ -33,10 +36,14 @@ interface Props {
   templates: EmailTemplate[];
   templateLists: EmailTemplateList[];
   leadLists: LeadList[];
+  /** Le dice al pie fijo de `SendPage` como tiene que verse su boton. */
+  onActionChange: (action: SendActionState) => void;
 }
 
-export default function EmailSender({ leads, templates, templateLists, leadLists }: Props) {
+export default function EmailSender({ leads, templates, templateLists, leadLists, onActionChange }: Props) {
   const [catId, setCatId] = useState<number | null>(null);
+  /** Para llevar el foco al selector cuando el boton dice "Elegi una plantilla". */
+  const plantillaRef = useRef<HTMLDivElement>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
 
   // Edición dinámica
@@ -64,6 +71,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const [previewLead, setPreviewLead] = useState<Lead | null>(null);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRecipients, setShowRecipients] = useState(false);
   const [channelOptions, setChannelOptions] = useState<EmailDeliveryChannelOption[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const selectedChannel = useMemo(
@@ -198,10 +206,53 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     setSelectedListIds(new Set());
   };
 
+  /*
+   * Que hace el boton del pie. Ver `WhatsAppSender` para el razonamiento; aca
+   * se suma que el correo puede ir programado, y entonces el rotulo lo dice.
+   *
+   * `missingSchedule` -programar marcado sin fecha u hora- se trata como
+   * "enviando": el boton no manda, pero tampoco miente diciendo que falta la
+   * plantilla. Los campos vacios estan a la vista, justo encima.
+   */
+  const faltanDatosDeProgramacion = schedule && (!scheduledDate || !scheduledTime);
+
+  const razonPendiente: SendActionState['razonPendiente'] = !selectedTemplate
+    ? 'plantilla'
+    : recipients.length === 0
+      ? 'destinatarios'
+      : sending || faltanDatosDeProgramacion
+        ? 'enviando'
+        : null;
+
   const preConfirmSend = () => {
-    if (!selectedTemplate || recipients.length === 0) return;
+    if (!selectedTemplate) {
+      plantillaRef.current?.scrollIntoView({ block: 'nearest' });
+      plantillaRef.current?.querySelector('select')?.focus();
+      return;
+    }
+    if (recipients.length === 0) {
+      setShowRecipients(true);
+      return;
+    }
+    if (sending || faltanDatosDeProgramacion) return;
     setShowConfirmModal(true);
   };
+
+  const cuenta = recipients.length;
+  const plural = cuenta === 1 ? '' : 's';
+  const etiquetaAccion = !selectedTemplate
+    ? 'Elegí una plantilla'
+    : cuenta === 0
+      ? 'Elegí destinatarios'
+      : sending
+        ? 'Enviando mensajes…'
+        : faltanDatosDeProgramacion
+          ? 'Completá la fecha y la hora'
+          : schedule
+            ? `Programar envío a ${cuenta} lead${plural}`
+            : `Enviar ahora a ${cuenta} lead${plural}`;
+
+  useSendAction(onActionChange, etiquetaAccion, razonPendiente, preConfirmSend);
 
   const executeSend = async () => {
     setShowConfirmModal(false);
@@ -252,7 +303,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
 
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
-      <SendStep step={1} title="Plantilla">
+      <div ref={plantillaRef}>
+      <SendStep title="Plantilla" actions={<SendHistoryDisclosure log={sentLog} templateName={selectedTemplate?.nombre} />}>
         <div className="flex flex-col gap-2.5">
           <TemplatePicker
             templates={templates}
@@ -278,9 +330,11 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           )}
         </div>
       </SendStep>
+      </div>
 
-      <SendStep step={2} title="Mensaje" disabled={!selectedTemplate}>
-        {selectedTemplate && usaMotivo && (
+      {selectedTemplate ? (
+        <SendStep title="Mensaje">
+        {usaMotivo && (
           <div className="mb-2.5">
             <Field
               label="Motivo del mensaje"
@@ -294,8 +348,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             </Field>
           </div>
         )}
-        {selectedTemplate ? (
-          <EmailEditor
+        <EmailEditor
             selectedTemplate={selectedTemplate}
             customSubject={customSubject}
             setCustomSubject={setCustomSubject}
@@ -303,15 +356,33 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
             setCustomBody={setCustomBody}
             attachments={attachments}
             setAttachments={setAttachments}
-            setShowPreviewModal={setShowPreviewModal}
-          />
-        ) : (
-          <p className="text-micro text-ink-muted">Elegí una plantilla para editar el correo.</p>
-        )}
+          setShowPreviewModal={setShowPreviewModal}
+        />
+        </SendStep>
+      ) : (
+        <SendRequisito title="Mensaje" requisito="Elegí una plantilla para escribir el correo." />
+      )}
+
+      <RecipientSummaryRow
+        count={recipients.length}
+        names={recipients.map((lead) => lead.name)}
+        onOpen={() => setShowRecipients(true)}
+      />
+
+      <SendStep title="Cuándo sale">
+        <EmailScheduler
+          schedule={schedule}
+          setSchedule={setSchedule}
+          scheduledDate={scheduledDate}
+          setScheduledDate={setScheduledDate}
+          scheduledTime={scheduledTime}
+          setScheduledTime={setScheduledTime}
+          result={result}
+        />
       </SendStep>
 
-      <SendStep step={3} title="Destinatarios" actions={<RecipientCount count={recipients.length} />}>
-        <RecipientPicker
+      {showRecipients && (
+        <RecipientSheet
           leads={leads}
           leadLists={leadLists}
           selectedLeadIds={selectedLeadIds}
@@ -323,27 +394,10 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           onSearchChange={setLeadSearch}
           sentLeadIds={sentLeadIds}
           canal="email"
+          count={recipients.length}
+          onClose={() => setShowRecipients(false)}
         />
-      </SendStep>
-
-      <SendStep step={4} title="Enviar">
-        <div className="flex flex-col gap-2.5">
-          <EmailScheduler
-            schedule={schedule}
-            setSchedule={setSchedule}
-            scheduledDate={scheduledDate}
-            setScheduledDate={setScheduledDate}
-            scheduledTime={scheduledTime}
-            setScheduledTime={setScheduledTime}
-            preConfirmSend={preConfirmSend}
-            sending={sending}
-            selectedTemplate={selectedTemplate}
-            recipients={recipients}
-            result={result}
-          />
-          <SendHistoryDisclosure log={sentLog} templateName={selectedTemplate?.nombre} />
-        </div>
-      </SendStep>
+      )}
 
       {showPreviewModal && selectedTemplate && (
         <Modal onClose={() => setShowPreviewModal(false)} maxWidth="480px" label="Vista previa del correo">

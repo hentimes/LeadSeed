@@ -1,7 +1,5 @@
-import type { EmailTemplate, Lead } from '../../types';
 import { Icon } from '../../utils/icons';
 import { Checkbox, Field, Input, Panel } from '../../design';
-import { SendAction } from './RecipientPicker';
 
 interface Props {
   schedule: boolean;
@@ -10,15 +8,14 @@ interface Props {
   setScheduledDate: (val: string) => void;
   scheduledTime: string;
   setScheduledTime: (val: string) => void;
-  preConfirmSend: () => void;
-  sending: boolean;
-  selectedTemplate: EmailTemplate | null;
-  recipients: Lead[];
   result: { total: number; sent: number; errors: string[] } | null;
 }
 
 /**
- * Envio inmediato o programado del correo.
+ * Programacion del envio, y el parte de como salio.
+ *
+ * El boton ya no vive aca: se mudo al pie fijo de la pagina. Lo que queda es
+ * cuando sale el correo y, despues, cuantos llegaron.
  *
  * La fecha y la hora estaban en la misma fila que la casilla, empujadas a
  * la derecha: en un panel de 320px los dos campos no entraban. Ahora la
@@ -31,20 +28,8 @@ export default function EmailScheduler({
   setScheduledDate,
   scheduledTime,
   setScheduledTime,
-  preConfirmSend,
-  sending,
-  selectedTemplate,
-  recipients,
   result,
 }: Props) {
-  const missingSchedule = schedule && (!scheduledDate || !scheduledTime);
-  const count = recipients.length;
-  const plural = count === 1 ? '' : 's';
-
-  let label = `Enviar ahora a ${count} lead${plural}`;
-  if (sending) label = 'Enviando mensajes...';
-  else if (schedule) label = `Programar envío a ${count} lead${plural}`;
-
   return (
     <div className="flex flex-col gap-2.5">
       <Checkbox
@@ -53,8 +38,11 @@ export default function EmailScheduler({
         label="Programar envío automático"
       />
 
+      {/* Apilados por defecto: un `input[type=date]` de Chrome necesita unos
+          130px para "dd/mm/aaaa" mas el icono de calendario, y dos columnas a
+          320px le dan 112. Se cortaba por la derecha. */}
       {schedule && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 panel-md:grid-cols-2">
           <Field label="Fecha">
             <Input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
           </Field>
@@ -63,12 +51,6 @@ export default function EmailScheduler({
           </Field>
         </div>
       )}
-
-      <SendAction
-        label={label}
-        disabled={!selectedTemplate || count === 0 || sending || missingSchedule}
-        onClick={preConfirmSend}
-      />
 
       {result && (
         <Panel tone={result.errors.length ? 'warning' : 'success'}>

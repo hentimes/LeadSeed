@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } from '../../types';
+import type { SendActionState } from './channels';
+import { useSendAction } from './useSendAction';
 import { buildLeadMessages, openWhatsAppMessages } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
 import { getSettings } from '../../services/appSettingsService';
@@ -9,10 +11,11 @@ import { insertTextAtCursor } from '../../utils/textHelper';
 import { getCurrentSession } from '../../services/authService';
 import { loadTemplateSendLog, logWhatsAppSend } from '../../services/sendService';
 import { Field, Select, Textarea } from '../../design';
-import { SendStep } from './SendStep';
+import { SendStep, SendRequisito } from './SendStep';
 import { puedeRecibirPor } from '../../utils/leadContacto';
 import { TemplatePicker } from './TemplatePicker';
-import { RecipientPicker, RecipientCount, SendAction } from './RecipientPicker';
+import { RecipientSheet } from './RecipientSheet';
+import { RecipientSummaryRow } from './RecipientSummaryRow';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
 
@@ -21,6 +24,8 @@ interface Props {
   templates: WhatsAppTemplate[];
   templateLists: WhatsAppTemplateList[];
   leadLists: LeadList[];
+  /** Le dice al pie fijo de `SendPage` como tiene que verse su boton. */
+  onActionChange: (action: SendActionState) => void;
 }
 
 /**
@@ -48,10 +53,12 @@ const LEAD_DE_EJEMPLO = {
   notes: 'Cliente VIP',
 } as Lead;
 
-export default function WhatsAppSender({ leads, templates, templateLists, leadLists }: Props) {
+export default function WhatsAppSender({ leads, templates, templateLists, leadLists, onActionChange }: Props) {
   const [catId, setCatId] = useState<number | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  /** Para llevar el foco al selector cuando el boton dice "Elegi una plantilla". */
+  const plantillaRef = useRef<HTMLDivElement>(null);
 
   // Edición dinámica al vuelo
   const [customBody, setCustomBody] = useState('');
@@ -65,6 +72,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   const [previewLead, setPreviewLead] = useState<Lead | null>(null);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRecipients, setShowRecipients] = useState(false);
 
   // Motivo del mensaje: se elige una vez por envio, no por destinatario.
   const { motivos: reasons } = useMessageReasons();
@@ -140,10 +148,47 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     setSelectedListIds(new Set());
   };
 
+  /*
+   * QUE HACE EL BOTON DEL PIE AHORA MISMO.
+   *
+   * Nunca esta apagado. Si falta algo, el boton lo dice y al pulsarlo lleva
+   * justo ahi: sin plantilla, sube al selector; sin destinatarios, abre la
+   * hoja. Un boton muerto no explica nada, y lo que falta se pide arriba, fuera
+   * de la vista.
+   */
+  const razonPendiente: SendActionState['razonPendiente'] = !selectedTemplate
+    ? 'plantilla'
+    : recipients.length === 0
+      ? 'destinatarios'
+      : null;
+
   const preConfirmSend = () => {
-    if (!selectedTemplate || recipients.length === 0) return;
+    if (!selectedTemplate) {
+      plantillaRef.current?.scrollIntoView({ block: 'nearest' });
+      plantillaRef.current?.querySelector('select')?.focus();
+      return;
+    }
+    if (recipients.length === 0) {
+      setShowRecipients(true);
+      return;
+    }
     setShowConfirmModal(true);
   };
+
+  const etiquetaAccion =
+    razonPendiente === 'plantilla'
+      ? 'Elegí una plantilla'
+      : razonPendiente === 'destinatarios'
+        ? 'Elegí destinatarios'
+        : `Abrir WhatsApp para ${recipients.length} lead${recipients.length === 1 ? '' : 's'}`;
+
+  /*
+   * Las dependencias son primitivas a proposito. `onTrigger` cambia de
+   * identidad en cada render -es una funcion nueva- y ponerla aca dispararia el
+   * efecto sin parar. Lo que importa es que el pie tenga el handler del render
+   * actual, y eso ya pasa porque el efecto corre despues de cada cambio real.
+   */
+  useSendAction(onActionChange, etiquetaAccion, razonPendiente, preConfirmSend);
 
   const executeSend = async () => {
     setShowConfirmModal(false);
@@ -163,7 +208,8 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
-      <SendStep step={1} title="Plantilla">
+      <div ref={plantillaRef}>
+      <SendStep title="Plantilla" actions={<SendHistoryDisclosure log={sentLog} templateName={selectedTemplate?.nombre} />}>
         <TemplatePicker
           templates={templates}
           templateLists={templateLists}
@@ -173,9 +219,10 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
           onSelect={setSelectedTemplate}
         />
       </SendStep>
+      </div>
 
-      <SendStep step={2} title="Mensaje" disabled={!selectedTemplate}>
-        {selectedTemplate ? (
+      {selectedTemplate ? (
+        <SendStep title="Mensaje">
           <div className="flex flex-col gap-2.5">
             {usaMotivo && (
               <Field
@@ -247,13 +294,19 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
               </div>
             </Field>
           </div>
-        ) : (
-          <p className="text-micro text-ink-muted">Elegí una plantilla para editar el mensaje.</p>
-        )}
-      </SendStep>
+        </SendStep>
+      ) : (
+        <SendRequisito title="Mensaje" requisito="Elegí una plantilla para escribir el mensaje." />
+      )}
 
-      <SendStep step={3} title="Destinatarios" actions={<RecipientCount count={recipients.length} />}>
-        <RecipientPicker
+      <RecipientSummaryRow
+        count={recipients.length}
+        names={recipients.map((lead) => lead.name)}
+        onOpen={() => setShowRecipients(true)}
+      />
+
+      {showRecipients && (
+        <RecipientSheet
           leads={leads}
           leadLists={leadLists}
           selectedLeadIds={selectedLeadIds}
@@ -265,19 +318,10 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
           onSearchChange={setLeadSearch}
           sentLeadIds={sentLeadIds}
           canal="whatsapp"
+          count={recipients.length}
+          onClose={() => setShowRecipients(false)}
         />
-      </SendStep>
-
-      <SendStep step={4} title="Enviar">
-        <div className="flex flex-col gap-2.5">
-          <SendAction
-            label={`Abrir WhatsApp para ${recipients.length} lead${recipients.length === 1 ? '' : 's'}`}
-            disabled={!selectedTemplate || recipients.length === 0}
-            onClick={preConfirmSend}
-          />
-          <SendHistoryDisclosure log={sentLog} templateName={selectedTemplate?.nombre} />
-        </div>
-      </SendStep>
+      )}
 
       {showConfirmModal && selectedTemplate && (
         <SendConfirmModal

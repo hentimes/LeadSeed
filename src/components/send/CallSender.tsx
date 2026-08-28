@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../../types';
 import { getAssignedLeads } from '../../hooks/useTemplates';
 import { Icon } from '../../utils/icons';
@@ -8,9 +8,10 @@ import { applyReason } from '../../utils/waHelper';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
 import { ReasonPicker } from './ReasonPicker';
 import { Field, Panel, Select } from '../../design';
-import { SendStep } from './SendStep';
+import { SendStep, SendRequisito } from './SendStep';
+import type { SendActionState } from './channels';
+import { useSendAction } from './useSendAction';
 import { TemplatePicker } from './TemplatePicker';
-import { SendAction } from './RecipientPicker';
 import { puedeRecibirPor } from '../../utils/leadContacto';
 
 interface Props {
@@ -18,15 +19,22 @@ interface Props {
   templates: CallTemplate[];
   templateLists: CallTemplateList[];
   leadLists: LeadList[];
+  /** Le dice al pie fijo de `SendPage` como tiene que verse su boton. */
+  onActionChange: (action: SendActionState) => void;
 }
 
-export default function CallSender({ leads, templates, templateLists }: Props) {
+export default function CallSender({ leads, templates, templateLists, onActionChange }: Props) {
+  /** Para llevar el foco a lo que falta cuando el boton del pie lo pide. */
+  const guionRef = useRef<HTMLDivElement>(null);
+  const leadRef = useRef<HTMLDivElement>(null);
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [assignedLeadIds, setAssignedLeadIds] = useState<string[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string>('');
   const [logging, setLogging] = useState(false);
   const [message, setMessage] = useState('');
+  /** Si el ultimo aviso fue de exito. Ver el comentario del `Panel`. */
+  const [messageOk, setMessageOk] = useState(false);
 
   // Motivo del mensaje: aqui alimenta el guion que se lee al llamar.
   const { motivos: reasons } = useMessageReasons();
@@ -78,6 +86,7 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
   // El guion que se lee y el que se registra son el mismo texto.
   const guionResuelto = applyReason(selectedTemplate?.contenido || '', motivoTexto);
   const selectedLead = validLeads.find((lead) => lead.id === selectedLeadId);
+  const telefonoElegido = selectedLead?.phone?.trim() || '';
 
   const handleLogCall = async () => {
     if (!selectedTemplate || !selectedLead) return;
@@ -87,7 +96,8 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
       const session = await getCurrentSession();
       const userId = session?.user?.id;
       if (!userId) {
-        setMessage('Sesion no disponible');
+        setMessageOk(false);
+        setMessage('Sesión no disponible');
         return;
       }
 
@@ -95,18 +105,61 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
         nombre: selectedTemplate.nombre,
         contenido: guionResuelto,
       });
-      setMessage('Llamada registrada con exito');
+      setMessageOk(true);
+      setMessage('Llamada registrada con éxito');
     } catch {
-      setMessage('Error al registrar llamada');
+      setMessageOk(false);
+      setMessage('No se pudo registrar la llamada');
     } finally {
       setLogging(false);
       setTimeout(() => setMessage(''), 3000);
     }
   };
 
+  /*
+   * Que hace el boton del pie.
+   *
+   * Llamadas no envia nada: registra una llamada que ya se hizo por fuera. Por
+   * eso reutiliza `razonPendiente` con otro contenido -guion en vez de
+   * plantilla, un lead en vez de destinatarios-, pero el comportamiento es el
+   * mismo: nunca apagado, y al pulsarlo lleva a lo que falta.
+   */
+  const razonPendiente: SendActionState['razonPendiente'] = !selectedTemplateId
+    ? 'plantilla'
+    : !selectedLeadId
+      ? 'destinatarios'
+      : logging
+        ? 'enviando'
+        : null;
+
+  const etiquetaAccion = !selectedTemplateId
+    ? 'Elegí un guion'
+    : !selectedLeadId
+      ? 'Elegí a quién llamaste'
+      : logging
+        ? 'Registrando…'
+        : 'Registrar llamada completada';
+
+  const alPulsar = () => {
+    if (!selectedTemplateId) {
+      guionRef.current?.scrollIntoView({ block: 'nearest' });
+      guionRef.current?.querySelector('select')?.focus();
+      return;
+    }
+    if (!selectedLeadId) {
+      leadRef.current?.scrollIntoView({ block: 'nearest' });
+      leadRef.current?.querySelector('select')?.focus();
+      return;
+    }
+    void handleLogCall();
+  };
+
+  useSendAction(onActionChange, etiquetaAccion, razonPendiente, alPulsar);
+
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
-      <SendStep step={1} title="Guion">
+      <div ref={guionRef}>
+      <SendStep title="Guion">
         <TemplatePicker
           templates={templates}
           templateLists={templateLists}
@@ -122,9 +175,11 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
           itemLabel="guion"
         />
       </SendStep>
+      </div>
 
-      <SendStep step={2} title="Script" disabled={!selectedTemplate}>
-        {selectedTemplate && usaMotivo && (
+      {selectedTemplate ? (
+        <SendStep title="Script">
+        {usaMotivo && (
           <div className="mb-2.5">
             <Field
               label="Motivo del mensaje"
@@ -138,16 +193,17 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
             </Field>
           </div>
         )}
-        {selectedTemplate ? (
-          <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-surface-muted p-2.5 text-body text-ink">
-            {guionResuelto}
-          </p>
-        ) : (
-          <p className="text-micro text-ink-muted">Elegí un guion para ver el script.</p>
-        )}
-      </SendStep>
+        <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-surface-muted p-2.5 text-body text-ink">
+          {guionResuelto}
+        </p>
+        </SendStep>
+      ) : (
+        <SendRequisito title="Script" requisito="Elegí un guion para ver el script." />
+      )}
 
-      <SendStep step={3} title="Lead a llamar" disabled={!selectedTemplateId}>
+      {selectedTemplateId ? (
+        <SendStep title="Lead a llamar">
+        <div ref={leadRef}>
         <Field
           label="Lead"
           hint={
@@ -169,26 +225,42 @@ export default function CallSender({ leads, templates, templateLists }: Props) {
             ))}
           </Select>
         </Field>
-      </SendStep>
 
-      <SendStep step={4} title="Registrar">
-        <div className="flex flex-col gap-2.5">
-          <SendAction
-            label={logging ? 'Registrando...' : 'Registrar llamada completada'}
-            disabled={!selectedTemplateId || !selectedLeadId || logging}
-            onClick={handleLogCall}
-          />
-
-          {message && (
-            <Panel tone={message.includes('exito') ? 'success' : 'danger'}>
-              <div className="flex items-center gap-2 text-body font-medium">
-                {message.includes('exito') ? <Icon.Check /> : <Icon.Warning />}
-                {message}
-              </div>
-            </Panel>
-          )}
+        {/*
+          El numero solo existia dentro del `<option>`: no se podia copiar ni
+          tocar. La pantalla se llama "Llamadas" y no dejaba llamar; el unico
+          boton era el de registrar una llamada que habia que hacer por fuera.
+        */}
+        {telefonoElegido && (
+          <a
+            href={`tel:${telefonoElegido}`}
+            className="mt-2 flex h-control items-center justify-center gap-2 rounded-md border border-line bg-surface text-body font-semibold text-primary transition-colors hover:bg-surface-hover"
+          >
+            <span className="[&_svg]:h-4 [&_svg]:w-4">
+              <Icon.Phone />
+            </span>
+            Llamar a {telefonoElegido}
+          </a>
+        )}
         </div>
-      </SendStep>
+        </SendStep>
+      ) : (
+        <SendRequisito title="Lead a llamar" requisito="Elegí un guion para ver a quién llamar." />
+      )}
+
+      {/* El parte de como salio se queda arriba del pie, al lado del boton que
+          lo provoco. El tono se decide con una bandera y no buscando la palabra
+          "exito" dentro del mensaje: al corregirle la tilde, ese truco pasaba a
+          marcar como error un registro que habia salido bien. */}
+      {message && (
+        <Panel tone={messageOk ? 'success' : 'danger'}>
+          <div className="flex items-center gap-2 text-body font-medium">
+            {messageOk ? <Icon.Check /> : <Icon.Warning />}
+            {message}
+          </div>
+        </Panel>
+      )}
+
     </div>
   );
 }

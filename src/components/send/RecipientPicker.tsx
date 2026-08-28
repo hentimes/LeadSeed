@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Lead, LeadList } from '../../types';
-import { Badge, Button, EmptyState, Input, ListPagination, ListPanel, ListRow } from '../../design';
+import { Badge, EmptyState, Input, ListPagination, ListPanel, ListRow, Select } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 import { puedeRecibirPor, DATO_DEL_CANAL, type CanalContacto } from '../../utils/leadContacto';
@@ -79,10 +79,20 @@ export function RecipientPicker({
   const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
   const sinNombre = useMemo(() => contarSinNombre(contactables), [contactables]);
 
+  /*
+   * VER SOLO UNA LISTA. Es filtro de vista y nada mas: no toca la seleccion.
+   *
+   * Antes esto no existia y el filtrado lo hacia `selectedListIds`, el mismo
+   * estado con el que se AGREGAN listas enteras al envio. Un unico estado con
+   * dos significados: mirar y elegir. Ahora son dos, y cada control hace una
+   * sola cosa.
+   */
+  const [verListaId, setVerListaId] = useState<number | null>(null);
+
   const filteredLeads = useMemo(() => {
     let result = contactables;
-    if (selectedListIds.size > 0) {
-      result = result.filter((lead) => lead.listaIds.some((id) => selectedListIds.has(id)));
+    if (verListaId !== null) {
+      result = result.filter((lead) => lead.listaIds.includes(verListaId));
     }
     result = result.filter((lead) => pasaFiltroDeNombre(lead, ocultarSinNombre));
     if (search) {
@@ -92,7 +102,7 @@ export function RecipientPicker({
       );
     }
     return result;
-  }, [contactables, selectedListIds, search, ocultarSinNombre]);
+  }, [contactables, verListaId, search, ocultarSinNombre]);
 
   const hasSelection = selectedLeadIds.size > 0 || selectedListIds.size > 0;
 
@@ -111,7 +121,7 @@ export function RecipientPicker({
    * filtro nuevo y despues corrige, que es un render en cascada visible. Es el
    * patron que React documenta para estado derivado de props.
    */
-  const filtroActual = `${search}|${ocultarSinNombre}|${[...selectedListIds].sort().join(',')}`;
+  const filtroActual = `${search}|${ocultarSinNombre}|${verListaId ?? ''}`;
   const [filtroAnterior, setFiltroAnterior] = useState(filtroActual);
   if (filtroAnterior !== filtroActual) {
     setFiltroAnterior(filtroActual);
@@ -149,6 +159,26 @@ export function RecipientPicker({
       </div>
 
       {/*
+        Filtro de VISTA. Deliberadamente separado de los chips de abajo, que
+        agregan al envio. Este solo decide a quien mirar.
+      */}
+      {leadLists.length > 0 && (
+        <Select
+          value={verListaId ?? ''}
+          onChange={(evento) => setVerListaId(evento.target.value ? Number(evento.target.value) : null)}
+          compact
+          aria-label="Ver solo los leads de una lista"
+        >
+          <option value="">Ver: todas las listas</option>
+          {leadLists.map((lista) => (
+            <option key={lista.id} value={lista.id}>
+              Ver: {lista.name}
+            </option>
+          ))}
+        </Select>
+      )}
+
+      {/*
         Se dice cuantos quedaron fuera y por que. Filtrar en silencio deja a
         quien mira preguntandose donde estan sus leads.
       */}
@@ -160,19 +190,19 @@ export function RecipientPicker({
       )}
 
       {/*
-        `flush` y los margenes negativos sacan la lista del relleno de la
-        tarjeta del paso: se apoya en el borde en vez de dibujar una segunda
-        caja dentro de la primera. Es el aspecto de la lista de inscripcion a
-        flujos, que es la referencia que adopto el producto.
-      */}
-      {/*
-        Sin rotulo ni cuenta: "Leads directos" repetia lo que el paso ya dice y
-        gastaba una franja entera. La cuenta de seleccionados ya vive en la
-        cabecera del paso.
+        Antes esto iba con `flush` y `-mx-3`, o sea con margen negativo para
+        salir del relleno de la tarjeta del paso y apoyarse en su borde. Era un
+        apano para no dibujar dos cajas anidadas, y el efecto real era que la
+        lista se veia incrustada a la fuerza dentro de otra cosa: eso es lo que
+        el usuario describio como una lista "atravesada".
+
+        Aca ya no hace falta ningun apano: la lista dejo de estar dentro de una
+        tarjeta. Es el contenido principal de su propia hoja, con su borde
+        propio y sin margenes negativos.
+
+        Sin rotulo: "Leads directos" repetia lo que el titulo de la hoja ya dice.
       */}
       <ListPanel
-        flush
-        className="-mx-3"
         footer={
           <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
         }
@@ -208,11 +238,25 @@ export function RecipientPicker({
         })}
       </ListPanel>
 
-      {/* Filtro por lista, debajo de lo que filtra. */}
+      {/*
+        AGREGAR UNA LISTA ENTERA. Ojo con el rotulo: esto NO filtra.
+
+        Decia "Filtrar por lista" y hacia dos cosas a la vez. Filtraba la vista,
+        si -por eso el rotulo sonaba razonable-, pero ademas `selectedListIds`
+        se lee en los tres senders para hacer la UNION de los leads sueltos con
+        TODOS los leads de esas listas. O sea que tocabas un chip creyendo que
+        acotabas lo que veias, y sumabas cuatrocientos destinatarios al envio.
+
+        El rotulo ahora dice lo que pasa, y cada chip activo muestra cuantos
+        agrego. Un control que promete una cosa y hace otra, en la pantalla que
+        dispara mensajes a cientos de personas, es lo mas caro que habia aca.
+      */}
       {leadLists.length > 0 && (
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="text-micro font-medium text-ink-secondary">Filtrar por lista</span>
+            <span className="text-micro font-medium text-ink-secondary">
+              Agregar lista completa
+            </span>
             {hasSelection && (
               <button
                 onClick={onClear}
@@ -231,7 +275,8 @@ export function RecipientPicker({
                   key={list.id}
                   onClick={() => onToggleList(list.id!)}
                   aria-pressed={on}
-                  className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-micro font-medium transition-colors ${
+                  aria-label={`${on ? 'Quitar' : 'Agregar'} los ${count} leads de ${list.name}`}
+                  className={`flex min-h-[28px] items-center gap-1.5 rounded-full border px-2.5 py-1 text-micro font-medium transition-colors ${
                     on
                       ? 'border-transparent text-ink-inverse'
                       : 'border-line bg-surface text-ink-secondary hover:border-line-strong hover:text-ink'
@@ -242,7 +287,10 @@ export function RecipientPicker({
                   style={on ? { backgroundColor: list.color } : undefined}
                 >
                   <span className="max-w-[120px] truncate">{list.name}</span>
-                  <span className={`tabular-nums ${on ? 'opacity-75' : 'text-ink-muted'}`}>{count}</span>
+                  {/* El signo importa: dice que suma, no que acota. */}
+                  <span className={`tabular-nums ${on ? 'opacity-75' : 'text-ink-muted'}`}>
+                    +{count}
+                  </span>
                 </button>
               );
             })}
@@ -250,31 +298,5 @@ export function RecipientPicker({
         </div>
       )}
     </div>
-  );
-}
-
-/** Resumen de la seleccion, para el encabezado del paso. */
-export function RecipientCount({ count }: { count: number }) {
-  return (
-    <Badge tone={count > 0 ? 'primary' : 'neutral'}>
-      {count} {count === 1 ? 'destinatario' : 'destinatarios'}
-    </Badge>
-  );
-}
-
-/** Boton de accion primaria del envio, identico en los tres canales. */
-export function SendAction({
-  label,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Button variant="primary" onClick={onClick} disabled={disabled} className="w-full">
-      {label}
-    </Button>
   );
 }

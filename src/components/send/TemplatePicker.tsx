@@ -43,8 +43,33 @@ export function TemplatePicker<T extends TemplateLike>({
     ? templates.filter((template) => (template.templateListIds || []).includes(categoryId))
     : templates;
 
+  /*
+   * Sin nada que elegir, los dos desplegables son un callejon sin salida: el
+   * unico contenido es "Elegir plantilla..." y no hay ninguna pista de que
+   * primero hay que crearla, ni como llegar ahi. El flujo de envio se moria en
+   * el paso 1.
+   */
+  if (templates.length === 0) {
+    // "guions" no existe: el plural en español depende de la terminación, no de
+    // pegarle una ese al singular.
+    const plural = itemLabel === 'guion' ? 'guiones' : `${itemLabel}s`;
+
+    return (
+      <p className="rounded-md border border-dashed border-line bg-surface-sunken px-3 py-2.5 text-meta text-ink-secondary">
+        Todavía no tenés {plural} para este canal. Creá {itemLabel === 'guion' ? 'el primero' : 'la primera'}{' '}
+        desde <strong className="font-semibold text-ink">Plantillas</strong>, acá arriba.
+      </p>
+    );
+  }
+
+  /*
+   * Apilados por defecto, dos columnas desde `panel-sm`. A 320px, dos columnas
+   * dejan 112px por `select`, y "Todas las categorias" a 13px pide unos 125: el
+   * `select` nativo recorta sin puntos suspensivos y, con los scrollbars
+   * ocultos, se pierde texto sin ninguna pista.
+   */
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 gap-2 panel-sm:grid-cols-2">
       <Field label="Categoría">
         <Select
           value={categoryId ?? ''}
