@@ -4,6 +4,9 @@ import type {
   CommunityComment,
   CommunityFeedSort,
   CommunityPost,
+  CommunityPostEdit,
+  CommunityReactionEmoji,
+  CommunityReactionSummary,
   NewCommunityPost,
 } from '../types/community';
 
@@ -18,9 +21,37 @@ export function loadCategories(): Promise<CommunityCategory[]> {
 }
 
 export function loadPosts(sort: CommunityFeedSort, categoryId?: string): Promise<CommunityPost[]> {
-  return sort === 'trending'
-    ? repo.fetchTrendingPosts(categoryId)
-    : repo.fetchRecentPosts(categoryId);
+  if (sort === 'trending') return repo.fetchTrendingPosts(categoryId);
+  if (sort === 'recent') return repo.fetchRecentPosts(categoryId);
+  return repo.fetchPostsByActivity(categoryId);
+}
+
+/**
+ * Guarda los cambios de una publicacion.
+ *
+ * Reusa `validatePost`: las reglas de largo del titulo y del cuerpo son las
+ * mismas al crear y al editar, y tenerlas en dos sitios es como se separan.
+ */
+export function editPost(postId: string, edit: CommunityPostEdit): Promise<CommunityPost | null> {
+  const error = validatePost({ ...edit, title: edit.title, body: edit.body });
+  if (error) throw new Error(error);
+
+  return repo.updatePost(postId, {
+    title: edit.title.trim(),
+    body: edit.body.trim(),
+    categoryId: edit.categoryId,
+  });
+}
+
+export function removePost(postId: string): Promise<void> {
+  return repo.deletePost(postId);
+}
+
+/** Maximo del motivo. Debe coincidir con el CHECK de la migracion 126. */
+export const REPORT_REASON_MAX = 200;
+
+export function reportPost(postId: string, reporterId: string, reason: string): Promise<void> {
+  return repo.reportPost(postId, reporterId, reason.trim().slice(0, REPORT_REASON_MAX));
 }
 
 export function loadPost(postId: string): Promise<CommunityPost | null> {
@@ -66,18 +97,47 @@ export function loadComments(postId: string): Promise<CommunityComment[]> {
   return repo.fetchComments(postId);
 }
 
-export function createComment(
-  postId: string,
-  authorId: string,
-  body: string
-): Promise<CommunityComment | null> {
+/** Las mismas reglas al crear y al editar; tenerlas dos veces es como se separan. */
+function validarComentario(body: string): string {
   const trimmed = body.trim();
   if (!trimmed) throw new Error('El comentario está vacío.');
   if (trimmed.length > COMMENT_MAX) {
     throw new Error(`El comentario no puede superar los ${COMMENT_MAX} caracteres.`);
   }
+  return trimmed;
+}
 
-  return repo.insertComment(postId, authorId, trimmed);
+export function createComment(
+  postId: string,
+  authorId: string,
+  body: string,
+  parentId?: string | null
+): Promise<CommunityComment | null> {
+  return repo.insertComment(postId, authorId, validarComentario(body), parentId);
+}
+
+export function editComment(commentId: string, body: string): Promise<CommunityComment | null> {
+  return repo.updateComment(commentId, validarComentario(body));
+}
+
+export function removeComment(commentId: string): Promise<void> {
+  return repo.softDeleteComment(commentId);
+}
+
+export function loadCommentReactions(
+  commentIds: string[],
+  userId?: string
+): Promise<Map<string, CommunityReactionSummary[]>> {
+  return repo.fetchCommentReactions(commentIds, userId);
+}
+
+export function toggleCommentReaction(
+  commentId: string,
+  userId: string,
+  emoji: CommunityReactionEmoji,
+  reacted: boolean
+): Promise<void> {
+  return repo.toggleCommentReaction(commentId, userId, emoji, reacted);
 }
 
 export function loadLikedPostIds(userId: string): Promise<Set<string>> {

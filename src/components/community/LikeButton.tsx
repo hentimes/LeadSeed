@@ -6,6 +6,12 @@ interface LikeButtonProps {
   onToggle: () => void;
 }
 
+/**
+ * El icono crece un 15% al marcar y vuelve. Es la unica animacion de la
+ * seccion que responde a una accion del usuario, y por eso se deja: confirma
+ * que el toque llego antes de que vuelva la respuesta del servidor. La regla
+ * global de `prefers-reduced-motion` la anula sola.
+ */
 export default function LikeButton({ liked, count, onToggle }: LikeButtonProps) {
   return (
     <button
@@ -15,14 +21,15 @@ export default function LikeButton({ liked, count, onToggle }: LikeButtonProps) 
         onToggle();
       }}
       aria-pressed={liked}
-      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
-        liked
-          ? 'bg-primary-soft dark:bg-primary/20 text-primary'
-          : 'text-ink-muted hover:bg-surface-muted dark:hover:bg-gray-800'
-      }`}
       title={liked ? 'Quitar me gusta' : 'Me gusta'}
+      aria-label={liked ? `Quitar me gusta, ${count}` : `Me gusta, ${count}`}
+      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-semibold transition-colors ${
+        liked ? 'bg-primary-soft text-primary' : 'text-ink-muted hover:bg-surface-hover hover:text-ink'
+      }`}
     >
-      <span className="[&_svg]:!h-4 [&_svg]:!w-4">
+      <span
+        className={`transition-transform [&_svg]:!h-3.5 [&_svg]:!w-3.5 ${liked ? 'scale-110' : ''}`}
+      >
         <Icon.ThumbUp />
       </span>
       {count}

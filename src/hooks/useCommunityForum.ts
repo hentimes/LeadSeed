@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   createPost,
+  editPost,
   loadCategories,
   loadLikedPostIds,
   loadPosts,
+  removePost,
+  reportPost as reportPostService,
   setLike,
   subscribeToPosts,
 } from '../services/communityForumService';
@@ -12,6 +15,7 @@ import type {
   CommunityCategory,
   CommunityFeedSort,
   CommunityPost,
+  CommunityPostEdit,
   NewCommunityPost,
 } from '../types/community';
 
@@ -20,7 +24,13 @@ export function useCommunityForum() {
   const [categories, setCategories] = useState<CommunityCategory[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
-  const [sort, setSort] = useState<CommunityFeedSort>('recent');
+  /*
+   * Por defecto, actividad reciente: es el orden de un grupo de Facebook y el
+   * unico que mantiene viva una conversacion. Con `recent` -que era el defecto
+   * anterior- un hilo con diez respuestas de hoy queda debajo de una
+   * publicacion de hace un minuto que no le importa a nadie.
+   */
+  const [sort, setSort] = useState<CommunityFeedSort>('activity');
   const [categoryId, setCategoryId] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +95,30 @@ export function useCommunityForum() {
     [user, refresh]
   );
 
+  const edit = useCallback(
+    async (postId: string, cambios: CommunityPostEdit) => {
+      await editPost(postId, cambios);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  const remove = useCallback(
+    async (postId: string) => {
+      await removePost(postId);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  const report = useCallback(
+    async (postId: string, reason: string) => {
+      if (!user) return;
+      await reportPostService(postId, user.id, reason);
+    },
+    [user]
+  );
+
   return {
     categories,
     posts,
@@ -96,6 +130,9 @@ export function useCommunityForum() {
     setCategoryId,
     toggleLike,
     publish,
+    edit,
+    remove,
+    report,
     refresh,
   };
 }

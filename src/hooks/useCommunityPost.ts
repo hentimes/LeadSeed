@@ -1,17 +1,29 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   createComment,
+  editComment,
+  loadCommentReactions,
   loadComments,
   loadPost,
+  removeComment,
   subscribeToComments,
+  toggleCommentReaction,
 } from '../services/communityForumService';
-import type { CommunityComment, CommunityPost } from '../types/community';
+import { buildCommentTree } from '../utils/buildCommentTree';
+import type {
+  CommunityComment,
+  CommunityCommentNode,
+  CommunityPost,
+  CommunityReactionEmoji,
+  CommunityReactionSummary,
+} from '../types/community';
 
 export function useCommunityPost(postId: string) {
   const { user } = useAuth();
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<CommunityComment[]>([]);
+  const [reactions, setReactions] = useState<Map<string, CommunityReactionSummary[]>>(new Map());
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -19,7 +31,11 @@ export function useCommunityPost(postId: string) {
     setPost(nextPost);
     setComments(nextComments);
     setLoading(false);
-  }, [postId]);
+
+    // Una sola consulta para las reacciones de todo el hilo, no una por
+    // comentario.
+    setReactions(await loadCommentReactions(nextComments.map((c) => c.id), user?.id));
+  }, [postId, user?.id]);
 
   useEffect(() => {
     setLoading(true);
@@ -28,14 +44,94 @@ export function useCommunityPost(postId: string) {
 
   useEffect(() => subscribeToComments(postId, () => void refresh()), [postId, refresh]);
 
+  /** El hilo armado. Se recalcula solo cuando cambia la lista plana. */
+  const tree: CommunityCommentNode[] = useMemo(() => buildCommentTree(comments), [comments]);
+
   const comment = useCallback(
-    async (body: string) => {
+    async (body: string, parentId?: string | null) => {
       if (!user) return;
-      await createComment(postId, user.id, body);
+      await createComment(postId, user.id, body, parentId);
       await refresh();
     },
     [postId, user, refresh]
   );
 
-  return { post, comments, loading, comment, refresh };
+  const edit = useCallback(
+    async (commentId: string, body: string) => {
+      await editComment(commentId, body);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  const remove = useCallback(
+    async (commentId: string) => {
+      await removeComment(commentId);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  /**
+   * Una sola reaccion por persona y por comentario: elegir otra reemplaza a la
+   * anterior. Mismo criterio que el chat, y ademas lo impone un trigger
+   * (migracion 128) para que dos pestañas no puedan dejar dos puestas.
+   */
+  const react = useCallback(
+    async (commentId: string, emoji: CommunityReactionEmoji) => {
+      if (!user) return;
+
+      const actuales = reactions.get(commentId) ?? [];
+      const mia = actuales.find((r) => r.reactedByMe);
+      const esLaMisma = mia?.emoji === emoji;
+      const anterior = esLaMisma ? undefined : mia;
+
+      // Optimista: el chip responde al instante y se revierte si falla.
+      const siguiente = actuales
+        .map((r) => {
+          if (r.emoji === anterior?.emoji) {
+            return { ...r, count: Math.max(0, r.count - 1), reactedByMe: false };
+          }
+          if (r.emoji === emoji) {
+            return {
+              ...r,
+              count: Math.max(0, r.count + (esLaMisma ? -1 : 1)),
+              reactedByMe: !esLaMisma,
+            };
+          }
+          return r;
+        })
+        .concat(
+          !esLaMisma && !actuales.some((r) => r.emoji === emoji)
+            ? [{ emoji, count: 1, reactedByMe: true }]
+            : []
+        )
+        .filter((r) => r.count > 0);
+
+      setReactions((prev) => new Map(prev).set(commentId, siguiente));
+
+      try {
+        if (anterior) await toggleCommentReaction(commentId, user.id, anterior.emoji, false);
+        await toggleCommentReaction(commentId, user.id, emoji, !esLaMisma);
+      } catch (error) {
+        console.error('[community] toggleCommentReaction', error);
+        setReactions((prev) => new Map(prev).set(commentId, actuales));
+      }
+    },
+    [reactions, user]
+  );
+
+  return {
+    post,
+    comments,
+    tree,
+    reactions,
+    loading,
+    comment,
+    edit,
+    remove,
+    react,
+    refresh,
+    currentUserId: user?.id,
+  };
 }
