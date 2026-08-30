@@ -50,7 +50,7 @@ def clases_de(codigo):
 
 
 hallazgos = []
-for p in glob.glob('src/**/*.tsx', recursive=True):
+for p in glob.glob('apps/extension/src/**/*.tsx', recursive=True):
     p = p.replace(os.sep, '/')
     codigo = io.open(p, encoding='utf-8').read()
     for linea, trozo in clases_de(codigo):
@@ -60,7 +60,7 @@ for p in glob.glob('src/**/*.tsx', recursive=True):
             # ¿hay alguna clase dark: del mismo tipo en el mismo bloque?
             if re.search(r'dark:(hover:)?' + re.escape(prefijo), trozo):
                 continue
-            hallazgos.append((p.replace('src/', ''), linea, desc,
+            hallazgos.append((p.replace('apps/extension/src/', ''), linea, desc,
                               re.search(patron, trozo).group(0)))
             break
 

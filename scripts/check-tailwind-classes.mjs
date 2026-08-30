@@ -27,11 +27,16 @@
  * resultado no vale, asi que comprueba que exista y avisa si no.
  */
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { join, relative, dirname } from 'node:path';
 
-const RAIZ = process.cwd();
-const DIST = join(RAIZ, 'dist', 'assets');
-const SRC = join(RAIZ, 'src');
+// El proyecto es un monorepo: el CSS y el codigo de la extension viven en
+// `apps/extension/`, no en la raiz. Se resuelve desde la ubicacion del script y
+// no desde `process.cwd()` para que dé igual desde donde se lance.
+const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
+const APP = join(RAIZ, 'apps', 'extension');
+const DIST = join(APP, 'dist', 'assets');
+const SRC = join(APP, 'src');
 
 /**
  * Clases que se usan a proposito sin generar CSS.
@@ -164,7 +169,7 @@ function main() {
     const cssMasNuevo = Math.max(...hojas.map((f) => statSync(join(DIST, f)).mtimeMs));
     const fuenteMasNueva = Math.max(
       ...archivos(SRC, ['.tsx', '.ts', '.css']).map((f) => statSync(f).mtimeMs),
-      statSync(join(RAIZ, 'tailwind.config.js')).mtimeMs,
+      statSync(join(APP, 'tailwind.config.js')).mtimeMs,
     );
     if (fuenteMasNueva > cssMasNuevo) {
       console.error(

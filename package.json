@@ -1,18 +1,18 @@
 {
-  "name": "leadseed",
+  "name": "leadseed-monorepo",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
+    "dev": "npm run dev -w @leadseed/extension",
+    "build": "npm run build -w @leadseed/extension",
+    "preview": "npm run preview -w @leadseed/extension",
+    "test": "npm run test -w @leadseed/extension",
+    "test:watch": "npm run test:watch -w @leadseed/extension",
+    "test:coverage": "npm run test:coverage -w @leadseed/extension",
+    "typecheck": "npm run typecheck -w @leadseed/extension",
+    "lint": "eslint apps/extension/src",
+    "lint:fix": "eslint apps/extension/src --fix",
     "check:functions": "node scripts/check-edge-function-ownership.mjs",
     "check:classes": "node scripts/check-tailwind-classes.mjs"
   },
@@ -52,5 +52,9 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

@@ -33,16 +33,16 @@ function downgradeToWarn(rules) {
 }
 
 const DOMAIN_LAYERS = [
-  'src/services/**/*.{ts,tsx}',
-  'src/repositories/**/*.{ts,tsx}',
-  'src/hooks/**/*.{ts,tsx}',
-  'src/utils/**/*.{ts,tsx}',
-  'src/config/**/*.{ts,tsx}',
+  'apps/extension/src/services/**/*.{ts,tsx}',
+  'apps/extension/src/repositories/**/*.{ts,tsx}',
+  'apps/extension/src/hooks/**/*.{ts,tsx}',
+  'apps/extension/src/utils/**/*.{ts,tsx}',
+  'apps/extension/src/config/**/*.{ts,tsx}',
 ];
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'public/**', 'assets/**', 'sql/**', 'supabase/**'],
+    ignores: ['**/dist/**', 'node_modules/**', 'public/**', 'assets/**', 'sql/**', 'supabase/**'],
   },
 
   // Una marca de deuda que ya no hace falta debe FALLAR, no quedarse ahi.
@@ -60,7 +60,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['apps/extension/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -124,7 +124,7 @@ export default tseslint.config(
   // no crea dependencia en ejecucion y no es una fuga de capa. Prohibirlo
   // obligaria a duplicar tipos, que es peor que el problema que se quiere evitar.
   {
-    files: ['src/components/**/*.{ts,tsx}', 'src/pages/**/*.{ts,tsx}'],
+    files: ['apps/extension/src/components/**/*.{ts,tsx}', 'apps/extension/src/pages/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': 'off',
       '@typescript-eslint/no-restricted-imports': [
@@ -166,11 +166,11 @@ export default tseslint.config(
   // Capa de dominio: ni datos crudos, ni UI, ni implementacion de plataforma.
   {
     files: [
-      'src/hooks/**/*.{ts,tsx}',
-      'src/services/**/*.{ts,tsx}',
-      'src/contexts/**/*.{ts,tsx}',
-      'src/utils/**/*.{ts,tsx}',
-      'src/config/**/*.{ts,tsx}',
+      'apps/extension/src/hooks/**/*.{ts,tsx}',
+      'apps/extension/src/services/**/*.{ts,tsx}',
+      'apps/extension/src/contexts/**/*.{ts,tsx}',
+      'apps/extension/src/utils/**/*.{ts,tsx}',
+      'apps/extension/src/config/**/*.{ts,tsx}',
     ],
     rules: {
       'no-restricted-imports': [
@@ -205,7 +205,7 @@ export default tseslint.config(
   // Repositorios: son los unicos dueños del cliente Supabase, pero tampoco
   // dependen de la UI ni de la implementacion de plataforma.
   {
-    files: ['src/repositories/**/*.{ts,tsx}'],
+    files: ['apps/extension/src/repositories/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -311,7 +311,7 @@ export default tseslint.config(
 
   // Los tests si pueden tocar globals y tipos laxos.
   {
-    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**/*.{ts,tsx}'],
+    files: ['apps/extension/src/**/*.test.ts', 'apps/extension/src/**/*.test.tsx', 'apps/extension/src/test/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-globals': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -339,32 +339,32 @@ export default tseslint.config(
   {
     files: [
       // Puntos de entrada de la extension. No portables por definicion.
-      'src/background.ts',
-      'src/offscreen.ts',
+      'apps/extension/src/background.ts',
+      'apps/extension/src/offscreen.ts',
       // Todo `src/platform/` es plataforma por definicion: es la carpeta cuyo
       // contenido se reescribe al portar, no se adapta.
-      'src/platform/**',
+      'apps/extension/src/platform/**',
       // Mecanica de interfaz web, no dominio. No se portan a movil: se
       // reemplazan por el equivalente nativo o dejan de tener sentido.
       // Un atajo de teclado no existe en un telefono, y medir el viewport para
       // decidir hacia donde se abre un menu lo resuelve el propio componente
       // nativo. Envolverlos en un puerto seria inventar una abstraccion para
       // algo que no cruza.
-      'src/hooks/useAppKeyboardShortcuts.ts',
-      'src/hooks/useFlipOnOverflow.ts',
+      'apps/extension/src/hooks/useAppKeyboardShortcuts.ts',
+      'apps/extension/src/hooks/useFlipOnOverflow.ts',
       // Cerrar con Escape. En un telefono no hay tecla Escape: el gesto
       // equivalente es el boton atras del sistema, que se escucha con otra API
       // entera. No es el mismo mecanismo con otro nombre, asi que no hay puerto
       // que valga; se reescribe.
-      'src/hooks/useCloseOnEscape.ts',
+      'apps/extension/src/hooks/useCloseOnEscape.ts',
       // Mide el ancho real del panel con ResizeObserver para decidir cuantas
       // columnas caben. En movil el layout responsivo se resuelve con
       // Dimensions y flex, no midiendo un nodo.
-      'src/hooks/useResponsiveColumns.ts',
+      'apps/extension/src/hooks/useResponsiveColumns.ts',
       // Compresion de imagen con canvas. En movil se resuelve con una libreria
       // nativa (expo-image-manipulator), no con este algoritmo: es sustitucion,
       // no adaptacion.
-      'src/utils/imageCompression.ts',
+      'apps/extension/src/utils/imageCompression.ts',
     ],
     rules: {
       'no-restricted-globals': 'off',
