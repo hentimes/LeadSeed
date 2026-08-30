@@ -76,7 +76,7 @@ export function CargasAgeModal({ numeroCargas, edadCargas, onChange }: Props) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-[11px] font-semibold transition-all ${
-           isComplete ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
+           isComplete ? 'border border-state-success-soft bg-state-success-soft text-ink' : 'border border-state-warning-soft bg-state-warning-soft text-state-warning-ink'
         }`}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -107,7 +107,7 @@ export function CargasAgeModal({ numeroCargas, edadCargas, onChange }: Props) {
                   value={age}
                   onChange={(e) => handleAgeChange(i, e.target.value)}
                   placeholder="Ej: 5"
-                  className="flex-1 rounded-[6px] border border-line px-2 py-1 text-[12px] font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  className="flex-1 rounded-[6px] border border-line bg-surface px-2 py-1 text-meta font-medium text-ink placeholder:text-ink-muted outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
             ))}

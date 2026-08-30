@@ -205,7 +205,7 @@ export default function LeadsTableControls({
 
             {activeFiltersCount > 0 && (
               <button onClick={clearAllFilters}
-                      className="w-5 h-5 flex items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0 ml-1"
+                      className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-state-danger-soft text-state-danger-ink transition-colors hover:bg-state-danger hover:text-white"
                       title="Limpiar filtros">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>

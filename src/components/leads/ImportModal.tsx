@@ -154,7 +154,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
 
         <div className="p-4 flex-1 overflow-y-auto">
           {showColInfo && (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg text-xs">
+            <div className="mb-4 rounded-lg bg-state-info-soft p-3 text-micro text-ink">
               <p className="font-semibold text-blue-800 mb-2">Formato de columnas aceptado:</p>
               <div className="grid grid-cols-2 gap-1">
                 {[
@@ -234,7 +234,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                   </button>
                   <button
                     onClick={selectClean}
-                    className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-2 py-1 rounded"
+                    className="rounded bg-state-success-soft px-2 py-1 text-micro text-ink transition-colors hover:bg-state-success hover:text-white"
                   >
                     Solo sin duplicados
                   </button>
@@ -298,7 +298,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                         <tr
                           key={i}
                           className={`border-t ${
-                            isDup ? 'bg-red-50' : isSelected ? 'bg-blue-50' : 'hover:bg-surface-muted'
+                            isDup ? 'bg-state-danger-soft' : isSelected ? 'bg-primary-soft' : 'hover:bg-surface-muted'
                           }`}
                         >
                           <td className="px-2 py-1.5">
@@ -321,7 +321,7 @@ export default function ImportModal({ existingRuts, existingPhones, onImport, on
                           <td className="px-2 py-1.5">
                             {isDup ? (
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded font-medium">
+                                <span className="rounded bg-state-danger-soft px-1.5 py-0.5 text-micro font-medium text-state-danger-ink">
                                   DUPLICADO
                                 </span>
                                 {dupes!.map((d, j) => (

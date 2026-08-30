@@ -311,11 +311,11 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                 </div>
                 {detail.googleSyncBadgeLabel && (
                   <div className="flex items-start gap-1.5">
-                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded shrink-0">
+                    <span className="shrink-0 rounded border border-state-warning-soft bg-state-warning-soft px-1.5 py-0.5 text-micro font-semibold text-state-warning-ink">
                       {detail.googleSyncBadgeLabel}
                     </span>
                     {detail.googlePendingSummary && (
-                      <p className="text-[10px] leading-4 text-amber-800">{detail.googlePendingSummary}</p>
+                      <p className="text-micro leading-4 text-state-warning-ink">{detail.googlePendingSummary}</p>
                     )}
                   </div>
                 )}
@@ -327,13 +327,13 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                     type="date"
                     value={detail.appointmentDate}
                     onChange={(e) => detail.setAppointmentDate(e.target.value)}
-                    className="w-1/2 px-2 py-1.5 border border-line rounded-[4px] text-[11px] font-medium text-ink focus:outline-none focus:border-primary"
+                    className="w-1/2 px-2 py-1.5 border border-line rounded-[4px] bg-surface text-meta font-medium text-ink focus:outline-none focus:border-primary"
                   />
                   <input
                     type="time"
                     value={detail.appointmentTime}
                     onChange={(e) => detail.setAppointmentTime(e.target.value)}
-                    className="w-1/2 px-2 py-1.5 border border-line rounded-[4px] text-[11px] font-medium text-ink focus:outline-none focus:border-primary"
+                    className="w-1/2 px-2 py-1.5 border border-line rounded-[4px] bg-surface text-meta font-medium text-ink focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -342,23 +342,23 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                     value={detail.appointmentNote}
                     onChange={(e) => detail.setAppointmentNote(e.target.value)}
                     placeholder="Nota (opcional)"
-                    className="flex-1 px-2 py-1.5 border border-line rounded-[4px] text-[11px] text-ink focus:outline-none focus:border-primary"
+                    className="flex-1 px-2 py-1.5 border border-line rounded-[4px] bg-surface text-meta text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
                   />
                   <button
                     onClick={() => {
                       void detail.handleCreateAppointment();
                     }}
                     disabled={detail.appointmentLoading}
-                    className="px-3 py-1.5 bg-ink hover:bg-black text-white text-[11px] font-bold rounded-[4px] transition-colors disabled:opacity-60"
+                    className="rounded-[4px] bg-primary px-3 py-1.5 text-meta font-bold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
                   >
                     {detail.appointmentLoading ? '...' : 'Agendar'}
                   </button>
                 </div>
                 {!!detail.appointmentError && (
-                  <p className="text-[10px] text-red-600 font-medium">{detail.appointmentError}</p>
+                  <p className="text-micro font-medium text-state-danger-ink">{detail.appointmentError}</p>
                 )}
                 {!!detail.appointmentMessage && (
-                  <p className="text-[10px] text-emerald-600 font-medium">{detail.appointmentMessage}</p>
+                  <p className="text-micro font-medium text-state-success-ink">{detail.appointmentMessage}</p>
                 )}
               </div>
             )}

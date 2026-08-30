@@ -142,7 +142,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Ej: Mensaje de bienvenida"
-          className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full rounded border border-line-strong bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-muted outline-none transition-colors focus:border-focus focus:ring-1 focus:ring-focus"
           required
         />
       </div>
@@ -161,7 +161,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
                 value={asunto}
                 onChange={(e) => setAsunto(e.target.value)}
                 placeholder="Ej: Hola {nombre}, sobre tu plan de salud..."
-                className="flex-1 border border-line-strong rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 rounded border border-line-strong bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-muted outline-none transition-colors focus:border-focus focus:ring-1 focus:ring-focus"
                 required
               />
             </div>
@@ -181,7 +181,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
               <button
                 type="button"
                 onClick={handleImportHtml}
-                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                className="flex items-center gap-1 text-micro text-primary-ink hover:underline"
               >
                  Importar HTML
               </button>
@@ -209,7 +209,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
-                  showPreview ? 'bg-blue-100 text-blue-700' : 'bg-surface-hover hover:bg-surface-sunken'
+                  showPreview ? 'bg-primary-soft text-primary-ink' : 'bg-surface-hover text-ink-secondary hover:bg-surface-sunken'
                 }`}
               >
                  Vista Previa
@@ -226,7 +226,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
               onChange={(e) => setContenido(e.target.value)}
               rows={showPreview ? 12 : 8}
               placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  <h1>Hola {nombre}</h1>\n  <p>Te escribo para...</p>\n</body>\n</html>'}
-              className="w-full border border-line-strong rounded px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded border border-line-strong bg-surface px-3 py-2 font-mono text-body text-ink placeholder:text-ink-muted outline-none transition-colors focus:border-focus focus:ring-1 focus:ring-focus"
               required
             />
           ) : (
@@ -240,7 +240,7 @@ export default function TemplateEditor({ template, type, categories = [], reason
                   ? 'Hola {nombre} , te escribo de...'
                   : 'Hola {nombre},\n\nTe escribo para...'
               }
-              className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded border border-line-strong bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-muted outline-none transition-colors focus:border-focus focus:ring-1 focus:ring-focus"
               required
             />
           )}

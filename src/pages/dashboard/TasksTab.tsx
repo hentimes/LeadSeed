@@ -18,18 +18,18 @@ function TaskAlertCard({ title, count, description, onClick, type }: TaskAlertCa
   const isUrgent = type === 'urgent';
   const colors = isUrgent 
     ? {
-        cardBg: 'bg-[#FFF9F9]',
-        cardBorder: 'border-[#FCA5A5]',
-        iconBg: 'bg-white',
-        iconBorder: 'border-[#FCA5A5]',
-        iconColor: 'text-[#E02424]',
-        numberColor: 'text-[#E02424]',
-        arrowColor: 'text-[#FCA5A5]'
+        cardBg: 'bg-state-danger-soft',
+        cardBorder: 'border-state-danger-soft',
+        iconBg: 'bg-surface',
+        iconBorder: 'border-state-danger-soft',
+        iconColor: 'text-state-danger-ink',
+        numberColor: 'text-state-danger-ink',
+        arrowColor: 'text-state-danger-ink'
       }
     : {
-        cardBg: 'bg-white',
+        cardBg: 'bg-surface',
         cardBorder: 'border-line',
-        iconBg: 'bg-white',
+        iconBg: 'bg-surface-sunken',
         iconBorder: 'border-line',
         iconColor: 'text-ink',
         numberColor: 'text-ink',

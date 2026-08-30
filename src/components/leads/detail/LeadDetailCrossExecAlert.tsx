@@ -10,8 +10,8 @@ export default function LeadDetailCrossExecAlert({ alerts, getMessage }: Props) 
   if (alerts.length === 0) return null;
 
   return (
-    <div className="border border-amber-200 bg-amber-50 rounded-[6px] p-3">
-      <div className="flex items-center gap-2 text-[11px] font-bold text-amber-800 uppercase tracking-wide mb-2">
+    <div className="rounded-[6px] border border-state-warning-soft bg-state-warning-soft p-3">
+      <div className="mb-2 flex items-center gap-2 text-meta font-bold uppercase tracking-wide text-state-warning-ink">
         {Icon.Warning()}
         Seguimiento comercial
       </div>

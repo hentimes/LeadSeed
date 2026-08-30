@@ -10,9 +10,9 @@ interface AppStatusScreenProps {
 
 const toneClasses = {
   error: {
-    wrapper: 'bg-red-50',
-    title: 'text-red-700',
-    description: 'text-red-600',
+    wrapper: 'bg-state-danger-soft',
+    title: 'text-ink',
+    description: 'text-ink-secondary',
   },
   neutral: {
     wrapper: 'bg-slate-50 dark:bg-slate-900 flex items-center justify-center',

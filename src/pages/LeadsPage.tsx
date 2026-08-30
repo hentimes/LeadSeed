@@ -108,7 +108,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
                 p.setShowTrash(!p.showTrash);
                 p.clearSelection();
               }}
-              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-surface text-ink-secondary border-line hover:bg-surface-hover'}`}
+              className={`px-2.5 h-[34px] rounded-[6px] text-[13px] font-medium transition-colors flex items-center shadow-sm border shrink-0 ${p.showTrash ? 'border-state-danger-soft bg-state-danger-soft text-state-danger-ink' : 'border-line bg-surface text-ink-secondary hover:bg-surface-hover'}`}
               title={p.showTrash ? 'Volver a leads' : 'Papelera'}
             >
               {p.showTrash ? 'Salir de papelera' : <div className="w-[14px] h-[14px] flex items-center justify-center scale-90 opacity-80">{Icon.Trash()}</div>}

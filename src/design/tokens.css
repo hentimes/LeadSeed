@@ -15,6 +15,31 @@
  */
 
 :root {
+  /*
+   * QUE TEMA USAN LOS CONTROLES QUE DIBUJA EL NAVEGADOR
+   *
+   * No estaba declarado en ningun sitio, y esa ausencia es la causa de que
+   * varias cosas se vieran mal en oscuro:
+   *
+   *   - `<input type="date">` y `type="time"` salian con fondo BLANCO y su
+   *     icono de calendario negro, porque el reloj y el calendario los dibuja
+   *     Chrome, no nuestro CSS. Ninguna clase de Tailwind los alcanza.
+   *   - la lista desplegada de un `<select>` salia clara aunque el control
+   *     cerrado fuera oscuro
+   *   - el relleno automatico de contrasenas pintaba su amarillo de siempre
+   *   - los spinners de `type="number"` y la barra de `type="range"`
+   *
+   * `color-scheme` es lo unico que le dice al navegador de que lado esta la
+   * pagina. Va aca y no en cada campo: es una propiedad heredada, asi que
+   * declararla en la raiz alcanza a todo el arbol de una vez.
+   *
+   * Ojo con una consecuencia deseada: en oscuro, un campo SIN clase de fondo
+   * deja de ser blanco, pero pasa a ser el gris que elige el navegador, que no
+   * es `--ls-surface`. Por eso los campos igual declaran su fondo; esto es la
+   * red de seguridad y el arreglo de lo que el CSS no puede tocar.
+   */
+  color-scheme: light;
+
   /* ---------------------------------------------------------------
    * MARCA
    * El Dashboard usaba #635BFF y Leads #6C4CF6. Se unifica en #6C4CF6,
@@ -98,6 +123,57 @@
    * OJO: sobre `surface-sunken` da 4.38 y NO alcanza. Ahi no se usa.
    */
   --ls-warning-ink: #a06400;
+  /*
+   * EL ROJO QUE SE PUEDE ESCRIBIR.
+   *
+   * `--ls-danger` como TEXTO da 3.76:1 sobre la superficie clara y 3.44 sobre
+   * su propio tinte: por debajo del 4.5 de WCAG 1.4.3. O sea que
+   * `Button variant="ghost-danger"` y `variant="danger"` incumplen en TODOS
+   * sus usos en tema claro, no solo en Agenda.
+   *
+   * Lo curioso: `ghost-danger` se creo para unificar el "Cancelar" de esta
+   * misma seccion, y nacio con ese contraste.
+   *
+   * Misma receta que `--ls-warning-ink`: solo se mueve la luminosidad.
+   * #ef4444 es hsl(0, 84%, 60%); este es hsl(0, 84%, 46%). Mismo rojo.
+   * Da 5.22 sobre surface, 4.96 sobre el fondo y 4.77 sobre danger-soft.
+   *
+   * `--ls-danger` se queda para lo que siempre debio ser: rellenos y formas,
+   * donde el umbral es 3:1 y lo cumple.
+   */
+  --ls-danger-ink: #d81313;
+  /*
+   * EL VERDE DE 'CONVERTIDO', LEGIBLE COMO RELLENO.
+   *
+   * `STATUS_COLORS.convertido` es #10b981, y sobre el fondo de pagina da
+   * 2.41:1: por debajo del 3:1 que WCAG 1.4.11 pide para un grafico. En la
+   * franja de un cuadrante se tolera, porque ahi el color es identidad al lado
+   * de su palabra; en una barra donde EL LARGO ES EL DATO, no: si no se ve
+   * donde termina el segmento, no se lee la proporcion.
+   *
+   * Solo baja la luminosidad: #10b981 es hsl(160, 84%, 39%) y este es
+   * hsl(160, 84%, 32%). Mismo verde, no otro. Da 3.57:1, que es exactamente
+   * lo mismo que el rojo de descartado, asi que ningun segmento de la barra
+   * pesa mas que los otros.
+   *
+   * Ojo: es el hermano de #10b981, no de `--ls-success` (#22c55e), que es un
+   * verde mas calido y se usa para otra cosa.
+   */
+  --ls-success-ink: #0d9669;
+  /*
+   * LA TINTA DE MARCA QUE SE LEE EN LOS DOS TEMAS.
+   *
+   * `--ls-primary` sobre `--ls-surface` en oscuro da 3.32:1, y como anillo
+   * sobre `--ls-primary-soft` da 2.88. O sea que hoy, en tema oscuro,
+   * cualquier `text-primary` de tamano normal incumple 1.4.3, y el anillo que
+   * dice 'soltá acá' no llega ni al 3:1 de 1.4.11.
+   *
+   * Este token es a `--ls-primary` lo que `--ls-warning-ink` es al ambar: el
+   * mismo color, con la luminosidad que hace falta en cada tema. En claro es
+   * el morado de siempre; en oscuro usa `--ls-primary-light`, que da 5.78
+   * sobre la superficie y 5.02 como anillo.
+   */
+  --ls-primary-ink: #6c4cf6;
   --ls-danger: #ef4444;
   --ls-danger-soft: #fef2f2;
   --ls-info: #3b82f6;
@@ -261,6 +337,20 @@
   --ls-control-height-lg: 44px;
 
   /*
+   * Alto FIJO de una fila de registro: 32px.
+   *
+   * `ListPanel` reparte por relleno (`py-1.5`), asi que el alto sale del
+   * contenido. En el historial no sirve: la fila viva lleva texto de 11px y la
+   * lapida va en cursiva del mismo tamano pero sin los mismos elementos, y con
+   * relleno cada una mediria distinto. Una lista donde las filas cambian de
+   * alto segun su estado tartamudea al recorrerla.
+   *
+   * 32 y no 28: a 28 el boton de borrar (`control-sm`, 28px) toca los dos
+   * bordes y no queda aire.
+   */
+  --ls-row-dense: 32px;
+
+  /*
    * Rail de navegacion. El contenido solo reserva el ancho contraido: al
    * expandirse el rail flota por encima, para que ninguna seccion cambie de
    * ancho al abrir el menu. Por eso `--ls-rail-width` es constante y no
@@ -288,6 +378,10 @@
  * los colores de estado se mantienen para no perder identidad.
  */
 .dark {
+  /* Ver la nota de `color-scheme` en `:root`. Sin esta linea, los calendarios
+     y los desplegables nativos se siguen dibujando en claro. */
+  color-scheme: dark;
+
   --ls-text: #f1f5f9;
   --ls-text-secondary: #94a3b8;
   /* Mismo caso en oscuro: #64748b daba 3.66:1 sobre --ls-surface. Este da
@@ -313,6 +407,11 @@
   /* En oscuro el saturado ya da 8.11:1 sobre `surface`: el token existe para
      que los componentes no tengan que saber en que tema estan. */
   --ls-warning-ink: #f59e0b;
+  /* En oscuro hace falta aclararlo, no oscurecerlo: 5.66 sobre surface. */
+  --ls-danger-ink: #f26565;
+  /* En oscuro los saturados ya rinden: 7.45 el verde, 5.78 el morado. */
+  --ls-success-ink: #10b981;
+  --ls-primary-ink: #8f85ff;
   --ls-danger-soft: rgba(239, 68, 68, 0.14);
   --ls-info-soft: rgba(59, 130, 246, 0.14);
 

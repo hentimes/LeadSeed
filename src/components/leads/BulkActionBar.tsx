@@ -29,7 +29,7 @@ export default function BulkActionBar({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[12px] font-semibold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-[6px]">
+      <span className="rounded-[6px] bg-primary-soft px-2 py-0.5 text-meta font-semibold text-primary-ink">
         {selectedIds.size} sel.
       </span>
       <button
@@ -41,15 +41,15 @@ export default function BulkActionBar({
       </button>
       {showTrash ? (
         <>
-          <button onClick={onRestore} className="text-green-700 px-2 py-1 rounded text-[12px] font-medium hover:bg-green-50 transition-colors">
+          <button onClick={onRestore} className="rounded px-2 py-1 text-meta font-medium text-state-success-ink transition-colors hover:bg-state-success-soft">
             Restaurar
           </button>
-          <button onClick={onDelete} className="text-red-700 px-2 py-1 rounded text-[12px] font-medium hover:bg-red-50 transition-colors">
+          <button onClick={onDelete} className="rounded px-2 py-1 text-meta font-medium text-state-danger-ink transition-colors hover:bg-state-danger-soft">
             Eliminar def.
           </button>
         </>
       ) : (
-        <button onClick={onDelete} className="text-red-600 px-2 py-1 rounded text-[12px] font-medium hover:bg-red-50 transition-colors">
+        <button onClick={onDelete} className="rounded px-2 py-1 text-meta font-medium text-state-danger-ink transition-colors hover:bg-state-danger-soft">
           Eliminar
         </button>
       )}

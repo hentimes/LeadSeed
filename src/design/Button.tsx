@@ -7,11 +7,15 @@ const VARIANTS: Record<Variant, string> = {
   primary: 'bg-primary text-ink-inverse hover:bg-primary-hover shadow-sm',
   secondary: 'bg-surface text-ink-secondary border border-line hover:bg-surface-hover hover:text-ink shadow-sm',
   ghost: 'bg-transparent text-ink-secondary hover:bg-primary-soft hover:text-primary',
-  danger: 'bg-state-danger-soft text-state-danger border border-state-danger/25 hover:bg-state-danger hover:text-ink-inverse',
+  // `text-state-danger-ink` y no `-danger`: el segundo da 3.44:1 sobre este
+  // mismo tinte, o sea que el rotulo del boton incumplia AA.
+  danger: 'bg-state-danger-soft text-state-danger-ink border border-state-danger/25 hover:bg-state-danger hover:text-ink-inverse',
   // Accion destructiva sin peso visual: para tarjetas densas, donde un boton
   // relleno competiria con el contenido. Agregada el 2026-08-13 al unificar
   // Agenda, que resolvia esto con `btn-ghost text-red-500` suelto.
-  'ghost-danger': 'bg-transparent text-state-danger hover:bg-state-danger-soft',
+  // Idem: 3.76:1 sobre la superficie clara. Se creo para el "Cancelar" de
+  // Agenda y nacio incumpliendo.
+  'ghost-danger': 'bg-transparent text-state-danger-ink hover:bg-state-danger-soft',
 };
 
 const SIZES: Record<Size, string> = {

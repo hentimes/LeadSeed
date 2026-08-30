@@ -149,3 +149,44 @@
   animation: alert-ring 2s ease-in-out infinite;
   animation-delay: 1.5s;
 }
+
+/*
+ * LA BARRA DEL TABLERO DE TAREAS
+ *
+ * Un `input[type=range]` con el pulgar del ancho de lo que se ve. Se estiliza
+ * aca y no con clases porque los pseudoelementos del control nativo
+ * -`::-webkit-slider-thumb`- no se alcanzan desde Tailwind.
+ *
+ * El pulgar mide `--proporcion`, que el componente calcula como
+ * visible/total: con dos columnas de diez queda corto, y ese largo es la
+ * unica pista de cuanto tablero falta. Es lo que hace un scrollbar de verdad,
+ * y aca hay que dibujarlo porque el del sistema esta oculto en todo el
+ * producto.
+ */
+.board-scroll-range::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--proporcion, 40%);
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--ls-border-strong);
+  transition: background 150ms var(--ls-easing);
+}
+.board-scroll-range:hover::-webkit-slider-thumb,
+.board-scroll-range:focus-visible::-webkit-slider-thumb {
+  background: var(--ls-primary-ink);
+}
+
+/*
+ * EFECTO IMANTADO AL CAMBIAR EL ANCHO DEL PANEL
+ *
+ * Al angostar el panel lateral, las columnas del tablero se salen de la vista
+ * de golpe; al ensancharlo, aparecen igual de seco. Con la curva imantada el
+ * movimiento se nota: arrancan lentas, aceleran y se pasan apenas de largo
+ * antes de asentarse, como si tuvieran peso.
+ *
+ * Se anima `transform` y no `width` ni `left`: son las propiedades que el
+ * compositor puede mover sin recalcular el diseno en cada fotograma.
+ */
+.tablero-imantado {
+  transition: transform 320ms var(--ls-easing-magnet);
+}

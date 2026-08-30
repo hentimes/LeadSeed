@@ -90,3 +90,21 @@ export function elegirColorAlAzar(
   const elegido = candidatos[Math.floor(random() * candidatos.length)];
   return elegido?.hex ?? DEFAULT_LIST_COLOR;
 }
+
+/**
+ * Los colores que se ofrecen para una tarea.
+ *
+ * Son seis de la paleta y no los veinte: en una fila de un formulario de 336px
+ * no entran veinte circulos, y para distinguir tareas dentro de una columna
+ * seis categorias ya son mas de las que alguien recuerda. El blanco y el negro
+ * quedan fuera por lo mismo que no se sortean: uno desaparece sobre la
+ * superficie y el otro se confunde con el texto.
+ */
+export const COLORES_DE_TAREA: string[] = [
+  '#EF4444',
+  '#F97316',
+  '#FBBF24',
+  '#22C55E',
+  '#3B82F6',
+  '#A855F7',
+];

@@ -3,11 +3,12 @@ import {
   faList, faClockRotateLeft, faGear, faEllipsis,
   faEye, faPencil, faTrash, faDownload, faUpload, faFileImport,
   faCheck, faSearch, faPlus, faTimes, faQuestion, faMoon, faSun,
-  faRotateLeft, faChevronDown, faChevronUp, faChevronRight, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
+  faRotateLeft, faChevronDown, faChevronUp, faChevronRight, faChevronLeft, faCaretUp, faCaretDown, faEnvelope, faGripVertical,
   faPalette, faDatabase, faBullseye, faPhone, faChartPie, faExclamationTriangle, faPaperclip, faCopy, faShieldHalved, faArrowRightFromBracket,
   faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
   faCrown, faUser, faUserSlash, faBell, faCommentDots, faArrowRight, faFilter,
-  faLightbulb, faLayerGroup, faCalendarDays, faShareNodes, faCircleQuestion
+  faLightbulb, faLayerGroup, faCalendarDays, faShareNodes, faCircleQuestion, faClock,
+  faAddressBook, faFileLines
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -18,7 +19,20 @@ const I = ({ icon, className = '' }: { icon: IconDefinition; className?: string 
 
 export const Icon = {
   // Nav
-  Leads: () => <I icon={faUsers} className="text-sm" />,
+  /*
+   * DOS DESTINOS NO PUEDEN COMPARTIR DIBUJO
+   *
+   * `Leads` y `Users` eran los dos `faUsers`, asi que Leads y Comunidad se
+   * pintaban identicos en el rail. Y `Messages` lo usaban Plantillas y Chat.
+   * En un rail de solo iconos, dos entradas iguales obligan a leer el rotulo
+   * -que solo aparece expandido- o a probar cual es cual.
+   *
+   * Se movio Leads y no Comunidad: un grupo de personas ES una comunidad, asi
+   * que ese glifo estaba en el destino equivocado de los dos. Leads es una
+   * agenda de contactos, y una libreta se distingue de unas siluetas incluso a
+   * 16px, que es donde hay que distinguirlas.
+   */
+  Leads: () => <I icon={faAddressBook} className="text-sm" />,
   Send: () => <I icon={faPaperPlane} className="text-sm" />,
   Tasks: () => <I icon={faClipboardCheck} className="text-sm" />,
   Dashboard: () => <I icon={faChartBar} className="text-sm" />,
@@ -31,8 +45,13 @@ export const Icon = {
   Pipeline: () => <I icon={faDiagramProject} className="text-sm" />,
   Funnel: () => <I icon={faFilter} className="text-sm" />,
   Lists: () => <I icon={faList} className="text-sm" />,
+  /** El globo con puntos es la CONVERSACION: Chat. Ver la nota de `Leads`. */
   Messages: () => <I icon={faCommentDots} className="text-sm" />,
+  /** Plantillas: un documento guardado, no una conversacion en curso. */
+  Templates: () => <I icon={faFileLines} className="text-sm" />,
   History: () => <I icon={faClockRotateLeft} className="text-sm" />,
+  /** Reloj simple. `History` es el reloj CON flecha: uno dice "programado", el otro "lo que ya paso". */
+  Clock: () => <I icon={faClock} className="text-xs" />,
   Settings: () => <I icon={faGear} className="text-sm" />,
   Admin: () => <I icon={faShieldHalved} className="text-sm" />,
   More: () => <I icon={faEllipsis} className="text-sm" />,
@@ -98,6 +117,7 @@ export const Icon = {
   ChevronDown: () => <I icon={faChevronDown} className="text-xs" />,
   ChevronUp: () => <I icon={faChevronUp} className="text-xs" />,
   ChevronRight: () => <I icon={faChevronRight} className="text-xs" />,
+  ChevronLeft: () => <I icon={faChevronLeft} className="text-xs" />,
   // Misma familia de glifos en los tres estados: antes el inactivo usaba
   // faArrowsUpDown y los activos faCaret*, y se veian como iconos distintos.
   // El activo se distingue por color, no por forma.

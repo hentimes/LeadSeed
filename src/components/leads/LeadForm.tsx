@@ -276,7 +276,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
         </div>
       )}
 
-      {error && <div className="p-2.5 bg-red-50 border border-red-100 rounded-[6px]"><p className="text-[11px] font-semibold text-red-600">{error}</p></div>}
+      {error && <div className="rounded-[6px] border border-state-danger-soft bg-state-danger-soft p-2.5"><p className="text-meta font-semibold text-ink">{error}</p></div>}
 
       <div className="flex gap-3 pt-2">
         <Button type="button" onClick={onCancel} className="flex-1">
