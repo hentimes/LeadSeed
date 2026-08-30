@@ -1,11 +1,57 @@
-import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
 
-export default defineConfig({
+const RAIZ_ENV = fileURLToPath(new URL('../../', import.meta.url));
+
+/**
+ * Un build sin credenciales COMPILA y produce un artefacto roto.
+ *
+ * `supabaseClient.ts` lanza al cargar el modulo si faltan, asi que la extension
+ * se instala, abre el panel y se queda en blanco. Ni `tsc`, ni el lint, ni los
+ * tests lo detectan: `vitest.config.ts` inyecta esas variables por su cuenta,
+ * de modo que la bateria entera puede estar verde con la aplicacion muerta.
+ *
+ * Fallar aqui convierte ese silencio en un error de build con nombre.
+ */
+function exigirCredenciales(mode: string): void {
+  const env = loadEnv(mode, RAIZ_ENV, 'VITE_');
+  const faltan = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'].filter((k) => !env[k]);
+
+  if (faltan.length > 0) {
+    throw new Error(
+      `Faltan variables de entorno: ${faltan.join(', ')}.
+` +
+        `Se buscan en ${RAIZ_ENV} (la raiz del monorepo, no la carpeta de la app).
+` +
+        `Copia .env.example a .env.local y completalo.`,
+    );
+  }
+}
+
+export default defineConfig(({ mode }) => {
+  exigirCredenciales(mode);
+
+  return {
   plugins: [react(), crx({ manifest })],
   base: './',
+  /*
+   * Los `.env` viven en la RAIZ del monorepo, no aqui.
+   *
+   * Vite los busca por defecto junto a este archivo, y al mover la app a
+   * `apps/extension/` dejo de encontrarlos: el build salio sin
+   * `VITE_SUPABASE_URL` ni `VITE_SUPABASE_ANON_KEY`, `supabaseClient` lanzo
+   * "Missing Supabase environment variables" al cargar el modulo, y el panel
+   * quedo en blanco. Compilaba y pasaba los tests igual, porque
+   * `vitest.config.ts` inyecta esas variables por su cuenta.
+   *
+   * Se apunta a la raiz en vez de duplicar el archivo aqui: las credenciales de
+   * Supabase son las mismas para la extension y para la app movil, y dos copias
+   * de un secreto son dos sitios donde puede quedar desactualizado.
+   */
+  envDir: RAIZ_ENV,
   build: {
     modulePreload: false,
     target: 'esnext',
@@ -53,4 +99,5 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  };
 });
