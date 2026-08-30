@@ -1,388 +1,571 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useHideUnnamedLeads } from '../hooks/useHideUnnamedLeads';
 import { useLeads } from '../hooks/useLeads';
-import { useWhatsAppTemplates } from '../hooks/useTemplates';
-import { useLists } from '../hooks/useLists';
+import { usePipelineData } from '../hooks/usePipelineData';
 import { useAuth } from '../contexts/AuthContext';
-import type { Lead, LeadStatus, WhatsAppTemplate, LeadList } from '../types';
-import { STATUS_LABELS, STATUS_COLORS } from '../types';
+import { PIPELINE_STAGES, STAGE_ACTIONS, STATUS_LABELS, type Lead, type LeadStatus, type WhatsAppTemplate } from '../types';
 import { Icon } from '../utils/icons';
 import { openWhatsAppForLeads } from '../utils/waHelper';
 import LeadDetail from '../components/leads/LeadDetail';
-import LeadIdentity from '../components/leads/LeadIdentity';
 import SinNombreToggle, { contarSinNombre, pasaFiltroDeNombre } from '../components/leads/SinNombreToggle';
-import { nombreVisible, telefonoEnmascarado } from '../utils/leadDisplay';
+import { nombreVisible } from '../utils/leadDisplay';
 import DiscardReasonModal from '../components/leads/DiscardReasonModal';
 import { createFollowUpTaskForLead } from '../services/tasksService';
-import { Button } from '../design';
-import { ListPanel, clasesDeFila } from '../design';
+import { buscarCitaActivaDelLead, cancelarCitaAntesDeBorrar } from '../services/leadDeletionService';
+import { EmptyState, Input, LoadError, Skeleton } from '../design';
+import { PipelineStageCard } from '../components/pipeline/PipelineStageCard';
+import { PipelineProportionBar } from '../components/pipeline/PipelineProportionBar';
+import { StageLeadsSheet } from '../components/pipeline/StageLeadsSheet';
+import { MoveLeadSheet } from '../components/pipeline/MoveLeadSheet';
+import { TaskFollowUpPrompt } from '../components/pipeline/TaskFollowUpPrompt';
 
+/** Cuantos leads se asoman dentro de cada cuadrante. */
+const FICHAS_VISIBLES = 4;
 
+/** Hora que se asume cuando se elige fecha y no hora. */
+const HORA_POR_DEFECTO = '09:00';
+
+/**
+ * PIPELINE COMERCIAL
+ *
+ * Cuatro cuadrantes -las cuatro etapas reales- con los leads adentro, que se
+ * arrastran de uno a otro.
+ *
+ * ## Por que cuatro y no cinco
+ *
+ * 'nuevo' no es una etapa: es la ausencia de una. Lo dice `PIPELINE_STAGES` y
+ * lo explica la migracion 062. Un lead con estado 'nuevo' es uno que todavia no
+ * se gestiono, no uno que este en una casilla del tablero.
+ *
+ * ## Pero no desaparecen
+ *
+ * Sacarlos del tablero sin mas los borraria de la vista: son la mayoria de la
+ * base. Por eso arriba hay una fila -no un cuadrante- que los cuenta y abre su
+ * lista. Esta hecha de otro material a proposito: sin franja de color y sin
+ * entrar en la barra de proporcion, porque la proporcion es entre ETAPAS y esto
+ * no es una.
+ *
+ * Desde esa lista se puede mandar un lead directo a cualquier etapa, sin pasar
+ * por la anterior: sirve para los que vienen cerrados de otra fuente.
+ *
+ * ## La promocion automatica ya existe
+ *
+ * Escribirle a un lead, agendarle algo o crearle una tarea lo pasa a
+ * 'contactado' solo. No lo hace esta pantalla: son triggers de la migracion 062
+ * sobre `send_logs`, `appointments` y `tasks`, y solo promueven DESDE 'nuevo',
+ * asi que nunca hacen retroceder a un convertido. Aca se nota porque las fichas
+ * se ordenan por ultima modificacion: el lead que acabas de tocar aparece
+ * primero en Contactado.
+ */
 export default function PipelinePage() {
   const { user } = useAuth();
-  const { getAll: getLeads, save: saveLead, refreshKey: leadsRefreshKey } = useLeads();
-  const { getAll: getWaTemplates } = useWhatsAppTemplates();
-  const { getAll: getLists } = useLists();
+  const { save: saveLead, remove: removeLead, restore: restoreLead } = useLeads();
+  const { leads, lists, waTemplates, cargando, fallo, recargar } = usePipelineData();
 
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [waTemplates, setWaTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [lists, setLists] = useState<LeadList[]>([]);
-  const [viewLead, setViewLead] = useState<Lead | null>(null);
-  const [activeTab, setActiveTab] = useState<LeadStatus>('nuevo');
-  const [dragOver, setDragOver] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [etapaAbierta, setEtapaAbierta] = useState<LeadStatus | null>(null);
+  const [destinoDelArrastre, setDestinoDelArrastre] = useState<LeadStatus | null>(null);
+  const [leadArrastrado, setLeadArrastrado] = useState<string | null>(null);
+  const [viewLead, setViewLead] = useState<Lead | null>(null);
+  const [leadEnMenu, setLeadEnMenu] = useState<Lead | null>(null);
+  const [aviso, setAviso] = useState<{ texto: string; error: boolean; deshacer?: () => void } | null>(null);
+
   // Compartido con la tabla de leads y el panel de flujos: es una preferencia
   // de la cuenta, no de esta pantalla.
   const [ocultarSinNombre, setOcultarSinNombre] = useHideUnnamedLeads();
-  const [taskPrompt, setTaskPrompt] = useState<{ leadId: string; leadName: string; lead: Lead | null; newStatus: LeadStatus } | null>(null);
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskDate, setTaskDate] = useState('');
-  const [taskTime, setTaskTime] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
-  
+
+  /** Lead movido, a la espera de decidir si se le agenda seguimiento. */
+  const [seguimiento, setSeguimiento] = useState<
+    { lead: Lead; nuevoEstado: LeadStatus; estadoAnterior: LeadStatus } | null
+  >(null);
+
   /**
-   * Lead arrastrado a "descartado" a la espera de que se responda por que.
+   * Lead soltado en "descartado" a la espera de que se responda por que.
    *
-   * El arrastre era el tercer camino que descartaba sin preguntar, despues de la
-   * accion masiva. Mientras no se responda no se guarda nada: si se cancela, el
-   * lead se queda donde estaba.
+   * El arrastre era el tercer camino que descartaba sin preguntar, despues de
+   * la accion masiva. Mientras no se responda no se guarda nada: si se cancela,
+   * el lead se queda donde estaba.
    */
   const [pendingDiscard, setPendingDiscard] = useState<Lead | null>(null);
 
+  /**
+   * Movimientos aplicados en pantalla que todavia no confirmo el servidor.
+   *
+   * Sin esto, entre soltar la ficha y verla en su cuadrante nuevo hay DOS
+   * viajes de red: el guardado, y la recarga completa que dispara `refreshKey`.
+   * La ficha se quedaba quieta un rato largo y parecia que el gesto no habia
+   * funcionado.
+   *
+   * Se aplica al agrupar y se descarta si el guardado falla, asi que un error
+   * devuelve la ficha a su sitio en vez de dejarla donde nunca llego a estar.
+   */
+  const [movimientosPendientes, setMovimientosPendientes] = useState<Record<string, LeadStatus>>({});
+
   const draggingRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const fetchedLeads = await getLeads();
-      setLeads(fetchedLeads);
-      const fetchedLists = await getLists();
-      setLists(fetchedLists);
-      const fetchedTemplates = await getWaTemplates();
-      setWaTemplates(fetchedTemplates);
-    };
-    fetchData();
-  }, [getLeads, getLists, getWaTemplates, leadsRefreshKey]);
-
   const searchLower = search.toLowerCase().trim();
 
-  const sinNombreTotal = useMemo(() => contarSinNombre(leads), [leads]);
+  /*
+   * Cuando llegan datos nuevos, se descartan los movimientos que el servidor ya
+   * confirmo.
+   *
+   * Sin esto la lista de pendientes solo crece, y una entrada vieja deja de ser
+   * inofensiva en cuanto ese lead cambia de etapa por otra via -desde otro
+   * dispositivo, o por el trigger que lo promueve al escribirle-: el pendiente
+   * de hace media hora seguiria mandando y taparia el cambio real.
+   *
+   * Se reconcilia durante el render y no en un efecto, como el reinicio de
+   * pagina: con un efecto se pinta una vez con el dato viejo y se corrige
+   * despues, que es un parpadeo visible. Y se devuelve el MISMO objeto cuando no
+   * sobra nada, para no disparar un render de mas en cada recarga.
+   */
+  const [leadsReconciliados, setLeadsReconciliados] = useState(leads);
+  if (leadsReconciliados !== leads) {
+    setLeadsReconciliados(leads);
+    setMovimientosPendientes((previos) => {
+      const quedan = Object.entries(previos).filter(([id, estado]) => {
+        const lead = leads.find((candidato) => candidato.id === id);
+        // Un lead que ya no viene -borrado- tampoco necesita su pendiente.
+        return lead ? (lead.status || 'nuevo') !== estado : false;
+      });
+      return quedan.length === Object.keys(previos).length ? previos : Object.fromEntries(quedan);
+    });
+  }
 
-  const grouped = useMemo(() => {
-    const map: Record<LeadStatus, Lead[]> = { nuevo: [], contactado: [], interesado: [], convertido: [], descartado: [] };
-    for (const l of leads) {
-      if (!pasaFiltroDeNombre(l, ocultarSinNombre)) continue;
+  const agrupados = useMemo(() => {
+    const mapa: Record<LeadStatus, Lead[]> = {
+      nuevo: [], contactado: [], interesado: [], convertido: [], descartado: [],
+    };
+
+    for (const lead of leads) {
+      if (!pasaFiltroDeNombre(lead, ocultarSinNombre)) continue;
+
       if (searchLower) {
-        const match = l.name.toLowerCase().includes(searchLower) ||
-          (l.company || '').toLowerCase().includes(searchLower) ||
-          (l.phone || '').includes(searchLower) ||
-          (l.email || '').toLowerCase().includes(searchLower) ||
-          (l.rut || '').toLowerCase().includes(searchLower);
-        if (!match) continue;
+        const coincide =
+          lead.name.toLowerCase().includes(searchLower) ||
+          (lead.company || '').toLowerCase().includes(searchLower) ||
+          (lead.phone || '').includes(searchLower) ||
+          (lead.email || '').toLowerCase().includes(searchLower) ||
+          (lead.rut || '').toLowerCase().includes(searchLower);
+        if (!coincide) continue;
       }
-      const s = (l.status || 'nuevo') as LeadStatus;
-      map[s].push(l);
+
+      const pendiente = lead.id ? movimientosPendientes[lead.id] : undefined;
+      mapa[pendiente ?? ((lead.status || 'nuevo') as LeadStatus)].push(lead);
     }
-    return map;
-  }, [leads, searchLower, ocultarSinNombre]);
 
-  const handleDragStart = (_e: React.DragEvent, lead: Lead) => {
-    draggingRef.current = lead.id!;
-  };
-
-  const handleDragEnd = () => {
-    draggingRef.current = null;
-  };
-
-  const applyStatus = async (lead: Lead, status: LeadStatus, discardReason?: string) => {
-    await saveLead({ ...lead, status, ...(discardReason ? { discardReason } : {}) });
-
-    if (status !== 'nuevo') {
-      setTaskPrompt({ leadId: lead.id!, leadName: lead.name, lead, newStatus: status });
-      setTaskTitle(`Seguimiento para ${lead.name}`);
-      setTaskDate('');
-      setTaskTime('');
+    /*
+     * Por ultima modificacion, del mas reciente al mas viejo. Es lo que hace
+     * visible la promocion automatica sin construir nada: el lead al que le
+     * acabas de escribir es la primera ficha de Contactado cuando volves.
+     */
+    for (const estado of Object.keys(mapa) as LeadStatus[]) {
+      mapa[estado].sort(
+        (a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime(),
+      );
     }
-  };
 
-  const handleDrop = async (status: LeadStatus) => {
-    setDragOver(null);
-    const leadId = draggingRef.current;
-    if (leadId == null) return;
-    draggingRef.current = null;
+    return mapa;
+  }, [leads, searchLower, ocultarSinNombre, movimientosPendientes]);
 
-    const lead = leads.find((l) => l.id === leadId);
-    if (!lead) return;
+  const cuentas = useMemo(() => {
+    const total = {} as Record<LeadStatus, number>;
+    for (const estado of Object.keys(agrupados) as LeadStatus[]) total[estado] = agrupados[estado].length;
+    return total;
+  }, [agrupados]);
 
-    if (status === 'descartado') {
-      setPendingDiscard(lead);
+  /** Los sin nombre de la etapa abierta, para el interruptor de la hoja. */
+  const sinNombreDeLaEtapa = useMemo(
+    () => (etapaAbierta ? contarSinNombre(leads.filter((l) => (l.status || 'nuevo') === etapaAbierta)) : 0),
+    [leads, etapaAbierta],
+  );
+
+  const enElFlujo = PIPELINE_STAGES.reduce((suma, etapa) => suma + cuentas[etapa], 0);
+
+  /**
+   * Cuantos leads de cada etapa llevan demasiado tiempo sin moverse.
+   *
+   * El plazo lo define `STAGE_ACTIONS`. Las etapas finales no lo tienen: un lead
+   * convertido no esta trabado por llevar meses convertido.
+   *
+   * Se mide sobre `updatedAt`, que es lo unico que hay. Vale la pena decir su
+   * limite: `updatedAt` cambia con CUALQUIER edicion del lead, no solo con un
+   * cambio de etapa. Editarle el telefono a un lead lo saca de la cuenta de
+   * trabados sin que haya avanzado. Es una aproximacion util, no una verdad; si
+   * el dato importa de veras, haria falta guardar cuando cambio de etapa.
+   */
+  const trabados = useMemo(() => {
+    const ahora = Date.now();
+    const total = {} as Record<LeadStatus, number>;
+
+    for (const etapa of PIPELINE_STAGES) {
+      const dias = STAGE_ACTIONS[etapa].dias;
+      total[etapa] = dias === null
+        ? 0
+        : agrupados[etapa].filter((lead) => {
+            const movido = new Date(lead.updatedAt || 0).getTime();
+            if (!movido) return false;
+            return (ahora - movido) / 86400000 > dias;
+          }).length;
+    }
+
+    return total;
+  }, [agrupados]);
+
+  /**
+   * Guarda el estado nuevo y, si corresponde, ofrece agendar el seguimiento.
+   *
+   * Antes no habia `try`: si el guardado fallaba, la excepcion subia sin
+   * capturar, la ficha simplemente no se movia y no se decia nada. Esto es
+   * estado real de negocio del lead, asi que fallar en silencio es caro.
+   */
+  const aplicarEstado = async (lead: Lead, estado: LeadStatus, motivoDescarte?: string) => {
+    const id = lead.id;
+    if (!id) return;
+
+    // Se guarda ANTES de tocar nada: es a donde vuelve el lead si te arrepentis.
+    const estadoAnterior = (lead.status || 'nuevo') as LeadStatus;
+
+    setAviso(null);
+    setMovimientosPendientes((previos) => ({ ...previos, [id]: estado }));
+
+    try {
+      await saveLead({ ...lead, status: estado, ...(motivoDescarte ? { discardReason: motivoDescarte } : {}) });
+    } catch (error) {
+      console.error('[pipeline] no se pudo mover el lead', error);
+      // Se revierte el movimiento en pantalla: si no, la ficha quedaria en un
+      // cuadrante al que el servidor nunca la dejo entrar.
+      setMovimientosPendientes(({ [id]: _descartado, ...resto }) => resto);
+      setAviso({ texto: `No se pudo mover a ${nombreVisible(lead.name)}.`, error: true });
       return;
     }
 
-    await applyStatus(lead, status);
+    /*
+     * Dos formas de confirmar, segun si hay algo que completar.
+     *
+     * Al mover a una etapa abierta se ofrece agendar el seguimiento, y esa
+     * pregunta ya trae su propio titulo -"X pasó a Y"- y su deshacer, asi que
+     * no hace falta ademas una linea diciendo lo mismo.
+     *
+     * Al descartar no se ofrece nada: proponer un seguimiento para un lead que
+     * acabas de dar por perdido, y justo despues de responder por que, se
+     * contradice solo. Ahi alcanza con la linea.
+     */
+    if (estado === 'descartado') {
+      setAviso({
+        texto: `${nombreVisible(lead.name)} pasó a ${STATUS_LABELS[estado]}.`,
+        error: false,
+        deshacer: () => void deshacerMovimiento(lead, estadoAnterior),
+      });
+      return;
+    }
+
+    setSeguimiento({ lead, nuevoEstado: estado, estadoAnterior });
   };
 
-  const confirmDiscard = async (motivo: string) => {
-    const lead = pendingDiscard;
-    setPendingDiscard(null);
-    if (lead) await applyStatus(lead, 'descartado', motivo || undefined);
+  /**
+   * Devuelve el lead a donde estaba.
+   *
+   * Se guarda el objeto original entero, no solo el estado: asi vuelve tambien
+   * el motivo de descarte que se le haya puesto al moverlo, en vez de quedar
+   * como un lead activo con un motivo de por que se perdio.
+   *
+   * ## Sobre volver a "sin clasificar"
+   *
+   * Si el lead estaba en 'nuevo', deshacer lo devuelve ahi, y eso parece
+   * contradecir la regla de que un lead gestionado no vuelve a estar sin
+   * gestionar. No la contradice: esa regla habla de ASIGNAR 'nuevo' a mano como
+   * si fuera una etapa. Deshacer no afirma nada nuevo, restituye lo que era
+   * verdad hace cinco segundos. Es la diferencia entre corregir un error y
+   * declarar que alguien dejo de estar contactado.
+   */
+  const deshacerMovimiento = async (lead: Lead, estadoAnterior: LeadStatus) => {
+    const id = lead.id;
+    if (!id) return;
+
+    setAviso(null);
+    // El ofrecimiento de seguimiento era de un movimiento que ya no ocurrio.
+    setSeguimiento(null);
+    setMovimientosPendientes((previos) => ({ ...previos, [id]: estadoAnterior }));
+
+    try {
+      await saveLead(lead);
+    } catch (error) {
+      console.error('[pipeline] no se pudo deshacer el movimiento', error);
+      setMovimientosPendientes(({ [id]: _descartado, ...resto }) => resto);
+      setAviso({ texto: 'No se pudo deshacer. Probá de nuevo.', error: true });
+    }
   };
-  const createTask = async () => {
-    if (!taskPrompt || !taskTitle.trim() || !user) return;
-    const dueDate = taskDate && taskTime
-      ? new Date(`${taskDate}T${taskTime}:00`).toISOString()
+
+  /**
+   * Manda el lead a la papelera.
+   *
+   * Cancela antes su cita activa, si la tiene. Ese paso no es opcional: sin el,
+   * la cita sigue en la agenda -y en Google Calendar- apuntando a alguien que ya
+   * no esta. La logica se comparte con la tabla de leads en
+   * `leadDeletionService` justamente para que no haya dos borrados distintos.
+   */
+  const eliminarLead = async (lead: Lead) => {
+    if (!lead.id) return;
+    setAviso(null);
+    setLeadEnMenu(null);
+
+    try {
+      const citaId = await buscarCitaActivaDelLead(lead);
+      await cancelarCitaAntesDeBorrar(lead, citaId);
+      await removeLead(lead.id);
+
+      setAviso({
+        texto: `${nombreVisible(lead.name)} fue a la papelera.`,
+        error: false,
+        // El borrado es logico, asi que deshacer es de verdad, no un truco.
+        deshacer: () => { void restoreLead(lead.id!); setAviso(null); },
+      });
+    } catch (error) {
+      console.error('[pipeline] no se pudo eliminar el lead', error);
+      setAviso({ texto: `No se pudo eliminar a ${nombreVisible(lead.name)}.`, error: true });
+    }
+  };
+
+  const moverDesdeElMenu = async (estado: LeadStatus) => {
+    const lead = leadEnMenu;
+    setLeadEnMenu(null);
+    if (!lead) return;
+
+    if (estado === 'descartado') {
+      setPendingDiscard(lead);
+      return;
+    }
+    await aplicarEstado(lead, estado);
+  };
+
+  const soltarEnEtapa = async (estado: LeadStatus) => {
+    setDestinoDelArrastre(null);
+    setLeadArrastrado(null);
+    const leadId = draggingRef.current;
+    draggingRef.current = null;
+    if (!leadId) return;
+
+    const lead = leads.find((candidato) => candidato.id === leadId);
+    if (!lead || (lead.status || 'nuevo') === estado) return;
+
+    if (estado === 'descartado') {
+      setPendingDiscard(lead);
+      return;
+    }
+    await aplicarEstado(lead, estado);
+  };
+
+  const crearTarea = async ({ titulo, fecha, hora }: { titulo: string; fecha: string; hora: string }) => {
+    const pendiente = seguimiento;
+    setSeguimiento(null);
+    if (!pendiente || !user) return;
+
+    /*
+     * Fecha sin hora ya no se pierde. Antes se pedian las dos juntas y, si
+     * faltaba la hora, la tarea se creaba SIN VENCIMIENTO sin que nadie avisara.
+     */
+    const vencimiento = fecha
+      ? new Date(`${fecha}T${hora || HORA_POR_DEFECTO}:00`).toISOString()
       : null;
 
     await createFollowUpTaskForLead({
       userId: user.id,
-      leadId: taskPrompt.leadId,
-      leadName: taskPrompt.leadName,
-      newStatus: taskPrompt.newStatus,
-      title: taskTitle,
-      dueDateIso: dueDate,
+      leadId: pendiente.lead.id!,
+      leadName: pendiente.lead.name,
+      newStatus: pendiente.nuevoEstado,
+      title: titulo,
+      dueDateIso: vencimiento,
     });
-    
-    setTaskPrompt(null);
   };
 
-  const totalInSearch = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
-
-  const renderNuevoTab = () => {
-    const isDragOver = dragOver === 'nuevo';
-    const isActive = activeTab === 'nuevo';
-    const total = leads.filter((l) => (l.status || 'nuevo') === 'nuevo').length;
-    return (
-      <button
-        onClick={() => setActiveTab('nuevo')}
-        onDragOver={(e) => { e.preventDefault(); setDragOver('nuevo'); }}
-        onDragLeave={() => setDragOver(null)}
-        onDrop={(e) => { e.preventDefault(); handleDrop('nuevo'); }}
-        className={`flex-1 w-full py-1.5 px-2 rounded text-[10px] font-bold transition-all border ${
-          isDragOver ? 'scale-105 z-10 opacity-100' : 
-          isActive ? 'opacity-100 ring-2' : 'opacity-70 hover:opacity-100'
-        }`}
-        style={{
-          backgroundColor: `${STATUS_COLORS['nuevo']}15`,
-          borderColor: STATUS_COLORS['nuevo'],
-          color: STATUS_COLORS['nuevo']
-        }}
-      >
-        <div className="flex items-center justify-center gap-1.5">
-          <span className="uppercase tracking-wider">NUEVO</span>
-          <span className="text-[10px] px-1.5 rounded bg-surface/70 text-ink shadow-sm">{total}</span>
-        </div>
-      </button>
-    );
+  const escribirPorWhatsApp = (lead: Lead, plantilla: WhatsAppTemplate) => {
+    openWhatsAppForLeads([lead], plantilla.contenido || '');
   };
 
-  const renderSquareCard = (s: LeadStatus) => {
-    const isDragOver = dragOver === s;
-    const isActive = activeTab === s;
-    const items = grouped[s];
+  if (cargando) {
     return (
-      <div
-        key={s}
-        onClick={() => setActiveTab(s)}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(s); }}
-        onDragLeave={() => setDragOver(null)}
-        onDrop={(e) => { e.preventDefault(); handleDrop(s); }}
-        className={`card-standard flex flex-col border-2 transition-all cursor-pointer overflow-hidden h-[160px] sm:h-[180px] ${
-          isDragOver ? 'scale-105 shadow-xl z-10' : 
-          isActive ? 'shadow-md ring-2 ring-offset-2 dark:ring-offset-gray-900' : 'opacity-90 hover:opacity-100 hover:shadow-md'
-        }`}
-        style={{
-          borderColor: STATUS_COLORS[s],
-          backgroundColor: isActive || isDragOver ? `${STATUS_COLORS[s]}08` : undefined,
-          boxShadow: isActive || isDragOver ? `0 0 0 2px ${STATUS_COLORS[s]}40` : undefined,
-        }}
-      >
-        <div className="flex items-center justify-between px-3 py-2 border-b" style={{ backgroundColor: `${STATUS_COLORS[s]}15`, borderColor: `${STATUS_COLORS[s]}30` }}>
-          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: STATUS_COLORS[s] }}>{STATUS_LABELS[s]}</span>
-          <span className="text-[10px] font-bold bg-surface dark:backdrop-blur-md px-1.5 py-0.5 rounded text-ink shadow-sm">{items.length}</span>
-        </div>
-        <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
-          {items.map((lead) => (
-             <div 
-               key={lead.id} 
-               draggable
-               onDragStart={(e) => {
-                 e.stopPropagation();
-                 handleDragStart(e, lead);
-               }}
-               onDragEnd={handleDragEnd}
-               className="text-[10px] sm:text-[11px] truncate px-1.5 py-0.5 hover:bg-black/5 rounded text-ink-secondary font-medium cursor-grab active:cursor-grabbing flex justify-between items-center group/item"
-             >
-               <span className="truncate">{lead.name}</span>
-               <span className="text-[10px] text-ink-muted group-hover/item:text-ink-muted opacity-0 group-hover/item:opacity-100 font-mono tracking-tighter ml-1">|||</span>
-             </div>
+      <div role="status" aria-label="Cargando" className="space-y-3">
+        <Skeleton shape="block" height="34px" />
+        <Skeleton shape="block" height="10px" />
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} shape="block" height="196px" />
           ))}
-          {items.length === 0 && (
-             <div className="text-[10px] text-center text-ink-muted mt-6 flex flex-col items-center opacity-50">
-               <div className="text-xl mb-1">{Icon.Pipeline()}</div>
-               <span className="mt-1">Vacío</span>
-             </div>
-          )}
         </div>
       </div>
     );
-  };
+  }
+
+  if (fallo) {
+    return (
+      <LoadError
+        title="No pudimos cargar tu pipeline"
+        description="Revisá la conexión y volvé a intentar."
+        onRetry={() => void recargar()}
+      />
+    );
+  }
 
   return (
-    <div className="pb-6">
-
-
-      <div className="flex gap-2 mb-3 w-full">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar nombre, teléfono, email, RUT..."
-            className="w-full border border-line-strong rounded h-full px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          {searchLower && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-muted">{totalInSearch} encontrados</span>
-          )}
-        </div>
-        {/* `shrink-0`: la barra tiene un buscador `flex-1` y una pestana
-            `w-1/4`, asi que sin esto el boton se comprimia a cero y no habia
-            forma de verlo ni de pulsarlo. */}
-        <SinNombreToggle
-          count={sinNombreTotal}
-          ocultos={ocultarSinNombre}
-          onToggle={() => setOcultarSinNombre(!ocultarSinNombre)}
-          className="shrink-0 self-center"
+    <div className="flex flex-col gap-3 pb-4">
+      {seguimiento && (
+        <TaskFollowUpPrompt
+          lead={seguimiento.lead}
+          nuevoEstado={seguimiento.nuevoEstado}
+          onCrear={(datos) => void crearTarea(datos)}
+          onDeshacer={() => void deshacerMovimiento(seguimiento.lead, seguimiento.estadoAnterior)}
+          onOmitir={() => setSeguimiento(null)}
         />
-        <div className="w-1/4 min-w-[100px] flex">
-          {renderNuevoTab()}
-        </div>
-      </div>
+      )}
 
       {/*
-        La caja de esta lista estaba escrita a mano: su propia cabecera, su
-        propio contador con fondo, su propio borde. Ahora sale de `ListPanel`,
-        que es el mismo que usan el modal de flujos y el selector de
-        destinatarios, asi que las tres se ven igual. El color del estado se
-        conserva en el rotulo: es dato, no estilo.
+        El aviso va en una linea. "Deshacer" es un icono de flecha circular con
+        su nombre accesible: un boton con rotulo pedia una fila de 34px para una
+        accion que casi nunca se usa, y estirar el aviso empuja el tablero, que
+        es a lo que veniste.
       */}
-      <ListPanel
-        className="mb-5"
-        title={<>Lista: <span style={{ color: STATUS_COLORS[activeTab] }}>{STATUS_LABELS[activeTab]}</span></>}
-        count={`${grouped[activeTab].length} items`}
-        maxHeight="max-h-[250px]"
-      >
-        <div>
-          {grouped[activeTab].length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-ink-muted flex flex-col items-center justify-center h-full">
-               <span className="text-3xl mb-3 opacity-20">{Icon.Pipeline()}</span>
-               <span>No hay leads aquí</span>
-               <span className="text-xs mt-1 text-ink-muted">Arrastra leads desde otras listas</span>
-            </div>
-          ) : (
-            grouped[activeTab].map((lead) => (
-              <div
-                key={lead.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, lead)}
-                onDragEnd={handleDragEnd}
-                className={`${clasesDeFila()} cursor-grab active:cursor-grabbing active:opacity-50 flex justify-between items-center gap-2 group`}
-              >
-                {/*
-                  El nombre y el dato de contacto iban uno al lado del otro; el
-                  resto de las listas los apila. Se converge al molde, asi que la
-                  fila crece a dos lineas pero se lee igual que en las demas
-                  secciones.
-
-                  El icono que acompanaba a la empresa era `Icon.Messages`: no
-                  hay icono de empresa en el juego y se habia elegido por
-                  descarte, asi que decia "mensajes" donde ponia el nombre de una
-                  compania. Las lineas secundarias del resto de las listas son
-                  texto plano, y aqui tambien lo son ahora: ademas de quitar el
-                  icono equivocado, libera ancho en un panel de 360px.
-                */}
-                <LeadIdentity
-                  className="min-w-0 flex-1"
-                  density="compact"
-                  name={lead.name}
-                  caption={[lead.company, lead.phone && telefonoEnmascarado(lead.phone)]
-                    .filter(Boolean)
-                    .join(' · ')}
-                />
-                <div className="flex items-center gap-2 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setViewLead(lead)} className="text-ink-muted hover:text-primary cursor-pointer p-1" title="Ver detalle" aria-label={`Ver detalle de ${nombreVisible(lead.name)}`}><div className="w-4">{Icon.View()}</div></button>
-                  <span className="text-[10px] text-ink-muted font-mono tracking-tighter">|||</span>
-                </div>
-              </div>
-            ))
+      {aviso && (
+        <div
+          role="status"
+          className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-meta ${
+            aviso.error ? 'bg-state-danger-soft text-state-danger' : 'bg-surface-sunken text-ink-secondary'
+          }`}
+        >
+          <span className="min-w-0 flex-1 truncate">{aviso.texto}</span>
+          {aviso.deshacer && (
+            <button
+              type="button"
+              onClick={aviso.deshacer}
+              title="Deshacer"
+              aria-label="Deshacer"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-surface-hover hover:text-ink [&_svg]:h-3 [&_svg]:w-3"
+            >
+              <Icon.Restore />
+            </button>
           )}
         </div>
-      </ListPanel>
+      )}
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {(['contactado', 'interesado', 'convertido', 'descartado'] as LeadStatus[]).map((s) => renderSquareCard(s))}
+      <div className="flex items-center gap-2">
+        <Input
+          type="search"
+          value={search}
+          onChange={(evento) => setSearch(evento.target.value)}
+          placeholder="Buscar nombre, teléfono, email, RUT..."
+          className="flex-1"
+        />
+        <SinNombreToggle
+          count={contarSinNombre(leads)}
+          ocultos={ocultarSinNombre}
+          onToggle={() => setOcultarSinNombre(!ocultarSinNombre)}
+        />
       </div>
 
-      {taskPrompt && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg shadow-sm animate-scale-in">
-          <p className="text-xs font-medium text-amber-800 mb-2">
-            ¿Crear tarea de seguimiento para {taskPrompt.leadName}?
-          </p>
-          <input
-            type="text"
-            value={taskTitle}
-            onChange={(e) => setTaskTitle(e.target.value)}
-            placeholder="Título de la tarea"
-            className="w-full border rounded px-2 py-1.5 text-xs mb-2 outline-none focus:ring-2 focus:ring-amber-500"
-            autoFocus
-          />
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <input type="date" value={taskDate} onChange={(e) => setTaskDate(e.target.value)}
-              className="border rounded px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-amber-500" />
-            <input type="time" value={taskTime} onChange={(e) => setTaskTime(e.target.value)}
-              className="border rounded px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-amber-500" />
-          </div>
-          {waTemplates.length > 0 && (
-            <div className="flex gap-2 items-center mb-3">
-              <select value={selectedTemplate ?? ''} onChange={(e) => setSelectedTemplate(e.target.value ? Number(e.target.value) : null)}
-                className="border rounded px-2 py-1 text-xs flex-1 outline-none focus:ring-2 focus:ring-amber-500">
-                <option value="">Enviar WhatsApp con plantilla...</option>
-                {waTemplates.map((t: WhatsAppTemplate) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
-              </select>
-              {selectedTemplate && taskPrompt?.lead && (
-                <Button
-                  variant="primary"
-                  className="shrink-0"
-                  onClick={() => { openWhatsAppForLeads([taskPrompt.lead!], waTemplates.find((t: WhatsAppTemplate) => t.id === selectedTemplate)?.contenido || ''); }}
-                >
-                  Enviar
-                </Button>
-              )}
-            </div>
-          )}
-          <div className="flex gap-2 justify-end">
-            <button onClick={() => { setTaskPrompt(null); setSelectedTemplate(null); }} className="text-xs text-ink-muted hover:text-ink-secondary px-2 py-1.5">
-              Omitir
+      {leads.length === 0 ? (
+        <EmptyState
+          icon={<Icon.Pipeline />}
+          title="Todavía no tenés leads"
+          description="Cuando entren, vas a poder moverlos por las etapas desde acá."
+        />
+      ) : (
+        <>
+          {/*
+            La puerta de los que todavia no entraron al flujo. Es una fila y no
+            un cuadrante: no es una etapa, es de donde salen. Sin franja de
+            color y fuera de la barra de proporcion, por lo mismo.
+          */}
+          {cuentas.nuevo > 0 && (
+            <button
+              type="button"
+              onClick={() => setEtapaAbierta('nuevo')}
+              className="flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-left transition-colors hover:bg-surface-hover"
+            >
+              <span className="min-w-0 flex-1 text-meta font-medium text-ink">Sin clasificar</span>
+              <span className="shrink-0 rounded bg-surface-sunken px-1.5 py-0.5 text-micro font-semibold tabular-nums text-ink-secondary">
+                {cuentas.nuevo}
+              </span>
+              <span className="shrink-0 text-ink-muted [&_svg]:h-3 [&_svg]:w-3">{Icon.ChevronRight()}</span>
             </button>
-            <Button variant="primary" onClick={createTask}>
-              Crear tarea
-            </Button>
+          )}
+
+          <div>
+            <PipelineProportionBar cuentas={cuentas} />
+            <p className="mt-1.5 text-micro text-ink-secondary">
+              {searchLower
+                ? `${enElFlujo} en el flujo coinciden con la búsqueda`
+                : `${enElFlujo} ${enElFlujo === 1 ? 'lead' : 'leads'} en el flujo`}
+            </p>
           </div>
-        </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {PIPELINE_STAGES.map((estado) => (
+              <PipelineStageCard
+                key={estado}
+                estado={estado}
+                leads={agrupados[estado].slice(0, FICHAS_VISIBLES)}
+                total={cuentas[estado]}
+                trabados={trabados[estado] ?? 0}
+                esDestinoDelArrastre={destinoDelArrastre === estado}
+                leadArrastrado={leadArrastrado}
+                onAbrirLista={() => setEtapaAbierta(estado)}
+                onAccionesDeLead={setLeadEnMenu}
+                onDragStartLead={(lead) => { draggingRef.current = lead.id!; setLeadArrastrado(lead.id!); }}
+                onDragEndLead={() => { draggingRef.current = null; setLeadArrastrado(null); setDestinoDelArrastre(null); }}
+                onDragOver={() => setDestinoDelArrastre(estado)}
+                onDragLeave={() => setDestinoDelArrastre(null)}
+                onDrop={() => void soltarEnEtapa(estado)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {etapaAbierta && (
+        <StageLeadsSheet
+          estado={etapaAbierta}
+          leads={agrupados[etapaAbierta]}
+          onAbrirLead={(lead) => { setViewLead(lead); setEtapaAbierta(null); }}
+          onAcciones={(lead) => { setLeadEnMenu(lead); setEtapaAbierta(null); }}
+          onClose={() => setEtapaAbierta(null)}
+          ocultarSinNombre={ocultarSinNombre}
+          onToggleSinNombre={() => setOcultarSinNombre(!ocultarSinNombre)}
+          sinNombreTotal={sinNombreDeLaEtapa}
+        />
+      )}
+
+      {leadEnMenu && (
+        <MoveLeadSheet
+          lead={leadEnMenu}
+          onMover={(estado) => void moverDesdeElMenu(estado)}
+          onVerDetalle={() => { setViewLead(leadEnMenu); setLeadEnMenu(null); }}
+          onEscribir={
+            waTemplates[0]
+              ? () => { escribirPorWhatsApp(leadEnMenu, waTemplates[0]!); setLeadEnMenu(null); }
+              : undefined
+          }
+          onEliminar={() => void eliminarLead(leadEnMenu)}
+          onClose={() => setLeadEnMenu(null)}
+        />
       )}
 
       {pendingDiscard && (
         <DiscardReasonModal
           cantidad={1}
-          onConfirm={confirmDiscard}
+          onConfirm={(motivo) => {
+            const lead = pendingDiscard;
+            setPendingDiscard(null);
+            if (lead) void aplicarEstado(lead, 'descartado', motivo || undefined);
+          }}
           onCancel={() => setPendingDiscard(null)}
         />
       )}
 
       {viewLead && (
-        <LeadDetail 
-          lead={viewLead} 
-          lists={lists} 
-          onClose={() => setViewLead(null)} 
-          onEdit={() => { /* Solo lectura en pipeline */ }} 
+        <LeadDetail
+          lead={viewLead}
+          lists={lists}
+          onClose={() => setViewLead(null)}
+          onEdit={() => { /* Solo lectura en pipeline */ }}
         />
       )}
     </div>
