@@ -1,12 +1,12 @@
 import { ChatIcon } from './ChatIcons';
-import { CHAT_REACTION_EMOJIS, type ChatReactionEmoji, type ChatReactionSummary } from '../../types';
+import { CHAT_REACTIONS, type ChatReactionKind, type ChatReactionSummary } from '../../types';
 
 /**
  * REACCIONES
  *
- * Lo que se guarda en la base es el caracter (`👍`, `👎`, `❤️`), porque es la
- * clave de la fila y la valida un CHECK. Lo que se DIBUJA no es ese caracter:
- * son iconos de trazo del mismo juego que el resto del chat.
+ * Lo que se guarda en la base es un identificador (`like`, `dislike`, `love`),
+ * nunca el caracter: ver la migracion 136. Lo que se DIBUJA son iconos de trazo
+ * del mismo juego que el resto del chat.
  *
  * La distincion es una regla del producto, no una preferencia: los emoticones
  * viven unicamente dentro del selector de emoticones. Un emoticon suelto en la
@@ -16,16 +16,16 @@ import { CHAT_REACTION_EMOJIS, type ChatReactionEmoji, type ChatReactionSummary 
  */
 
 /** Nombre de cada reaccion para el lector de pantalla y el tooltip. */
-export const NOMBRE_DE_REACCION: Record<ChatReactionEmoji, string> = {
-  '👍': 'Me gusta',
-  '👎': 'No me gusta',
-  '❤️': 'Me encanta',
+export const NOMBRE_DE_REACCION: Record<ChatReactionKind, string> = {
+  like: 'Me gusta',
+  dislike: 'No me gusta',
+  love: 'Me encanta',
 };
 
-const ICONO: Record<ChatReactionEmoji, (props: { className?: string; filled?: boolean }) => JSX.Element> = {
-  '👍': ChatIcon.ThumbUp,
-  '👎': ChatIcon.ThumbDown,
-  '❤️': ChatIcon.Heart,
+const ICONO: Record<ChatReactionKind, (props: { className?: string; filled?: boolean }) => JSX.Element> = {
+  like: ChatIcon.ThumbUp,
+  dislike: ChatIcon.ThumbDown,
+  love: ChatIcon.Heart,
 };
 
 /**
@@ -49,12 +49,12 @@ export function ChatReactionBar({
   isOwn: boolean;
   /** Hay un cambio viajando al servidor: se atenua hasta confirmar. */
   pending: boolean;
-  onToggle: (emoji: ChatReactionEmoji) => void;
+  onToggle: (reaction: ChatReactionKind) => void;
 }) {
   // Orden fijo, el mismo que el selector: sin esto los chips bailan de sitio
   // segun quien reaccione primero.
-  const ordenadas = CHAT_REACTION_EMOJIS.map((emoji) =>
-    reactions.find((r) => r.emoji === emoji)
+  const ordenadas = CHAT_REACTIONS.map((reaction) =>
+    reactions.find((r) => r.reaction === reaction)
   ).filter((r): r is ChatReactionSummary => !!r && r.count > 0);
 
   if (ordenadas.length === 0) return null;
@@ -66,18 +66,18 @@ export function ChatReactionBar({
       }`}
     >
       {ordenadas.map((reaction) => {
-        const Glifo = ICONO[reaction.emoji];
+        const Glifo = ICONO[reaction.reaction];
 
         return (
           <button
-            key={reaction.emoji}
+            key={reaction.reaction}
             type="button"
-            onClick={() => onToggle(reaction.emoji)}
+            onClick={() => onToggle(reaction.reaction)}
             aria-pressed={reaction.reactedByMe}
             aria-label={
               reaction.reactedByMe
-                ? `${NOMBRE_DE_REACCION[reaction.emoji]}, ${reaction.count}, incluida la tuya`
-                : `${NOMBRE_DE_REACCION[reaction.emoji]}, ${reaction.count}`
+                ? `${NOMBRE_DE_REACCION[reaction.reaction]}, ${reaction.count}, incluida la tuya`
+                : `${NOMBRE_DE_REACCION[reaction.reaction]}, ${reaction.count}`
             }
             className={`inline-flex h-6 items-center gap-1 rounded-full border px-1.5 text-micro font-bold transition-colors ${
               reaction.reactedByMe
@@ -107,21 +107,21 @@ export function ChatReactionPicker({
   onToggle,
 }: {
   reactions: ChatReactionSummary[];
-  onToggle: (emoji: ChatReactionEmoji) => void;
+  onToggle: (reaction: ChatReactionKind) => void;
 }) {
   return (
     <>
-      {CHAT_REACTION_EMOJIS.map((emoji) => {
-        const mia = reactions.find((r) => r.emoji === emoji)?.reactedByMe ?? false;
-        const Glifo = ICONO[emoji];
+      {CHAT_REACTIONS.map((reaction) => {
+        const mia = reactions.find((r) => r.reaction === reaction)?.reactedByMe ?? false;
+        const Glifo = ICONO[reaction];
 
         return (
           <button
-            key={emoji}
+            key={reaction}
             type="button"
-            onClick={() => onToggle(emoji)}
-            title={NOMBRE_DE_REACCION[emoji]}
-            aria-label={`Reaccionar: ${NOMBRE_DE_REACCION[emoji]}`}
+            onClick={() => onToggle(reaction)}
+            title={NOMBRE_DE_REACCION[reaction]}
+            aria-label={`Reaccionar: ${NOMBRE_DE_REACCION[reaction]}`}
             aria-pressed={mia}
             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-surface-hover ${
               mia ? 'bg-primary-soft text-primary' : 'text-ink-muted hover:text-ink'

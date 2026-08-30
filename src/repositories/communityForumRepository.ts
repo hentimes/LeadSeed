@@ -4,7 +4,7 @@ import type {
   CommunityCategory,
   CommunityComment,
   CommunityPost,
-  CommunityReactionEmoji,
+  CommunityReactionKind,
   CommunityReactionSummary,
   NewCommunityPost,
 } from '../types/community';
@@ -245,7 +245,7 @@ export async function softDeleteComment(commentId: string): Promise<void> {
 
 interface FilaDeResumenDeComentario {
   comment_id: string;
-  emoji: CommunityReactionEmoji;
+  reaction: CommunityReactionKind;
   count: number;
   user_ids: string[];
 }
@@ -265,7 +265,7 @@ export async function fetchCommentReactions(
 
   const { data, error } = await supabase
     .from('community_comment_reaction_summary')
-    .select('comment_id, emoji, count, user_ids')
+    .select('comment_id, reaction, count, user_ids')
     .in('comment_id', commentIds);
 
   if (error || !data) {
@@ -278,7 +278,7 @@ export async function fetchCommentReactions(
   for (const fila of data as unknown as FilaDeResumenDeComentario[]) {
     const lista = porComentario.get(fila.comment_id) ?? [];
     lista.push({
-      emoji: fila.emoji,
+      reaction: fila.reaction,
       count: fila.count,
       reactedByMe: !!currentUserId && fila.user_ids.includes(currentUserId),
     });
@@ -297,13 +297,13 @@ export async function fetchCommentReactions(
 export async function toggleCommentReaction(
   commentId: string,
   userId: string,
-  emoji: CommunityReactionEmoji,
+  reaction: CommunityReactionKind,
   reacted: boolean
 ): Promise<void> {
   if (reacted) {
     const { error } = await supabase
       .from('community_comment_reactions')
-      .insert({ comment_id: commentId, user_id: userId, emoji });
+      .insert({ comment_id: commentId, user_id: userId, reaction });
 
     if (error && error.code !== '23505') throw error;
     return;
@@ -314,7 +314,7 @@ export async function toggleCommentReaction(
     .delete()
     .eq('comment_id', commentId)
     .eq('user_id', userId)
-    .eq('emoji', emoji);
+    .eq('reaction', reaction);
 
   if (error) throw error;
 }

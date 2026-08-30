@@ -5,7 +5,7 @@ import {
 } from '../repositories/chatReactionsRepository';
 import { removeChatChannel } from '../repositories/chatRepository';
 import { toggleChatReaction } from '../services/chatService';
-import type { ChatReactionEmoji, ChatReactionSummary } from '../types';
+import type { ChatReactionKind, ChatReactionSummary } from '../types';
 
 /**
  * Reacciones de los mensajes visibles de la sala.
@@ -30,7 +30,7 @@ export interface ChatReactions {
   /** Reacciones por id de mensaje. Un mensaje sin reacciones no esta en el mapa. */
   byMessage: Map<string, ChatReactionSummary[]>;
   /** Pone la reaccion si no estaba, la quita si estaba. */
-  toggle(messageId: string, emoji: ChatReactionEmoji): Promise<void>;
+  toggle(messageId: string, reaction: ChatReactionKind): Promise<void>;
   /** Ids con un cambio en vuelo, para atenuarlos mientras viajan. */
   pending: Set<string>;
 }
@@ -91,7 +91,7 @@ export function useChatReactions(
   }, [roomId, recargar]);
 
   const toggle = useCallback(
-    async (messageId: string, emoji: ChatReactionEmoji) => {
+    async (messageId: string, reaction: ChatReactionKind) => {
       if (!userId) return;
 
       const actuales = byMessage.get(messageId) ?? [];
@@ -100,13 +100,13 @@ export function useChatReactions(
        * UNA reaccion por persona y por mensaje.
        *
        * La tabla admitiria varias -su clave primaria es (mensaje, persona,
-       * emoji)- pero el producto quiere que elegir una reemplace a la anterior,
+       * reaction)- pero el producto quiere que elegir una reemplace a la anterior,
        * como en WhatsApp. Se resuelve aca y ademas en la base con un trigger
        * (migracion 127): el cliente solo, con dos pestañas abiertas, no
        * alcanza.
        */
       const mia = actuales.find((r) => r.reactedByMe);
-      const esLaMisma = mia?.emoji === emoji;
+      const esLaMisma = mia?.reaction === reaction;
       const anterior = esLaMisma ? undefined : mia;
 
       /*
@@ -117,10 +117,10 @@ export function useChatReactions(
        */
       const siguiente = actuales
         .map((r) => {
-          if (r.emoji === anterior?.emoji) {
+          if (r.reaction === anterior?.reaction) {
             return { ...r, count: Math.max(0, r.count - 1), reactedByMe: false };
           }
-          if (r.emoji === emoji) {
+          if (r.reaction === reaction) {
             return {
               ...r,
               count: Math.max(0, r.count + (esLaMisma ? -1 : 1)),
@@ -131,8 +131,8 @@ export function useChatReactions(
         })
         .concat(
           // La reaccion elegida todavia no existia en el mensaje.
-          !esLaMisma && !actuales.some((r) => r.emoji === emoji)
-            ? [{ emoji, count: 1, reactedByMe: true }]
+          !esLaMisma && !actuales.some((r) => r.reaction === reaction)
+            ? [{ reaction, count: 1, reactedByMe: true }]
             : []
         )
         .filter((r) => r.count > 0);
@@ -143,8 +143,8 @@ export function useChatReactions(
       try {
         // Primero se quita la anterior y despues se pone la nueva: al reves,
         // un fallo a mitad dejaria dos reacciones puestas de la misma persona.
-        if (anterior) await toggleChatReaction(messageId, userId, anterior.emoji, false);
-        await toggleChatReaction(messageId, userId, emoji, !esLaMisma);
+        if (anterior) await toggleChatReaction(messageId, userId, anterior.reaction, false);
+        await toggleChatReaction(messageId, userId, reaction, !esLaMisma);
       } catch (error) {
         console.error('[chat] toggleChatReaction', error);
         // Se restaura la copia previa, no se recarga la sala entera: perder

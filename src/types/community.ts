@@ -65,16 +65,16 @@ export interface CommunityCommentNode extends CommunityComment {
 }
 
 /**
- * Los tres iconos con los que se puede reaccionar. Se guarda el caracter
- * porque es la clave de la fila y lo valida un CHECK; lo que se DIBUJA son
- * iconos del proyecto, nunca el emoticon.
+ * Las tres reacciones posibles. Se guarda un identificador estable y no el
+ * caracter; el motivo esta en `CHAT_REACTIONS`, que es la misma decision para
+ * el chat. Lo que se DIBUJA son iconos del proyecto.
  */
-export const COMMUNITY_REACTION_EMOJIS = ['👍', '👎', '❤️'] as const;
+export const COMMUNITY_REACTIONS = ['like', 'dislike', 'love'] as const;
 
-export type CommunityReactionEmoji = (typeof COMMUNITY_REACTION_EMOJIS)[number];
+export type CommunityReactionKind = (typeof COMMUNITY_REACTIONS)[number];
 
 export interface CommunityReactionSummary {
-  emoji: CommunityReactionEmoji;
+  reaction: CommunityReactionKind;
   count: number;
   reactedByMe: boolean;
 }

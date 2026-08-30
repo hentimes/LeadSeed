@@ -5,7 +5,7 @@ import type {
   CommunityFeedSort,
   CommunityPost,
   CommunityPostEdit,
-  CommunityReactionEmoji,
+  CommunityReactionKind,
   CommunityReactionSummary,
   NewCommunityPost,
 } from '../types/community';
@@ -134,10 +134,10 @@ export function loadCommentReactions(
 export function toggleCommentReaction(
   commentId: string,
   userId: string,
-  emoji: CommunityReactionEmoji,
+  reaction: CommunityReactionKind,
   reacted: boolean
 ): Promise<void> {
-  return repo.toggleCommentReaction(commentId, userId, emoji, reacted);
+  return repo.toggleCommentReaction(commentId, userId, reaction, reacted);
 }
 
 export function loadLikedPostIds(userId: string): Promise<Set<string>> {

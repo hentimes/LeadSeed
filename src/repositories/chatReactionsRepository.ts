@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import type { ChatReactionEmoji, ChatReactionSummary } from '../types';
+import type { ChatReactionKind, ChatReactionSummary } from '../types';
 import { uniqueChannelName } from '../utils/realtimeChannel';
 
 /**
@@ -15,7 +15,7 @@ import { uniqueChannelName } from '../utils/realtimeChannel';
 
 interface FilaDeResumen {
   message_id: string;
-  emoji: ChatReactionEmoji;
+  reaction: ChatReactionKind;
   count: number;
   user_ids: string[];
 }
@@ -40,7 +40,7 @@ export async function fetchReactionsForMessages(
 
   const { data, error } = await supabase
     .from('chat_message_reaction_summary')
-    .select('message_id, emoji, count, user_ids')
+    .select('message_id, reaction, count, user_ids')
     .in('message_id', messageIds);
 
   if (error || !data) {
@@ -53,7 +53,7 @@ export async function fetchReactionsForMessages(
   for (const fila of data as unknown as FilaDeResumen[]) {
     const lista = porMensaje.get(fila.message_id) ?? [];
     lista.push({
-      emoji: fila.emoji,
+      reaction: fila.reaction,
       count: fila.count,
       reactedByMe: !!currentUserId && fila.user_ids.includes(currentUserId),
     });
@@ -74,13 +74,13 @@ export async function fetchReactionsForMessages(
 export async function toggleChatReaction(
   messageId: string,
   userId: string,
-  emoji: ChatReactionEmoji,
+  reaction: ChatReactionKind,
   reacted: boolean
 ): Promise<void> {
   if (reacted) {
     const { error } = await supabase
       .from('chat_message_reactions')
-      .insert({ message_id: messageId, user_id: userId, emoji });
+      .insert({ message_id: messageId, user_id: userId, reaction });
 
     if (error && error.code !== '23505') throw error;
     return;
@@ -91,7 +91,7 @@ export async function toggleChatReaction(
     .delete()
     .eq('message_id', messageId)
     .eq('user_id', userId)
-    .eq('emoji', emoji);
+    .eq('reaction', reaction);
 
   if (error) throw error;
 }

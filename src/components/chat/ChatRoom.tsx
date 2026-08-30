@@ -472,7 +472,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
         highlights={highlights}
         reactionsByMessage={reactions.byMessage}
         reactionsPending={reactions.pending}
-        onToggleReaction={(messageId, emoji) => void reactions.toggle(messageId, emoji)}
+        onToggleReaction={(messageId, reaction) => void reactions.toggle(messageId, reaction)}
         moderation={moderation}
         dm={dm}
         openMenuFor={openMenuFor}

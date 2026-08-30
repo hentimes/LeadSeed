@@ -5,7 +5,7 @@ import ChatSystemMessage from './ChatSystemMessage';
 import MessageAuthorMenu from './MessageAuthorMenu';
 import { ChatIcon } from './ChatIcons';
 import { formatearHora } from '../../utils/date';
-import type { ChatMessage, ChatReactionEmoji, ChatReactionSummary } from '../../types';
+import type { ChatMessage, ChatReactionKind, ChatReactionSummary } from '../../types';
 import type { Mention } from '../../types/mentions';
 import type { GrupoDeAutor } from '../../utils/chatMessageGrouping';
 
@@ -31,7 +31,7 @@ export interface ChatMessageGroupProps {
 
   reactionsByMessage: Map<string, ChatReactionSummary[]>;
   reactionsPending: Set<string>;
-  onToggleReaction: (messageId: string, emoji: ChatReactionEmoji) => void;
+  onToggleReaction: (messageId: string, reaction: ChatReactionKind) => void;
 
   /** `${messageId}:${menu}` del unico menu abierto en toda la sala. */
   openMenuFor: string | null;
@@ -170,7 +170,7 @@ export default function ChatMessageGroup({
             isHighlighted={highlightedIds.has(message.id)}
             reactions={reactionsByMessage.get(message.id) ?? []}
             reactionPending={reactionsPending.has(message.id)}
-            onToggleReaction={(emoji) => onToggleReaction(message.id, emoji)}
+            onToggleReaction={(reaction) => onToggleReaction(message.id, reaction)}
             openMenu={
               openMenuFor?.startsWith(`${message.id}:`)
                 ? (openMenuFor.split(':')[1] as 'reactions' | 'more' | 'pin' | 'report')

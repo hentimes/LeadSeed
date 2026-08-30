@@ -1,7 +1,7 @@
 import { ChatIcon } from '../chat/ChatIcons';
 import {
-  COMMUNITY_REACTION_EMOJIS,
-  type CommunityReactionEmoji,
+  COMMUNITY_REACTIONS,
+  type CommunityReactionKind,
   type CommunityReactionSummary,
 } from '../../types/community';
 
@@ -13,25 +13,25 @@ import {
  * viven unicamente dentro del selector de emoticones.
  *
  * Es un componente aparte del de chat y no una generalizacion porque los tipos
- * son distintos (`ChatReactionEmoji` frente a `CommunityReactionEmoji`, cada uno
+ * son distintos (`ChatReactionKind` frente a `CommunityReactionKind`, cada uno
  * atado al CHECK de su tabla) y lo unico que compartirian es el JSX. Cuando
  * aparezca un tercer consumidor conviene extraer la primitiva; con dos, la
  * abstraccion costaria mas de lo que ahorra.
  */
 
-const NOMBRE: Record<CommunityReactionEmoji, string> = {
-  '👍': 'Me gusta',
-  '👎': 'No me gusta',
-  '❤️': 'Me encanta',
+const NOMBRE: Record<CommunityReactionKind, string> = {
+  like: 'Me gusta',
+  dislike: 'No me gusta',
+  love: 'Me encanta',
 };
 
 const ICONO: Record<
-  CommunityReactionEmoji,
+  CommunityReactionKind,
   (props: { className?: string; filled?: boolean }) => JSX.Element
 > = {
-  '👍': ChatIcon.ThumbUp,
-  '👎': ChatIcon.ThumbDown,
-  '❤️': ChatIcon.Heart,
+  like: ChatIcon.ThumbUp,
+  dislike: ChatIcon.ThumbDown,
+  love: ChatIcon.Heart,
 };
 
 /** Las reacciones ya puestas. El contador se oculta cuando vale 1. */
@@ -40,11 +40,11 @@ export default function CommentReactionBar({
   onToggle,
 }: {
   reactions: CommunityReactionSummary[];
-  onToggle: (emoji: CommunityReactionEmoji) => void;
+  onToggle: (reaction: CommunityReactionKind) => void;
 }) {
   // Orden fijo: sin esto los chips bailan segun quien reaccione primero.
-  const ordenadas = COMMUNITY_REACTION_EMOJIS.map((emoji) =>
-    reactions.find((r) => r.emoji === emoji)
+  const ordenadas = COMMUNITY_REACTIONS.map((reaction) =>
+    reactions.find((r) => r.reaction === reaction)
   ).filter((r): r is CommunityReactionSummary => !!r && r.count > 0);
 
   if (ordenadas.length === 0) return null;
@@ -52,18 +52,18 @@ export default function CommentReactionBar({
   return (
     <>
       {ordenadas.map((reaction) => {
-        const Glifo = ICONO[reaction.emoji];
+        const Glifo = ICONO[reaction.reaction];
 
         return (
           <button
-            key={reaction.emoji}
+            key={reaction.reaction}
             type="button"
-            onClick={() => onToggle(reaction.emoji)}
+            onClick={() => onToggle(reaction.reaction)}
             aria-pressed={reaction.reactedByMe}
             aria-label={
               reaction.reactedByMe
-                ? `${NOMBRE[reaction.emoji]}, ${reaction.count}, incluida la tuya`
-                : `${NOMBRE[reaction.emoji]}, ${reaction.count}`
+                ? `${NOMBRE[reaction.reaction]}, ${reaction.count}, incluida la tuya`
+                : `${NOMBRE[reaction.reaction]}, ${reaction.count}`
             }
             className={`inline-flex h-6 shrink-0 items-center gap-1 rounded-full border px-1.5 text-micro font-bold transition-colors ${
               reaction.reactedByMe
@@ -86,21 +86,21 @@ export function CommentReactionPicker({
   onToggle,
 }: {
   reactions: CommunityReactionSummary[];
-  onToggle: (emoji: CommunityReactionEmoji) => void;
+  onToggle: (reaction: CommunityReactionKind) => void;
 }) {
   return (
     <>
-      {COMMUNITY_REACTION_EMOJIS.map((emoji) => {
-        const mia = reactions.find((r) => r.emoji === emoji)?.reactedByMe ?? false;
-        const Glifo = ICONO[emoji];
+      {COMMUNITY_REACTIONS.map((reaction) => {
+        const mia = reactions.find((r) => r.reaction === reaction)?.reactedByMe ?? false;
+        const Glifo = ICONO[reaction];
 
         return (
           <button
-            key={emoji}
+            key={reaction}
             type="button"
-            onClick={() => onToggle(emoji)}
-            title={NOMBRE[emoji]}
-            aria-label={`Reaccionar: ${NOMBRE[emoji]}`}
+            onClick={() => onToggle(reaction)}
+            title={NOMBRE[reaction]}
+            aria-label={`Reaccionar: ${NOMBRE[reaction]}`}
             aria-pressed={mia}
             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-surface-hover ${
               mia ? 'bg-primary-soft text-primary' : 'text-ink-muted hover:text-ink'

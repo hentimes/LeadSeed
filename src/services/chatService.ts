@@ -30,7 +30,7 @@ import {
   unsaveChatMessage,
   upsertChatRoomRead,
 } from '../repositories/chatRepository';
-import type { ChatMessage, ChatPinnedMessage, ChatReactionEmoji, ChatRoom } from '../types';
+import type { ChatMessage, ChatPinnedMessage, ChatReactionKind, ChatRoom } from '../types';
 import type { ChatAttachment } from './chatAttachmentsService';
 
 /** Cuanto dura fijado un mensaje por defecto. Elegible en el futuro por UI. */
@@ -182,10 +182,10 @@ export async function unfreezeChatRoom(roomId: string, unfrozenBy: string): Prom
 export function toggleChatReaction(
   messageId: string,
   userId: string,
-  emoji: ChatReactionEmoji,
+  reaction: ChatReactionKind,
   reacted: boolean
 ): Promise<void> {
-  return toggleChatReactionRepo(messageId, userId, emoji, reacted);
+  return toggleChatReactionRepo(messageId, userId, reaction, reacted);
 }
 
 export function subscribeToChatRoomUpdates(

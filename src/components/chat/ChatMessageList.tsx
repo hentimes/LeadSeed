@@ -3,7 +3,7 @@ import ChatDaySeparator from './ChatDaySeparator';
 import ChatMessageGroup from './ChatMessageGroup';
 import { agruparMensajes } from '../../utils/chatMessageGrouping';
 import { reportMessage } from '../../services/chatModerationService';
-import type { ChatMessage, ChatReactionEmoji, ChatReactionSummary } from '../../types';
+import type { ChatMessage, ChatReactionKind, ChatReactionSummary } from '../../types';
 import type { Mention } from '../../types/mentions';
 import type { ChatScroll } from '../../hooks/useChatScroll';
 import type { useChatModeration } from '../../hooks/useChatModeration';
@@ -36,7 +36,7 @@ export interface ChatMessageListProps {
 
   reactionsByMessage: Map<string, ChatReactionSummary[]>;
   reactionsPending: Set<string>;
-  onToggleReaction: (messageId: string, emoji: ChatReactionEmoji) => void;
+  onToggleReaction: (messageId: string, reaction: ChatReactionKind) => void;
   moderation: ReturnType<typeof useChatModeration>;
   dm: ReturnType<typeof useDirectMessageSessions>;
 

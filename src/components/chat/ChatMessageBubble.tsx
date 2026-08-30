@@ -7,7 +7,7 @@ import ChatMessageActions from './ChatMessageActions';
 import { ChatReactionBar } from './ChatReactionBar';
 import { ChatIcon } from './ChatIcons';
 import { toPlainText } from '../../utils/mentionParser';
-import type { ChatMessage, ChatReactionEmoji, ChatReactionSummary } from '../../types';
+import type { ChatMessage, ChatReactionKind, ChatReactionSummary } from '../../types';
 import type { Mention } from '../../types/mentions';
 
 /**
@@ -37,7 +37,7 @@ export interface ChatMessageBubbleProps {
   reactions: ChatReactionSummary[];
   /** Hay una reaccion de este mensaje viajando al servidor. */
   reactionPending: boolean;
-  onToggleReaction: (emoji: ChatReactionEmoji) => void;
+  onToggleReaction: (reaction: ChatReactionKind) => void;
 
   openMenu: 'reactions' | 'more' | 'pin' | 'report' | null;
   onOpenMenu: (menu: 'reactions' | 'more' | 'pin' | 'report' | null) => void;

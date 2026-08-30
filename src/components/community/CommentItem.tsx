@@ -7,7 +7,7 @@ import { formatearTiempoRelativo } from '../../utils/date';
 import { COMMENT_MAX } from '../../services/communityForumService';
 import type {
   CommunityCommentNode,
-  CommunityReactionEmoji,
+  CommunityReactionKind,
   CommunityReactionSummary,
 } from '../../types/community';
 
@@ -34,7 +34,7 @@ export interface CommentItemProps {
   onReply: (parentId: string, body: string) => Promise<void>;
   onEdit: (commentId: string, body: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;
-  onReact: (commentId: string, emoji: CommunityReactionEmoji) => void;
+  onReact: (commentId: string, reaction: CommunityReactionKind) => void;
 }
 
 export default function CommentItem({
@@ -147,7 +147,7 @@ export default function CommentItem({
             <div className="relative mt-1 flex items-center gap-1">
               <CommentReactionBar
                 reactions={reactions.get(node.id) ?? []}
-                onToggle={(emoji) => onReact(node.id, emoji)}
+                onToggle={(reaction) => onReact(node.id, reaction)}
               />
 
               {/* Carita y tres puntos, mismo modelo que el chat. */}
@@ -168,8 +168,8 @@ export default function CommentItem({
                 <span className="flex items-center rounded-full border border-line bg-surface p-0.5 shadow-card">
                   <CommentReactionPicker
                     reactions={reactions.get(node.id) ?? []}
-                    onToggle={(emoji) => {
-                      onReact(node.id, emoji);
+                    onToggle={(reaction) => {
+                      onReact(node.id, reaction);
                       setReaccionesAbiertas(false);
                     }}
                   />

@@ -121,8 +121,8 @@ export const ChatIcon = {
   /*
    * Reacciones. Son iconos de trazo, del mismo juego que el resto del chat, y
    * NO emoticones: en el producto los emoticones viven solo dentro del selector
-   * de emoticones. Lo que se guarda en la base sigue siendo el caracter
-   * (`👍`, `👎`, `❤️`), porque es la clave de la fila; lo que se DIBUJA es esto.
+   * de emoticones. Lo que se guarda en la base es un identificador (`like`,
+   * `dislike`, `love`), no un caracter; lo que se DIBUJA es esto.
    */
   ThumbUp: ({ className = '', filled = false }: Props) => (
     <svg viewBox="0 0 24 24" className={`${base} ${className}`} {...trazo} fill={filled ? 'currentColor' : 'none'}>

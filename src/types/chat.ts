@@ -13,15 +13,22 @@ export interface ChatRoom {
 }
 
 /**
- * Los tres emojis con los que se puede reaccionar. La lista es cerrada y la
- * base la valida con un CHECK: ver la migracion 119.
+ * Las tres reacciones posibles. La lista es cerrada y la base la valida con un
+ * CHECK: ver las migraciones 119 y 136.
+ *
+ * Son identificadores, no emojis, y la distincion no es cosmetica: el corazon
+ * se escribe con dos puntos de codigo -U+2764 mas el selector de variacion
+ * U+FE0F- asi que un cliente que mandara solo el primero producia otra cadena,
+ * otra fila y otra clave primaria. Una clave no puede depender de eso.
+ *
+ * Que glifo se dibuja lo decide la interfaz, que pinta iconos del proyecto.
  */
-export const CHAT_REACTION_EMOJIS = ['👍', '👎', '❤️'] as const;
+export const CHAT_REACTIONS = ['like', 'dislike', 'love'] as const;
 
-export type ChatReactionEmoji = (typeof CHAT_REACTION_EMOJIS)[number];
+export type ChatReactionKind = (typeof CHAT_REACTIONS)[number];
 
 /**
- * Reacciones de un mensaje, ya agregadas por emoji.
+ * Reacciones de un mensaje, ya agregadas por tipo.
  *
  * Llega agregado y no como la lista cruda de filas a proposito: lo unico que
  * necesita la interfaz es cuantos hay de cada uno y si reaccionaste vos. Traer
@@ -29,7 +36,7 @@ export type ChatReactionEmoji = (typeof CHAT_REACTION_EMOJIS)[number];
  * doscientas filas en la respuesta para pintar un "200".
  */
 export interface ChatReactionSummary {
-  emoji: ChatReactionEmoji;
+  reaction: ChatReactionKind;
   count: number;
   reactedByMe: boolean;
 }

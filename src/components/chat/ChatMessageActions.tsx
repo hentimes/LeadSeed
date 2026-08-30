@@ -1,5 +1,5 @@
 import { ChatReactionPicker } from './ChatReactionBar';
-import type { ChatReactionEmoji, ChatReactionSummary } from '../../types';
+import type { ChatReactionKind, ChatReactionSummary } from '../../types';
 import { ChatIcon } from './ChatIcons';
 import ChatMenuSurface, { ChatMenuItem } from './ChatMenuSurface';
 import PinDurationMenu from './PinDurationMenu';
@@ -46,7 +46,7 @@ export interface ChatMessageActionsProps {
   authorName: string;
 
   reactions: ChatReactionSummary[];
-  onToggleReaction: (emoji: ChatReactionEmoji) => void;
+  onToggleReaction: (reaction: ChatReactionKind) => void;
 
   onReply: () => void;
   onToggleSaved: () => void;
@@ -212,8 +212,8 @@ export default function ChatMessageActions({
             >
               <ChatReactionPicker
                 reactions={reactions}
-                onToggle={(emoji) => {
-                  onToggleReaction(emoji);
+                onToggle={(reaction) => {
+                  onToggleReaction(reaction);
                   // Solo se puede tener una: elegirla cierra.
                   onOpenMenu(null);
                 }}

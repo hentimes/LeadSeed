@@ -15,7 +15,7 @@ import type {
   CommunityComment,
   CommunityCommentNode,
   CommunityPost,
-  CommunityReactionEmoji,
+  CommunityReactionKind,
   CommunityReactionSummary,
 } from '../types/community';
 
@@ -78,21 +78,21 @@ export function useCommunityPost(postId: string) {
    * (migracion 128) para que dos pestañas no puedan dejar dos puestas.
    */
   const react = useCallback(
-    async (commentId: string, emoji: CommunityReactionEmoji) => {
+    async (commentId: string, reaction: CommunityReactionKind) => {
       if (!user) return;
 
       const actuales = reactions.get(commentId) ?? [];
       const mia = actuales.find((r) => r.reactedByMe);
-      const esLaMisma = mia?.emoji === emoji;
+      const esLaMisma = mia?.reaction === reaction;
       const anterior = esLaMisma ? undefined : mia;
 
       // Optimista: el chip responde al instante y se revierte si falla.
       const siguiente = actuales
         .map((r) => {
-          if (r.emoji === anterior?.emoji) {
+          if (r.reaction === anterior?.reaction) {
             return { ...r, count: Math.max(0, r.count - 1), reactedByMe: false };
           }
-          if (r.emoji === emoji) {
+          if (r.reaction === reaction) {
             return {
               ...r,
               count: Math.max(0, r.count + (esLaMisma ? -1 : 1)),
@@ -102,8 +102,8 @@ export function useCommunityPost(postId: string) {
           return r;
         })
         .concat(
-          !esLaMisma && !actuales.some((r) => r.emoji === emoji)
-            ? [{ emoji, count: 1, reactedByMe: true }]
+          !esLaMisma && !actuales.some((r) => r.reaction === reaction)
+            ? [{ reaction, count: 1, reactedByMe: true }]
             : []
         )
         .filter((r) => r.count > 0);
@@ -111,8 +111,8 @@ export function useCommunityPost(postId: string) {
       setReactions((prev) => new Map(prev).set(commentId, siguiente));
 
       try {
-        if (anterior) await toggleCommentReaction(commentId, user.id, anterior.emoji, false);
-        await toggleCommentReaction(commentId, user.id, emoji, !esLaMisma);
+        if (anterior) await toggleCommentReaction(commentId, user.id, anterior.reaction, false);
+        await toggleCommentReaction(commentId, user.id, reaction, !esLaMisma);
       } catch (error) {
         console.error('[community] toggleCommentReaction', error);
         setReactions((prev) => new Map(prev).set(commentId, actuales));
