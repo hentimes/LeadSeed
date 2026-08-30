@@ -199,7 +199,7 @@ export default function AppPageRenderer({
       pageContent = <FlowsPage />;
       break;
     case 'send':
-      pageContent = <SendPage />;
+      pageContent = <SendPage onNavigate={onNavigate} />;
       break;
     case 'history':
       pageContent = (

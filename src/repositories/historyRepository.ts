@@ -19,6 +19,12 @@ export interface SendLogRow {
   content: string | null;
   subject: string | null;
   is_html: boolean | null;
+  /**
+   * Marca de borrado blando (migracion 135). Con valor, el historial pinta la
+   * fila como lapida y no muestra el contenido; el envio sigue contando para
+   * los contadores del lead y las metricas del panel, porque ocurrio.
+   */
+  deleted_at: string | null;
 }
 
 export interface LeadNoteRow {
@@ -116,6 +122,27 @@ export async function fetchSendLogRowsByTemplateId(templateId: number): Promise<
   }
 
   return data as SendLogRow[];
+}
+
+/**
+ * Marca o desmarca una fila del historial como eliminada.
+ *
+ * No borra: escribe `deleted_at`. Ver la cabecera de la migracion 135 para el
+ * porque -en resumen, `send_logs` alimenta los contadores del lead, la bandeja
+ * de olvidados y el panel, y un DELETE les bajaria los numeros en silencio-.
+ *
+ * No lleva `.eq('user_id', ...)`: la politica RLS es `FOR ALL` sobre
+ * `auth.uid() = user_id`, asi que un intento sobre una fila ajena no actualiza
+ * nada. Agregarlo aca daria la falsa impresion de que la seguridad la pone el
+ * cliente.
+ */
+export async function setSendLogDeletedAt(logId: number, deletedAt: string | null): Promise<void> {
+  const { error } = await supabase
+    .from('send_logs')
+    .update({ deleted_at: deletedAt })
+    .eq('id', logId);
+
+  if (error) throw error;
 }
 
 export async function fetchRecentLeadNoteRows(limit = 100): Promise<LeadNoteRow[]> {

@@ -27,7 +27,7 @@ export const secondaryRoutes: RouteDef[] = [
    * una pestana llamada igual que su grupo no dice en cual de las tres estas.
    * El rotulo se usa tambien en la pantalla de "funcionalidad no disponible".
    */
-  { page: 'templates', label: 'Plantillas', icon: Icon.Messages, requiredFeature: 'module:templates' },
+  { page: 'templates', label: 'Plantillas', icon: Icon.Templates, requiredFeature: 'module:templates' },
   /*
    * `flows` no estaba declarada, asi que `AppPageRenderer` no encontraba su
    * ruta y Flujos quedaba fuera de cualquier comprobacion de plan. Se declara

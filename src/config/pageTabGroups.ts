@@ -37,6 +37,20 @@ export interface PageTabGroupDef {
   /** A donde lleva la entrada del rail. */
   landing: Page;
   pages: Page[];
+  /**
+   * Paginas que PERTENECEN al grupo pero NO son pestanas suyas.
+   *
+   * Existe por el Historial, y la distincion es justo la que enuncia la regla 1
+   * de aca arriba: `history` no es par de `send` -es un registro, no una accion
+   * hermana-, asi que no puede ser una cuarta pestana. Pero tampoco es una
+   * seccion aparte: es el pasado de lo que se hace en estas tres.
+   *
+   * Un `extra` se alcanza por un icono al final de la barra, y cuando estas en
+   * el la barra SIGUE pintandose. Eso segundo es lo que lo hace util: sin ello,
+   * entrar al historial te dejaria sin forma de volver a Enviar salvo por el
+   * rail, del que este destino ya no cuelga.
+   */
+  extras?: Page[];
 }
 
 export const pageTabGroups: PageTabGroupDef[] = [
@@ -45,10 +59,18 @@ export const pageTabGroups: PageTabGroupDef[] = [
     label: 'Mensajes',
     landing: 'send',
     pages: ['send', 'templates', 'flows'],
+    extras: ['history'],
   },
 ];
 
-/** El grupo al que pertenece una pagina, si pertenece a alguno. */
+/**
+ * El grupo al que pertenece una pagina, si pertenece a alguno.
+ *
+ * Cuenta tambien los `extras`, para que la barra se siga viendo estando en
+ * ellos. Lo que decide si algo es PESTANA es `pages`, no esta funcion.
+ */
 export function grupoDePagina(page: Page): PageTabGroupDef | undefined {
-  return pageTabGroups.find((grupo) => grupo.pages.includes(page));
+  return pageTabGroups.find(
+    (grupo) => grupo.pages.includes(page) || (grupo.extras ?? []).includes(page),
+  );
 }

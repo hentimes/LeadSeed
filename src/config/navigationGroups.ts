@@ -43,7 +43,14 @@ export const railGroups: RailGroupDef[] = [
   {
     id: 'analitica',
     label: 'Analítica',
-    pages: ['pipeline', 'tasks', 'agenda', 'history'],
+    /*
+     * `history` salio de aca: se alcanza por el icono de reloj de la barra de
+     * Mensajes, que es de donde salen los envios que registra. Sigue declarada
+     * en `routes.ts`, y eso importa: de ahi lee `AppPageRenderer` su
+     * `requiredFeature`, asi que la comprobacion de plan no se pierde por dejar
+     * de estar en el rail.
+     */
+    pages: ['pipeline', 'tasks', 'agenda'],
   },
   {
     id: 'colaboracion',

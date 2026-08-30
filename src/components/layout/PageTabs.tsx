@@ -39,6 +39,18 @@ const rutas = [...primaryRoutes, ...secondaryRoutes];
  * rail es un directorio -lo que no tienes no debe ocupar sitio-; la barra es
  * el contexto de donde ya estas, y que tenga dos pestanas en unas cuentas y
  * tres en otras hace que la pantalla cambie de forma segun el plan.
+ *
+ * ## Los `extras` del grupo NO se pintan aca
+ *
+ * El Historial pertenece al grupo Mensajes, pero su acceso vive en la fila de
+ * canales de Enviar, que es donde se decide que mensaje sale. Esta barra la
+ * comparten las tres paginas, y un icono aca aparecia tambien en Plantillas y
+ * en Flujos, que no envian nada.
+ *
+ * Lo que si aporta que `history` sea `extra` del grupo es que `grupoDePagina`
+ * lo reconozca: asi, estando en el Historial, esta barra se sigue pintando y
+ * hay por donde volver a Enviar. Sin eso seria un callejon sin salida, porque
+ * el Historial ya no cuelga del rail.
  */
 export default function PageTabs({
   group,

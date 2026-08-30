@@ -5,6 +5,7 @@ import {
   fetchRecentSendLogRows,
   fetchSendLogRowsByUser,
   fetchSendLogRowsByTemplateId,
+  setSendLogDeletedAt,
   type LeadNoteRow,
   type SendLogCountRow,
   type SendLogRow,
@@ -38,7 +39,26 @@ function mapSendLogRowToDomain(row: SendLogRow): SendLog {
     content: row.content || undefined,
     subject: row.subject || undefined,
     isHtml: row.is_html ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
   };
+}
+
+/**
+ * Marca una fila del historial como eliminada, o la restaura con `null`.
+ *
+ * ## Lo eliminado SIGUE contando
+ *
+ * Y conviene dejarlo escrito, porque la tentacion de "arreglarlo" despues es
+ * real: `buildLeadSendCounts` y `fetchSentLeadIdsSetForUser` **no** filtran por
+ * `deletedAt`, a proposito.
+ *
+ * Eliminar una linea del historial es ordenar una lista, no negar un hecho. Si
+ * los contadores restaran, limpiar el historial le bajaria los numeros al panel
+ * y devolveria leads a la bandeja de olvidados como si nunca se les hubiera
+ * escrito. Eso es peor que la lista larga que se queria ordenar.
+ */
+export async function softDeleteSendLog(logId: number, eliminado: boolean): Promise<void> {
+  await setSendLogDeletedAt(logId, eliminado ? new Date().toISOString() : null);
 }
 
 function mapLeadNoteRowToDomain(row: LeadNoteRow): LeadNote {

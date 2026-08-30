@@ -1,184 +1,222 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLeads } from '../hooks/useLeads';
-import { useEmailTemplates, useWhatsAppTemplates } from '../hooks/useTemplates';
-import {
-  buildActivityFeed,
-  enrichSendLogs,
-  fetchRecentHistoryData,
-  type ActivityItem,
-  type EnrichedLog,
-} from '../services/historyService';
+import { useState } from 'react';
 import type { Page } from '../types';
 import { Icon } from '../utils/icons';
-import { Card } from '../design';
+import {
+  Input,
+  ListPanel,
+  ListPagination,
+  SegmentedControl,
+  Select,
+  Skeleton,
+} from '../design';
+import { useSendHistory, type FiltroDeCanal } from '../hooks/useSendHistory';
+import { SendHistoryRow } from '../components/history/SendHistoryRow';
+import { SendHistoryMessageModal } from '../components/history/SendHistoryMessageModal';
+import { ORDENES } from '../utils/sendHistorySort';
+import type { EnrichedLog } from '../services/historyService';
 
 interface Props {
   onNavigate: (page: Page) => void;
   onViewTemplate: (type: 'whatsapp' | 'email' | 'call', id: number) => void;
 }
 
-const PAGE_SIZE = 8;
+/**
+ * Los canales, solo con icono.
+ *
+ * `collapseLabels` no sirve aca porque exige que TODAS las opciones traigan
+ * icono, y "Todos" no tiene uno propio que signifique algo. Se pone el rotulo
+ * corto en esa y el icono en las tres reales.
+ */
+const CANALES: { value: FiltroDeCanal; label: string }[] = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'Email' },
+  { value: 'call', label: 'Llamadas' },
+];
 
+function fechaCorta(iso: string): string {
+  return new Intl.DateTimeFormat('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(iso));
+}
+
+/**
+ * EL HISTORIAL DE ENVIOS
+ *
+ * Se llega desde Mensajes, por el icono de reloj de la barra. Dejo de estar en
+ * el rail: no es un destino de trabajo, es la consulta de lo que ya paso.
+ *
+ * Antes eran 185 lineas que hacian todo. El estado vive ahora en
+ * `useSendHistory`, la fila en `SendHistoryRow` y el mensaje en su modal; aca
+ * queda el armado.
+ *
+ * ## Lo que se arreglo, que no era solo estetico
+ *
+ * El nombre de la plantilla se pintaba subrayado y en azul -la cosa mas
+ * clicable de la fila- y al tocarlo **no pasaba nada**, nunca. `openTemplate`
+ * hacia `Number(log.templateId)` sobre un uuid: `NaN`, y la guarda
+ * `Number.isFinite` cortaba ahi. Por eso "si haces click no lo muestra".
+ *
+ * Ahora ese enlace abre el mensaje que se envio de verdad, que es lo unico que
+ * alguien podia estar esperando de el.
+ */
 export default function SendHistoryPage({ onViewTemplate }: Props) {
-  const [logs, setLogs] = useState<EnrichedLog[]>([]);
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
-  const [expandedId, setExpandedId] = useState<string | number | null>(null);
-  const [filter, setFilter] = useState<'todos' | 'whatsapp' | 'email'>('todos');
-  const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'envios' | 'actividad'>('envios');
-  const [page, setPage] = useState(0);
+  const historial = useSendHistory();
+  const [mensajeAbierto, setMensajeAbierto] = useState<EnrichedLog | null>(null);
 
-  const { getAll: getLeads } = useLeads();
-  const { getAll: getWaTemplates } = useWhatsAppTemplates();
-  const { getAll: getEmailTemplates } = useEmailTemplates();
+  /*
+   * `undefined` con una sola pagina, y no el componente.
+   *
+   * `ListPanel` pinta su cabecera si recibe `headerActions`, y `ListPagination`
+   * devuelve `null` cuando no hay que paginar: pasarlo siempre dejaria una
+   * franja gris de 34px vacia encima de la lista. En un panel de 400px de alto,
+   * 34px por nada son dos filas del historial.
+   */
+  const paginador =
+    historial.totalPaginas > 1 ? (
+      <ListPagination
+        page={historial.pagina}
+        pageCount={historial.totalPaginas}
+        onPageChange={historial.setPagina}
+      />
+    ) : undefined;
 
-  useEffect(() => {
-    void loadData();
-  }, [getLeads, getWaTemplates, getEmailTemplates]);
+  // `onViewTemplate` sigue en las props porque `AppPageRenderer` lo pasa y
+  // porque el salto a la plantilla es una funcion que puede volver. Hoy no hay
+  // ningun boton que lo dispare: llevaba a Plantillas desde una pantalla que se
+  // abre para leer un mensaje, que es justo perder el sitio donde estabas.
+  void onViewTemplate;
 
-  const loadData = async () => {
-    const [{ logs: rawLogs, notes }, waTemplates, emailTemplates, leads] = await Promise.all([
-      fetchRecentHistoryData(),
-      getWaTemplates(),
-      getEmailTemplates(),
-      getLeads(),
-    ]);
-
-    setLogs(enrichSendLogs(rawLogs, waTemplates, emailTemplates));
-    setActivity(buildActivityFeed(rawLogs, notes, leads));
-  };
-
-  const searchLower = search.toLowerCase().trim();
-
-  const filteredLogs = useMemo(() => {
-    let result = logs;
-    if (filter !== 'todos') result = result.filter((log) => log.templateType === filter);
-    if (searchLower) {
-      result = result.filter((log) =>
-        (log.leadName || '').toLowerCase().includes(searchLower) ||
-        (log.leadPhone || '').includes(searchLower) ||
-        (log.templateNombre || '').toLowerCase().includes(searchLower)
-      );
-    }
-    return result;
-  }, [logs, filter, searchLower]);
-
-  const filteredActivity = useMemo(() => {
-    if (!searchLower) return activity;
-    return activity.filter((item) =>
-      (item.leadName || '').toLowerCase().includes(searchLower) ||
-      (item.text || '').toLowerCase().includes(searchLower)
+  if (historial.cargando) {
+    return (
+      <div role="status" aria-label="Cargando el historial" className="flex flex-col gap-2">
+        <Skeleton shape="block" height="30px" />
+        <Skeleton shape="block" height="240px" />
+      </div>
     );
-  }, [activity, searchLower]);
-
-  const pagedLogs = filteredLogs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const pagedActivity = filteredActivity.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.max(1, Math.ceil((tab === 'envios' ? filteredLogs.length : filteredActivity.length) / PAGE_SIZE));
-
-  const openTemplate = (log: EnrichedLog) => {
-    if (!log.templateContenido) return;
-
-    const templateId = Number(log.templateId);
-    if (!Number.isFinite(templateId)) return;
-
-    onViewTemplate(log.templateType, templateId);
-  };
+  }
 
   return (
-    <div>
+    <div className="flex flex-col gap-2">
+      {/* Fila 1: buscar. A ancho completo porque es lo que mas se usa. */}
+      <Input
+        value={historial.busqueda}
+        onChange={(evento) => historial.setBusqueda(evento.target.value)}
+        placeholder="Buscar lead, plantilla o texto del mensaje…"
+        aria-label="Buscar en el historial"
+        className="h-control-sm text-meta"
+      />
 
-      <div className="flex gap-2 mb-3 items-center flex-wrap">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(0);
-          }}
-          placeholder="Buscar lead, plantilla, email..."
-          className="border border-line-strong rounded px-2 py-1.5 text-sm w-44"
-        />
-        <div className="flex gap-0 border rounded overflow-hidden">
-          <button onClick={() => { setTab('envios'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'envios' ? 'bg-blue-600 text-white' : 'bg-surface dark:backdrop-blur-md text-ink-secondary'}`}>Envios ({filteredLogs.length})</button>
-          <button onClick={() => { setTab('actividad'); setPage(0); }} className={`px-3 py-1.5 text-xs font-medium ${tab === 'actividad' ? 'bg-blue-600 text-white' : 'bg-surface dark:backdrop-blur-md text-ink-secondary'}`}>Actividad ({filteredActivity.length})</button>
-        </div>
-        {tab === 'envios' && (
-          <select
-            value={filter}
-            onChange={(e) => {
-              setFilter(e.target.value as typeof filter);
-              setPage(0);
-            }}
-            className="border border-line-strong rounded px-2 py-1.5 text-xs"
+      {/* Fila 2: que se lista. Dos pestanas y no un desplegable: son dos, y con
+          dos un desplegable esconde la mitad de la pantalla detras de un toque. */}
+      <SegmentedControl
+        options={[
+          { value: 'envios', label: `Envíos ${historial.totalEnvios}` },
+          { value: 'actividad', label: `Actividad ${historial.totalActividad}` },
+        ]}
+        value={historial.pestana}
+        onChange={(valor) => historial.setPestana(valor as 'envios' | 'actividad')}
+        label="Qué se lista"
+        className="w-full [&>button]:flex-1"
+      />
+
+      {historial.pestana === 'envios' && (
+        <div className="flex items-center gap-1.5">
+          <SegmentedControl
+            options={CANALES}
+            value={historial.canal}
+            onChange={historial.setCanal}
+            label="Canal"
+            className="shrink-0"
+          />
+
+          {/*
+            Criterio y direccion FUNDIDOS en un solo desplegable.
+
+            En 336px un control es lo que hay, no dos. Y una flecha suelta no
+            dice hacia donde ordena: "arriba" en fechas puede ser lo mas nuevo o
+            lo mas viejo segun a quien le preguntes. Con palabras -"Más
+            recientes primero"- no hay lectura posible mas que una.
+          */}
+          <Select
+            value={historial.orden}
+            onChange={(evento) => historial.setOrden(evento.target.value)}
+            aria-label="Ordenar el historial"
+            compact
+            className="min-w-0 flex-1"
           >
-            <option value="todos">Todos</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="email">Email</option>
-          </select>
-        )}
-      </div>
-
-      {tab === 'envios' ? (
-        <Card className="overflow-hidden">
-          {filteredLogs.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-ink-muted">No hay envios.</p>
-          ) : (
-            pagedLogs.map((log) => (
-              <div key={log.id} className={`border-b last:border-0 dark:border-gray-700 ${expandedId === log.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
-                <div className="px-3 py-1.5 text-xs flex items-center gap-2">
-                  {log.templateType === 'whatsapp' && <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Messages /> WP</span>}
-                  {log.templateType === 'email' && <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Email /> EM</span>}
-                  {log.templateType === 'call' && <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><Icon.Phone /> LLAMADA</span>}
-                  <span className="font-medium truncate">{log.leadName}</span>
-                  <span className="text-ink-muted truncate hidden sm:inline">{log.leadPhone}</span>
-                  <span className="text-ink-muted">-</span>
-                  <button
-                    onClick={() => {
-                      openTemplate(log);
-                    }}
-                    className={`${log.templateContenido ? 'text-blue-600 hover:text-blue-800 underline' : 'text-ink-muted cursor-default'}`}
-                  >
-                    {log.templateNombre}
-                  </button>
-                  <span className="text-ink-muted ml-auto shrink-0">{new Date(log.sentAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                  {log.scheduledFor && <span className="text-amber-500 text-[10px] shrink-0">Prog.</span>}
-                  {log.templateContenido && (
-                    <button onClick={() => setExpandedId(expandedId === log.id ? null : log.id || null)} className="text-ink-muted hover:text-blue-600 shrink-0 ml-1">
-                      {expandedId === log.id ? '^' : 'v'}
-                    </button>
-                  )}
-                </div>
-                {expandedId === log.id && log.templateContenido && (
-                  <div className="px-3 pb-2 text-xs border-t dark:border-gray-700 bg-surface dark:backdrop-blur-md max-h-40 overflow-y-auto">
-                    {log.isHtml ? <div dangerouslySetInnerHTML={{ __html: log.templateContenido }} /> : <div className="whitespace-pre-wrap">{log.templateContenido}</div>}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </Card>
-      ) : (
-        <Card className="overflow-hidden">
-          {filteredActivity.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-ink-muted">No hay actividad.</p>
-          ) : (
-            pagedActivity.map((item, index) => (
-              <div key={index} className="px-3 py-1.5 text-xs flex items-center gap-2 border-b last:border-0 dark:border-gray-700">
-                <span className={item.type === 'send' ? 'text-green-500' : 'text-blue-500'}>{item.type === 'send' ? 'WA/@' : 'N'}</span>
-                <span className="text-ink-secondary truncate">{item.text}</span>
-                <span className="text-ink-muted ml-auto shrink-0">{new Date(item.time).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            ))
-          )}
-        </Card>
+            {ORDENES.map((opcion) => (
+              <option key={opcion.value} value={opcion.value}>
+                {opcion.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-3">
-          <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} className="px-2 py-1 text-xs border rounded disabled:opacity-30 dark:border-gray-600">{'<'}</button>
-          <span className="text-xs text-ink-muted">{page + 1} / {totalPages}</span>
-          <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} className="px-2 py-1 text-xs border rounded disabled:opacity-30 dark:border-gray-600">{'>'}</button>
-        </div>
+      {historial.pestana === 'envios' ? (
+        <ListPanel
+          empty={
+            <p className="px-3 py-8 text-center text-meta text-ink-secondary">
+              {historial.busqueda ? 'Ningún envío coincide.' : 'Todavía no enviaste nada.'}
+            </p>
+          }
+          headerActions={paginador}
+        >
+          {historial.logsDeLaPagina.map((log) => (
+            <SendHistoryRow
+              key={log.id}
+              log={log}
+              onAbrirMensaje={setMensajeAbierto}
+              onEliminar={(elegido) => {
+                if (elegido.id != null) void historial.eliminar(elegido.id);
+              }}
+              onRestaurar={(elegido) => {
+                if (elegido.id != null) void historial.restaurar(elegido.id);
+              }}
+            />
+          ))}
+        </ListPanel>
+      ) : (
+        <ListPanel
+          empty={
+            <p className="px-3 py-8 text-center text-meta text-ink-secondary">
+              No hay actividad.
+            </p>
+          }
+          headerActions={paginador}
+        >
+          {historial.actividadDeLaPagina.map((item, indice) => (
+            <div
+              key={`${item.time}-${indice}`}
+              className="flex h-row-dense items-center gap-2 border-b border-line px-2.5 last:border-0"
+            >
+              {/* El icono dice el tipo por forma; antes eran las siglas "WA/@" y
+                  "N", que hay que aprenderse. */}
+              <span
+                aria-label={item.type === 'send' ? 'Envío' : 'Nota'}
+                title={item.type === 'send' ? 'Envío' : 'Nota'}
+                className="flex w-3.5 shrink-0 justify-center text-ink-secondary [&_svg]:h-3 [&_svg]:w-3"
+              >
+                {item.type === 'send' ? <Icon.Send /> : <Icon.Edit />}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-meta text-ink">{item.text}</span>
+              <span className="shrink-0 text-micro tabular-nums text-ink-secondary">
+                {fechaCorta(item.time)}
+              </span>
+            </div>
+          ))}
+        </ListPanel>
+      )}
+
+      {mensajeAbierto && (
+        <SendHistoryMessageModal
+          log={mensajeAbierto}
+          onClose={() => setMensajeAbierto(null)}
+        />
       )}
     </div>
   );

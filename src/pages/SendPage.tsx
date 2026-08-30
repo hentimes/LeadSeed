@@ -19,7 +19,10 @@ import type {
   CallTemplate,
   CallTemplateList,
 } from '../types';
-import { LoadError, Skeleton } from '../design';
+import { IconButton, LoadError, Skeleton } from '../design';
+import { Icon } from '../utils/icons';
+import { useAuth } from '../contexts/AuthContext';
+import type { Page } from '../types';
 import WhatsAppSender from '../components/send/WhatsAppSender';
 import EmailSender from '../components/send/EmailSender';
 import CallSender from '../components/send/CallSender';
@@ -41,8 +44,30 @@ function SendSkeleton() {
   );
 }
 
-export default function SendPage() {
+export default function SendPage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const [tab, setTab] = useState<SendChannel>('whatsapp');
+  const { hasFeature, isAdmin } = useAuth();
+
+  /*
+   * El Historial, solo aca.
+   *
+   * Estuvo un rato en la barra de arriba, que comparten Enviar, Plantillas y
+   * Flujos, y ahi sobraba en dos de las tres: ni Plantillas ni Flujos envian
+   * nada. Su sitio es el final de la fila de canales, junto a la decision de
+   * por donde sale el mensaje, porque lo que registra es exactamente eso.
+   *
+   * ## La comprobacion de plan
+   *
+   * La hacia el rail, ocultando la entrada de quien no tiene `module:history`.
+   * Al sacar el Historial del rail esa comprobacion desaparecia con el, asi que
+   * se repone aca. Se OCULTA en vez de pintarse bloqueado -al reves que las
+   * pestanas de arriba-: un icono sin rotulo con un candado no dice que es lo
+   * que no tenes, seria un boton mudo.
+   *
+   * `AppPageRenderer` vuelve a comprobarlo al pintar la pagina, asi que esto es
+   * lo que evita ofrecer un destino que va a rebotar, no lo que lo protege.
+   */
+  const puedeVerHistorial = isAdmin || hasFeature('module:history');
 
   /*
    * Como se ve el boton del pie en cada canal.
@@ -139,7 +164,23 @@ export default function SendPage() {
 
   return (
     <div className="flex w-full flex-col">
-      <SendTabs active={tab} onChange={setTab} />
+      <SendTabs
+        active={tab}
+        onChange={setTab}
+        trailing={
+          puedeVerHistorial ? (
+            <IconButton
+              icon={<Icon.History />}
+              /* `IconButton` usa el rotulo para `title` y para `aria-label`, asi
+                 que esto es a la vez el globo al pasar por encima y lo que
+                 anuncia un lector de pantalla. */
+              label="Historial"
+              size="sm"
+              onClick={() => onNavigate('history')}
+            />
+          ) : undefined
+        }
+      />
 
       <div className="mt-3">
         {cargando ? (

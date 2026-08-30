@@ -22,6 +22,32 @@ export const STATUS_LABELS: Record<LeadStatus, string> = {
   descartado: 'Descartado',
 };
 
+/**
+ * QUE HAY QUE HACER EN CADA ETAPA, Y CUANDO SE CONSIDERA TRABADO.
+ *
+ * La idea viene de la matriz de Eisenhower: alli el cuadrante no dice donde
+ * esta la tarea, dice QUE HACER con ella -hacer, programar, delegar, eliminar-.
+ * Nuestros cuadrantes solo decian donde estaba el lead.
+ *
+ * `dias` es a partir de cuantos dias sin moverse el lead se considera trabado.
+ * Es la adaptacion del consejo de "limitá a 10 elementos por cuadrante": el
+ * limite literal no aplica -no se puede capar cuantos leads hay en una etapa-,
+ * pero la intuicion de abajo si: una etapa desbordada avisa de que algo no
+ * avanza. En vez de un tope, un aviso.
+ *
+ * Los plazos son un punto de partida y estan pensados para revisarse con datos
+ * reales, no son una verdad del negocio.
+ *
+ * 'convertido' y 'descartado' no llevan ninguno de los dos: son finales. Un
+ * lead cerrado no esta trabado por llevar tiempo cerrado.
+ */
+export const STAGE_ACTIONS: Record<PipelineStage, { verbo: string; dias: number | null }> = {
+  contactado: { verbo: 'Hacer seguimiento', dias: 7 },
+  interesado: { verbo: 'Cerrar', dias: 14 },
+  convertido: { verbo: '', dias: null },
+  descartado: { verbo: '', dias: null },
+};
+
 export const STATUS_COLORS: Record<LeadStatus, string> = {
   // 'nuevo' y 'convertido' no tienen token equivalente: son un gris neutro y un
   // verde mas frio que --ls-success. Se dejan literales en vez de forzar una
@@ -196,6 +222,14 @@ export interface SendLog {
   content?: string;
   subject?: string;
   isHtml?: boolean;
+  /**
+   * Cuando se marco como eliminada en el historial (migracion 135).
+   *
+   * El envio NO deja de existir: la fila se sigue viendo como lapida y sigue
+   * contando en los contadores del lead y en las metricas. Lo unico que se
+   * oculta es el contenido.
+   */
+  deletedAt?: string;
 }
 
 export interface AdminObservedLeadAlert {
