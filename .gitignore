@@ -16,7 +16,12 @@
 .env.local
 coverage/
 dist.crx
-dist.pem
+# Cualquier clave privada, no solo la que se llamaba dist.pem. La clave de
+# firma de la extension llego a estar versionada y sigue siendo recuperable del
+# historial: ver el commit 064474a. Un patron amplio evita que la proxima entre
+# por llamarse distinto.
+*.pem
+*.key
 dist/
 *.zip
 node_modules/
