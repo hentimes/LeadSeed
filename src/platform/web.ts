@@ -10,7 +10,9 @@
  * suprimia nada. Lo detecto `reportUnusedDisableDirectives` en cuanto se activo.
  */
 import { launchOAuthInTab } from './oauthTab';
+import { pedirAviso, pedirConfirmacion } from './dialogBridge';
 import type {
+  AlertOptions,
   AppMessage,
   AppRoute,
   DeeplinkPort,
@@ -21,26 +23,32 @@ import type {
   NavigationPort,
   OAuthLauncherPort,
   Platform,
+  ConfirmOptions,
   ProtectedFilePort,
   ScrollLockPort,
   StoragePort,
 } from './types';
 
 /**
- * Implementacion de los puertos para la extension de Chrome.
+ * Dialogos dentro de la extension.
  *
- * Deliberadamente delega en los mismos `confirm`, `alert` y `window.location.hash`
- * que la capa de dominio usaba antes. El objetivo de este bloque es invertir la
- * dependencia, no cambiar el comportamiento: el usuario debe ver exactamente los
- * mismos dialogos y la misma navegacion que antes.
+ * Antes esto era `window.confirm` y `window.alert` a secas. Funcionaba, pero el
+ * dialogo lo dibujaba Chrome: aparecia centrado en la PESTANA, a media pantalla
+ * del panel lateral, con el titulo "La extension LeadSeed dice" y sin una sola
+ * pista de que fuera parte de esta aplicacion. Ademas bloquea el hilo, no acepta
+ * estilo, y en un panel de 336px el usuario tiene que cruzar la pantalla entera
+ * para contestar algo que pregunto aqui.
+ *
+ * Ahora la peticion viaja por `dialogBridge` hasta un componente montado en la
+ * raiz. Los llamadores no cambian: siguen viendo el mismo puerto asincrono.
  */
 
 export const webDialogs: DialogsPort = {
-  async confirm(message: string) {
-    return window.confirm(message);
+  async confirm(message: string, options?: ConfirmOptions) {
+    return pedirConfirmacion(message, options);
   },
-  async alert(message: string) {
-    window.alert(message);
+  async alert(message: string, options?: AlertOptions) {
+    await pedirAviso(message, options);
   },
 };
 

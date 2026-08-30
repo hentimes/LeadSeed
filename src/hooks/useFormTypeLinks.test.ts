@@ -168,7 +168,12 @@ describe('useFormTypeLinks', () => {
       await result.current.deactivate(crearLink({ id: 4 }));
     });
 
-    expect(confirmar).toHaveBeenCalledWith('Desactivar Link principal?');
+    // Se comprueba que la pregunta NOMBRE el enlace, no su redaccion exacta:
+    // el texto es cosa de la interfaz y cambiarlo no debe romper este test.
+    expect(confirmar).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ title: expect.stringContaining('Link principal') }),
+    );
     expect(servicio.deactivateMyCaptureLink).not.toHaveBeenCalled();
   });
 

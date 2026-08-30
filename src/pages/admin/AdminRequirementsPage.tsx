@@ -82,12 +82,26 @@ export default function AdminRequirementsPage() {
   const cerrar = async (req: Requirement) => {
     // `dialogs` es el puerto del proyecto; `confirm()` del navegador bloquea el
     // hilo y no existe fuera de la web, que es donde va este codigo despues.
-    if (!(await getPlatform().dialogs.confirm('¿Cerrar este requerimiento?'))) return;
+    if (
+      !(await getPlatform().dialogs.confirm('Se marca como resuelto para quien lo abrió.', {
+        title: '¿Cerrar este requerimiento?',
+        confirmLabel: 'Cerrar',
+      }))
+    ) {
+      return;
+    }
     await ejecutar(() => closeRequirement(req.id), 'No se pudo cerrar el requerimiento');
   };
 
   const archivar = async (req: Requirement) => {
-    if (!(await getPlatform().dialogs.confirm('¿Archivar? Dejará de aparecer en la bandeja principal.'))) return;
+    if (
+      !(await getPlatform().dialogs.confirm('Deja de aparecer en la bandeja principal.', {
+        title: '¿Archivar este requerimiento?',
+        confirmLabel: 'Archivar',
+      }))
+    ) {
+      return;
+    }
     await ejecutar(() => archiveRequirement(req.id), 'No se pudo archivar el requerimiento', true);
   };
 

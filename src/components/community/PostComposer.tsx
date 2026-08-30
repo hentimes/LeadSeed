@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 import { Button, Modal, SegmentedControl } from '../../design';
 import { POST_BODY_MAX, POST_TITLE_MAX } from '../../services/communityForumService';
 import type { CommunityCategory, CommunityPost, NewCommunityPost } from '../../types/community';
@@ -68,8 +69,18 @@ export default function PostComposer({
    * Cerrar descartaba titulo y cuerpo sin avisar: escribir cinco parrafos y
    * tocar fuera del modal por error los borraba sin vuelta atras.
    */
-  const handleClose = () => {
-    if (hayBorrador && !window.confirm('Vas a perder lo que escribiste. ¿Cerrar igual?')) return;
+  const handleClose = async () => {
+    if (
+      hayBorrador &&
+      !(await getPlatform().dialogs.confirm('Vas a perder lo que escribiste.', {
+        title: '¿Cerrar sin publicar?',
+        confirmLabel: 'Descartar',
+        cancelLabel: 'Seguir escribiendo',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     onClose();
   };
 

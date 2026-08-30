@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
@@ -187,7 +188,9 @@ export default function SupportFloatingChat() {
       await createSupportMessage(user.id, targetAdminId, text);
     } catch (error: unknown) {
       console.error('Error enviando mensaje:', error);
-      alert('Error al enviar el mensaje: ' + getErrorMessage(error, 'Error desconocido'));
+      await getPlatform().dialogs.alert(getErrorMessage(error, 'Error desconocido'), {
+        title: 'No se pudo enviar el mensaje',
+      });
     }
   };
 
@@ -204,7 +207,7 @@ export default function SupportFloatingChat() {
     await submitSupportClaim(requirementId, claimReason);
     setActiveClaimId(null);
     setClaimReason('');
-    alert('Tu reclamo ha sido enviado al superadmin.');
+    await getPlatform().dialogs.alert('Tu reclamo fue enviado al superadmin.');
   };
 
   const handleBump = async () => {
@@ -285,15 +288,15 @@ export default function SupportFloatingChat() {
                   </div>
                 ) : (
                   <div className="flex gap-3 justify-center">
-                    <button onClick={() => handleRate(pendingRatingRequirement.id, 'up')} className="px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-xs font-bold">Bien</button>
-                    <button onClick={() => handleRate(pendingRatingRequirement.id, 'down')} className="px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-bold">Mal</button>
+                    <button onClick={() => handleRate(pendingRatingRequirement.id, 'up')} className="rounded-lg bg-state-success-soft px-3 py-1.5 text-micro font-bold text-ink">Bien</button>
+                    <button onClick={() => handleRate(pendingRatingRequirement.id, 'down')} className="rounded-lg bg-state-danger-soft px-3 py-1.5 text-micro font-bold text-state-danger-ink">Mal</button>
                   </div>
                 )}
               </div>
             )}
 
             {activeRequirement && canBump && (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 shadow-sm text-center">
+              <div className="rounded-xl border border-state-warning-soft bg-state-warning-soft p-3 text-center shadow-sm">
                 <p className="text-[11px] font-bold text-orange-800 mb-1">Han pasado 24 horas</p>
                 <button onClick={handleBump} disabled={isBumping} className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg shadow-sm disabled:opacity-50">
                   {isBumping ? 'Enviando...' : 'Insistir / Reenviar'}

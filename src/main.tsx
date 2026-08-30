@@ -4,6 +4,7 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { PresenceProvider } from './hooks/usePresence';
 import AppErrorBoundary from './components/app/AppErrorBoundary';
+import AppDialogHost from './components/app/AppDialogHost';
 import { setPlatform } from './platform/registry';
 import { webPlatform } from './platform/web';
 import { getErrorMessage } from './utils/errorMessage';
@@ -73,6 +74,15 @@ if (!rootEl) {
             </PresenceProvider>
           </AuthProvider>
         </QueryClientProvider>
+
+        {/*
+          Fuera de los proveedores y hermano de `App`: los dialogos no necesitan
+          sesion ni consultas, y montarlos aqui hace que tambien funcionen en el
+          login y en la eleccion de plan, que es donde `alert()` avisaba de los
+          errores. Dentro de `AppErrorBoundary` para que un fallo del arbol se
+          siga viendo.
+        */}
+        <AppDialogHost />
       </AppErrorBoundary>
     );
   } catch (e) {

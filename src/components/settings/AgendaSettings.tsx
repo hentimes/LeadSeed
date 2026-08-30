@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 import {
   createMyAvailabilityBlock,
   deleteMyAvailabilityBlock,
@@ -200,7 +201,15 @@ export default function AgendaSettings() {
   };
 
   const handleDeleteBlock = async (block: AvailabilityBlock) => {
-    if (!confirm('Eliminar este bloqueo?')) return;
+    if (
+      !(await getPlatform().dialogs.confirm('El horario vuelve a quedar disponible para agendar.', {
+        title: '¿Eliminar este bloqueo?',
+        confirmLabel: 'Eliminar',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
 
     setSaving(true);
     setMessage('');

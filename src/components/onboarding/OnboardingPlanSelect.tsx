@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 import { useSaaS } from '../../hooks/useSaaS';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
@@ -37,7 +38,9 @@ export default function OnboardingPlanSelect() {
       await refreshProfile();
     } catch (err) {
       console.error('Error al seleccionar plan:', err);
-      alert('Hubo un error al asignar el plan. Por favor intenta nuevamente.');
+      await getPlatform().dialogs.alert('Hubo un error al asignar el plan. Por favor intentá nuevamente.', {
+        title: 'No se pudo asignar el plan',
+      });
       setSelectingId(null);
     }
   };
@@ -87,7 +90,7 @@ export default function OnboardingPlanSelect() {
               )}
               
               <div className="flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isEnabled ? 'bg-blue-100 text-blue-600' : 'bg-surface-sunken text-ink-muted'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isEnabled ? 'bg-primary-soft text-primary-ink' : 'bg-surface-sunken text-ink-muted'}`}>
                   {isFree ? Icon.Leads() : Icon.Dashboard()}
                 </div>
                 

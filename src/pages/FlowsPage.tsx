@@ -96,7 +96,14 @@ export default function FlowsPage() {
   };
 
   const omitir = async (fila: PendingFlowStep) => {
-    if (!(await getPlatform().dialogs.confirm(`¿Omitir este paso para ${fila.leadName}? Pasa directo al siguiente y lo omitido no se puede volver a programar.`))) return;
+    if (
+      !(await getPlatform().dialogs.confirm(
+        'Pasa directo al siguiente, y lo omitido no se puede volver a programar.',
+        { title: `¿Omitir este paso para ${fila.leadName}?`, confirmLabel: 'Omitir', tone: 'danger' },
+      ))
+    ) {
+      return;
+    }
     await flujos.omitirPaso(fila.progressId);
     setAviso(`Paso omitido para ${fila.leadName}.`);
   };
@@ -255,7 +262,14 @@ export default function FlowsPage() {
                   variant="ghost-danger"
                   className="shrink-0"
                   onClick={async () => {
-                    if (!(await getPlatform().dialogs.confirm(`¿Eliminar el flujo ${flujo.name}? Los leads inscritos dejan de recibir sus pasos pendientes.`))) return;
+                    if (
+                      !(await getPlatform().dialogs.confirm(
+                        'Los leads inscritos dejan de recibir sus pasos pendientes.',
+                        { title: `¿Eliminar el flujo ${flujo.name}?`, confirmLabel: 'Eliminar', tone: 'danger' },
+                      ))
+                    ) {
+                      return;
+                    }
                     try {
                       await flujos.remove(flujo.id);
                       setAviso(`Flujo ${flujo.name} eliminado.`);

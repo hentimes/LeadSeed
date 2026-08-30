@@ -151,7 +151,8 @@ export function useLeadsPageController() {
   const confirmDeleteLeadWithAgenda = (_leadName: string, isPermanent: boolean): Promise<boolean> => {
     const actionLabel = isPermanent ? 'eliminar definitivamente' : 'eliminar';
     return getPlatform().dialogs.confirm(
-      `Este lead tiene una hora agendada. Si confirmas, el sistema va a ${actionLabel} este lead y se va a eliminar tambien la hora agendada. Estas seguro?`,
+      `Este lead tiene una hora agendada. Al ${actionLabel} el lead se cancela también esa cita.`,
+      { title: '¿Eliminar el lead y su cita?', confirmLabel: 'Eliminar', tone: 'danger' },
     );
   };
 
@@ -365,7 +366,13 @@ export function useLeadsPageController() {
       if (hasActiveAppointment) {
         if (!(await confirmDeleteLeadWithAgenda(lead?.name || 'este lead', true))) return;
         if (lead) await cancelLeadAppointmentBeforeDelete(lead, appointmentId);
-      } else if (!(await getPlatform().dialogs.confirm('Eliminar definitivamente?'))) {
+      } else if (
+        !(await getPlatform().dialogs.confirm('No se puede deshacer.', {
+          title: '¿Eliminar definitivamente?',
+          confirmLabel: 'Eliminar',
+          tone: 'danger',
+        }))
+      ) {
         return;
       }
       await permanentDelete(id);
@@ -406,10 +413,21 @@ export function useLeadsPageController() {
     if (showTrash) {
       if (leadsWithAppointments.length > 0) {
         const aceptado = await getPlatform().dialogs.confirm(
-          `${leadsWithAppointments.length} de los ${selection.selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar definitivamente esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
+          `${leadsWithAppointments.length} de los ${selection.selectedIds.size} seleccionados tienen hora agendada. Esas citas también se cancelan. No se puede deshacer.`,
+          {
+            title: `¿Eliminar ${selection.selectedIds.size} leads definitivamente?`,
+            confirmLabel: 'Eliminar',
+            tone: 'danger',
+          },
         );
         if (!aceptado) return;
-      } else if (!(await getPlatform().dialogs.confirm(`Eliminar definitivamente ${selection.selectedIds.size} leads?`))) {
+      } else if (
+        !(await getPlatform().dialogs.confirm('No se puede deshacer.', {
+          title: `¿Eliminar definitivamente ${selection.selectedIds.size} leads?`,
+          confirmLabel: 'Eliminar',
+          tone: 'danger',
+        }))
+      ) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
@@ -417,10 +435,20 @@ export function useLeadsPageController() {
     } else {
       if (leadsWithAppointments.length > 0) {
         const aceptado = await getPlatform().dialogs.confirm(
-          `${leadsWithAppointments.length} de los ${selection.selectedIds.size} leads seleccionados tienen hora agendada. Si confirmas, el sistema va a eliminar esos leads y se va a eliminar tambien la hora agendada asociada. Estas seguro?`,
+          `${leadsWithAppointments.length} de los ${selection.selectedIds.size} seleccionados tienen hora agendada. Esas citas también se cancelan.`,
+          {
+            title: `¿Mover ${selection.selectedIds.size} leads a la papelera?`,
+            confirmLabel: 'Mover',
+            tone: 'danger',
+          },
         );
         if (!aceptado) return;
-      } else if (!(await getPlatform().dialogs.confirm(`Mover ${selection.selectedIds.size} leads a la papelera?`))) {
+      } else if (
+        !(await getPlatform().dialogs.confirm('Se pueden recuperar desde la papelera.', {
+          title: `¿Mover ${selection.selectedIds.size} leads a la papelera?`,
+          confirmLabel: 'Mover',
+        }))
+      ) {
         return;
       }
       for (const entry of leadsWithAppointments) await cancelLeadAppointmentBeforeDelete(entry.lead, entry.appointmentId);
@@ -477,7 +505,9 @@ export function useLeadsPageController() {
 
   const handleImport = async (rows: ParsedRow[]) => {
     if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
-      await getPlatform().dialogs.alert('Has superado el limite de 100 prospectos del plan Free. Actualiza tu plan para poder importar mas leads.');
+      await getPlatform().dialogs.alert('Actualizá tu plan para poder importar más leads.', {
+        title: 'Llegaste al límite del plan Free',
+      });
       return;
     }
 
@@ -492,7 +522,9 @@ export function useLeadsPageController() {
 
   const handleNewLeadClick = async () => {
     if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
-      await getPlatform().dialogs.alert('Has superado el limite de 100 prospectos del plan Free. Mejora tu plan para tener leads ilimitados.');
+      await getPlatform().dialogs.alert('Mejorá tu plan para tener leads ilimitados.', {
+        title: 'Llegaste al límite del plan Free',
+      });
       return;
     }
     setEditing(null);

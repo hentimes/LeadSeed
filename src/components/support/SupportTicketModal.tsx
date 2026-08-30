@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 import { useAuth } from '../../contexts/AuthContext';
 import { Icon } from '../../utils/icons';
 import { createSupportTicket } from '../../services/supportService';
@@ -36,7 +37,9 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
       }, 2000);
     } catch {
       setLoading(false);
-      alert('Error al enviar el requerimiento.');
+      await getPlatform().dialogs.alert('No se pudo enviar el requerimiento. Probá de nuevo.', {
+        title: 'Algo falló',
+      });
     }
   };
 

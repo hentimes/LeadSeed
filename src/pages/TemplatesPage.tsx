@@ -123,7 +123,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const handleDeleteReason = async (id: number) => {
     // Las plantillas que lo tuvieran como valor por defecto lo pierden, pero no
     // se rompen: la columna es `on delete set null`.
-    if (!(await getPlatform().dialogs.confirm('¿Eliminar este motivo? Las plantillas que lo usaran por defecto quedarán sin motivo.'))) return;
+    if (!(await getPlatform().dialogs.confirm('Las plantillas que lo usaban por defecto quedan sin motivo.', { title: '¿Eliminar este motivo?', confirmLabel: 'Eliminar', tone: 'danger' }))) return;
     await borrarMotivo(id);
   };
 
@@ -186,7 +186,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   };
 
   const handleDeleteCategory = async (id: number) => {
-    if (!(await getPlatform().dialogs.confirm('¿Eliminar esta categoría? Las plantillas que la tuvieran salen de ella. No se borra ninguna plantilla.'))) return;
+    if (!(await getPlatform().dialogs.confirm('Las plantillas que la tuvieran salen de ella. No se borra ninguna.', { title: '¿Eliminar esta categoría?', confirmLabel: 'Eliminar', tone: 'danger' }))) return;
     if (tab === 'whatsapp') await waL.remove(id); 
     else if (tab === 'email') await emL.remove(id);
     else await caL.remove(id);
@@ -213,7 +213,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   };
 
   const handleDelete = async (id: number) => {
-    if (!(await getPlatform().dialogs.confirm('¿Eliminar esta plantilla? No se puede deshacer.'))) return;
+    if (!(await getPlatform().dialogs.confirm('No se puede deshacer.', { title: '¿Eliminar esta plantilla?', confirmLabel: 'Eliminar', tone: 'danger' }))) return;
     if (tab === 'whatsapp') await waT.remove(id); 
     else if (tab === 'email') await emT.remove(id);
     else await caT.remove(id);
@@ -224,7 +224,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!(await getPlatform().dialogs.confirm(`¿Eliminar ${selectedIds.size} plantillas? No se puede deshacer.`))) return;
+    if (!(await getPlatform().dialogs.confirm('No se puede deshacer.', { title: `¿Eliminar ${selectedIds.size} plantillas?`, confirmLabel: 'Eliminar', tone: 'danger' }))) return;
     for (const id of selectedIds) {
       if (tab === 'whatsapp') await waT.remove(id); 
       else if (tab === 'email') await emT.remove(id);

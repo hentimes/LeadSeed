@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { getPlatform } from '../platform/registry';
 import { useLists } from '../hooks/useLists';
 import { useLeads } from '../hooks/useLeads';
 import { Icon } from '../utils/icons';
@@ -217,7 +218,15 @@ export default function ListsPage() {
     : leadsNotInList;
 
   const handleDeleteList = async (id: number) => {
-    if (!confirm('¿Eliminar esta lista?')) return;
+    if (
+      !(await getPlatform().dialogs.confirm('Los leads no se borran: solo dejan de estar en esta lista.', {
+        title: '¿Eliminar esta lista?',
+        confirmLabel: 'Eliminar',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     await removeList(id);
     if (expandedId === id) setExpandedId(null);
     load();
@@ -239,7 +248,18 @@ export default function ListsPage() {
 
   const handleBulkDelete = async () => {
     if (selectedLeadIds.size === 0 || currentList?.isSmart) return; // Smart lists generally read only
-    if (!confirm(`¿Eliminar ${selectedLeadIds.size} leads permanentemente?`)) return;
+    if (
+      !(await getPlatform().dialogs.confirm(
+        'Se borran de toda la aplicación, no solo de esta lista. No se puede deshacer.',
+        {
+          title: `¿Eliminar ${selectedLeadIds.size} leads?`,
+          confirmLabel: 'Eliminar',
+          tone: 'danger',
+        },
+      ))
+    ) {
+      return;
+    }
     for (const id of selectedLeadIds) await deleteLead(id);
     setSelectedLeadIds(new Set());
     load();
@@ -340,10 +360,10 @@ export default function ListsPage() {
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {insideGroup && (
-               <button onClick={(e) => { e.stopPropagation(); handleRemoveFromGroup(list.id); }} className="flex h-7 shrink-0 items-center rounded-md px-2 text-micro font-medium text-ink-muted transition-colors hover:bg-orange-50 hover:text-orange-500" title="Sacar de la carpeta" aria-label={`Sacar ${list.name} de la carpeta`}>Sacar</button>
+               <button onClick={(e) => { e.stopPropagation(); handleRemoveFromGroup(list.id); }} className="flex h-7 shrink-0 items-center rounded-md px-2 text-micro font-medium text-ink-muted transition-colors hover:bg-state-warning-soft hover:text-state-warning-ink" title="Sacar de la carpeta" aria-label={`Sacar ${list.name} de la carpeta`}>Sacar</button>
             )}
             {!list.isSmart && (
-              <button onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id as number); }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 [&_svg]:h-3.5 [&_svg]:w-3.5" title="Eliminar lista" aria-label={`Eliminar la lista ${list.name}`}>
+              <button onClick={(e) => { e.stopPropagation(); handleDeleteList(list.id as number); }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-state-danger-soft hover:text-state-danger-ink [&_svg]:h-3.5 [&_svg]:w-3.5" title="Eliminar lista" aria-label={`Eliminar la lista ${list.name}`}>
                 {Icon.Trash()}
               </button>
             )}
@@ -353,9 +373,9 @@ export default function ListsPage() {
         {isExpanded && (
           <div className="border-t border-line bg-surface-muted/50 p-5">
             {!list.isSmart && selectedLeadIds.size > 0 && (
-              <div className="flex gap-3 mb-4 items-center bg-blue-50 border border-blue-100 p-2.5 rounded-lg text-sm">
+              <div className="mb-4 flex items-center gap-3 rounded-lg border border-state-info-soft bg-state-info-soft p-2.5 text-body text-ink">
                 <span className="text-blue-800 font-semibold">{selectedLeadIds.size} seleccionados</span>
-                <div className="h-4 w-px bg-blue-200 mx-2"></div>
+                <div className="mx-2 h-4 w-px bg-line"></div>
                 <button onClick={handleBulkRemove} className="text-orange-700 font-medium hover:text-orange-900 flex items-center gap-1">
                   Quitar de lista
                 </button>
@@ -375,7 +395,7 @@ export default function ListsPage() {
                   value={leadSearch} 
                   onChange={(e) => setLeadSearch(e.target.value)}
                   placeholder="Buscar y agregar lead a la lista..." 
-                  className="w-full border-line-strong rounded-lg px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm outline-none" 
+                  className="w-full rounded-lg border border-line-strong bg-surface px-4 py-2 text-body text-ink shadow-sm outline-none transition-colors placeholder:text-ink-muted focus:border-focus focus:ring-1 focus:ring-focus" 
                 />
                 
                 {leadSearch && filteredNotInList.length > 0 && (
@@ -384,12 +404,12 @@ export default function ListsPage() {
                       <button 
                         key={lead.id} 
                         onClick={() => handleAddLead(lead.id!)}
-                        className="w-full text-left px-4 py-2 hover:bg-blue-50 border-b last:border-0 text-sm flex justify-between items-center transition-colors"
+                        className="flex w-full items-center justify-between border-b px-4 py-2 text-left text-body transition-colors last:border-0 hover:bg-surface-hover"
                       >
                         <span className="font-medium text-ink">
                           {lead.name} <span className="text-ink-muted font-normal ml-2">{lead.phone}</span>
                         </span>
-                        <span className="text-blue-600 bg-blue-100 w-6 h-6 rounded-full flex items-center justify-center font-bold">+</span>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-soft font-bold text-primary-ink">+</span>
                       </button>
                     ))}
                   </div>

@@ -193,7 +193,10 @@ export function useFormTypeLinks(formType: FormType): UseFormTypeLinksResult {
         return;
       }
 
-      const confirmado = await getPlatform().dialogs.confirm(`Desactivar ${link.label}?`);
+      const confirmado = await getPlatform().dialogs.confirm(
+        'El enlace deja de captar leads. Se puede volver a activar.',
+        { title: `¿Desactivar ${link.label}?`, confirmLabel: 'Desactivar' },
+      );
       if (!confirmado) return;
 
       await ejecutar(
@@ -243,7 +246,8 @@ export function useFormTypeLinks(formType: FormType): UseFormTypeLinksResult {
   const resetProgress = useCallback(
     async (link: CaptureLink) => {
       const confirmado = await getPlatform().dialogs.confirm(
-        `Resetear Visitas/Paso 1/Paso 2 de "${link.label}" a cero? Los leads ya capturados no se ven afectados.`,
+        'Visitas, Paso 1 y Paso 2 vuelven a cero. Los leads ya capturados no se tocan.',
+        { title: `¿Resetear los contadores de "${link.label}"?`, confirmLabel: 'Resetear', tone: 'danger' },
       );
       if (!confirmado) return;
 

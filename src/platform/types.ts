@@ -26,11 +26,39 @@
  * contrato sincrono haria imposible implementarlo alli. Los llamadores ya usan
  * `await`, asi que el cambio no altera su forma.
  */
+
+/**
+ * Ajustes opcionales de una confirmacion.
+ *
+ * Son opcionales y no obligatorios porque el mensaje solo ya alcanza para la
+ * mayoria; esto es para las veces en que no. `tone: 'danger'` pinta el boton de
+ * aceptar en rojo, y se reserva para lo que no tiene vuelta atras.
+ *
+ * El puerto los declara -en vez de que los invente la implementacion web-
+ * porque son decisiones de dominio: que una accion sea destructiva no depende de
+ * si corre en un navegador o en un telefono.
+ */
+export interface ConfirmOptions {
+  /** Encabezado corto. Sin el, el dialogo muestra solo el mensaje. */
+  title?: string;
+  /** Rotulo del boton que acepta. Por defecto, "Aceptar". */
+  confirmLabel?: string;
+  /** Rotulo del boton que cancela. Por defecto, "Cancelar". */
+  cancelLabel?: string;
+  /** `danger` para lo irreversible: borrar, cancelar una cita. */
+  tone?: 'neutral' | 'danger';
+}
+
+export interface AlertOptions {
+  title?: string;
+  confirmLabel?: string;
+}
+
 export interface DialogsPort {
   /** Pregunta al usuario y resuelve `true` si acepta. */
-  confirm(message: string): Promise<boolean>;
+  confirm(message: string, options?: ConfirmOptions): Promise<boolean>;
   /** Informa algo al usuario, sin pedir respuesta. */
-  alert(message: string): Promise<void>;
+  alert(message: string, options?: AlertOptions): Promise<void>;
 }
 
 /**

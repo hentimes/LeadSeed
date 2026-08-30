@@ -90,11 +90,13 @@ export default function LoginPage() {
       } catch (callbackError) {
         const message =
           getErrorMessage(callbackError, 'No se pudo completar el login.');
-        alert(message);
+        await getPlatform().dialogs.alert(message, { title: 'No se pudo iniciar sesión' });
       }
     } catch (error) {
       console.error('Error al iniciar sesion con Google:', error);
-      alert('Hubo un error al iniciar sesion. Revisa la consola.');
+      await getPlatform().dialogs.alert('Hubo un error al iniciar sesión. Revisá la consola.', {
+        title: 'No se pudo iniciar sesión',
+      });
     }
   };
 
