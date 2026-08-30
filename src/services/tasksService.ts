@@ -14,6 +14,10 @@ export function mapTaskRowToDomain(row: TaskRow): Task {
     descripcion: row.description || '',
     status: row.status as TaskStatus,
     fechaVencimiento: row.due_date || '',
+    // Las filas anteriores a la migracion 131 no traen el campo.
+    importante: row.is_important ?? false,
+    sectionId: row.section_id ?? null,
+    color: row.color ?? null,
     leadIds: row.lead_id ? [row.lead_id] : [],
     leadListIds: row.lead_list_ids || [],
     createdAt: row.created_at,
@@ -33,6 +37,19 @@ function mapTaskInputToRow(
     lead_id: data.leadIds.length > 0 ? data.leadIds[0] : null,
     lead_list_ids: data.leadListIds || [],
     user_id: userId,
+    /*
+     * Estos tres faltaban, y no era cosmetico: se agregaron al tipo `Task` y al
+     * formulario, pero nunca al payload que se guarda. O sea que marcar "es
+     * importante", elegir un color o mover una tarea de columna se veia en
+     * pantalla y se perdia al recargar.
+     *
+     * El peor de los tres era la importancia: es uno de los dos ejes de la
+     * matriz, asi que la matriz repartia sobre un dato que jamas llegaba a la
+     * base y todo caia en la fila de "no importante".
+     */
+    is_important: data.importante,
+    color: data.color,
+    section_id: data.sectionId,
   };
 }
 

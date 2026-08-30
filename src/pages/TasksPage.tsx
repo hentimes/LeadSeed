@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getPlatform } from '../platform/registry';
 import TaskCard from '../components/tasks/TaskCard';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskSection from '../components/tasks/TaskSection';
+import { EisenhowerMatrix } from '../components/tasks/EisenhowerMatrix';
+import { TaskBoard } from '../components/tasks/TaskBoard';
+import { TaskDetailPage } from '../components/tasks/TaskDetailPage';
+import { useTaskSections } from '../hooks/useTaskSections';
 import { useAuth } from '../contexts/AuthContext';
 import { useLeads } from '../hooks/useLeads';
 import { useLists } from '../hooks/useLists';
@@ -13,7 +18,7 @@ import {
 } from '../services/tasksService';
 import type { Lead, LeadList, Task, TaskStatus } from '../types';
 import { Icon } from '../utils/icons';
-import { Button } from '../design';
+import { Button, Select } from '../design';
 
 const STATUS_TABS: { key: TaskStatus | 'todas'; label: string; color: string }[] = [
   { key: 'pendiente', label: 'Pendientes', color: 'text-amber-600' },
@@ -31,7 +36,25 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
   const [lists, setLists] = useState<LeadList[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
+  /*
+   * Se guarda el ID, no el objeto.
+   *
+   * Con el objeto, cualquier cambio que no pasara por `setViendo` dejaba el
+   * panel mostrando datos viejos: mover la tarea de columna recarga `tasks` y
+   * el tablero se entera, pero la copia guardada seguia con la seccion
+   * anterior. Derivandola de `tasks` en cada render eso no puede pasar.
+   */
+  const [viendoId, setViendoId] = useState<string | null>(null);
   const [filter, setFilter] = useState<TaskStatus | 'todas'>('pendiente');
+
+  /*
+   * La vista es OTRA cosa que el filtro. El filtro dice que tareas mirar
+   * -pendientes, completadas, todas-; la vista dice como. Estaban mezclados en
+   * la misma fila de pestanas, y por eso "Matriz" convivia con "Completadas"
+   * como si fueran alternativas del mismo tipo.
+   */
+  const [vista, setVista] = useState<'lista' | 'matriz' | 'tablero'>('lista');
+  const secciones = useTaskSections();
 
   useEffect(() => {
     if (user) {
@@ -59,9 +82,18 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
     setShowForm(true);
   };
 
+  /*
+   * Abrir una tarea CAMBIA LA PANTALLA; crear una sigue en un modal.
+   *
+   * No es una inconsistencia: crear es un formulario corto que se responde de
+   * una y del que se vuelve enseguida, y cambiar de pantalla por eso hace perder
+   * el sitio. Abrir una tarea que ya existe es ir a otro lado -a leerla, a
+   * editarla, a marcarla hecha-, y ahi la capa encima estorba.
+   */
   const openEdit = (task: Task) => {
     setEditing(task);
-    setShowForm(true);
+    setShowForm(false);
+    setViendoId(task.id ?? null);
   };
 
   const handleSave = async (data: Omit<Task, 'id' | 'createdAt' | 'status'>) => {
@@ -80,7 +112,16 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
   };
 
   const handleDelete = async (id: string) => {
-    if (!user || !confirm('Eliminar esta tarea?')) return;
+    if (!user) return;
+    if (
+      !(await getPlatform().dialogs.confirm('Se van con ella sus notas, subtareas y adjuntos.', {
+        title: '¿Eliminar esta tarea?',
+        confirmLabel: 'Eliminar',
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     await removeTask(id);
     void loadData();
   };
@@ -106,18 +147,79 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
     return all;
   }, [stats, filter]);
 
+  /*
+   * LA TAREA ABIERTA.
+   *
+   * Se deriva durante el render y no desde un efecto que llame a `setViendoId`:
+   * un efecto para estado derivado pinta primero sin seleccion y corrige
+   * despues, o sea un parpadeo en cada entrada.
+   *
+   * Si el id guardado ya no esta entre las pendientes -la completaste, la
+   * borraste, la filtraste- cae sola a la primera, que en `stats.pending` es la
+   * mas urgente porque las secciones ya vienen ordenadas por vencimiento. Asi se
+   * cumple "siempre hay una abierta" sin dejar el panel en blanco.
+   */
+  const abierta =
+    stats.pending.find((task) => task.id === viendoId) ?? stats.pending[0] ?? null;
+
+  const guardarCambios = (cambios: Partial<Task>) => {
+    if (!abierta || !user) return;
+    const { id, createdAt, status, ...resto } = { ...abierta, ...cambios };
+    void saveTaskForUser(user.id, resto, status, id).then(loadData);
+  };
+
+  /*
+   * En LISTA el detalle sigue ocupando la pantalla entera, y no es una
+   * incoherencia: la lista crece con las tareas que tengas, asi que no hay un
+   * alto fijo del que descontar un panel. El tablero y la matriz si lo tienen.
+   */
+  /*
+   * El detalle es una PANTALLA, no un panel debajo del tablero.
+   *
+   * El panel inferior tenia un problema de fondo: el tablero crece con la
+   * columna mas larga, asi que con muchas tareas el detalle quedaba empujado
+   * fuera de la vista y el reparto de alto dejaba de existir. Un panel que solo
+   * funciona con pocas tareas no es un panel.
+   *
+   * Vale para las tres vistas, asi que abrir una tarea se comporta igual desde
+   * la lista, la matriz y el tablero.
+   */
+  const viendo = stats.pending.find((t) => t.id === viendoId) ?? null;
+
+  if (viendo) {
+    return (
+      <TaskDetailPage
+        task={viendo}
+        sections={secciones.sections}
+        leads={leads}
+        lists={lists}
+        userId={user?.id}
+        onVolver={() => { setViendoId(null); setEditing(null); }}
+        onGuardar={guardarCambios}
+        onToggleComplete={() => {
+          void handleToggleComplete(viendo);
+          setViendoId(null);
+        }}
+        onEliminar={() => {
+          void handleDelete(viendo.id!);
+          setViendoId(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div>
       <div className="flex justify-end items-center mb-4">
         <div className="flex gap-1.5 mr-2 self-center">
           {stats.overdue.length > 0 && (
-            <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-red-200">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
+            <span className="rounded-full border border-state-danger-soft bg-state-danger-soft px-2 py-0.5 text-micro font-semibold text-state-danger-ink">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
           )}
           {stats.dueToday.length > 0 && (
-            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-amber-200">{stats.dueToday.length} hoy</span>
+            <span className="rounded-full border border-state-warning-soft bg-state-warning-soft px-2 py-0.5 text-micro font-semibold text-state-warning-ink">{stats.dueToday.length} hoy</span>
           )}
           {stats.dueTomorrow.length > 0 && (
-            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-blue-200">{stats.dueTomorrow.length} manana</span>
+            <span className="rounded-full border border-state-info-soft bg-state-info-soft px-2 py-0.5 text-micro font-semibold text-ink">{stats.dueTomorrow.length} manana</span>
           )}
         </div>
         <Button variant="primary" onClick={openNew} icon={Icon.Plus()}>
@@ -125,6 +227,25 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         </Button>
       </div>
 
+      <div className="mb-3 flex items-center justify-end">
+        <label className="flex items-center gap-1.5">
+          <span className="text-micro text-ink-secondary">Vista</span>
+          <Select
+            value={vista}
+            onChange={(evento) => setVista(evento.target.value as typeof vista)}
+            compact
+            fullWidth={false}
+            aria-label="Vista de las tareas"
+          >
+            <option value="lista">Lista</option>
+            <option value="matriz">Matriz</option>
+            <option value="tablero">Tablero</option>
+          </Select>
+        </label>
+      </div>
+
+      {/* Las pestanas de filtro solo mandan sobre la lista. */}
+      {vista === 'lista' && (
       <div className="flex gap-1 mb-3 border-b border-line">
         {STATUS_TABS.map(({ key, label }) => (
           <button
@@ -145,6 +266,42 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         ))}
       </div>
 
+      )}
+
+      {/*
+        TABLERO Y MATRIZ VAN PARTIDOS: el mapa arriba, el detalle abajo.
+ 
+        El alto se acota aca y NO metiendo `tasks` en `PAGE_FILL_HEIGHT`. Esa
+        constante fuerza `h-full` a la pagina ENTERA, y como en Tareas conviven
+        tres vistas, Lista y Matriz -que hoy crecen y dependen del scroll del
+        `<main>`- quedarian recortadas sin ninguna barra que lo avisara.
+ 
+        `max-h` en vez de alto fijo: en un panel alto el detalle aprovecha lo que
+        sobra, y en uno bajo no desborda.
+      */}
+      {(vista === 'matriz' || vista === 'tablero') && (
+        <div className="flex flex-col gap-2">
+          <div>
+            {vista === 'matriz' ? (
+              <EisenhowerMatrix tasks={stats.pending} onAbrirTarea={openEdit} />
+            ) : (
+              <TaskBoard
+                tasks={stats.pending}
+                sections={secciones.sections}
+                onAbrirTarea={openEdit}
+                onMoverTarea={(taskId, sectionId) => {
+                  void secciones.moverTarea(taskId, sectionId).then(loadData);
+                }}
+                onCrearSeccion={(nombre) => void secciones.crear(nombre)}
+                onRenombrarSeccion={(id, nombre) => void secciones.renombrar(id, nombre)}
+                onBorrarSeccion={(id) => void secciones.borrar(id)}
+              />
+            )}
+          </div>
+
+        </div>
+      )}
+
       {showForm && (
         <TaskForm
           task={editing}
@@ -158,7 +315,11 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
         />
       )}
 
-      <div className="space-y-4">
+      {/*
+        La matriz solo mira las PENDIENTES. Una tarea hecha no se prioriza, y
+        dejarlas dentro llenaria "Eliminar" de trabajo ya terminado.
+      */}
+      <div className={`space-y-4 ${vista === 'lista' ? '' : 'hidden'}`}>
         {filter === 'pendiente' && (
           <>
             {stats.overdue.length > 0 && (

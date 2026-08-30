@@ -6,13 +6,16 @@ export interface TaskRow {
   description: string | null;
   status: string;
   due_date: string | null;
+  is_important: boolean;
+  section_id: string | null;
+  color: string | null;
   lead_id: string | null;
   lead_list_ids: number[] | null;
   created_at: string;
   user_id: string;
 }
 
-const TASK_SELECT = 'id, title, description, status, due_date, lead_id, lead_list_ids, created_at, user_id';
+const TASK_SELECT = 'id, title, description, status, due_date, lead_id, lead_list_ids, created_at, user_id, is_important, section_id, color';
 
 export async function fetchTaskRowsByUser(userId: string): Promise<TaskRow[]> {
   const { data, error } = await supabase
