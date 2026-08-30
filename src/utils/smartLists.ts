@@ -1,5 +1,5 @@
 import type { Lead } from '../types';
-import { STATE } from '../design/colors';
+import { STATE } from '../config/colors';
 
 /**
  * LISTAS AUTOMATICAS

@@ -7,7 +7,7 @@ import {
   updateLeadList,
   updateLeadListsColor,
 } from '../repositories/listsRepository';
-import { STATE } from '../design/colors';
+import { STATE } from '../config/colors';
 
 const mapRowToLeadList = (row: LeadListRow): LeadList => ({
   id: row.id,

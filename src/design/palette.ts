@@ -10,7 +10,7 @@
  * el CSS este montado; deben coincidir con tokens.css.
  */
 
-import { BRAND, STATE } from './colors';
+import { BRAND, STATE } from '../config/colors';
 
 const FALLBACK: Record<string, string> = {
   '--ls-primary': BRAND.primary,

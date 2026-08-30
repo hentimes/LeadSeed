@@ -1,6 +1,7 @@
 import { Icon } from '../../utils/icons';
+import { STATUS_COLORS } from '../../design/leadColors';
 import { nombreVisible } from '../../utils/leadDisplay';
-import { STAGE_ACTIONS, STATUS_COLORS, STATUS_LABELS, type Lead, type LeadStatus, type PipelineStage } from '../../types';
+import { STAGE_ACTIONS, STATUS_LABELS, type Lead, type LeadStatus, type PipelineStage } from '../../types';
 
 /** Cuantos leads se asoman dentro del cuadrante. */
 const FICHAS_VISIBLES = 4;

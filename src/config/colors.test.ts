@@ -11,7 +11,7 @@ import { BRAND, STATE } from './colors';
  * Se lee el CSS como texto a proposito, en vez de importarlo. Lo que hay que
  * comprobar es lo que dice el fichero fuente, no lo que un navegador calcula.
  */
-const css = readFileSync(join(__dirname, 'tokens.css'), 'utf-8');
+const css = readFileSync(join(__dirname, '..', 'design', 'tokens.css'), 'utf-8');
 const rootBlock = css.slice(css.indexOf(':root'), css.indexOf('.dark'));
 const darkBlock = css.slice(css.indexOf('.dark'));
 

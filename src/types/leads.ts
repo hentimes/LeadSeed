@@ -1,4 +1,3 @@
-import { STATE } from '../design/colors';
 
 export type LeadStatus = 'nuevo' | 'contactado' | 'interesado' | 'convertido' | 'descartado';
 
@@ -48,17 +47,6 @@ export const STAGE_ACTIONS: Record<PipelineStage, { verbo: string; dias: number 
   descartado: { verbo: '', dias: null },
 };
 
-export const STATUS_COLORS: Record<LeadStatus, string> = {
-  // 'nuevo' y 'convertido' no tienen token equivalente: son un gris neutro y un
-  // verde mas frio que --ls-success. Se dejan literales en vez de forzar una
-  // correspondencia que no existe.
-  nuevo: '#6b7280',
-  contactado: STATE.info,
-  interesado: STATE.warning,
-  convertido: '#10b981',
-  descartado: STATE.danger,
-};
-
 /** Canal de captura del lead. 'general' incluye tambien el formulario /form. */
 export type LeadSourceChannel = 'pb' | 'general' | 'retiro';
 
@@ -68,11 +56,6 @@ export const SOURCE_CHANNEL_LABELS: Record<LeadSourceChannel, string> = {
   retiro: 'Retiro',
 };
 
-export const SOURCE_CHANNEL_COLORS: Record<LeadSourceChannel, string> = {
-  pb: STATE.info,
-  general: '#6b7280',
-  retiro: '#a855f7',
-};
 
 export interface PlanesproLeadRawPayload {
   paso1_motivo?: string;

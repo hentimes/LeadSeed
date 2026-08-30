@@ -1,4 +1,4 @@
-import { BRAND, STATE } from '../design/colors';
+import { BRAND, STATE } from '../config/colors';
 
 export type LeadAlertEventKind = 'lead_created';
 

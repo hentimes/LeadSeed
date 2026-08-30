@@ -1,7 +1,8 @@
 import { Modal } from '../../design';
+import { STATUS_COLORS } from '../../design/leadColors';
 import { Icon } from '../../utils/icons';
 import { nombreVisible } from '../../utils/leadDisplay';
-import { PIPELINE_STAGES, STATUS_COLORS, STATUS_LABELS, type Lead, type LeadStatus } from '../../types';
+import { PIPELINE_STAGES, STATUS_LABELS, type Lead, type LeadStatus } from '../../types';
 
 /**
  * MOVER UN LEAD DE ETAPA

@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { STATUS_COLORS } from '../../design/leadColors';
 import { Button, Input, ListPagination, ListRow, Modal } from '../../design';
 import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 import SinNombreToggle from '../leads/SinNombreToggle';
 import { nombreVisible, telefonoEnmascarado } from '../../utils/leadDisplay';
-import { STATUS_COLORS, STATUS_LABELS, type Lead, type LeadStatus } from '../../types';
+import { STATUS_LABELS, type Lead, type LeadStatus } from '../../types';
 
 /** Cuantos leads por pagina dentro de la hoja. */
 const LEADS_POR_PAGINA = 8;

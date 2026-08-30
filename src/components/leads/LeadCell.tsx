@@ -1,5 +1,6 @@
 import type { Lead, LeadList, LeadSourceChannel, PlanesproLeadMetadata } from '../../types';
-import { SOURCE_CHANNEL_COLORS, SOURCE_CHANNEL_LABELS, STATUS_COLORS, STATUS_LABELS } from '../../types';
+import { STATUS_COLORS, SOURCE_CHANNEL_COLORS } from '../../design/leadColors';
+import { SOURCE_CHANNEL_LABELS, STATUS_LABELS } from '../../types';
 import { getLeadColumnValue, LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
 import CopyableValue from './CopyableValue';
 
