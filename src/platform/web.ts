@@ -14,6 +14,7 @@ import { pedirAviso, pedirConfirmacion } from './dialogBridge';
 import type {
   AlertOptions,
   AppMessage,
+  ClipboardPort,
   AppRoute,
   DeeplinkPort,
   DialogsPort,
@@ -168,6 +169,22 @@ function messageBusAvailable(): boolean {
   return typeof chrome !== 'undefined' && Boolean(chrome.runtime?.id);
 }
 
+/**
+ * `navigator.clipboard` falla de verdad y hay que contarlo: si el documento no
+ * esta enfocado, o el permiso se denego, la promesa rechaza. Tragarse eso
+ * dejaria un "URL copiada" mintiendo sobre un portapapeles vacio.
+ */
+export const webClipboard: ClipboardPort = {
+  async writeText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};
+
 export const webMessageBus: MessageBusPort = {
   isAvailable: messageBusAvailable,
 
@@ -300,6 +317,7 @@ export const webPlatform: Platform = {
   navigation: webNavigation,
   storage: webStorage,
   deeplink: webDeeplink,
+  clipboard: webClipboard,
   messageBus: webMessageBus,
   oauth: webOAuth,
   fileSaver: webFileSaver,

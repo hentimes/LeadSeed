@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 import type { Plan, Profile } from '../../types';
 import { Badge, IconButton } from '../../design';
 import { formatearFechaHora, formatearTiempoRelativo } from '../../utils/date';
@@ -57,7 +58,8 @@ export default function AdminUserHeader({
 
   const copiarId = async () => {
     try {
-      await navigator.clipboard.writeText(profile.id);
+      const copiado = await getPlatform().clipboard.writeText(profile.id);
+      if (!copiado) return;
       setIdCopiado(true);
       window.setTimeout(() => setIdCopiado(false), 2000);
     } catch {

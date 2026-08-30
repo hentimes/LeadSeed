@@ -131,6 +131,21 @@ export interface DeeplinkPort {
   openExternal(url: string): void;
 }
 
+/**
+ * Copiar al portapapeles.
+ *
+ * En el navegador es `navigator.clipboard`, que ademas exige contexto seguro y
+ * puede rechazar si el gesto del usuario ya se perdio. En React Native es
+ * `expo-clipboard`, con otra firma y sin ese requisito. No es la misma API con
+ * otro nombre, asi que cruza por un puerto.
+ *
+ * Devuelve si se pudo: el llamador tiene que poder decir "copiado" solo cuando
+ * de verdad se copio. Un `void` obligaria a asumir el exito.
+ */
+export interface ClipboardPort {
+  writeText(text: string): Promise<boolean>;
+}
+
 /** Mensaje entre la interfaz y el proceso de fondo. */
 export interface AppMessage {
   type: string;
@@ -245,6 +260,7 @@ export interface Platform {
   navigation: NavigationPort;
   storage: StoragePort;
   deeplink: DeeplinkPort;
+  clipboard: ClipboardPort;
   messageBus: MessageBusPort;
   oauth: OAuthLauncherPort;
   fileSaver: FileSaverPort;

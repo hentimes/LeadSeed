@@ -266,8 +266,11 @@ export function useFormTypeLinks(formType: FormType): UseFormTypeLinksResult {
 
   const copyUrl = useCallback(
     async (link: CaptureLink) => {
-      await navigator.clipboard.writeText(urlOf(link));
-      setMessage('URL copiada');
+      const copiado = await getPlatform().clipboard.writeText(urlOf(link));
+      // Solo se dice "copiada" si de verdad se copio: el portapapeles puede
+      // rechazar si el documento perdio el foco, y anunciar un exito que no
+      // ocurrio hace que el usuario pegue lo que tenia antes.
+      setMessage(copiado ? 'URL copiada' : 'No se pudo copiar la URL');
     },
     [urlOf],
   );

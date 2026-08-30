@@ -1,4 +1,5 @@
 import type { Lead, LeadList, Page } from '../../types';
+import { getPlatform } from '../../platform/registry';
 import { Icon } from '../../utils/icons';
 import { useLeadDetail, toJourneyLabel } from '../../hooks/useLeadDetail';
 import LeadDetailHeader from './detail/LeadDetailHeader';
@@ -42,7 +43,7 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
     detail.rawPayload.document_id;
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    void getPlatform().clipboard.writeText(text);
   };
 
   return (

@@ -42,13 +42,24 @@ function crearLink(overrides: Partial<CaptureLink> = {}): CaptureLink {
   } as CaptureLink;
 }
 
+/*
+ * El portapapeles se dobla por el PUERTO, no parcheando `navigator`. Antes el
+ * test redefinia `navigator.clipboard` con `Object.defineProperty`, que ademas
+ * de ser fragil dejaba el global tocado para el resto del archivo.
+ */
+const escribirEnPortapapeles = vi.fn();
+
 const tipoAbierto = { slug: 'pb', displayName: 'Booking PlanesPro', linksAdminOnly: false } as FormType;
 const tipoAdmin = { slug: 'retiro', displayName: 'Retiro técnico', linksAdminOnly: true } as FormType;
 
 beforeEach(() => {
   vi.clearAllMocks();
   confirmar.mockResolvedValue(true);
-  resetPlatformForTesting({ dialogs: { confirm: confirmar, alert: vi.fn() } } as unknown as Platform);
+  escribirEnPortapapeles.mockResolvedValue(true);
+  resetPlatformForTesting({
+    dialogs: { confirm: confirmar, alert: vi.fn() },
+    clipboard: { writeText: escribirEnPortapapeles },
+  } as unknown as Platform);
 
   servicio.listMyCaptureLinks.mockResolvedValue([crearLink()]);
   servicio.getMyCaptureLinkStats.mockResolvedValue([]);
@@ -200,19 +211,26 @@ describe('useFormTypeLinks', () => {
   });
 
   it('copia la URL construida y no el codigo suelto', async () => {
-    const escribir = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, 'clipboard', {
-      value: { writeText: escribir },
-      configurable: true,
+    const { result } = await montar();
+    await act(async () => {
+      await result.current.copyUrl(crearLink());
     });
+
+    expect(escribirEnPortapapeles).toHaveBeenCalledWith('https://planespro.cl/pb/abc123');
+    expect(result.current.message).toBe('URL copiada');
+  });
+
+  it('no dice que copio si el portapapeles rechazo', async () => {
+    // El portapapeles rechaza si el documento perdio el foco o si se denego el
+    // permiso. Anunciar exito ahi hace que el usuario pegue lo que tenia antes.
+    escribirEnPortapapeles.mockResolvedValue(false);
 
     const { result } = await montar();
     await act(async () => {
       await result.current.copyUrl(crearLink());
     });
 
-    expect(escribir).toHaveBeenCalledWith('https://planespro.cl/pb/abc123');
-    expect(result.current.message).toBe('URL copiada');
+    expect(result.current.message).toBe('No se pudo copiar la URL');
   });
 
   it('avisa cuando la carga falla en vez de quedarse en blanco', async () => {

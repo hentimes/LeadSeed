@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getPlatform } from '../../platform/registry';
 
 /**
  * Muestra un valor con un boton de copiar que aparece al pasar el mouse.
@@ -13,7 +14,8 @@ export default function CopyableValue({ value, children }: { value: string; chil
 
   const copy = (event: React.MouseEvent) => {
     event.stopPropagation();
-    void navigator.clipboard.writeText(value).then(() => {
+    void getPlatform().clipboard.writeText(value).then((copiado) => {
+      if (!copiado) return;
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1200);
     });

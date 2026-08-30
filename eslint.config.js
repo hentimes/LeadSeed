@@ -294,6 +294,17 @@ export default tseslint.config(
           name: 'Image',
           message: 'El constructor Image del DOM no existe en React Native. Ver roadmap 13.6.',
         },
+        // Tercera pasada, 2026-08-29. La regla se amplio dos veces al volver a
+        // medir y aun quedaba una via de escape: `navigator` no estaba, asi que
+        // `navigator.clipboard.writeText()` pasaba limpio dentro de
+        // `useFormTypeLinks`. El portapapeles del navegador no existe en React
+        // Native -alli es `expo-clipboard`- y ademas exige contexto seguro, asi
+        // que cruza por el puerto Clipboard.
+        {
+          name: 'navigator',
+          message:
+            'navigator no existe en React Native. Usa un puerto de src/platform/. Ver roadmap 13.6.',
+        },
       ],
     },
   },
