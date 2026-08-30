@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { rangoParaPeriodo } from '../utils/agendaGrid';
+import { isActiveAppointment } from '../utils/appointmentStatus';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant } from '../types';
 import {
   addMyAppointmentParticipant,
@@ -27,7 +29,19 @@ export interface RescheduleFormState {
   time: string;
 }
 
-export const CLOSED_STATUSES = new Set(['cancelada', 'rechazada']);
+/*
+ * Las citas cerradas salen de `isActiveAppointment`, no de un Set propio.
+ *
+ * Habia uno aca -`['cancelada', 'rechazada']`- y discrepaba del catalogo real:
+ * `appointmentStatus.ts` dice que 'completada' y 'no_asistio' TAMBIEN liberan
+ * el horario. Con el Set local, una cita ya realizada seguia figurando en
+ * "Citas activas" durante los sesenta dias del rango.
+ *
+ * Y ese archivo existe justamente para esto: su ficha cuenta que el mismo Set
+ * estaba declarado tres veces con criterios distintos, y que una de las copias
+ * comparaba el valor crudo sin normalizar mayusculas. Esta era la cuarta, con
+ * los dos defectos.
+ */
 
 function readAppointmentIdFromHash(): string {
   const route = getPlatform().navigation.current();
@@ -83,15 +97,40 @@ export function useAgenda() {
   const [focusedAppointmentId, setFocusedAppointmentId] = useState('');
   const appointmentRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const activeAppointments = appointments.filter((appointment) => !CLOSED_STATUSES.has(appointment.status));
+  const activeAppointments = appointments
+    .filter((appointment) => isActiveAppointment(appointment.status))
+    // Por cuando empieza. Las canceladas ya se ordenaban; las activas quedaban
+    // en el orden en que las devolviera la consulta, o sea ninguno.
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
   const cancelledAppointments = appointments
-    .filter((appointment) => CLOSED_STATUSES.has(appointment.status))
+    .filter((appointment) => !isActiveAppointment(appointment.status))
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+
+  /**
+   * El periodo que esta mirando el calendario, si hay alguno.
+   *
+   * `null` en la vista lista, que sigue con los sesenta dias de siempre.
+   */
+  const [rangoVisible, setRangoVisible] = useState<{ desde: Date; hasta: Date } | null>(null);
 
   const loadAgenda = async (silent = false) => {
     if (!silent) setLoading(true);
     setError('');
-    const range = getDefaultAgendaRange(60);
+
+    /*
+     * El rango sale del periodo que se este mirando, no de un `60` fijo.
+     *
+     * Con el rango fijo -de hoy a hoy+60- navegar al mes pasado en el calendario
+     * mostraba una grilla vacia. Y eso no es "no hay citas": es que no se
+     * pidieron. Un calendario vacio es una AFIRMACION, y esa afirmacion habria
+     * sido falsa.
+     *
+     * `rangoParaPeriodo` agrega una semana a cada lado, asi que moverse un mes
+     * suele caer dentro de lo ya cargado y las flechas no parpadean.
+     */
+    const range = rangoVisible
+      ? rangoParaPeriodo(rangoVisible.desde, rangoVisible.hasta)
+      : getDefaultAgendaRange(60);
     try {
       const [nextAppointments, nextParticipants, nextAuditEvents] = await Promise.all([
         listMyAppointments(range.from, range.to),
@@ -107,6 +146,16 @@ export function useAgenda() {
       if (!silent) setLoading(false);
     }
   };
+
+  /*
+   * Al cambiar de periodo se recarga. Las claves son cadenas y no los `Date`:
+   * un objeto nuevo en cada render dispararia la carga sin parar.
+   */
+  useEffect(() => {
+    if (!rangoVisible) return;
+    void loadAgenda(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangoVisible?.desde.getTime(), rangoVisible?.hasta.getTime()]);
 
   useEffect(() => {
     void loadAgenda();
@@ -144,7 +193,7 @@ export function useAgenda() {
     const targetAppointment = appointments.find((appointment) => appointment.id === focusedAppointmentId);
     if (!targetAppointment) return;
 
-    if (CLOSED_STATUSES.has(targetAppointment.status)) {
+    if (!isActiveAppointment(targetAppointment.status)) {
       setShowCancelled(true);
     } else {
       setExpandedParticipants((current) => (current[focusedAppointmentId] ? current : { ...current, [focusedAppointmentId]: true }));
@@ -218,7 +267,21 @@ export function useAgenda() {
   };
 
   const handleCancelAppointment = async (appointment: AgendaAppointment) => {
-    if (!(await getPlatform().dialogs.confirm('Cancelar esta cita? El horario quedara disponible.'))) return;
+    /*
+     * Se avisa de la consecuencia que el usuario NO ve desde aca: al invitado le
+     * llega el aviso de cancelacion. Cancelar una cita toca a un tercero, y eso
+     * merece decirse antes y no descubrirse despues.
+     */
+    const confirmado = await getPlatform().dialogs.confirm(
+      'El horario queda disponible y se avisa a quien estaba invitado.',
+      {
+        title: '¿Cancelar esta cita?',
+        confirmLabel: 'Cancelar la cita',
+        cancelLabel: 'Volver',
+        tone: 'danger',
+      },
+    );
+    if (!confirmado) return;
 
     setAppointmentActionId(appointment.id);
     setMessage('');
@@ -295,6 +358,9 @@ export function useAgenda() {
     loading,
     message,
     error,
+    /** Todas, sin filtrar por estado: el calendario decide que pinta. */
+    appointments,
+    setRangoVisible,
     activeAppointments,
     cancelledAppointments,
     showCancelled,
