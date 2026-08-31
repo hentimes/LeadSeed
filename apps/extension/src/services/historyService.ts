@@ -94,7 +94,7 @@ export async function fetchLeadSendCountsForUser(
   return buildLeadSendCounts(rows);
 }
 
-export async function fetchSendLogsForTemplate(templateId: number): Promise<SendLog[]> {
+export async function fetchSendLogsForTemplate(templateId: string | number): Promise<SendLog[]> {
   const rows = await fetchSendLogRowsByTemplateId(templateId);
   return rows.map(mapSendLogRowToDomain);
 }

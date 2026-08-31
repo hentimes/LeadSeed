@@ -81,7 +81,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const [fallo, setFallo] = useState(false);
   const [editing, setEditing] = useState<EditableTemplate | null>(null);
   const [saving, setSaving] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [sendLogs, setSendLogs] = useState<SendLog[]>([]);
 
   // Category form
@@ -194,7 +194,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     load();
   };
 
-  const handleSave = async (data: { id?: number; nombre: string; contenido: string; asunto?: string; isHtml?: boolean; templateListIds?: number[]; defaultReasonId?: number | null }) => {
+  const handleSave = async (data: { id?: string | number; nombre: string; contenido: string; asunto?: string; isHtml?: boolean; templateListIds?: number[]; defaultReasonId?: number | null }) => {
     if (saving) return; // prevent double submit
     setSaving(true);
     const existing = templates.find((t) => t.id === data.id);
@@ -212,7 +212,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     load();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     if (!(await getPlatform().dialogs.confirm('No se puede deshacer.', { title: '¿Eliminar esta plantilla?', confirmLabel: 'Eliminar', tone: 'danger' }))) return;
     if (tab === 'whatsapp') await waT.remove(id); 
     else if (tab === 'email') await emT.remove(id);
@@ -235,22 +235,32 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   };
 
   /**
-   * El id de una plantilla es `string | number` en el tipo porque asi lo
-   * declara el dominio, pero la seleccion y el editor trabajan con numeros.
-   * Se convierte en un solo sitio en vez de repartir `as number` por el JSX.
+   * El id de una plantilla, tal cual viene, SIN convertirlo.
+   *
+   * Antes esto convertia a numero, y `templates.id` es un uuid: `Number(uuid)`
+   * da NaN, la guarda `Number.isFinite` devolvia null, y el id se perdia
+   * SIEMPRE. Las tres consecuencias se veian en pantalla y parecian tres fallos
+   * distintos:
+   *
+   *  - la casilla de seleccion no marcaba, porque `toggleSel` estaba detras de
+   *    un `if (id !== null)`
+   *  - la papelera no borraba, por el mismo guarda
+   *  - editar una plantilla creaba un DUPLICADO: `aEditable` la entregaba sin
+   *    id, el editor la trataba como nueva -de ahi el titulo "Nueva plantilla"
+   *    sobre una existente- y al guardar se daba de alta otra vez
+   *
+   * El servicio ya aceptaba `string | number` en `remove` y en `deleteTemplate`.
+   * El unico sitio que exigia numero era esta pantalla.
    */
-  const idNumerico = (t: AnyTemplate): number | null => {
+  const idDe = (t: AnyTemplate): string | number | null => {
     if (typeof t.id === 'number') return t.id;
-    if (typeof t.id === 'string' && t.id.trim() !== '') {
-      const n = Number(t.id);
-      return Number.isFinite(n) ? n : null;
-    }
+    if (typeof t.id === 'string' && t.id.trim() !== '') return t.id;
     return null;
   };
 
   /** Recorta una plantilla a lo que el editor necesita. */
   const aEditable = (t: AnyTemplate): EditableTemplate => ({
-    ...(idNumerico(t) !== null ? { id: idNumerico(t) as number } : {}),
+    ...(idDe(t) !== null ? { id: idDe(t) as number } : {}),
     nombre: t.nombre,
     contenido: t.contenido,
     ...('asunto' in t ? { asunto: t.asunto } : {}),
@@ -263,7 +273,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     typeof l.id === 'number' ? [{ id: l.id, name: l.name, color: l.color }] : [],
   );
 
-  const toggleSel = (id: number) => {
+  const toggleSel = (id: string | number) => {
     setSelectedIds((prev) => {
       const n = new Set(prev);
       if (n.has(id)) n.delete(id);
@@ -436,7 +446,7 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
         <Card padding="none">
           <ul className="min-w-0">
             {buscadas.map((t) => {
-              const id = idNumerico(t);
+              const id = idDe(t);
               const seleccionada = id !== null && selectedIds.has(id);
               return (
                 <li

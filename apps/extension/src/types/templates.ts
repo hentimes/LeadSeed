@@ -94,7 +94,16 @@ export type AnyTemplateList = WhatsAppTemplateList | EmailTemplateList | CallTem
  * editor solo trabaja con las que ya vienen de la base, que tienen id numerico.
  */
 export interface EditableTemplate {
-  id?: number;
+  /**
+   * `string | number`, no `number`.
+   *
+   * `templates.id` es un uuid. Declararlo como numero obligaba a la pantalla a
+   * convertirlo, `Number(uuid)` daba NaN, y el id se perdia: no se podia
+   * seleccionar ni borrar una plantilla, y guardar una edicion creaba un
+   * duplicado en vez de actualizar, porque el editor recibia la plantilla sin
+   * id y el guardado lo leia como alta.
+   */
+  id?: string | number;
   nombre: string;
   contenido: string;
   asunto?: string;

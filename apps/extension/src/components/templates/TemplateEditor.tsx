@@ -12,7 +12,7 @@ interface Props {
   /** Catalogo de motivos, para el desplegable de valor por defecto. */
   reasons?: { id: number; text: string }[];
   onSave: (data: {
-    id?: number;
+    id?: string | number;
     nombre: string;
     contenido: string;
     asunto?: string;
@@ -93,7 +93,10 @@ export default function TemplateEditor({ template, type, categories = [], reason
     if (!nombre.trim() || !contenido.trim()) return;
     if (type === 'email' && !asunto.trim()) return;
     onSave({
-      id: template?.id || 0,
+      // `template?.id` a secas, sin `|| 0`. Ese cero era un id inventado para
+      // una plantilla que no lo tenia: no identifica nada y, siendo falsy, se
+      // colaba por los mismos `if (id)` que decidian entre alta y edicion.
+      id: template?.id,
       nombre: nombre.trim(),
       contenido: contenido.trim(),
       asunto: type === 'email' ? asunto.trim() : undefined,

@@ -107,7 +107,8 @@ export async function fetchSentLeadIdsByUser(userId: string): Promise<string[]> 
     .filter((leadId): leadId is string => typeof leadId === 'string' && leadId.length > 0);
 }
 
-export async function fetchSendLogRowsByTemplateId(templateId: number): Promise<SendLogRow[]> {
+/** `template_id` es uuid: recibir solo `number` obligaba a convertirlo y perderlo. */
+export async function fetchSendLogRowsByTemplateId(templateId: string | number): Promise<SendLogRow[]> {
   const { data, error } = await supabase
     .from('send_logs')
     .select('*')
