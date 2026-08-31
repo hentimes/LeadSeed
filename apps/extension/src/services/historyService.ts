@@ -4,6 +4,7 @@ import {
   fetchRecentLeadNoteRows,
   fetchRecentSendLogRows,
   fetchSendLogRowsByUser,
+  fetchLeadSendSummaryRows,
   fetchSendLogRowsByTemplateId,
   setSendLogDeletedAt,
   type LeadNoteRow,
@@ -102,6 +103,39 @@ export async function fetchSendLogsForTemplate(templateId: string | number): Pro
 export async function fetchSentLeadIdsSetForUser(userId: string): Promise<Set<string>> {
   const leadIds = await fetchSentLeadIdsByUser(userId);
   return new Set(leadIds);
+}
+
+/** Lo que la pantalla necesita saber de un lead antes de escribirle. */
+export interface LeadSendSummary {
+  total: number;
+  lastSentAt: string;
+  lastTemplateId: string | null;
+  lastTemplateName: string | null;
+  lastTemplateType: 'whatsapp' | 'email' | 'call';
+}
+
+/**
+ * Resumen por lead, indexado por id para que la fila lo lea en O(1).
+ *
+ * Devuelve un `Map` y no un objeto: las claves son uuid y un objeto plano los
+ * convierte en propiedades, con el riesgo de chocar con `constructor` o
+ * `__proto__`. Con uuid no pasaria, pero el Map no cuesta nada y no hay que
+ * razonarlo.
+ */
+export async function fetchLeadSendSummary(): Promise<Map<string, LeadSendSummary>> {
+  const rows = await fetchLeadSendSummaryRows();
+  return new Map(
+    rows.map((row) => [
+      row.lead_id,
+      {
+        total: row.total,
+        lastSentAt: row.last_sent_at,
+        lastTemplateId: row.last_template_id,
+        lastTemplateName: row.last_template_name,
+        lastTemplateType: row.last_template_type,
+      },
+    ]),
+  );
 }
 
 export function buildLeadSendCounts(

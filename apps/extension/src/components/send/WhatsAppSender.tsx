@@ -317,6 +317,8 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
           search={leadSearch}
           onSearchChange={setLeadSearch}
           sentLeadIds={sentLeadIds}
+          plantillas={templates}
+          categorias={templateLists}
           canal="whatsapp"
           count={recipients.length}
           onClose={() => setShowRecipients(false)}

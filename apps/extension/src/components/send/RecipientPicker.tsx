@@ -5,6 +5,25 @@ import { Icon } from '../../utils/icons';
 import LeadIdentity from '../leads/LeadIdentity';
 import { puedeRecibirPor, DATO_DEL_CANAL, type CanalContacto } from '../../utils/leadContacto';
 import SinNombreToggle, { contarSinNombre, pasaFiltroDeNombre } from '../leads/SinNombreToggle';
+import type { LeadSendSummary } from '../../services/historyService';
+import {
+  ORDENES_DESTINATARIO,
+  ordenarDestinatarios,
+  type CriterioDestinatario,
+} from '../../utils/recipientSort';
+
+/** Lo minimo que hace falta de una plantilla para resolver su categoria. */
+interface PlantillaMinima {
+  id?: string | number;
+  templateListIds?: number[];
+}
+interface CategoriaMinima {
+  id?: number;
+  name: string;
+  color: string;
+}
+
+const FECHA_CORTA = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit' });
 
 /**
  * Seleccion de destinatarios por lista y por lead suelto.
@@ -35,6 +54,9 @@ export function RecipientPicker({
   search,
   onSearchChange,
   sentLeadIds,
+  resumenDeEnvios,
+  plantillas = [],
+  categorias = [],
   /**
    * Canal del envio. Decide dos cosas a la vez: que dato se pinta bajo el
    * nombre y, sobre todo, que leads se listan. Antes era `secondaryField` y
@@ -52,6 +74,11 @@ export function RecipientPicker({
   search: string;
   onSearchChange: (value: string) => void;
   sentLeadIds: Set<string>;
+  /** Que se le envio a cada lead. Vacio mientras carga; la lista se pinta igual. */
+  resumenDeEnvios: Map<string, LeadSendSummary>;
+  /** Para resolver a que categoria pertenece la plantilla del ultimo envio. */
+  plantillas?: PlantillaMinima[];
+  categorias?: CategoriaMinima[];
   canal?: CanalContacto;
 }) {
   /*
@@ -89,6 +116,29 @@ export function RecipientPicker({
    */
   const [verListaId, setVerListaId] = useState<number | null>(null);
 
+  /**
+   * La categoria del ultimo envio.
+   *
+   * No viene de la base: se cruza el `template_id` guardado en el envio con las
+   * plantillas que la pantalla ya tiene cargadas. Hacerlo en el servidor habria
+   * pedido un join mas por una etiqueta que aqui ya esta disponible gratis.
+   *
+   * Una plantilla puede estar en varias categorias; se muestra la primera. Con
+   * dos etiquetas la fila deja de leerse, y para eso esta el historial completo.
+   */
+  const categoriaDelResumen = useMemo(() => {
+    const porPlantilla = new Map<string, CategoriaMinima>();
+    for (const plantilla of plantillas) {
+      const primera = (plantilla.templateListIds || [])[0];
+      const categoria = categorias.find((c) => c.id === primera);
+      if (plantilla.id != null && categoria) porPlantilla.set(String(plantilla.id), categoria);
+    }
+    return (resumen: LeadSendSummary): CategoriaMinima | undefined =>
+      resumen.lastTemplateId ? porPlantilla.get(resumen.lastTemplateId) : undefined;
+  }, [plantillas, categorias]);
+
+  const [orden, setOrden] = useState<CriterioDestinatario>('nombre');
+
   const filteredLeads = useMemo(() => {
     let result = contactables;
     if (verListaId !== null) {
@@ -101,8 +151,13 @@ export function RecipientPicker({
         (lead) => lead.name.toLowerCase().includes(query) || (lead.phone || '').includes(query),
       );
     }
-    return result;
-  }, [contactables, verListaId, search, ocultarSinNombre]);
+    return ordenarDestinatarios(
+      result,
+      orden,
+      resumenDeEnvios,
+      (r) => categoriaDelResumen(r)?.name ?? '',
+    );
+  }, [contactables, verListaId, search, ocultarSinNombre, orden, resumenDeEnvios, categoriaDelResumen]);
 
   const hasSelection = selectedLeadIds.size > 0 || selectedListIds.size > 0;
 
@@ -121,7 +176,7 @@ export function RecipientPicker({
    * filtro nuevo y despues corrige, que es un render en cascada visible. Es el
    * patron que React documenta para estado derivado de props.
    */
-  const filtroActual = `${search}|${ocultarSinNombre}|${verListaId ?? ''}`;
+  const filtroActual = `${search}|${ocultarSinNombre}|${verListaId ?? ''}|${orden}`;
   const [filtroAnterior, setFiltroAnterior] = useState(filtroActual);
   if (filtroAnterior !== filtroActual) {
     setFiltroAnterior(filtroActual);
@@ -162,21 +217,40 @@ export function RecipientPicker({
         Filtro de VISTA. Deliberadamente separado de los chips de abajo, que
         agregan al envio. Este solo decide a quien mirar.
       */}
-      {leadLists.length > 0 && (
+      <div className="flex items-center gap-1.5">
+        {leadLists.length > 0 && (
+          <Select
+            value={verListaId ?? ''}
+            onChange={(evento) => setVerListaId(evento.target.value ? Number(evento.target.value) : null)}
+            compact
+            aria-label="Ver solo los leads de una lista"
+            className="min-w-0 flex-1"
+          >
+            <option value="">Ver: todas las listas</option>
+            {leadLists.map((lista) => (
+              <option key={lista.id} value={lista.id}>
+                Ver: {lista.name}
+              </option>
+            ))}
+          </Select>
+        )}
+
+        {/* Ordenar por lo que se le envio antes: es la pregunta que trae a
+            alguien a esta pantalla -a quien le toca- y no se podia contestar. */}
         <Select
-          value={verListaId ?? ''}
-          onChange={(evento) => setVerListaId(evento.target.value ? Number(evento.target.value) : null)}
+          value={orden}
+          onChange={(evento) => setOrden(evento.target.value as CriterioDestinatario)}
           compact
-          aria-label="Ver solo los leads de una lista"
+          aria-label="Ordenar los destinatarios"
+          className="min-w-0 flex-1"
         >
-          <option value="">Ver: todas las listas</option>
-          {leadLists.map((lista) => (
-            <option key={lista.id} value={lista.id}>
-              Ver: {lista.name}
+          {ORDENES_DESTINATARIO.map((opcion) => (
+            <option key={opcion.value} value={opcion.value}>
+              Orden: {opcion.label}
             </option>
           ))}
         </Select>
-      )}
+      </div>
 
       {/*
         Se dice cuantos quedaron fuera y por que. Filtrar en silencio deja a
@@ -217,6 +291,8 @@ export function RecipientPicker({
         {visibles.map((lead) => {
           const checked = selectedLeadIds.has(lead.id!);
           const secondary = canal === 'email' ? lead.email : lead.phone;
+          const resumenDelLead = lead.id ? resumenDeEnvios.get(lead.id) : undefined;
+          const categoriaDelUltimo = resumenDelLead ? categoriaDelResumen(resumenDelLead) : undefined;
           return (
             <ListRow as="label" key={lead.id} isSelected={checked} className="cursor-pointer">
               <input
@@ -226,12 +302,49 @@ export function RecipientPicker({
                 className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded-sm border-line accent-[var(--ls-primary)]"
               />
               <LeadIdentity
-                className="flex-1"
+                className="min-w-0 flex-1"
                 name={lead.name}
                 caption={secondary}
               />
-              {sentLeadIds.has(lead.id!) && (
-                <Badge tone="success" className="shrink-0">Enviado</Badge>
+
+              {/*
+                Lo que ya se le envio. Va a la derecha y en dos lineas: arriba
+                cuantos y cuando -los dos datos que se comparan de un vistazo
+                entre filas- y abajo con que plantilla.
+
+                Sustituye a la pastilla "Enviado", que solo decia si o no. Con
+                un contador, la ausencia de contador ya significa "ninguno", asi
+                que la pastilla pasaba a repetir informacion.
+              */}
+              {resumenDelLead ? (
+                <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                  <span className="flex items-center gap-1">
+                    <span className="rounded-full bg-surface-sunken px-1.5 text-micro font-semibold tabular-nums text-ink-secondary">
+                      {resumenDelLead.total}
+                    </span>
+                    <span className="text-micro tabular-nums text-ink-secondary">
+                      {FECHA_CORTA.format(new Date(resumenDelLead.lastSentAt))}
+                    </span>
+                  </span>
+                  {resumenDelLead.lastTemplateName && (
+                    <span className="flex max-w-[124px] items-center gap-1">
+                      {categoriaDelUltimo && (
+                        <span
+                          aria-hidden="true"
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: categoriaDelUltimo.color }}
+                        />
+                      )}
+                      <span className="truncate text-micro text-ink-secondary">
+                        {resumenDelLead.lastTemplateName}
+                      </span>
+                    </span>
+                  )}
+                </span>
+              ) : (
+                sentLeadIds.has(lead.id!) && (
+                  <Badge tone="success" className="shrink-0">Enviado</Badge>
+                )
               )}
             </ListRow>
           );

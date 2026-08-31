@@ -146,6 +146,34 @@ export async function setSendLogDeletedAt(logId: number, deletedAt: string | nul
   if (error) throw error;
 }
 
+/** Una fila por lead: ver la migracion 138. */
+export interface LeadSendSummaryRow {
+  lead_id: string;
+  total: number;
+  last_sent_at: string;
+  last_template_id: string | null;
+  last_template_name: string | null;
+  last_template_type: 'whatsapp' | 'email' | 'call';
+}
+
+/**
+ * Resumen de envios por lead, agregado en el servidor.
+ *
+ * Sin `.eq('user_id', ...)`: la funcion es `SECURITY INVOKER`, asi que la
+ * politica de `send_logs` filtra sola. Poner el filtro aca daria a entender que
+ * la seguridad la pone el cliente.
+ */
+export async function fetchLeadSendSummaryRows(): Promise<LeadSendSummaryRow[]> {
+  const { data, error } = await supabase.rpc('lead_send_summary');
+
+  if (error || !data) {
+    if (error) console.error('fetchLeadSendSummaryRows failed', error);
+    return [];
+  }
+
+  return data as LeadSendSummaryRow[];
+}
+
 export async function fetchRecentLeadNoteRows(limit = 100): Promise<LeadNoteRow[]> {
   const { data, error } = await supabase
     .from('lead_notes')

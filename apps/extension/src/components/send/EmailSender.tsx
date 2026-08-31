@@ -393,6 +393,8 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           search={leadSearch}
           onSearchChange={setLeadSearch}
           sentLeadIds={sentLeadIds}
+          plantillas={templates}
+          categorias={templateLists}
           canal="email"
           count={recipients.length}
           onClose={() => setShowRecipients(false)}

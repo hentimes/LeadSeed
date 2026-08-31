@@ -1,4 +1,5 @@
 import type { Lead, LeadList } from '../../types';
+import { useLeadSendSummary } from '../../hooks/useLeadSendSummary';
 import { Button, Modal } from '../../design';
 import { RecipientPicker } from './RecipientPicker';
 import type { CanalContacto } from '../../utils/leadContacto';
@@ -27,6 +28,11 @@ import type { CanalContacto } from '../../utils/leadContacto';
  * deshacer en bloque: "Listo" solo cierra. Un "Cancelar" al lado prometeria que
  * revierte la seleccion, y no lo haria.
  */
+/**
+ * El resumen de envios se pide AQUI y no en el compositor: solo hace falta con
+ * la hoja abierta, y montarla es justo el momento en que alguien se pregunta a
+ * quien le toca. Pedirlo antes seria una consulta por cada visita a Mensajes.
+ */
 export function RecipientSheet({
   leads,
   leadLists,
@@ -38,6 +44,8 @@ export function RecipientSheet({
   search,
   onSearchChange,
   sentLeadIds,
+  plantillas,
+  categorias,
   canal,
   count,
   onClose,
@@ -52,10 +60,15 @@ export function RecipientSheet({
   search: string;
   onSearchChange: (value: string) => void;
   sentLeadIds: Set<string>;
+  /** Plantillas y categorias del canal, para resolver el ultimo envio de cada lead. */
+  plantillas?: { id?: string | number; templateListIds?: number[] }[];
+  categorias?: { id?: number; name: string; color: string }[];
   canal: CanalContacto;
   count: number;
   onClose: () => void;
 }) {
+  const resumenDeEnvios = useLeadSendSummary();
+
   return (
     <Modal onClose={onClose} maxWidth="520px" label="Elegir destinatarios">
       <div className="flex max-h-[85vh] flex-col">
@@ -75,6 +88,9 @@ export function RecipientSheet({
             search={search}
             onSearchChange={onSearchChange}
             sentLeadIds={sentLeadIds}
+            resumenDeEnvios={resumenDeEnvios}
+            plantillas={plantillas}
+            categorias={categorias}
             canal={canal}
           />
         </div>
