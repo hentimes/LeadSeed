@@ -85,6 +85,32 @@ function focusablesDe(contenedor: HTMLElement): HTMLElement[] {
 export function Modal({ onClose, children, maxWidth = '460px', label, align = 'center' }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  /*
+   * `onClose` en una ref, y el efecto SIN dependencias.
+   *
+   * Antes el efecto dependia de `[onClose]`, y casi todos los llamadores pasan
+   * una flecha en linea (`onClose={() => setAbierto(false)}`), que es una
+   * funcion nueva en cada render del padre. Cuando el texto de un campo vive en
+   * ese padre -el caso de `ReasonManagerModal`, cuyo `texto` lo guarda
+   * `TemplatesPage`- la cadena era:
+   *
+   *   tecla -> setState en el padre -> el padre repinta -> nueva identidad de
+   *   `onClose` -> el efecto se vuelve a ejecutar -> enfoca de nuevo el primer
+   *   elemento del panel, que es la X de cerrar.
+   *
+   * Resultado: no se podia escribir. Cada caracter mandaba el foco al boton de
+   * cerrar. Pasaba en todo dialogo con un campo cuyo estado viviera arriba.
+   *
+   * El efecto tiene que correr UNA vez, al montar: enfocar al abrir, atrapar el
+   * foco, bloquear el scroll y devolver el foco al cerrar son cosas de ciclo de
+   * vida, no de cada render. Lo unico que necesita el valor fresco es el
+   * manejador de Escape, y para eso esta la ref.
+   */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     // Quien tenia el foco antes de abrir. Se guarda para devolverselo al cerrar.
     const origen = document.activeElement as HTMLElement | null;
@@ -103,7 +129,7 @@ export function Modal({ onClose, children, maxWidth = '460px', label, align = 'c
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -134,7 +160,10 @@ export function Modal({ onClose, children, maxWidth = '460px', label, align = 'c
       // habitual cuando el dialogo cierra porque su fila se borro.
       if (origen && origen.isConnected) origen.focus();
     };
-  }, [onClose]);
+    // Sin dependencias a proposito: ver la nota de `onCloseRef` arriba. La regla
+    // de dependencias no protesta porque el efecto ya no lee `onClose`, solo la
+    // ref, que es justamente la senal de que la dependencia sobraba.
+  }, []);
 
   return createPortal(
     <div
