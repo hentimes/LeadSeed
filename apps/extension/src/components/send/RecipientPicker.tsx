@@ -43,6 +43,22 @@ const FECHA_CORTA = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2
 /** Cuantos leads por pagina en el selector de destinatarios. */
 const LEADS_POR_PAGINA = 8;
 
+/**
+ * Alto reservado para la lista, SIEMPRE, aunque el filtro deje dos leads.
+ *
+ * Sin esto el dialogo cambiaba de alto con cada busqueda: escribir una letra
+ * encogia la caja, el boton "Listo" saltaba hacia arriba y lo que estabas por
+ * tocar se movia de sitio. Reservar el sitio de una pagina completa cuesta un
+ * hueco vacio en el peor caso y a cambio la pantalla deja de moverse.
+ *
+ * 53px por fila sale de `ListRow` en densidad normal con dos lineas a cada lado
+ * -nombre sobre telefono, contador sobre plantilla-. Si cambia el contenido de
+ * la fila hay que volver a medir: es un numero acoplado al diseno, y por eso
+ * vive aca arriba con su motivo y no incrustado en una clase.
+ */
+const ALTO_DE_FILA = 53;
+const ALTO_DE_LISTA = LEADS_POR_PAGINA * ALTO_DE_FILA;
+
 export function RecipientPicker({
   leads,
   leadLists,
@@ -55,6 +71,7 @@ export function RecipientPicker({
   onSearchChange,
   sentLeadIds,
   resumenDeEnvios,
+  onVerHistorial,
   plantillas = [],
   categorias = [],
   /**
@@ -76,6 +93,8 @@ export function RecipientPicker({
   sentLeadIds: Set<string>;
   /** Que se le envio a cada lead. Vacio mientras carga; la lista se pinta igual. */
   resumenDeEnvios: Map<string, LeadSendSummary>;
+  /** Abre el historial de un lead. La hoja cambia de vista, no abre otro dialogo. */
+  onVerHistorial: (leadId: string) => void;
   /** Para resolver a que categoria pertenece la plantilla del ultimo envio. */
   plantillas?: PlantillaMinima[];
   categorias?: CategoriaMinima[];
@@ -276,7 +295,12 @@ export function RecipientPicker({
 
         Sin rotulo: "Leads directos" repetia lo que el titulo de la hoja ya dice.
       */}
+      {/* El alto va en un envoltorio y no en `ListPanel`: es un valor calculado,
+          y una clase de Tailwind armada en tiempo de ejecucion no genera CSS
+          -lo detecta `npm run check:classes`-. */}
+      <div className="shrink-0" style={{ height: ALTO_DE_LISTA }}>
       <ListPanel
+        className="h-full"
         footer={
           <ListPagination page={paginaActual} pageCount={totalPaginas} onPageChange={setPagina} />
         }
@@ -317,7 +341,21 @@ export function RecipientPicker({
                 que la pastilla pasaba a repetir informacion.
               */}
               {resumenDelLead ? (
-                <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                /*
+                  `button` y no `span`: abre el historial del lead. Va dentro de
+                  un `label` que marca la casilla, asi que necesita cortar la
+                  propagacion o tocar el historial marcaria el destinatario.
+                */
+                <button
+                  type="button"
+                  onClick={(evento) => {
+                    evento.preventDefault();
+                    evento.stopPropagation();
+                    if (lead.id) onVerHistorial(lead.id);
+                  }}
+                  title={`Ver los ${resumenDelLead.total} mensajes enviados a ${lead.name}`}
+                  className="flex shrink-0 flex-col items-end gap-0.5 rounded-md px-1 py-0.5 text-right transition-colors hover:bg-surface-sunken"
+                >
                   <span className="flex items-center gap-1">
                     <span className="rounded-full bg-surface-sunken px-1.5 text-micro font-semibold tabular-nums text-ink-secondary">
                       {resumenDelLead.total}
@@ -340,7 +378,7 @@ export function RecipientPicker({
                       </span>
                     </span>
                   )}
-                </span>
+                </button>
               ) : (
                 sentLeadIds.has(lead.id!) && (
                   <Badge tone="success" className="shrink-0">Enviado</Badge>
@@ -350,6 +388,7 @@ export function RecipientPicker({
           );
         })}
       </ListPanel>
+      </div>
 
       {/*
         AGREGAR UNA LISTA ENTERA. Ojo con el rotulo: esto NO filtra.

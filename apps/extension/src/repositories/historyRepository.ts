@@ -174,6 +174,29 @@ export async function fetchLeadSendSummaryRows(): Promise<LeadSendSummaryRow[]> 
   return data as LeadSendSummaryRow[];
 }
 
+/**
+ * Los envios de UN lead, del mas reciente al mas viejo.
+ *
+ * Existe una consulta parecida en `leadDetailRepository`, pero su tipo de fila
+ * declara solo las columnas viejas: no incluye `content` ni `template_name`, que
+ * son justo la copia del mensaje que hace falta para poder mostrarlo. Aca el
+ * tipo es el completo.
+ */
+export async function fetchSendLogRowsByLeadId(leadId: string): Promise<SendLogRow[]> {
+  const { data, error } = await supabase
+    .from('send_logs')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('sent_at', { ascending: false });
+
+  if (error || !data) {
+    if (error) console.error('fetchSendLogRowsByLeadId failed', error);
+    return [];
+  }
+
+  return data as SendLogRow[];
+}
+
 export async function fetchRecentLeadNoteRows(limit = 100): Promise<LeadNoteRow[]> {
   const { data, error } = await supabase
     .from('lead_notes')

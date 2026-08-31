@@ -1,4 +1,7 @@
 import type { Lead, LeadList } from '../../types';
+import { useState } from 'react';
+import { LeadHistoryView } from './LeadHistoryView';
+import type { EmailTemplate, WhatsAppTemplate } from '../../types';
 import { useLeadSendSummary } from '../../hooks/useLeadSendSummary';
 import { Button, Modal } from '../../design';
 import { RecipientPicker } from './RecipientPicker';
@@ -68,6 +71,35 @@ export function RecipientSheet({
   onClose: () => void;
 }) {
   const resumenDeEnvios = useLeadSendSummary();
+  const [leadEnHistorial, setLeadEnHistorial] = useState<string | null>(null);
+
+  const leadDelHistorial = leadEnHistorial
+    ? leads.find((l) => l.id === leadEnHistorial) ?? null
+    : null;
+
+  /*
+   * El historial REEMPLAZA el contenido de la hoja, no se abre encima.
+   *
+   * Dos velos apilados en un panel de 400px de alto dejan la pantalla
+   * ilegible, y con dos dialogos abiertos el usuario no sabe cual cierra
+   * Escape. Aca la hoja cambia de vista y se vuelve con la flecha, que es lo
+   * mismo que ya hace el detalle de una tarea.
+   */
+  if (leadDelHistorial) {
+    return (
+      <Modal onClose={onClose} maxWidth="520px" label={`Mensajes enviados a ${leadDelHistorial.name}`}>
+        <div className="flex h-[85vh] flex-col">
+          <LeadHistoryView
+            lead={leadDelHistorial}
+            plantillasWhatsApp={canal === 'email' ? [] : (plantillas as WhatsAppTemplate[])}
+            plantillasEmail={canal === 'email' ? (plantillas as EmailTemplate[]) : []}
+            categorias={categorias ?? []}
+            onVolver={() => setLeadEnHistorial(null)}
+          />
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal onClose={onClose} maxWidth="520px" label="Elegir destinatarios">
@@ -89,6 +121,7 @@ export function RecipientSheet({
             onSearchChange={onSearchChange}
             sentLeadIds={sentLeadIds}
             resumenDeEnvios={resumenDeEnvios}
+            onVerHistorial={setLeadEnHistorial}
             plantillas={plantillas}
             categorias={categorias}
             canal={canal}

@@ -5,6 +5,7 @@ import {
   fetchRecentSendLogRows,
   fetchSendLogRowsByUser,
   fetchLeadSendSummaryRows,
+  fetchSendLogRowsByLeadId,
   fetchSendLogRowsByTemplateId,
   setSendLogDeletedAt,
   type LeadNoteRow,
@@ -103,6 +104,20 @@ export async function fetchSendLogsForTemplate(templateId: string | number): Pro
 export async function fetchSentLeadIdsSetForUser(userId: string): Promise<Set<string>> {
   const leadIds = await fetchSentLeadIdsByUser(userId);
   return new Set(leadIds);
+}
+
+/**
+ * El historial de un lead, ya enriquecido con el nombre y el texto de lo que se
+ * envio. Reusa `enrichSendLogs`, que es quien sabe caer a la plantilla viva
+ * cuando el envio es anterior a la copia de la migracion 106.
+ */
+export async function fetchLeadSendHistory(
+  leadId: string,
+  waTemplates: WhatsAppTemplate[],
+  emailTemplates: EmailTemplate[],
+): Promise<EnrichedLog[]> {
+  const rows = await fetchSendLogRowsByLeadId(leadId);
+  return enrichSendLogs(rows.map(mapSendLogRowToDomain), waTemplates, emailTemplates);
 }
 
 /** Lo que la pantalla necesita saber de un lead antes de escribirle. */
