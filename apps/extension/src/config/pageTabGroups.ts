@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import type { Page } from '../types';
+import { Icon } from '../utils/icons';
 
 /**
  * GRUPOS DE PAGINAS CON BARRA HORIZONTAL
@@ -34,6 +36,15 @@ export interface PageTabGroupDef {
   id: string;
   /** Nombre del grupo: lo que dice el rail y la barra superior. */
   label: string;
+  /**
+   * Icono de la entrada del rail.
+   *
+   * Lo declara el grupo y no el rail, que lo tenia escrito a mano: como el
+   * unico grupo era Mensajes, se le puso `Icon.Messages` fijo, el mismo icono
+   * con el que ya se pintaba Chat. Los dos salian identicos en el rail, y un
+   * segundo grupo habria heredado el icono de Mensajes.
+   */
+  icon: () => ReactNode;
   /** A donde lleva la entrada del rail. */
   landing: Page;
   pages: Page[];
@@ -57,6 +68,9 @@ export const pageTabGroups: PageTabGroupDef[] = [
   {
     id: 'messages',
     label: 'Mensajes',
+    // El avion de papel, no la burbuja: la burbuja es Chat. Este grupo es el
+    // de mandar, y su pagina de entrada es Enviar.
+    icon: Icon.Send,
     landing: 'send',
     pages: ['send', 'templates', 'flows'],
     extras: ['history'],

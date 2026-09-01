@@ -41,12 +41,10 @@ const ICONO: Record<ChatReactionKind, (props: { className?: string; filled?: boo
  */
 export function ChatReactionBar({
   reactions,
-  isOwn,
   pending,
   onToggle,
 }: {
   reactions: ChatReactionSummary[];
-  isOwn: boolean;
   /** Hay un cambio viajando al servidor: se atenua hasta confirmar. */
   pending: boolean;
   onToggle: (reaction: ChatReactionKind) => void;
@@ -60,8 +58,11 @@ export function ChatReactionBar({
   if (ordenadas.length === 0) return null;
 
   return (
+    // `max-w-[45%]` y `flex-wrap`: al costado de la burbuja las pildoras le
+    // quitan ancho, y con tres reacciones distintas en un panel de 320px la
+    // burbuja se quedaba sin sitio. Pasado ese tope se apilan.
     <div
-      className={`mt-1 flex flex-wrap gap-1 ${isOwn ? 'justify-end' : 'justify-start'} ${
+      className={`flex max-w-[45%] shrink-0 flex-wrap items-end gap-1 ${
         pending ? 'pointer-events-none opacity-60' : ''
       }`}
     >

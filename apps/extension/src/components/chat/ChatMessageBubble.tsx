@@ -84,7 +84,6 @@ export default function ChatMessageBubble({
    * que una clase armada en tiempo de ejecucion no llega a generarse nunca y la
    * esquina se quedaria redonda sin que nada avise.
    */
-  const tieneReacciones = reactions.length > 0;
 
   /*
    * En pantalla tactil no hay hover, asi que los controles serian inalcanzables.
@@ -109,13 +108,11 @@ export default function ChatMessageBubble({
 
   const esquinaSuperior = isOwn ? 'rounded-tr-md' : 'rounded-tl-md';
   /*
-   * Con reacciones debajo, la esquina de abajo vuelve a ser redonda aunque el
-   * mensaje siga teniendo otro del mismo autor detras: la esquina apretada
-   * apunta a la burbuja siguiente, y con una fila de chips en medio esa union
-   * ya no existe.
+   * La esquina apretada apunta a la burbuja siguiente del mismo autor. Antes
+   * las reacciones se pintaban debajo y rompian esa union, asi que tambien
+   * redondeaban; ahora van al costado y la union sigue en pie.
    */
-  const esquinaInferior =
-    posicion.ultima || tieneReacciones ? '' : isOwn ? 'rounded-br-md' : 'rounded-bl-md';
+  const esquinaInferior = posicion.ultima ? '' : isOwn ? 'rounded-br-md' : 'rounded-bl-md';
   const esquinas = `rounded-2xl ${esquinaSuperior} ${esquinaInferior}`;
 
   if (eliminado) {
@@ -145,9 +142,19 @@ export default function ChatMessageBubble({
      * cuando una palabra de verdad no entra en la linea, que es lo que se
      * queria para las URLs largas.
      */
+    /*
+      Las reacciones van AL LADO de la burbuja, no debajo.
+ 
+      Debajo gastaban un renglon entero por mensaje reaccionado, y en una
+      conversacion con varias reacciones seguidas eso alargaba la lista mas que
+      los propios mensajes. Al costado ocupan el hueco que ya sobra en la fila.
+ 
+      `flex-row-reverse` en los propios: asi la burbuja sigue pegada a su borde
+      y las pildoras crecen hacia el centro, que es donde hay sitio.
+    */
     <div
-      className={`group relative flex w-full flex-col ${isOwn ? 'items-end' : 'items-start'} ${
-        tieneReacciones ? 'mb-1' : ''
+      className={`group relative flex w-full items-end gap-1 ${
+        isOwn ? 'flex-row-reverse' : 'flex-row'
       }`}
     >
       <div
@@ -266,12 +273,7 @@ export default function ChatMessageBubble({
         />
       </div>
 
-      <ChatReactionBar
-        reactions={reactions}
-        isOwn={isOwn}
-        pending={reactionPending}
-        onToggle={onToggleReaction}
-      />
+      <ChatReactionBar reactions={reactions} pending={reactionPending} onToggle={onToggleReaction} />
     </div>
   );
 }

@@ -159,7 +159,7 @@ export default function NavigationRail({
                   <NavigationRailItem
                     key={definicion.id}
                     label={definicion.label}
-                    icon={Icon.Messages}
+                    icon={definicion.icon}
                     isActive={grupoDePagina(currentPage)?.id === definicion.id}
                     isExpanded={isExpanded}
                     onClick={() => navegar(definicion.landing)}
