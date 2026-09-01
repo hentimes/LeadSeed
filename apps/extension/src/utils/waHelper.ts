@@ -107,16 +107,25 @@ export function buildLeadMessages(
   return leads.map((lead) => ({ lead, message: replaceVariables(base, lead) }));
 }
 
-/** Abre WhatsApp con textos ya resueltos. */
-export function openWhatsAppMessages(mensajes: LeadMessage[]): void {
+/**
+ * Abre WhatsApp con textos ya resueltos, de a uno y esperando a cada uno.
+ *
+ * El bucle no esperaba, y `abrirWhatsAppWeb` del proceso de fondo **reutiliza
+ * siempre la misma pestana**: con seis destinatarios salian seis peticiones a
+ * la vez que se pisaban en esa unica pestana y solo sobrevivia la ultima en
+ * cargar. El historial, en cambio, ya habia registrado los seis como enviados.
+ *
+ * Esperar arregla la carrera, pero no convierte esto en un envio masivo: cada
+ * mensaje sigue necesitando que una persona pulse enviar dentro de WhatsApp.
+ * Para varios destinatarios se usa la cola guiada de `useWhatsAppQueue`, que
+ * abre el siguiente cuando el anterior ya se envio.
+ */
+export async function openWhatsAppMessages(mensajes: LeadMessage[]): Promise<void> {
   for (const { lead, message } of mensajes) {
-    openWhatsApp(lead.phone, message);
+    await openWhatsApp(lead.phone, message);
   }
 }
 
-export function openWhatsAppForLeads(
-  leads: Lead[],
-  template: string
-): void {
-  openWhatsAppMessages(buildLeadMessages(leads, template));
+export async function openWhatsAppForLeads(leads: Lead[], template: string): Promise<void> {
+  await openWhatsAppMessages(buildLeadMessages(leads, template));
 }

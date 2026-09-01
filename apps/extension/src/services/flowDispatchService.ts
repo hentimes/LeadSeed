@@ -40,7 +40,7 @@ export async function dispatchFlowStep(userId: string, fila: PendingFlowStep): P
     // igual que en el compositor: si se resolviera dos veces podrian separarse.
     const mensajes = buildLeadMessages([lead], plantilla.contenido);
     const log = await logWhatsAppSend(userId, fila.templateId, mensajes, plantilla.nombre);
-    openWhatsAppMessages(mensajes);
+    await openWhatsAppMessages(mensajes);
     await markStepRegistered(fila.progressId, log.find((l) => l.leadId === lead.id)?.id);
     return;
   }

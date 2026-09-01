@@ -379,7 +379,7 @@ export default function PipelinePage() {
   };
 
   const escribirPorWhatsApp = (lead: Lead, plantilla: WhatsAppTemplate) => {
-    openWhatsAppForLeads([lead], plantilla.contenido || '');
+    void openWhatsAppForLeads([lead], plantilla.contenido || '');
   };
 
   if (cargando) {
