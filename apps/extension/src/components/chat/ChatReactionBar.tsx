@@ -58,11 +58,20 @@ export function ChatReactionBar({
   if (ordenadas.length === 0) return null;
 
   return (
-    // `max-w-[45%]` y `flex-wrap`: al costado de la burbuja las pildoras le
-    // quitan ancho, y con tres reacciones distintas en un panel de 320px la
-    // burbuja se quedaba sin sitio. Pasado ese tope se apilan.
+    /*
+      UNA SOLA CAPSULA, NO UNA POR REACCION.
+ 
+      Cada reaccion traia su borde, su fondo y su relleno: tres reacciones eran
+      tres pildoras de 24px de alto que no cabian al costado de la burbuja, y
+      con `flex-wrap` se apilaban una encima de otra. El envoltorio lleva ahora
+      el borde y el fondo, y dentro van los iconos sueltos: tres ocupan unos
+      52px en vez de 110, y caben en una sola linea.
+ 
+      `flex-nowrap` es la parte que impide que vuelvan a apilarse. Sin ancho
+      maximo: el grupo ya no crece lo suficiente como para necesitarlo.
+    */
     <div
-      className={`flex max-w-[45%] shrink-0 flex-wrap items-end gap-1 ${
+      className={`inline-flex h-5 shrink-0 flex-nowrap items-center gap-0.5 rounded-full border border-line bg-surface px-1 ${
         pending ? 'pointer-events-none opacity-60' : ''
       }`}
     >
@@ -80,13 +89,13 @@ export function ChatReactionBar({
                 ? `${NOMBRE_DE_REACCION[reaction.reaction]}, ${reaction.count}, incluida la tuya`
                 : `${NOMBRE_DE_REACCION[reaction.reaction]}, ${reaction.count}`
             }
-            className={`inline-flex h-6 items-center gap-1 rounded-full border px-1.5 text-micro font-bold transition-colors ${
-              reaction.reactedByMe
-                ? 'border-primary bg-primary-soft text-primary'
-                : 'border-line bg-surface text-ink-secondary hover:bg-surface-hover'
+            // La propia se distingue por el color del glifo y porque va
+            // relleno; no necesita fondo propio dentro de la capsula.
+            className={`inline-flex h-4 items-center gap-0.5 rounded-full px-0.5 text-micro font-bold leading-none transition-colors ${
+              reaction.reactedByMe ? 'text-primary' : 'text-ink-muted hover:text-ink-secondary'
             }`}
           >
-            <Glifo className="h-3.5 w-3.5" filled={reaction.reactedByMe} />
+            <Glifo className="h-3 w-3" filled={reaction.reactedByMe} />
             {reaction.count > 1 && reaction.count}
           </button>
         );
