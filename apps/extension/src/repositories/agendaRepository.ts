@@ -54,6 +54,8 @@ export interface AgendaAppointmentRow {
   source_channel: string | null;
   capture_ref: string | null;
   notes: string | null;
+  outcome_notes: string | null;
+  outcome_recorded_at: string | null;
   meet_link: string | null;
   google_event_id: string | null;
   google_sync_status: string | null;
@@ -216,6 +218,20 @@ export async function fetchMyAppointmentRows(args: DateRangeArgs): Promise<Agend
   const { data, error } = await supabase.rpc('list_my_appointments', args);
   if (error) throw error;
   return (data ?? []) as AgendaAppointmentRow[];
+}
+
+export async function recordMyAppointmentOutcomeRow(
+  appointmentId: string,
+  attended: boolean,
+  outcomeNotes?: string,
+): Promise<AgendaAppointmentRow> {
+  const { data, error } = await supabase.rpc('record_my_appointment_outcome', {
+    p_appointment_id: appointmentId,
+    p_attended: attended,
+    p_outcome_notes: outcomeNotes || null,
+  });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as AgendaAppointmentRow;
 }
 
 export async function createMyAppointmentFromLeadRow(args: CreateAppointmentFromLeadArgs): Promise<AgendaAppointmentRow> {

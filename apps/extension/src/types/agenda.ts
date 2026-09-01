@@ -59,7 +59,12 @@ export interface AgendaAppointment {
   status: string;
   sourceChannel: string;
   captureRef?: string;
+  /** Para que se agendo. La escribe quien crea la cita. */
   notes: string;
+  /** Minuta: que paso en la reunion. Solo tiene sentido si ya termino. */
+  outcomeNotes: string;
+  /** Cuando se cerro la cita. Sin esto, una cita pasada esta sin registrar. */
+  outcomeRecordedAt?: string;
   meetLink?: string;
   googleEventId?: string;
   googleSyncStatus?: string;
@@ -72,7 +77,14 @@ export interface AgendaAppointment {
 export interface AppointmentAuditEvent {
   id: string;
   appointmentId: string;
-  eventType: 'created_from_lead' | 'rescheduled' | 'cancelled' | 'google_sync_error' | 'participant_added' | 'participant_removed';
+  eventType:
+    | 'created_from_lead'
+    | 'rescheduled'
+    | 'cancelled'
+    | 'google_sync_error'
+    | 'participant_added'
+    | 'participant_removed'
+    | 'outcome_recorded';
   previousStatus?: string;
   nextStatus?: string;
   previousStartTime?: string;

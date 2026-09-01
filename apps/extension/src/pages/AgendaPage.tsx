@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import LoadingOverlay from '../components/LoadingOverlay';
-import type { Page } from '../types';
+import type { AgendaAppointment, Page } from '../types';
 import { Icon } from '../utils/icons';
 import { useAgenda } from '../hooks/useAgenda';
 import AgendaAppointmentCard from '../components/agenda/AgendaAppointmentCard';
 import AgendaCancelledRow from '../components/agenda/AgendaCancelledRow';
 import { AgendaCalendar, type VistaDeCalendario } from '../components/agenda/AgendaCalendar';
-import { Button, IconButton, SegmentedControl } from '../design';
+import { Button, Card, IconButton, SegmentedControl } from '../design';
+import AppointmentOutcomeModal from '../components/agenda/AppointmentOutcomeModal';
+import { formatDateTime } from '../components/agenda/agendaFormat';
 
 /** Los dias que mira la agenda. Sale de `getDefaultAgendaRange(60)` en el hook. */
 const DIAS_DEL_RANGO = 60;
@@ -44,6 +46,10 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
     window.location.hash = `#leads?lead=${leadId}`;
     onNavigate('leads');
   };
+
+  /** La cita cuya minuta se esta escribiendo. */
+  const [citaEnCierre, setCitaEnCierre] = useState<AgendaAppointment | null>(null);
+  const [verRegistradas, setVerRegistradas] = useState(false);
 
   if (agenda.loading) {
     return <LoadingOverlay message="Cargando agenda..." />;
@@ -140,6 +146,47 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         </div>
       )}
 
+      {/*
+        LO QUE YA PASO Y NADIE CONTO.
+ 
+        Va arriba de las citas por venir a proposito: una reunion de ayer sin
+        registrar es trabajo pendiente, y una de manana todavia no lo es. Antes
+        las dos se mezclaban en la misma lista ordenada por fecha, asi que lo
+        vencido quedaba arriba sin decir que habia que hacer algo con ello.
+      */}
+      {vista === null && agenda.pendingOutcomeAppointments.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h3 className="text-meta font-semibold text-ink-secondary">
+            Por registrar{' '}
+            <span className="tabular-nums text-ink-muted">
+              {agenda.pendingOutcomeAppointments.length}
+            </span>
+          </h3>
+
+          {agenda.pendingOutcomeAppointments.map((appointment) => (
+            <Card key={appointment.id} padding="sm" className="border-l-2 border-l-state-warning">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-card-title font-semibold text-ink">
+                    {appointment.leadName}
+                  </p>
+                  <p className="text-micro text-ink-muted">{formatDateTime(appointment.startsAt)}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="shrink-0"
+                  disabled={agenda.appointmentActionId === appointment.id}
+                  onClick={() => setCitaEnCierre(appointment)}
+                >
+                  Registrar
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
       <div className={`flex flex-col gap-3 ${vista === null ? '' : 'hidden'}`}>
         {agenda.activeAppointments.length === 0 ? (
           /*
@@ -200,6 +247,44 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         )}
       </div>
 
+      {/*
+        Las que ya se registraron.
+ 
+        Sin este bloque, registrar una cita la hacia desaparecer: salia de "Por
+        registrar", no volvia a "Citas activas" -ya no esta activa- y tampoco es
+        una cancelada. Plegado, porque es archivo: se consulta, no se trabaja.
+      */}
+      {vista === null && agenda.closedAppointments.length > 0 && (
+        <div className="border-t border-line py-3">
+          <button
+            type="button"
+            onClick={() => setVerRegistradas((actual) => !actual)}
+            aria-expanded={verRegistradas}
+            className="flex w-full items-center justify-between text-meta font-semibold text-ink-secondary"
+          >
+            <span>Registradas ({agenda.closedAppointments.length})</span>
+            <span>{verRegistradas ? Icon.ChevronDown() : Icon.ChevronRight()}</span>
+          </button>
+
+          {verRegistradas && (
+            <div className="mt-3 flex flex-col gap-2">
+              {agenda.closedAppointments.map((appointment) => (
+                <AgendaCancelledRow
+                  key={appointment.id}
+                  appointment={appointment}
+                  isFocused={agenda.focusedAppointmentId === appointment.id}
+                  setRef={(node) => {
+                    agenda.appointmentRefs.current[appointment.id] = node;
+                  }}
+                  onOpenLead={openLead}
+                  onView={agenda.openFocusedAppointment}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Las canceladas no acompanan al calendario: la rejilla no las dibuja
           -ocuparian un horario libre-, asi que un desplegable que promete
           canceladas debajo de una vista que no las tiene solo confunde. */}
@@ -234,6 +319,19 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
           </div>
         )}
       </div>
+
+      {citaEnCierre && (
+        <AppointmentOutcomeModal
+          cita={citaEnCierre}
+          guardando={agenda.appointmentActionId === citaEnCierre.id}
+          onClose={() => setCitaEnCierre(null)}
+          onGuardar={(cierre) => {
+            const cita = citaEnCierre;
+            setCitaEnCierre(null);
+            void agenda.handleRecordOutcome(cita, cierre);
+          }}
+        />
+      )}
     </div>
   );
 }

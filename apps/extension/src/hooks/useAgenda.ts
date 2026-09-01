@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { rangoParaPeriodo } from '../utils/agendaGrid';
 import { isActiveAppointment } from '../utils/appointmentStatus';
+import { getCurrentSession } from '../services/authService';
+import {
+  cerrarCita,
+  estaPendienteDeCierre,
+  type CierreDeCita,
+} from '../services/appointmentOutcomeService';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant } from '../types';
 import {
   addMyAppointmentParticipant,
@@ -97,13 +103,38 @@ export function useAgenda() {
   const [focusedAppointmentId, setFocusedAppointmentId] = useState('');
   const appointmentRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  /*
+   * Una cita que ya termino y sigue sin cerrar no es lo mismo que una que esta
+   * por venir: no se reprograma, se cuenta. Salen de "Citas activas" y pasan a
+   * su propio grupo, arriba, que es lo que hay que despachar.
+   */
+  const pendingOutcomeAppointments = appointments
+    .filter((appointment) => isActiveAppointment(appointment.status))
+    .filter((appointment) => estaPendienteDeCierre(appointment))
+    // De la mas reciente hacia atras: lo que acaba de pasar es lo que se
+    // recuerda con detalle.
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+
   const activeAppointments = appointments
     .filter((appointment) => isActiveAppointment(appointment.status))
+    .filter((appointment) => !estaPendienteDeCierre(appointment))
     // Por cuando empieza. Las canceladas ya se ordenaban; las activas quedaban
     // en el orden en que las devolviera la consulta, o sea ninguno.
     .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+
+  /*
+   * Las cerradas no son canceladas.
+   *
+   * `isActiveAppointment` es false para las cuatro que liberan el horario, asi
+   * que 'completada' y 'no_asistio' caian bajo el rotulo "Canceladas": una
+   * reunion que ocurrio y se registro aparecia como si no hubiera ocurrido.
+   */
+  const closedAppointments = appointments
+    .filter((appointment) => appointment.status === 'completada' || appointment.status === 'no_asistio')
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+
   const cancelledAppointments = appointments
-    .filter((appointment) => !isActiveAppointment(appointment.status))
+    .filter((appointment) => appointment.status === 'cancelada' || appointment.status === 'rechazada')
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
 
   /**
@@ -298,6 +329,45 @@ export function useAgenda() {
     }
   };
 
+  /**
+   * Cierra una cita ya pasada: asistencia, minuta y el seguimiento que salga.
+   *
+   * Recarga la agenda al terminar, igual que reprogramar o cancelar: la cita
+   * cambia de estado y de grupo, y sin recargar seguiria en "Por registrar".
+   */
+  const handleRecordOutcome = async (
+    appointment: AgendaAppointment,
+    cierre: Omit<CierreDeCita, 'appointmentId'>,
+  ) => {
+    const userId = (await getCurrentSession())?.user?.id;
+    if (!userId) return;
+
+    setAppointmentActionId(appointment.id);
+    setMessage('');
+    setError('');
+    try {
+      const resultado = await cerrarCita(userId, appointment, {
+        ...cierre,
+        appointmentId: appointment.id,
+      });
+      await loadAgenda(true);
+
+      const partes = [cierre.attended ? 'Reunión registrada' : 'Registrada como no asistida'];
+      if (resultado.notaCreada) partes.push('nota agregada al lead');
+      if (resultado.tareasCreadas > 0) {
+        partes.push(
+          resultado.tareasCreadas === 1 ? '1 tarea creada' : `${resultado.tareasCreadas} tareas creadas`,
+        );
+      }
+      setMessage(`${partes.join(', ')}.`);
+    } catch (err) {
+      setError(getErrorMessage(err, 'No se pudo registrar cómo fue la reunión'));
+      await loadAgenda(true);
+    } finally {
+      setAppointmentActionId('');
+    }
+  };
+
   const syncParticipantsAfterChange = async (appointmentId: string) => {
     const result = await syncMyGoogleCalendarAttendees(appointmentId);
     setMessage(
@@ -362,6 +432,9 @@ export function useAgenda() {
     appointments,
     setRangoVisible,
     activeAppointments,
+    pendingOutcomeAppointments,
+    handleRecordOutcome,
+    closedAppointments,
     cancelledAppointments,
     showCancelled,
     setShowCancelled,

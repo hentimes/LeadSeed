@@ -188,6 +188,9 @@ function mapAdminObservedAppointmentRow(row: AdminObservedAppointmentRow): Agend
     leadName: row.lead_name || 'Lead sin nombre',
     startsAt: row.starts_at,
     endsAt: row.ends_at,
+    // La vista de admin no trae el cierre: mira la agenda de otra persona
+    // para saber que tiene agendado, no para registrar como le fue.
+    outcomeNotes: '',
     status: row.status,
     sourceChannel: row.source_channel || 'general',
     captureRef: row.capture_ref || undefined,

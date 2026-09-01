@@ -7,6 +7,7 @@ export const EVENT_TYPE_LABELS: Record<AppointmentAuditEvent['eventType'], strin
   google_sync_error: 'Google pendiente',
   participant_added: 'Participante agregado',
   participant_removed: 'Participante quitado',
+  outcome_recorded: 'Cierre registrado',
 };
 
 export function formatDateTime(value: string): string {

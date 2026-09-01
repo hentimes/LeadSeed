@@ -132,6 +132,8 @@ function mapAppointmentRow(row: AgendaAppointmentRow): AgendaAppointment {
     sourceChannel: row.source_channel || 'general',
     captureRef: row.capture_ref || undefined,
     notes: row.notes || '',
+    outcomeNotes: row.outcome_notes || '',
+    outcomeRecordedAt: row.outcome_recorded_at || undefined,
     meetLink: row.meet_link || undefined,
     googleEventId: row.google_event_id || undefined,
     googleSyncStatus: row.google_sync_status || undefined,
@@ -148,6 +150,7 @@ function mapAuditEventType(value: string): AppointmentAuditEvent['eventType'] {
     value === 'rescheduled' ||
     value === 'cancelled' ||
     value === 'google_sync_error' ||
+    value === 'outcome_recorded' ||
     value === 'participant_added' ||
     value === 'participant_removed'
   ) {
