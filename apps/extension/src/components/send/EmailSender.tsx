@@ -19,13 +19,15 @@ import { ReasonPicker } from './ReasonPicker';
 import { getSettings } from '../../services/appSettingsService';
 import { getMyCalendarConnectionStatus } from '../../services/agendaService';
 import { listChannels } from '../../services/emailChannelsService';
-import { Button, Field, Modal, Select } from '../../design';
+import { Badge, Button, Field, Modal, Select } from '../../design';
 import { SendStep, SendRequisito } from './SendStep';
 import type { SendActionState } from './channels';
 import { useSendAction } from './useSendAction';
 import { puedeRecibirPor } from '../../utils/leadContacto';
 import { TemplatePicker } from './TemplatePicker';
 import { RecipientSheet } from './RecipientSheet';
+import { useRecipientBrowsing } from './useRecipientBrowsing';
+import { useSendSession } from './useSendSession';
 import { RecipientSummaryRow } from './RecipientSummaryRow';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
@@ -41,10 +43,15 @@ interface Props {
 }
 
 export default function EmailSender({ leads, templates, templateLists, leadLists, onActionChange }: Props) {
-  const [catId, setCatId] = useState<number | null>(null);
+  const sesion = useSendSession('email');
+
+  // Se arranca donde se dejo, igual que el compositor de WhatsApp.
+  const [catId, setCatId] = useState<number | null>(sesion.ultima.categoriaId);
   /** Para llevar el foco al selector cuando el boton dice "Elegi una plantilla". */
   const plantillaRef = useRef<HTMLDivElement>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(
+    () => templates.find((t) => String(t.id) === sesion.ultima.plantillaId) ?? null,
+  );
 
   // Edición dinámica
   const [customSubject, setCustomSubject] = useState('');
@@ -58,7 +65,10 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [selectedListIds, setSelectedListIds] = useState<Set<number>>(new Set());
 
-  const [leadSearch, setLeadSearch] = useState('');
+  // Busqueda, pagina y filtro de la hoja de destinatarios. Viven aca porque
+  // la hoja se desmonta al cerrarse y enviar de a uno es abrirla y cerrarla
+  // en cada vuelta.
+  const navegacion = useRecipientBrowsing(selectedTemplate?.id ?? null);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ total: number; sent: number; errors: string[] } | null>(null);
   const [sentLog, setSentLog] = useState<SendLog[]>([]);
@@ -78,6 +88,14 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     () => channelOptions.find((option) => option.id === selectedChannelId) || null,
     [channelOptions, selectedChannelId],
   );
+
+  useEffect(() => {
+    sesion.recordar({
+      categoriaId: catId,
+      plantillaId: selectedTemplate ? String(selectedTemplate.id) : null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catId, selectedTemplate]);
 
   useEffect(() => {
     if (selectedTemplate) {
@@ -298,13 +316,26 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     );
     setResult(sendResult);
     setSentLog(updatedLog);
+    await sesion.refrescarContador();
     setSending(false);
   };
 
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
       <div ref={plantillaRef}>
-      <SendStep title="Plantilla" actions={<SendHistoryDisclosure log={sentLog} templateName={selectedTemplate?.nombre} />}>
+      <SendStep
+        title="Plantilla"
+        actions={
+          <>
+            {sesion.enviadosHoy > 0 && (
+              <Badge tone="success" className="tabular-nums">
+                Hoy: {sesion.enviadosHoy}
+              </Badge>
+            )}
+            <SendHistoryDisclosure log={sentLog} templateName={selectedTemplate?.nombre} />
+          </>
+        }
+      >
         <div className="flex flex-col gap-2.5">
           <TemplatePicker
             templates={templates}
@@ -390,8 +421,12 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           onToggleLead={toggleLead}
           onToggleList={toggleList}
           onClear={clearRecipients}
-          search={leadSearch}
-          onSearchChange={setLeadSearch}
+          search={navegacion.search}
+          onSearchChange={navegacion.setSearch}
+          pagina={navegacion.pagina}
+          onPaginaChange={navegacion.setPagina}
+          ocultarSinNombre={navegacion.ocultarSinNombre}
+          onOcultarSinNombreChange={navegacion.setOcultarSinNombre}
           sentLeadIds={sentLeadIds}
           plantillas={templates}
           categorias={templateLists}

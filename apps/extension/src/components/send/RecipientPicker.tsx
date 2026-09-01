@@ -69,6 +69,10 @@ export function RecipientPicker({
   onClear,
   search,
   onSearchChange,
+  pagina,
+  onPaginaChange,
+  ocultarSinNombre,
+  onOcultarSinNombreChange,
   sentLeadIds,
   resumenDeEnvios,
   onVerHistorial,
@@ -90,6 +94,17 @@ export function RecipientPicker({
   onClear: () => void;
   search: string;
   onSearchChange: (value: string) => void;
+  /**
+   * La pagina la guarda quien abre la hoja, no la hoja.
+   *
+   * Se cerraba y volvia a la 1. Enviando de a uno -misma plantilla, otro
+   * contacto- eso obliga a repaginar hasta la 8 en cada envio. La busqueda ya
+   * subia por este mismo motivo; la pagina se habia quedado atras.
+   */
+  pagina: number;
+  onPaginaChange: (pagina: number) => void;
+  ocultarSinNombre: boolean;
+  onOcultarSinNombreChange: (valor: boolean) => void;
   sentLeadIds: Set<string>;
   /** Que se le envio a cada lead. Vacio mientras carga; la lista se pinta igual. */
   resumenDeEnvios: Map<string, LeadSendSummary>;
@@ -122,7 +137,6 @@ export function RecipientPicker({
    * significa lo mismo aqui que en la fila que lo pinta -incluido el caso del
    * nombre que es solo espacios, que hay en los leads importados-.
    */
-  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
   const sinNombre = useMemo(() => contarSinNombre(contactables), [contactables]);
 
   /*
@@ -185,7 +199,7 @@ export function RecipientPicker({
    * de `max-h-52`: el navegador montaba mil filas para ensenar cuatro, y para
    * llegar al lead 900 habia que arrastrar la barra a ciegas.
    */
-  const [pagina, setPagina] = useState(1);
+  const setPagina = onPaginaChange;
   const totalPaginas = Math.max(1, Math.ceil(filteredLeads.length / LEADS_POR_PAGINA));
 
   /*
@@ -228,7 +242,7 @@ export function RecipientPicker({
         <SinNombreToggle
           count={sinNombre}
           ocultos={ocultarSinNombre}
-          onToggle={() => setOcultarSinNombre((v) => !v)}
+          onToggle={() => onOcultarSinNombreChange(!ocultarSinNombre)}
         />
       </div>
 

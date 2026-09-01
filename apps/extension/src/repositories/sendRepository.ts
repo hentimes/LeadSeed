@@ -30,3 +30,28 @@ export async function markLeadRowsAsContacted(leadIds: string[]): Promise<void> 
     throw error;
   }
 }
+
+/**
+ * Cuantos envios de un canal hay desde un instante dado.
+ *
+ * `head: true` pide solo la cuenta: la fila entera no hace falta y el
+ * historial de una cuenta activa son miles.
+ *
+ * Excluye los borrados. El panel no lo hace -su consulta es anterior al
+ * borrado logico de `send_logs`- y por eso cuenta de mas.
+ */
+export async function countSendLogsSince(
+  templateType: 'whatsapp' | 'email' | 'call',
+  desdeIso: string,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('send_logs')
+    .select('id', { count: 'exact', head: true })
+    .eq('template_type', templateType)
+    .gte('sent_at', desdeIso)
+    .is('deleted_at', null);
+
+  if (error) throw error;
+
+  return count ?? 0;
+}

@@ -1,5 +1,10 @@
 import type { Lead, SendLog } from '../types';
-import { fetchSendLogRowsByTemplate, insertSendLogs, markLeadRowsAsContacted } from '../repositories/sendRepository';
+import {
+  countSendLogsSince,
+  fetchSendLogRowsByTemplate,
+  insertSendLogs,
+  markLeadRowsAsContacted,
+} from '../repositories/sendRepository';
 import type { EmailAttachment } from '../types';
 import { sendEmailToLeads } from '../utils/emailSender';
 import { replaceVariables, type LeadMessage } from '../utils/waHelper';
@@ -23,6 +28,23 @@ function mapSendLogRow(row: Awaited<ReturnType<typeof fetchSendLogRowsByTemplate
 
 export async function loadTemplateSendLog(templateId: number | string): Promise<SendLog[]> {
   return (await fetchSendLogRowsByTemplate(templateId)).map(mapSendLogRow);
+}
+
+/**
+ * Cuantos mensajes se enviaron hoy por un canal.
+ *
+ * El dia se corta en la hora de quien envia, no en UTC: `setHours(0,0,0,0)`
+ * sobre la fecha local. La consulta del panel usa `date_trunc('day', now())`
+ * en el servidor, que en Supabase corre en UTC, asi que alli el dia cambia a
+ * las 20:00 o 21:00 de Chile. Aca no.
+ */
+export async function countSendsToday(
+  canal: 'whatsapp' | 'email' | 'call',
+): Promise<number> {
+  const inicioDelDia = new Date();
+  inicioDelDia.setHours(0, 0, 0, 0);
+
+  return countSendLogsSince(canal, inicioDelDia.toISOString());
 }
 
 /**

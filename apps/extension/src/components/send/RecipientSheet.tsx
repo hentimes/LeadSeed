@@ -21,9 +21,13 @@ import type { CanalContacto } from '../../utils/leadContacto';
  * en el sender, que es quien calcula `recipients` y quien envia. Si el estado
  * viviera aca, cerrarla lo borraria.
  *
- * Lo unico que se pierde al cerrar es la pagina y la busqueda, que son estado
- * de consulta y no de trabajo. Es una decision, no un descuido: recordar la
- * pagina 7 de una busqueda vieja confunde mas de lo que ayuda.
+ * La busqueda, la pagina y el filtro de leads sin nombre tampoco viven aca.
+ * La pagina si moria al cerrar, por la razon de arriba: recordar la pagina 7
+ * de una busqueda vieja confunde. Pero el envio de a uno -misma plantilla,
+ * otro contacto, abrir y cerrar la hoja en cada vuelta- no es una busqueda
+ * vieja: es la misma tanda, y volver a la pagina 1 en cada envio obligaba a
+ * repaginar a mano. Ahora la guarda el compositor, que la reinicia al cambiar
+ * de plantilla, que es cuando de verdad empieza otra cosa.
  *
  * ## Por que no lleva boton de cancelar
  *
@@ -46,6 +50,10 @@ export function RecipientSheet({
   onClear,
   search,
   onSearchChange,
+  pagina,
+  onPaginaChange,
+  ocultarSinNombre,
+  onOcultarSinNombreChange,
   sentLeadIds,
   plantillas,
   categorias,
@@ -62,6 +70,10 @@ export function RecipientSheet({
   onClear: () => void;
   search: string;
   onSearchChange: (value: string) => void;
+  pagina: number;
+  onPaginaChange: (pagina: number) => void;
+  ocultarSinNombre: boolean;
+  onOcultarSinNombreChange: (valor: boolean) => void;
   sentLeadIds: Set<string>;
   /** Plantillas y categorias del canal, para resolver el ultimo envio de cada lead. */
   plantillas?: { id?: string | number; templateListIds?: number[] }[];
@@ -119,6 +131,10 @@ export function RecipientSheet({
             onClear={onClear}
             search={search}
             onSearchChange={onSearchChange}
+            pagina={pagina}
+            onPaginaChange={onPaginaChange}
+            ocultarSinNombre={ocultarSinNombre}
+            onOcultarSinNombreChange={onOcultarSinNombreChange}
             sentLeadIds={sentLeadIds}
             resumenDeEnvios={resumenDeEnvios}
             onVerHistorial={setLeadEnHistorial}
