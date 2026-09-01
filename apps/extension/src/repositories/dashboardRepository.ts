@@ -46,6 +46,13 @@ export interface DashboardSnapshotRow {
 export async function fetchDashboardSnapshotRow(comparePeriod: ComparePeriod): Promise<DashboardSnapshotRow> {
   const { data, error } = await supabase.rpc('get_my_dashboard_snapshot', {
     p_compare_period: comparePeriod,
+    /*
+     * El dia lo corta el servidor, y lo cortaba en UTC: a las 20:00 de Chile
+     * alli ya era el dia siguiente, asi que el contador de "hoy" se vaciaba
+     * con la jornada por la mitad. La zona la sabe el navegador y no hay que
+     * preguntarla ni guardarla en ningun lado.
+     */
+    p_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   });
 
   if (error || !data) {
