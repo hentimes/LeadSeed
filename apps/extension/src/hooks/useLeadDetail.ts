@@ -30,6 +30,7 @@ import { markLeadAsRead } from '../services/leadsService';
 import { isActiveAppointment } from '../utils/appointmentStatus';
 import { getErrorMessage } from '../utils/errorMessage';
 import { getPlatform } from '../platform/registry';
+import { toIsoLocal, todayDate } from '../utils/appointmentDateTime';
 
 const TECHNICAL_METADATA_KEYS = new Set([
   'raw_payload',
@@ -107,17 +108,6 @@ function parseCargaAges(value: unknown) {
     .filter(Boolean);
 }
 
-function todayDate(): string {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function toIsoLocal(date: string, time: string): string {
-  return new Date(`${date}T${time}:00`).toISOString();
-}
 
 export function toJourneyLabel(val: string, labels: Record<string, string>) {
   return labels[val] || val;
@@ -186,9 +176,23 @@ export function useLeadDetail(lead: Lead) {
   const visibleMeetLink = activeAppointment?.meetLink;
   const googleSyncBadgeLabel = getGoogleSyncBadgeLabel(activeAppointment);
   const googlePendingSummary = getGoogleSyncPendingSummary(activeAppointment);
-  const canCreateAppointment =
-    !!leadId &&
-    (!visibleAppointmentStatus || !isActiveAppointment(visibleAppointmentStatus));
+  /*
+   * Se puede agendar salvo que haya una cita VIGENTE, y `activeAppointment` ya
+   * solo trae las que no terminaron.
+   *
+   * El estado suelto no basta como respaldo: `localAppointmentStatus` y el del
+   * metadata del lead se quedan en 'pendiente' para siempre, asi que un lead
+   * con una cita vieja no volvia a poder agendar aunque la cita ya no exista.
+   * Cuando hay cita cargada manda ella; si no hay, se cae al estado guardado
+   * solo mientras la fecha que lo acompana siga en el futuro.
+   */
+  const citaGuardadaSigueVigente =
+    !!visibleAppointmentAt &&
+    new Date(`${visibleAppointmentAt}`).getTime() > Date.now() &&
+    !!visibleAppointmentStatus &&
+    isActiveAppointment(`${visibleAppointmentStatus}`);
+
+  const canCreateAppointment = !!leadId && !activeAppointment && !citaGuardadaSigueVigente;
 
   const genericMetadataEntries = useMemo(
     () =>
@@ -274,8 +278,20 @@ export function useLeadDetail(lead: Lead) {
       const range = getDefaultAgendaRange(90);
       const appointments = await listMyAppointments(range.from, range.to);
       if (cancelled) return;
+      /*
+       * VIGENTE ES LA QUE TODAVIA NO TERMINO.
+       *
+       * Esto miraba solo el estado. Una cita de ayer sigue en 'pendiente'
+       * mientras nadie la registre, asi que contaba como activa: la ficha la
+       * anunciaba como PENDIENTE con su fecha ya pasada, y ademas bloqueaba
+       * agendar la siguiente -`canCreateAppointment` la daba por vigente-. Un
+       * lead con una cita vencida se quedaba sin poder agendar nada.
+       */
       const appointment = appointments.find(
-        (item) => item.leadId === leadId && isActiveAppointment(item.status),
+        (item) =>
+          item.leadId === leadId &&
+          isActiveAppointment(item.status) &&
+          new Date(item.endsAt).getTime() > Date.now(),
       );
       setActiveAppointment(appointment || null);
     })();

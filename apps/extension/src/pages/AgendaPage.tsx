@@ -8,6 +8,8 @@ import AgendaCancelledRow from '../components/agenda/AgendaCancelledRow';
 import { AgendaCalendar, type VistaDeCalendario } from '../components/agenda/AgendaCalendar';
 import { Button, Card, IconButton, SegmentedControl } from '../design';
 import AppointmentOutcomeModal from '../components/agenda/AppointmentOutcomeModal';
+import ScheduleAppointmentModal from '../components/agenda/ScheduleAppointmentModal';
+import AgendaRegisteredRow from '../components/agenda/AgendaRegisteredRow';
 import { formatDateTime } from '../components/agenda/agendaFormat';
 
 /** Los dias que mira la agenda. Sale de `getDefaultAgendaRange(60)` en el hook. */
@@ -50,6 +52,8 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   /** La cita cuya minuta se esta escribiendo. */
   const [citaEnCierre, setCitaEnCierre] = useState<AgendaAppointment | null>(null);
   const [verRegistradas, setVerRegistradas] = useState(false);
+  /** El lead para el que se esta agendando la siguiente cita. */
+  const [citaNueva, setCitaNueva] = useState<{ leadId: string; leadName: string } | null>(null);
 
   if (agenda.loading) {
     return <LoadingOverlay message="Cargando agenda..." />;
@@ -269,15 +273,10 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
           {verRegistradas && (
             <div className="mt-3 flex flex-col gap-2">
               {agenda.closedAppointments.map((appointment) => (
-                <AgendaCancelledRow
+                <AgendaRegisteredRow
                   key={appointment.id}
                   appointment={appointment}
-                  isFocused={agenda.focusedAppointmentId === appointment.id}
-                  setRef={(node) => {
-                    agenda.appointmentRefs.current[appointment.id] = node;
-                  }}
                   onOpenLead={openLead}
-                  onView={agenda.openFocusedAppointment}
                 />
               ))}
             </div>
@@ -320,6 +319,18 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
         )}
       </div>
 
+      {citaNueva && (
+        <ScheduleAppointmentModal
+          leadId={citaNueva.leadId}
+          leadName={citaNueva.leadName}
+          onClose={() => setCitaNueva(null)}
+          onAgendada={(mensaje) => {
+            setCitaNueva(null);
+            void agenda.reloadWithMessage(mensaje);
+          }}
+        />
+      )}
+
       {citaEnCierre && (
         <AppointmentOutcomeModal
           cita={citaEnCierre}
@@ -338,10 +349,12 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
             if (!guardado) return;
 
             setCitaEnCierre(null);
-            // La cita nueva se crea desde la ficha del lead, que es la unica
-            // via que existe hoy. La tarea queda igual, como rastro de que
-            // habia que hacerlo.
-            if (opciones.agendarAhora) openLead(cita.leadId);
+            // Se agenda aqui mismo. Antes esto llevaba a la ficha del lead
+            // -la unica via que habia- y eso sacaba de la agenda a media
+            // tarea. La tarea de seguimiento se crea igual, como rastro.
+            if (opciones.agendarAhora && cita.leadId) {
+              setCitaNueva({ leadId: cita.leadId, leadName: cita.leadName });
+            }
           }}
         />
       )}

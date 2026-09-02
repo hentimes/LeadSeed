@@ -385,6 +385,18 @@ export function useAgenda() {
     }
   };
 
+  /**
+   * Recarga la agenda y deja un aviso.
+   *
+   * La usa quien agenda desde fuera de este hook -el modal de cita nueva- y
+   * necesita que la lista refleje lo que acaba de crear. El orden importa:
+   * primero la recarga, que limpia mensajes, y despues el aviso.
+   */
+  const reloadWithMessage = async (mensaje: string) => {
+    await loadAgenda(true);
+    setMessage(mensaje);
+  };
+
   const syncParticipantsAfterChange = async (appointmentId: string) => {
     const result = await syncMyGoogleCalendarAttendees(appointmentId);
     setMessage(
@@ -451,6 +463,7 @@ export function useAgenda() {
     activeAppointments,
     pendingOutcomeAppointments,
     handleRecordOutcome,
+    reloadWithMessage,
     closedAppointments,
     cancelledAppointments,
     showCancelled,
