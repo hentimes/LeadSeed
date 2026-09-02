@@ -1,5 +1,3 @@
-import { ChatReactionPicker } from './ChatReactionBar';
-import type { ChatReactionKind, ChatReactionSummary } from '../../types';
 import { ChatIcon } from './ChatIcons';
 import ChatMenuSurface, { ChatMenuItem } from './ChatMenuSurface';
 import PinDurationMenu from './PinDurationMenu';
@@ -36,6 +34,23 @@ import ReportMessageMenu from './ReportMessageMenu';
  * es lo que hacia la version anterior, no.
  */
 
+/**
+ * Clases de aparicion de las acciones de un mensaje.
+ *
+ * Las comparte con `ChatReactionTrigger`, que se separo de aca: la carita y
+ * los tres puntos tienen que aparecer y desaparecer a la vez aunque ya no
+ * vivan en el mismo componente.
+ */
+export function clasesDeVisibilidad(forzarVisibles: boolean, hayMenuAbierto: boolean): string {
+  /*
+   * `[@media(hover:none)]:opacity-100`: donde no hay raton los controles estan
+   * siempre a la vista. No cuesta nada porque el espacio ya esta reservado.
+   */
+  return forzarVisibles || hayMenuAbierto
+    ? 'opacity-100'
+    : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100';
+}
+
 export interface ChatMessageActionsProps {
   isOwn: boolean;
   isStaff: boolean;
@@ -44,9 +59,6 @@ export interface ChatMessageActionsProps {
   canReport: boolean;
   /** Para que los cuarenta botones de la sala no se llamen todos igual. */
   authorName: string;
-
-  reactions: ChatReactionSummary[];
-  onToggleReaction: (reaction: ChatReactionKind) => void;
 
   onReply: () => void;
   onToggleSaved: () => void;
@@ -69,8 +81,6 @@ export default function ChatMessageActions({
   isHighlighted,
   canReport,
   authorName,
-  reactions,
-  onToggleReaction,
   onReply,
   onToggleSaved,
   onToggleHighlight,
@@ -83,16 +93,8 @@ export default function ChatMessageActions({
 }: ChatMessageActionsProps) {
   // Los paneles se despliegan hacia el centro del panel.
   const align = isOwn ? 'right' : 'left';
-  const reaccionesAbiertas = openMenu === 'reactions';
 
-  /*
-   * `[@media(hover:none)]:opacity-100`: donde no hay raton los controles estan
-   * siempre a la vista. No cuesta nada porque el espacio ya esta reservado.
-   */
-  const visibilidad =
-    forzarVisibles || openMenu
-      ? 'opacity-100'
-      : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100';
+  const visibilidad = clasesDeVisibilidad(forzarVisibles, !!openMenu);
 
   return (
     <>
@@ -184,44 +186,6 @@ export default function ChatMessageActions({
         )}
       </div>
 
-      {/* Carita, fuera de la burbuja y hacia el centro del panel. */}
-      <div className={`absolute top-0.5 z-30 ${isOwn ? 'right-full mr-1' : 'left-full ml-1'}`}>
-        <button
-          type="button"
-          onClick={() => onOpenMenu(reaccionesAbiertas ? null : 'reactions')}
-          aria-label={`Reaccionar al mensaje de ${authorName}`}
-          aria-haspopup="menu"
-          aria-expanded={reaccionesAbiertas}
-          title={reaccionesAbiertas ? 'Cerrar reacciones' : 'Reaccionar'}
-          className={`flex h-6 w-6 items-center justify-center rounded-full border border-line bg-surface shadow-card transition-colors ${visibilidad} ${
-            reaccionesAbiertas ? 'text-primary' : 'text-ink-muted hover:bg-surface-hover hover:text-ink'
-          }`}
-        >
-          <ChatIcon.Smiley className="h-[17px] w-[17px]" />
-        </button>
-
-        {reaccionesAbiertas && (
-          <>
-            {/* Capa de cierre: tocar fuera baja el selector. */}
-            <div className="fixed inset-0 z-20" onClick={() => onOpenMenu(null)} aria-hidden="true" />
-
-            <div
-              className={`absolute bottom-full z-30 mb-1 flex w-max items-center rounded-full border border-line bg-surface p-0.5 shadow-float ${
-                isOwn ? 'right-0' : 'left-0'
-              }`}
-            >
-              <ChatReactionPicker
-                reactions={reactions}
-                onToggle={(reaction) => {
-                  onToggleReaction(reaction);
-                  // Solo se puede tener una: elegirla cierra.
-                  onOpenMenu(null);
-                }}
-              />
-            </div>
-          </>
-        )}
-      </div>
     </>
   );
 }

@@ -3,7 +3,8 @@ import { colorDeBurbuja } from '../../utils/bubbleColor';
 import { useLongPress } from '../../hooks/useLongPress';
 import MessageContent from './MessageContent';
 import MessageAttachment from './MessageAttachment';
-import ChatMessageActions from './ChatMessageActions';
+import ChatMessageActions, { clasesDeVisibilidad } from './ChatMessageActions';
+import ChatReactionTrigger from './ChatReactionTrigger';
 import { ChatReactionBar } from './ChatReactionBar';
 import { ChatIcon } from './ChatIcons';
 import { toPlainText } from '../../utils/mentionParser';
@@ -255,8 +256,6 @@ export default function ChatMessageBubble({
           isHighlighted={isHighlighted}
           canReport={!isOwn}
           authorName={message.user_profile?.full_name || 'Usuario'}
-          reactions={reactions}
-          onToggleReaction={onToggleReaction}
           onReply={onReply}
           onToggleSaved={onToggleSaved}
           onToggleHighlight={onToggleHighlight}
@@ -274,6 +273,27 @@ export default function ChatMessageBubble({
       </div>
 
       <ChatReactionBar reactions={reactions} pending={reactionPending} onToggle={onToggleReaction} />
+
+      {/*
+        La carita, DESPUES de las reacciones y no encima.
+ 
+        Se posicionaba en absoluto contra el borde de la burbuja, que es justo
+        donde pasaron a vivir las reacciones: en un mensaje de una linea quedaba
+        tapandolas. Aca es un elemento mas de la fila, asi que se coloca sola al
+        final por ancha que sea la tira de reacciones.
+      */}
+      <ChatReactionTrigger
+        authorName={message.user_profile?.full_name || 'Usuario'}
+        reactions={reactions}
+        onToggleReaction={onToggleReaction}
+        isOwn={isOwn}
+        abierto={openMenu === 'reactions'}
+        onAbrir={(abierto) => {
+          onOpenMenu(abierto ? 'reactions' : null);
+          if (!abierto) setForzarVisibles(false);
+        }}
+        visibilidad={clasesDeVisibilidad(forzarVisibles, !!openMenu)}
+      />
     </div>
   );
 }
