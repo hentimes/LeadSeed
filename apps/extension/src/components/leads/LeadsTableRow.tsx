@@ -12,6 +12,8 @@ interface Props {
   idx: number;
   selectedIds: Set<string>;
   sendCounts: Record<string, { whatsapp: number; email: number }>;
+  /** Que tiene pendiente cada lead: cita por delante, tarea sin cerrar, o las dos. */
+  pendingFlags: Record<string, { cita: boolean; tarea: boolean }>;
   listsMap: Map<number, LeadList>;
   compactMode: boolean;
   filterMode?: string | null;
@@ -53,7 +55,7 @@ const AvatarIcon = () => (
 );
 
 const LeadsTableRow = ({
-  lead, idx, selectedIds, sendCounts, listsMap, compactMode, filterMode, isTrash, columns,
+  lead, idx, selectedIds, sendCounts, pendingFlags, listsMap, compactMode, filterMode, isTrash, columns,
   onView, onEdit, onDelete, onRestore, onTogglePin, getScore,
   onPinDrop,
 }: Props) => {
@@ -62,6 +64,7 @@ const LeadsTableRow = ({
   // Se toma una vez por fila: antes se indexaba el registro seis veces, y la
   // comprobacion usaba `?.` pero la lectura de al lado no.
   const enviosDelLead = sendCounts[lead.id!];
+  const pendientesDelLead = pendingFlags[lead.id!];
 
   /*
    * El relleno de la celda y el tono de la fila salen de `design/ListPanel`,
@@ -116,6 +119,32 @@ const LeadsTableRow = ({
   const badges = useMemo(
     () => (
       <>
+        {/*
+          Cita y tarea pendientes, en ese orden.
+ 
+          Van los primeros de la tira porque responden a "que tengo que hacer
+          con este lead", que es la pregunta con la que se recorre la lista.
+          Sin fondo ni contador: son un si o un no, y una pastilla con numero
+          al lado de los contadores de envio se leeria como un tercer contador.
+        */}
+        {pendientesDelLead?.cita && (
+          <span
+            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-primary-soft text-primary [&_svg]:h-2.5 [&_svg]:w-2.5"
+            title="Tiene una cita agendada"
+            aria-label="Tiene una cita agendada"
+          >
+            {Icon.Calendar()}
+          </span>
+        )}
+        {pendientesDelLead?.tarea && (
+          <span
+            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-state-warning-soft text-state-warning-ink [&_svg]:h-2.5 [&_svg]:w-2.5"
+            title="Tiene una tarea pendiente"
+            aria-label="Tiene una tarea pendiente"
+          >
+            {Icon.Tasks()}
+          </span>
+        )}
         {lead.hasUnreadCrossExecAlert && (
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-state-warning-soft text-state-warning whitespace-nowrap">
             {Icon.Warning()} Cruce
@@ -156,7 +185,7 @@ const LeadsTableRow = ({
         )}
       </>
     ),
-    [lead, enviosDelLead, filterMode, onView]
+    [lead, enviosDelLead, pendientesDelLead, filterMode, onView]
   );
 
   const avatar = (
@@ -265,6 +294,7 @@ export default memo(LeadsTableRow, (prev, next) => {
   if (prev.columns !== next.columns) return false;
 
   if (prev.sendCounts !== next.sendCounts) return false;
+  if (prev.pendingFlags !== next.pendingFlags) return false;
   if (prev.listsMap !== next.listsMap) return false;
 
   return true;

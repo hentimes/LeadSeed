@@ -4,6 +4,7 @@ import type { LeadOrigin, LeadSortConfig, LeadSortField } from '../../repositori
 import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
+import { useLeadPendingFlags } from '../../hooks/useLeadPendingFlags';
 import LeadsTableControls from './LeadsTableControls';
 import LeadsTableRow from './LeadsTableRow';
 import LoadingOverlay from '../LoadingOverlay';
@@ -86,6 +87,7 @@ export default function LeadsTable({
   onReorderCols, onReorderPinned,
 }: Props) {
   const sendCounts = useSendCounts();
+  const pendingFlags = useLeadPendingFlags();
   
   const { containerRef, renderedColumns, hiddenCount, canScrollBack, canScrollForward, scrollBack, scrollForward } =
     useResponsiveColumns(visibleCols);
@@ -356,6 +358,7 @@ export default function LeadsTable({
                   idx={idx}
                   selectedIds={selectedIds}
                   sendCounts={sendCounts}
+                  pendingFlags={pendingFlags}
                   listsMap={listsMap}
                   compactMode={compactMode}
                   filterMode={filterMode}
