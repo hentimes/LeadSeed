@@ -291,8 +291,10 @@ export function useAgenda() {
       await loadAgenda(true);
       setMessage(getAppointmentSuccessMessage('reschedule', result.googleSyncStatus));
     } catch (err) {
+      // Sin recargar: `loadAgenda` arranca con `setError('')` y borraba este
+      // mensaje en el mismo instante, dejando el fallo mudo. Y no hay nada que
+      // recargar, porque la operacion no llego a cambiar nada.
       setError(getErrorMessage(err, 'No se pudo reprogramar la cita'));
-      await loadAgenda(true);
     } finally {
       setAppointmentActionId('');
     }
@@ -323,8 +325,10 @@ export function useAgenda() {
       await loadAgenda(true);
       setMessage(getAppointmentSuccessMessage('cancel', result.googleSyncStatus));
     } catch (err) {
+      // Sin recargar: `loadAgenda` arranca con `setError('')` y borraba este
+      // mensaje en el mismo instante, dejando el fallo mudo. Y no hay nada que
+      // recargar, porque la operacion no llego a cambiar nada.
       setError(getErrorMessage(err, 'No se pudo cancelar la cita'));
-      await loadAgenda(true);
     } finally {
       setAppointmentActionId('');
     }
