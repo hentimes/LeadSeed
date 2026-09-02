@@ -75,6 +75,20 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
     setLeads(fetchedLeads);
     setLists(fetchedLists);
     onTasksChanged?.();
+
+    /*
+     * Si se llego con `#tasks?task=ID` -desde el distintivo de la lista de
+     * leads- se abre esa tarea. Se hace despues de cargar y no al montar
+     * porque hasta aqui no hay tareas con las que emparejar el identificador.
+     */
+    const ruta = getPlatform().navigation.current();
+    if (ruta?.name === 'tasks' && ruta.taskId) {
+      const pedida = fetchedTasks.find((tarea) => String(tarea.id) === ruta.taskId);
+      if (pedida) {
+        setViendoId(String(pedida.id));
+        setFilter(pedida.status);
+      }
+    }
   };
 
   const openNew = () => {

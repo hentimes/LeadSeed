@@ -78,7 +78,15 @@ export type AppRoute =
       /** Abre el formulario de lead nuevo al entrar. */
       action?: 'new';
     }
-  | { name: 'agenda'; appointmentId?: string };
+  | { name: 'agenda'; appointmentId?: string }
+  /**
+   * La tarea concreta que hay que abrir al entrar.
+   *
+   * `filter` ya viajaba por el hash sin estar declarado aca: el panel escribe
+   * `#tasks?filter=overdue` a mano. Queda modelado para que la ruta describa
+   * lo que de verdad se usa.
+   */
+  | { name: 'tasks'; taskId?: string; filter?: string };
 
 export interface NavigationPort {
   /** Ruta actual, o `null` si la actual no corresponde a ninguna conocida. */

@@ -15,42 +15,64 @@ beforeEach(() => {
 });
 
 describe('fetchLeadPendingFlags', () => {
-  it('marca la cita de quien tiene una por delante', async () => {
-    repo.fetchLeadIdsWithUpcomingAppointment.mockResolvedValue(['lead-1']);
+  it('guarda la cita de quien tiene una por delante', async () => {
+    repo.fetchLeadIdsWithUpcomingAppointment.mockResolvedValue([
+      { leadId: 'lead-1', id: 'cita-1' },
+    ]);
 
     const flags = await fetchLeadPendingFlags('user-1');
 
-    expect(flags['lead-1']).toEqual({ cita: true, tarea: false });
+    expect(flags['lead-1']).toEqual({ citaId: 'cita-1' });
   });
 
-  it('marca la tarea de quien tiene una sin cerrar', async () => {
-    repo.fetchLeadIdsWithPendingTask.mockResolvedValue(['lead-2']);
+  it('guarda la tarea de quien tiene una sin cerrar', async () => {
+    repo.fetchLeadIdsWithPendingTask.mockResolvedValue([{ leadId: 'lead-2', id: 'tarea-2' }]);
 
     const flags = await fetchLeadPendingFlags('user-1');
 
-    expect(flags['lead-2']).toEqual({ cita: false, tarea: true });
+    expect(flags['lead-2']).toEqual({ tareaId: 'tarea-2' });
   });
 
   /*
-   * El caso que motiva el mapa: las dos fuentes son consultas distintas y el
-   * mismo lead puede estar en ambas. La segunda no debe pisar a la primera.
+   * Las dos fuentes son consultas distintas y el mismo lead puede estar en
+   * ambas: la segunda no debe pisar lo que dejo la primera.
    */
-  it('marca las dos cuando el lead tiene cita y tarea', async () => {
-    repo.fetchLeadIdsWithUpcomingAppointment.mockResolvedValue(['lead-3']);
-    repo.fetchLeadIdsWithPendingTask.mockResolvedValue(['lead-3']);
+  it('guarda las dos cuando el lead tiene cita y tarea', async () => {
+    repo.fetchLeadIdsWithUpcomingAppointment.mockResolvedValue([
+      { leadId: 'lead-3', id: 'cita-3' },
+    ]);
+    repo.fetchLeadIdsWithPendingTask.mockResolvedValue([{ leadId: 'lead-3', id: 'tarea-3' }]);
 
     const flags = await fetchLeadPendingFlags('user-1');
 
-    expect(flags['lead-3']).toEqual({ cita: true, tarea: true });
+    expect(flags['lead-3']).toEqual({ citaId: 'cita-3', tareaId: 'tarea-3' });
   });
 
-  it('un lead con varias tareas se marca una sola vez', async () => {
-    repo.fetchLeadIdsWithPendingTask.mockResolvedValue(['lead-4', 'lead-4', 'lead-4']);
+  /*
+   * Las consultas llegan ordenadas -la cita mas proxima y la tarea que vence
+   * antes van primeras-, asi que con varias se queda la primera. Es a la que
+   * lleva el distintivo al pulsarlo.
+   */
+  it('con varias citas se queda con la mas proxima', async () => {
+    repo.fetchLeadIdsWithUpcomingAppointment.mockResolvedValue([
+      { leadId: 'lead-4', id: 'cita-manana' },
+      { leadId: 'lead-4', id: 'cita-el-mes-que-viene' },
+    ]);
 
     const flags = await fetchLeadPendingFlags('user-1');
 
-    expect(Object.keys(flags)).toEqual(['lead-4']);
-    expect(flags['lead-4']).toEqual({ cita: false, tarea: true });
+    expect(flags['lead-4']).toEqual({ citaId: 'cita-manana' });
+  });
+
+  it('con varias tareas se queda con la que vence antes', async () => {
+    repo.fetchLeadIdsWithPendingTask.mockResolvedValue([
+      { leadId: 'lead-5', id: 'tarea-hoy' },
+      { leadId: 'lead-5', id: 'tarea-sin-fecha' },
+    ]);
+
+    const flags = await fetchLeadPendingFlags('user-1');
+
+    expect(flags['lead-5']).toEqual({ tareaId: 'tarea-hoy' });
   });
 
   it('sin nada pendiente devuelve un mapa vacio', async () => {

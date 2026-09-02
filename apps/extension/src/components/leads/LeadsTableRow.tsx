@@ -1,5 +1,6 @@
 import { memo, useState, useMemo } from 'react';
 import type { Lead, LeadList } from '../../types';
+import type { LeadPendingFlags } from '../../services/leadPendingService';
 import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import { tonoDeFila, type ListDensity } from '../../design';
@@ -13,7 +14,9 @@ interface Props {
   selectedIds: Set<string>;
   sendCounts: Record<string, { whatsapp: number; email: number }>;
   /** Que tiene pendiente cada lead: cita por delante, tarea sin cerrar, o las dos. */
-  pendingFlags: Record<string, { cita: boolean; tarea: boolean }>;
+  pendingFlags: Record<string, LeadPendingFlags>;
+  /** Lleva a la cita o a la tarea concreta del distintivo. */
+  onOpenPending: (destino: { citaId?: string; tareaId?: string }) => void;
   listsMap: Map<number, LeadList>;
   compactMode: boolean;
   filterMode?: string | null;
@@ -55,7 +58,7 @@ const AvatarIcon = () => (
 );
 
 const LeadsTableRow = ({
-  lead, idx, selectedIds, sendCounts, pendingFlags, listsMap, compactMode, filterMode, isTrash, columns,
+  lead, idx, selectedIds, sendCounts, pendingFlags, onOpenPending, listsMap, compactMode, filterMode, isTrash, columns,
   onView, onEdit, onDelete, onRestore, onTogglePin, getScore,
   onPinDrop,
 }: Props) => {
@@ -127,23 +130,35 @@ const LeadsTableRow = ({
           Sin fondo ni contador: son un si o un no, y una pastilla con numero
           al lado de los contadores de envio se leeria como un tercer contador.
         */}
-        {pendientesDelLead?.cita && (
-          <span
-            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-primary-soft text-primary [&_svg]:h-2.5 [&_svg]:w-2.5"
-            title="Tiene una cita agendada"
-            aria-label="Tiene una cita agendada"
+        {pendientesDelLead?.citaId && (
+          <button
+            type="button"
+            onClick={(event) => {
+              // La fila entera abre el lead: sin esto, el clic haria las dos
+              // cosas y ganaria la que se resolviera despues.
+              event.stopPropagation();
+              onOpenPending({ citaId: pendientesDelLead.citaId });
+            }}
+            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-ink-muted transition-colors hover:text-ink [&_svg]:h-2.5 [&_svg]:w-2.5"
+            title="Ver la cita agendada"
+            aria-label={`Ver la cita agendada de ${lead.name}`}
           >
             {Icon.Calendar()}
-          </span>
+          </button>
         )}
-        {pendientesDelLead?.tarea && (
-          <span
-            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-state-warning-soft text-state-warning-ink [&_svg]:h-2.5 [&_svg]:w-2.5"
-            title="Tiene una tarea pendiente"
-            aria-label="Tiene una tarea pendiente"
+        {pendientesDelLead?.tareaId && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenPending({ tareaId: pendientesDelLead.tareaId });
+            }}
+            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-ink-muted transition-colors hover:text-ink [&_svg]:h-2.5 [&_svg]:w-2.5"
+            title="Ver la tarea pendiente"
+            aria-label={`Ver la tarea pendiente de ${lead.name}`}
           >
             {Icon.Tasks()}
-          </span>
+          </button>
         )}
         {lead.hasUnreadCrossExecAlert && (
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-state-warning-soft text-state-warning whitespace-nowrap">
@@ -185,7 +200,7 @@ const LeadsTableRow = ({
         )}
       </>
     ),
-    [lead, enviosDelLead, pendientesDelLead, filterMode, onView]
+    [lead, enviosDelLead, pendientesDelLead, filterMode, onView, onOpenPending]
   );
 
   const avatar = (
@@ -295,6 +310,7 @@ export default memo(LeadsTableRow, (prev, next) => {
 
   if (prev.sendCounts !== next.sendCounts) return false;
   if (prev.pendingFlags !== next.pendingFlags) return false;
+  if (prev.onOpenPending !== next.onOpenPending) return false;
   if (prev.listsMap !== next.listsMap) return false;
 
   return true;

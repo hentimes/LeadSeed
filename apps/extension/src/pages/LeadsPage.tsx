@@ -63,6 +63,7 @@ export default function LeadsPage({ compactMode, visibleCols, onColsChange, onNa
       )}
 
       <LeadsTable
+        onNavigate={onNavigate}
         bulkActions={
           <BulkActionBar
             selectedIds={p.selectedIds}

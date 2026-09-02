@@ -1,10 +1,11 @@
-import { useEffect, useRef, useMemo, useState } from 'react';
-import type { Lead, LeadList, LeadSourceChannel, LeadStatus } from '../../types';
+import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
+import type { Lead, LeadList, LeadSourceChannel, LeadStatus, Page } from '../../types';
 import type { LeadOrigin, LeadSortConfig, LeadSortField } from '../../repositories/leadsRepository';
 import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import { useLeadPendingFlags } from '../../hooks/useLeadPendingFlags';
+import { getPlatform } from '../../platform/registry';
 import LeadsTableControls from './LeadsTableControls';
 import LeadsTableRow from './LeadsTableRow';
 import LoadingOverlay from '../LoadingOverlay';
@@ -13,6 +14,8 @@ import { LEAD_COLUMN_BY_KEY } from '../../config/leadColumns';
 
 
 interface Props {
+  /** Para saltar a la cita o la tarea del distintivo de una fila. */
+  onNavigate?: (page: Page) => void;
   leads: Lead[];
   lists: LeadList[];
   selectedIds: Set<string>;
@@ -78,6 +81,7 @@ const sortIcon = (f: LeadSortField, s: LeadSortConfig) => {
  */
 
 export default function LeadsTable({
+  onNavigate,
   leads, lists, selectedIds, onToggleSelect, onRangeSelect, onSelectAll,
   onEdit, onView, onDelete, onRestore, onTogglePin, isTrash, filterMode, filterListId, onFilterChange, filterStatus, onFilterStatusChange, filterDate, onFilterDateChange,
   filterOrigin, onFilterOriginChange, filterCaptureLinkId, onFilterCaptureLinkIdChange,
@@ -88,6 +92,31 @@ export default function LeadsTable({
 }: Props) {
   const sendCounts = useSendCounts();
   const pendingFlags = useLeadPendingFlags();
+
+  /*
+   * El distintivo lleva al elemento CONCRETO, no a la pantalla.
+   *
+   * La ruta se escribe antes de cambiar de pagina: `useAgenda` y `TasksPage`
+   * leen el identificador al montarse, asi que si se navegara primero
+   * llegarian a una ruta que todavia no dice a que abrir.
+   */
+  const abrirPendiente = useCallback(
+    (destino: { citaId?: string; tareaId?: string }) => {
+      const { navigation } = getPlatform();
+
+      if (destino.citaId) {
+        navigation.replace({ name: 'agenda', appointmentId: destino.citaId });
+        onNavigate?.('agenda');
+        return;
+      }
+
+      if (destino.tareaId) {
+        navigation.replace({ name: 'tasks', taskId: destino.tareaId });
+        onNavigate?.('tasks');
+      }
+    },
+    [onNavigate],
+  );
   
   const { containerRef, renderedColumns, hiddenCount, canScrollBack, canScrollForward, scrollBack, scrollForward } =
     useResponsiveColumns(visibleCols);
@@ -359,6 +388,7 @@ export default function LeadsTable({
                   selectedIds={selectedIds}
                   sendCounts={sendCounts}
                   pendingFlags={pendingFlags}
+                  onOpenPending={abrirPendiente}
                   listsMap={listsMap}
                   compactMode={compactMode}
                   filterMode={filterMode}

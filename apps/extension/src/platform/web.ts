@@ -82,6 +82,15 @@ function parseHash(hash: string): AppRoute | null {
     return appointmentId ? { name: 'agenda', appointmentId } : { name: 'agenda' };
   }
 
+  if (name === 'tasks') {
+    const route: AppRoute = { name: 'tasks' };
+    const taskId = params.get('task');
+    const filter = params.get('filter');
+    if (taskId) route.taskId = taskId;
+    if (filter) route.filter = filter;
+    return route;
+  }
+
   return null;
 }
 
@@ -93,6 +102,14 @@ function buildHash(route: AppRoute): string {
     if (route.action) params.set('action', route.action);
     const query = params.toString();
     return query ? `#leads?${query}` : '#leads';
+  }
+
+  if (route.name === 'tasks') {
+    const params = new URLSearchParams();
+    if (route.taskId) params.set('task', route.taskId);
+    if (route.filter) params.set('filter', route.filter);
+    const query = params.toString();
+    return query ? `#tasks?${query}` : '#tasks';
   }
 
   return route.appointmentId
