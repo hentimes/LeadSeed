@@ -368,8 +368,13 @@ export function useAgenda() {
       setMessage(`${partes.join(', ')}.`);
       return true;
     } catch (err) {
+      /*
+       * No se recarga la agenda aca, y no es un descuido: `loadAgenda` empieza
+       * con `setError('')`, asi que recargar despues de poner el mensaje lo
+       * borraba en el mismo instante y el fallo quedaba mudo. Ademas no hay
+       * nada que recargar: si el cierre fallo, en la base no cambio nada.
+       */
       setError(mensajeDeCierre(err));
-      await loadAgenda(true);
       return false;
     } finally {
       setAppointmentActionId('');

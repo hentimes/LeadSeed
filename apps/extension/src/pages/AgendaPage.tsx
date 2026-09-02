@@ -332,9 +332,16 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
             perdia y el error aparecia detras, arriba de una lista larga, donde
             no se veia. Se queda abierto hasta que el registro entra.
           */
-          onGuardar={async (cierre) => {
-            const guardado = await agenda.handleRecordOutcome(citaEnCierre, cierre);
-            if (guardado) setCitaEnCierre(null);
+          onGuardar={async (cierre, opciones) => {
+            const cita = citaEnCierre;
+            const guardado = await agenda.handleRecordOutcome(cita, cierre);
+            if (!guardado) return;
+
+            setCitaEnCierre(null);
+            // La cita nueva se crea desde la ficha del lead, que es la unica
+            // via que existe hoy. La tarea queda igual, como rastro de que
+            // habia que hacerlo.
+            if (opciones.agendarAhora) openLead(cita.leadId);
           }}
         />
       )}

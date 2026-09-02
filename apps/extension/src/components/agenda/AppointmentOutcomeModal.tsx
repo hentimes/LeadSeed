@@ -9,7 +9,16 @@ interface Props {
   guardando: boolean;
   /** Lo que fallo al guardar, si fallo. Se pinta aca dentro. */
   error?: string;
-  onGuardar: (cierre: Omit<CierreDeCita, 'appointmentId'>) => void;
+  /**
+   * `agendarAhora` lo decide el seguimiento "Agendar otra cita": ademas de
+   * dejar la tarea, hay que llevar a donde se agenda. Desde la agenda no se
+   * puede crear una cita -la unica via es la ficha del lead-, asi que la
+   * opcion sola dejaba un recordatorio y nada mas.
+   */
+  onGuardar: (
+    cierre: Omit<CierreDeCita, 'appointmentId'>,
+    opciones: { agendarAhora: boolean },
+  ) => void;
   onClose: () => void;
 }
 
@@ -135,7 +144,14 @@ export default function AppointmentOutcomeModal({
               />
             )}
 
-            <Field label="Crear seguimiento" hint="Se agregan a Tareas, con fecha propuesta.">
+            <Field
+              label="Crear seguimiento"
+              hint={
+                seguimientos.has('cita')
+                  ? 'Se agregan a Tareas. Al guardar te llevo a la ficha del lead para agendar.'
+                  : 'Se agregan a Tareas, con fecha propuesta.'
+              }
+            >
               <div className="flex flex-col gap-1.5">
                 {SEGUIMIENTOS.map((seguimiento) => (
                   <Checkbox
@@ -148,11 +164,6 @@ export default function AppointmentOutcomeModal({
               </div>
             </Field>
 
-            {tareas.length > 0 && (
-              <Badge tone="primary" className="self-start">
-                {tareas.length === 1 ? '1 tarea' : `${tareas.length} tareas`} al guardar
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -169,7 +180,23 @@ export default function AppointmentOutcomeModal({
           </div>
         )}
 
-        <footer className="flex justify-end gap-2 border-t border-line px-4 py-3">
+        {/*
+          El contador va en el pie, a la izquierda de los botones.
+ 
+          Estaba dentro del cuerpo y aparecia al marcar la primera casilla: una
+          linea nueva que empujaba todo y cambiaba el alto del modal en el
+          momento justo en que se esta eligiendo. Aca el sitio esta reservado
+          -`min-h` sobre la fila- asi que aparecer no mueve nada.
+        */}
+        <footer className="flex min-h-[52px] items-center gap-2 border-t border-line px-4 py-3">
+          <div className="min-w-0 flex-1">
+            {tareas.length > 0 && (
+              <Badge tone="primary">
+                {tareas.length === 1 ? '1 tarea' : `${tareas.length} tareas`} al guardar
+              </Badge>
+            )}
+          </div>
+
           <Button variant="secondary" size="sm" onClick={onClose}>
             Cancelar
           </Button>
@@ -180,12 +207,15 @@ export default function AppointmentOutcomeModal({
             // la cita sale justo de ahi.
             disabled={asistio === null || guardando}
             onClick={() =>
-              onGuardar({
-                attended: asistio === true,
-                outcomeNotes: minuta,
-                tambienComoNotaDelLead: comoNota,
-                tareas,
-              })
+              onGuardar(
+                {
+                  attended: asistio === true,
+                  outcomeNotes: minuta,
+                  tambienComoNotaDelLead: comoNota,
+                  tareas,
+                },
+                { agendarAhora: seguimientos.has('cita') && !!cita.leadId },
+              )
             }
           >
             Guardar
