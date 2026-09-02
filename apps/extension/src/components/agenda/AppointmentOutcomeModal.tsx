@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, Checkbox, Field, Modal, Textarea } from '../../design';
+import { Badge, Button, Checkbox, Field, Modal, Panel, Textarea } from '../../design';
 import type { AgendaAppointment } from '../../types';
 import type { CierreDeCita, TareaDeSeguimiento } from '../../services/appointmentOutcomeService';
 import { formatDateTime } from './agendaFormat';
@@ -7,6 +7,8 @@ import { formatDateTime } from './agendaFormat';
 interface Props {
   cita: AgendaAppointment;
   guardando: boolean;
+  /** Lo que fallo al guardar, si fallo. Se pinta aca dentro. */
+  error?: string;
   onGuardar: (cierre: Omit<CierreDeCita, 'appointmentId'>) => void;
   onClose: () => void;
 }
@@ -39,7 +41,13 @@ function enDias(dias: number): string {
  * cita se quedaba en 'agendada' para siempre y lo hablado no quedaba escrito
  * en ningun sitio.
  */
-export default function AppointmentOutcomeModal({ cita, guardando, onGuardar, onClose }: Props) {
+export default function AppointmentOutcomeModal({
+  cita,
+  guardando,
+  error,
+  onGuardar,
+  onClose,
+}: Props) {
   const [asistio, setAsistio] = useState<boolean | null>(null);
   const [minuta, setMinuta] = useState('');
   const [comoNota, setComoNota] = useState(true);
@@ -147,6 +155,19 @@ export default function AppointmentOutcomeModal({ cita, guardando, onGuardar, on
             )}
           </div>
         </div>
+
+        {/* El aviso va DENTRO y pegado a los botones: cerrando el modal al
+            fallar, el error aparecia detras y arriba de una lista larga, y la
+            minuta recien escrita se perdia. */}
+        {error && (
+          <div className="border-t border-line px-4 pt-3">
+            <Panel tone="danger">
+              <p role="alert" className="text-micro">
+                {error}
+              </p>
+            </Panel>
+          </div>
+        )}
 
         <footer className="flex justify-end gap-2 border-t border-line px-4 py-3">
           <Button variant="secondary" size="sm" onClick={onClose}>

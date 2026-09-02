@@ -325,10 +325,16 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
           cita={citaEnCierre}
           guardando={agenda.appointmentActionId === citaEnCierre.id}
           onClose={() => setCitaEnCierre(null)}
-          onGuardar={(cierre) => {
-            const cita = citaEnCierre;
-            setCitaEnCierre(null);
-            void agenda.handleRecordOutcome(cita, cierre);
+          error={agenda.error}
+          /*
+            El modal se cerraba antes de saber si el guardado habia salido
+            bien: con la migracion sin aplicar, la minuta recien escrita se
+            perdia y el error aparecia detras, arriba de una lista larga, donde
+            no se veia. Se queda abierto hasta que el registro entra.
+          */
+          onGuardar={async (cierre) => {
+            const guardado = await agenda.handleRecordOutcome(citaEnCierre, cierre);
+            if (guardado) setCitaEnCierre(null);
           }}
         />
       )}

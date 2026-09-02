@@ -5,6 +5,7 @@ import { getCurrentSession } from '../services/authService';
 import {
   cerrarCita,
   estaPendienteDeCierre,
+  mensajeDeCierre,
   type CierreDeCita,
 } from '../services/appointmentOutcomeService';
 import type { AgendaAppointment, AppointmentAuditEvent, AppointmentParticipant } from '../types';
@@ -338,9 +339,14 @@ export function useAgenda() {
   const handleRecordOutcome = async (
     appointment: AgendaAppointment,
     cierre: Omit<CierreDeCita, 'appointmentId'>,
-  ) => {
+  ): Promise<boolean> => {
     const userId = (await getCurrentSession())?.user?.id;
-    if (!userId) return;
+    if (!userId) {
+      // Salia sin decir nada y la pantalla se quedaba igual, que es
+      // indistinguible de "no hizo nada".
+      setError('No hay sesión activa. Volvé a entrar para registrar la reunión.');
+      return false;
+    }
 
     setAppointmentActionId(appointment.id);
     setMessage('');
@@ -360,9 +366,11 @@ export function useAgenda() {
         );
       }
       setMessage(`${partes.join(', ')}.`);
+      return true;
     } catch (err) {
-      setError(getErrorMessage(err, 'No se pudo registrar cómo fue la reunión'));
+      setError(mensajeDeCierre(err));
       await loadAgenda(true);
+      return false;
     } finally {
       setAppointmentActionId('');
     }

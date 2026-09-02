@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cerrarCita, estaPendienteDeCierre } from './appointmentOutcomeService';
+import { cerrarCita, estaPendienteDeCierre, mensajeDeCierre } from './appointmentOutcomeService';
 import type { AgendaAppointment } from '../types';
 
 const repo = vi.hoisted(() => ({ recordMyAppointmentOutcomeRow: vi.fn() }));
@@ -160,5 +160,32 @@ describe('cerrarCita', () => {
 
     expect(notas.createLeadNote).not.toHaveBeenCalled();
     expect(tareas.createTaskRow).not.toHaveBeenCalled();
+  });
+});
+
+describe('mensajeDeCierre', () => {
+  /*
+   * Con la migracion sin aplicar, la RPC no existe y PostgREST responde
+   * PGRST202. El mensaje crudo habla de un esquema y una firma; desde la
+   * agenda eso se lee como que el boton no hace nada.
+   */
+  it('explica que falta aplicar la migracion cuando la funcion no existe', () => {
+    const err = { code: 'PGRST202', message: 'Could not find the function public.record_my_appointment_outcome' };
+
+    expect(mensajeDeCierre(err)).toContain('migración 139');
+  });
+
+  it('reconoce el caso aunque no venga el codigo', () => {
+    const err = { message: 'Could not find the function public.record_my_appointment_outcome(...)' };
+
+    expect(mensajeDeCierre(err)).toContain('migración 139');
+  });
+
+  it('deja pasar el resto de errores tal como llegan', () => {
+    expect(mensajeDeCierre(new Error('sin conexión'))).toBe('sin conexión');
+  });
+
+  it('cae a una frase legible cuando el error no dice nada', () => {
+    expect(mensajeDeCierre({})).toBe('No se pudo registrar cómo fue la reunión');
   });
 });

@@ -2,6 +2,7 @@ import { recordMyAppointmentOutcomeRow } from '../repositories/agendaRepository'
 import { createTaskRow } from '../repositories/tasksRepository';
 import { createLeadNote } from './leadDetailService';
 import type { AgendaAppointment } from '../types';
+import { getErrorMessage } from '../utils/errorMessage';
 
 /**
  * Una cita ya terminada y sin cerrar.
@@ -45,6 +46,31 @@ export interface ResultadoDeCierre {
   cita: { id: string; status: string; outcomeRecordedAt?: string };
   notaCreada: boolean;
   tareasCreadas: number;
+}
+
+/**
+ * PostgREST devuelve PGRST202 cuando la funcion no existe en el esquema.
+ *
+ * Pasa con la migracion 139 sin aplicar: el codigo ya la llama y la base
+ * todavia no la tiene. El mensaje crudo -"Could not find the function..."- no
+ * le dice nada a quien lo lee desde la agenda, y sin explicacion el sintoma
+ * parece que la pantalla no hace nada.
+ */
+function esFuncionInexistente(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+
+  const codigo = String((err as { code?: unknown }).code ?? '');
+  const mensaje = String((err as { message?: unknown }).message ?? '');
+
+  return codigo === 'PGRST202' || mensaje.includes('Could not find the function');
+}
+
+export function mensajeDeCierre(err: unknown): string {
+  if (esFuncionInexistente(err)) {
+    return 'Falta aplicar la migración 139 en la base de datos: todavía no existe la función que registra la reunión.';
+  }
+
+  return getErrorMessage(err, 'No se pudo registrar cómo fue la reunión');
 }
 
 /**
