@@ -10,6 +10,7 @@ import { Button, Card, IconButton, SegmentedControl } from '../design';
 import AppointmentOutcomeModal from '../components/agenda/AppointmentOutcomeModal';
 import ScheduleAppointmentModal from '../components/agenda/ScheduleAppointmentModal';
 import AgendaRegisteredRow from '../components/agenda/AgendaRegisteredRow';
+import QuickTaskModal from '../components/agenda/QuickTaskModal';
 import { formatDateTime } from '../components/agenda/agendaFormat';
 
 /** Los dias que mira la agenda. Sale de `getDefaultAgendaRange(60)` en el hook. */
@@ -52,8 +53,15 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
   /** La cita cuya minuta se esta escribiendo. */
   const [citaEnCierre, setCitaEnCierre] = useState<AgendaAppointment | null>(null);
   const [verRegistradas, setVerRegistradas] = useState(false);
-  /** El lead para el que se esta agendando la siguiente cita. */
+  /**
+   * El lead para el que se esta agendando la siguiente cita.
+   *
+   * `leadId` vacio significa "todavia no se eligio": es como entra el boton de
+   * la cabecera, que agenda sin partir de ninguna cita previa.
+   */
   const [citaNueva, setCitaNueva] = useState<{ leadId: string; leadName: string } | null>(null);
+  /** La reunion de la que se esta sacando una tarea. */
+  const [tareaDesdeCita, setTareaDesdeCita] = useState<AgendaAppointment | null>(null);
 
   if (agenda.loading) {
     return <LoadingOverlay message="Cargando agenda..." />;
@@ -86,6 +94,20 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
           variant={vista ? 'primary' : 'ghost'}
           aria-pressed={vista !== null}
           onClick={() => setVista((actual) => (actual ? null : 'semana'))}
+        />
+        {/*
+          Crear una cita desde la propia agenda.
+ 
+          Hasta ahora la unica via era la ficha de un lead, asi que para
+          agendar habia que salir de la pantalla que existe justamente para
+          eso. El lead se elige dentro del modal.
+        */}
+        <IconButton
+          icon={Icon.Plus()}
+          label="Agendar una cita"
+          size="sm"
+          variant="primary"
+          onClick={() => setCitaNueva({ leadId: '', leadName: '' })}
         />
         <IconButton
           icon={Icon.Settings()}
@@ -277,6 +299,10 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
                   key={appointment.id}
                   appointment={appointment}
                   onOpenLead={openLead}
+                  onAgendar={(cita) =>
+                    setCitaNueva({ leadId: cita.leadId ?? '', leadName: cita.leadName })
+                  }
+                  onCrearTarea={setTareaDesdeCita}
                 />
               ))}
             </div>
@@ -318,6 +344,20 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
           </div>
         )}
       </div>
+
+      {tareaDesdeCita && (
+        <QuickTaskModal
+          leadId={tareaDesdeCita.leadId}
+          leadName={tareaDesdeCita.leadName}
+          origen={`Seguimiento de la reunión con ${tareaDesdeCita.leadName}`}
+          tituloSugerido={`Seguir con ${tareaDesdeCita.leadName}`}
+          onClose={() => setTareaDesdeCita(null)}
+          onCreada={(mensaje) => {
+            setTareaDesdeCita(null);
+            void agenda.reloadWithMessage(mensaje);
+          }}
+        />
+      )}
 
       {citaNueva && (
         <ScheduleAppointmentModal

@@ -109,3 +109,31 @@ export async function createFollowUpTaskForLead(params: {
     created_at: new Date().toISOString(),
   });
 }
+
+/**
+ * Una tarea con lo minimo: titulo, cuando y de que lead viene.
+ *
+ * Existe para las que nacen fuera de la pantalla de Tareas -al cerrar una
+ * reunion, o despues, desde una cita ya registrada-. `saveTaskForUser` pide el
+ * `Task` entero con seccion, subtareas y adjuntos; ahi solo hay tres datos, y
+ * completar el resto con vacios en cada sitio que la cree acabaria
+ * duplicandose.
+ */
+export async function createQuickTask(params: {
+  userId: string;
+  leadId?: string | null;
+  title: string;
+  description: string;
+  dueDateIso?: string | null;
+}): Promise<void> {
+  await createTaskRow({
+    title: params.title.trim(),
+    description: params.description,
+    lead_id: params.leadId ?? null,
+    lead_list_ids: [],
+    due_date: params.dueDateIso || null,
+    status: 'pendiente',
+    user_id: params.userId,
+    created_at: new Date().toISOString(),
+  });
+}

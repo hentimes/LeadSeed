@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge } from '../../design';
+import { Badge, Button } from '../../design';
 import { Icon } from '../../utils/icons';
 import type { AgendaAppointment } from '../../types';
 import { formatDateTime } from './agendaFormat';
@@ -7,6 +7,10 @@ import { formatDateTime } from './agendaFormat';
 interface Props {
   appointment: AgendaAppointment;
   onOpenLead: (leadId?: string) => void;
+  /** Agendar la siguiente cita con este lead. */
+  onAgendar: (cita: AgendaAppointment) => void;
+  /** Sacar una tarea de esta reunion, despues de haberla cerrado. */
+  onCrearTarea: (cita: AgendaAppointment) => void;
 }
 
 /**
@@ -21,7 +25,12 @@ interface Props {
  * `Badge` y no como texto suelto: "Realizada" y "No asistio" son el dato por
  * el que se mira esta lista, y en gris junto al nombre se perdian.
  */
-export default function AgendaRegisteredRow({ appointment, onOpenLead }: Props) {
+export default function AgendaRegisteredRow({
+  appointment,
+  onOpenLead,
+  onAgendar,
+  onCrearTarea,
+}: Props) {
   const [abierta, setAbierta] = useState(false);
 
   const asistio = appointment.status === 'completada';
@@ -77,7 +86,24 @@ export default function AgendaRegisteredRow({ appointment, onOpenLead }: Props) 
             </p>
           )}
 
-          <div className="mt-2 flex justify-end">
+          {/*
+            Lo que se puede hacer con una reunion ya cerrada.
+ 
+            Estas dos acciones solo existian DENTRO del momento de registrar:
+            si no se marcaba la casilla entonces, la reunion quedaba cerrada y
+            no se le podia sacar nada mas. Aca siguen disponibles despues.
+          */}
+          <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
+            {appointment.leadId && (
+              <>
+                <Button size="sm" variant="ghost" onClick={() => onAgendar(appointment)}>
+                  Agendar otra
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => onCrearTarea(appointment)}>
+                  Crear tarea
+                </Button>
+              </>
+            )}
             <button
               type="button"
               onClick={() => onOpenLead(appointment.leadId)}

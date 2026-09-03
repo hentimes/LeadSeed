@@ -430,8 +430,10 @@ export function useAgenda() {
       setParticipantForms((current) => ({ ...current, [appointment.id]: defaultParticipantForm() }));
       await loadAgenda(true);
     } catch (err) {
+      // Sin recargar: `loadAgenda` arranca con `setError('')` y borraba este
+      // mensaje en el mismo instante. Es el ultimo sitio del hook que quedaba
+      // con el fallo mudo.
       setError(getErrorMessage(err, 'No se pudo agregar el participante'));
-      await loadAgenda(true);
     } finally {
       setParticipantActionId('');
     }
@@ -446,8 +448,10 @@ export function useAgenda() {
       await syncParticipantsAfterChange(appointmentId);
       await loadAgenda(true);
     } catch (err) {
+      // Sin recargar: `loadAgenda` arranca con `setError('')` y borraba este
+      // mensaje en el mismo instante. Es el ultimo sitio del hook que quedaba
+      // con el fallo mudo.
       setError(getErrorMessage(err, 'No se pudo quitar el participante'));
-      await loadAgenda(true);
     } finally {
       setParticipantActionId('');
     }

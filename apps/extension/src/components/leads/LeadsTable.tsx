@@ -4,7 +4,7 @@ import type { LeadOrigin, LeadSortConfig, LeadSortField } from '../../repositori
 import type { ColumnDef } from '../../types';
 import { Icon } from '../../utils/icons';
 import { useSendCounts } from '../../hooks/useSendCounts';
-import { useLeadPendingFlags } from '../../hooks/useLeadPendingFlags';
+import { useLeadPendingFlags } from './useLeadPendingFlags';
 import { getPlatform } from '../../platform/registry';
 import LeadsTableControls from './LeadsTableControls';
 import LeadsTableRow from './LeadsTableRow';
