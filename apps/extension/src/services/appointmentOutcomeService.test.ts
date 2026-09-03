@@ -2,13 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { cerrarCita, estaPendienteDeCierre, mensajeDeCierre } from './appointmentOutcomeService';
 import type { AgendaAppointment } from '../types';
 
-const repo = vi.hoisted(() => ({ recordMyAppointmentOutcomeRow: vi.fn() }));
-const tareas = vi.hoisted(() => ({ createTaskRow: vi.fn() }));
-const notas = vi.hoisted(() => ({ createLeadNote: vi.fn() }));
+const repo = vi.hoisted(() => ({ closeMyAppointmentRow: vi.fn() }));
 
 vi.mock('../repositories/agendaRepository', () => repo);
-vi.mock('../repositories/tasksRepository', () => tareas);
-vi.mock('./leadDetailService', () => notas);
 
 const AYER = '2026-08-31T15:00:00.000Z';
 const MANANA = '2026-09-02T15:00:00.000Z';
@@ -32,10 +28,12 @@ function cita(overrides: Partial<AgendaAppointment> = {}): AgendaAppointment {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  repo.recordMyAppointmentOutcomeRow.mockResolvedValue({
-    id: 'cita-1',
+  repo.closeMyAppointmentRow.mockResolvedValue({
+    appointment_id: 'cita-1',
     status: 'completada',
     outcome_recorded_at: '2026-09-01T10:00:00.000Z',
+    note_created: false,
+    tasks_created: 0,
   });
 });
 
@@ -65,101 +63,104 @@ describe('estaPendienteDeCierre', () => {
 });
 
 describe('cerrarCita', () => {
-  it('marca la asistencia y guarda la minuta', async () => {
-    await cerrarCita('user-1', cita(), {
+  /*
+   * Una sola llamada, no tres. Las tres escrituras -cierre, nota y tareas-
+   * ocurren en una transaccion del servidor: si algo falla no se guarda nada y
+   * la cita sigue pendiente, en vez de quedar cerrada con el seguimiento a
+   * medias y sin forma de reintentarlo.
+   */
+  it('manda las tres escrituras en una sola llamada', async () => {
+    await cerrarCita(cita(), {
       appointmentId: 'cita-1',
       attended: true,
       outcomeNotes: '  Quedó en revisar la propuesta  ',
+      tambienComoNotaDelLead: true,
+      tareas: [{ title: 'Llamar', dueDateIso: '2026-09-03T12:00:00.000Z' }],
     });
 
-    expect(repo.recordMyAppointmentOutcomeRow).toHaveBeenCalledWith(
-      'cita-1',
-      true,
-      'Quedó en revisar la propuesta',
-    );
+    expect(repo.closeMyAppointmentRow).toHaveBeenCalledTimes(1);
+    expect(repo.closeMyAppointmentRow).toHaveBeenCalledWith({
+      appointmentId: 'cita-1',
+      attended: true,
+      outcomeNotes: 'Quedó en revisar la propuesta',
+      alsoLeadNote: true,
+      tasks: [{ title: 'Llamar', dueDate: '2026-09-03T12:00:00.000Z' }],
+    });
   });
 
   it('sin minuta no manda una cadena vacia', async () => {
-    await cerrarCita('user-1', cita(), { appointmentId: 'cita-1', attended: false });
+    await cerrarCita(cita(), { appointmentId: 'cita-1', attended: false });
 
-    expect(repo.recordMyAppointmentOutcomeRow).toHaveBeenCalledWith('cita-1', false, undefined);
+    expect(repo.closeMyAppointmentRow).toHaveBeenCalledWith(
+      expect.objectContaining({ attended: false, outcomeNotes: undefined }),
+    );
   });
 
-  it('copia la minuta a la ficha del lead cuando se pide', async () => {
-    const resultado = await cerrarCita('user-1', cita(), {
-      appointmentId: 'cita-1',
-      attended: true,
-      outcomeNotes: 'Pide llamar el lunes',
-      tambienComoNotaDelLead: true,
-    });
-
-    expect(notas.createLeadNote).toHaveBeenCalledWith('lead-1', 'user-1', 'Pide llamar el lunes');
-    expect(resultado.notaCreada).toBe(true);
-  });
-
-  it('sin minuta no crea una nota vacia en el lead', async () => {
-    const resultado = await cerrarCita('user-1', cita(), {
+  it('sin minuta no pide copiarla al lead aunque se haya marcado', async () => {
+    await cerrarCita(cita(), {
       appointmentId: 'cita-1',
       attended: false,
       tambienComoNotaDelLead: true,
     });
 
-    expect(notas.createLeadNote).not.toHaveBeenCalled();
-    expect(resultado.notaCreada).toBe(false);
-  });
-
-  it('crea las tareas de seguimiento apuntando al lead de la cita', async () => {
-    const resultado = await cerrarCita('user-1', cita(), {
-      appointmentId: 'cita-1',
-      attended: true,
-      tareas: [
-        { title: 'Llamar a Angel Largo', dueDateIso: '2026-09-03T12:00:00.000Z' },
-        { title: 'Agendar nueva cita', dueDateIso: null },
-      ],
-    });
-
-    expect(tareas.createTaskRow).toHaveBeenCalledTimes(2);
-    expect(tareas.createTaskRow).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Llamar a Angel Largo',
-        lead_id: 'lead-1',
-        status: 'pendiente',
-        user_id: 'user-1',
-      }),
+    expect(repo.closeMyAppointmentRow).toHaveBeenCalledWith(
+      expect.objectContaining({ alsoLeadNote: false }),
     );
-    expect(resultado.tareasCreadas).toBe(2);
   });
 
-  it('descarta las tareas sin titulo', async () => {
-    const resultado = await cerrarCita('user-1', cita(), {
+  it('una cita sin lead no puede llevar nota al lead', async () => {
+    await cerrarCita(cita({ leadId: undefined }), {
       appointmentId: 'cita-1',
       attended: true,
-      tareas: [{ title: '   ' }],
+      outcomeNotes: 'algo',
+      tambienComoNotaDelLead: true,
     });
 
-    expect(tareas.createTaskRow).not.toHaveBeenCalled();
-    expect(resultado.tareasCreadas).toBe(0);
+    expect(repo.closeMyAppointmentRow).toHaveBeenCalledWith(
+      expect.objectContaining({ alsoLeadNote: false }),
+    );
   });
 
-  /*
-   * El cierre va primero. Si fallara antes que la nota y las tareas, quedarian
-   * colgando de una reunion que el sistema sigue dando por sin registrar.
-   */
-  it('si falla el cierre no deja notas ni tareas sueltas', async () => {
-    repo.recordMyAppointmentOutcomeRow.mockRejectedValue(new Error('sin conexión'));
+  it('descarta las tareas sin titulo antes de mandarlas', async () => {
+    await cerrarCita(cita(), {
+      appointmentId: 'cita-1',
+      attended: true,
+      tareas: [{ title: '   ' }, { title: 'Escribir' }],
+    });
+
+    expect(repo.closeMyAppointmentRow).toHaveBeenCalledWith(
+      expect.objectContaining({ tasks: [{ title: 'Escribir', dueDate: null }] }),
+    );
+  });
+
+  it('devuelve lo que conto el servidor, no lo que se pidio', async () => {
+    repo.closeMyAppointmentRow.mockResolvedValue({
+      appointment_id: 'cita-1',
+      status: 'no_asistio',
+      outcome_recorded_at: '2026-09-01T10:00:00.000Z',
+      note_created: true,
+      tasks_created: 2,
+    });
+
+    const resultado = await cerrarCita(cita(), { appointmentId: 'cita-1', attended: false });
+
+    expect(resultado).toEqual({
+      cita: {
+        id: 'cita-1',
+        status: 'no_asistio',
+        outcomeRecordedAt: '2026-09-01T10:00:00.000Z',
+      },
+      notaCreada: true,
+      tareasCreadas: 2,
+    });
+  });
+
+  it('propaga el fallo sin inventar un cierre a medias', async () => {
+    repo.closeMyAppointmentRow.mockRejectedValue(new Error('sin conexión'));
 
     await expect(
-      cerrarCita('user-1', cita(), {
-        appointmentId: 'cita-1',
-        attended: true,
-        outcomeNotes: 'algo',
-        tambienComoNotaDelLead: true,
-        tareas: [{ title: 'Llamar' }],
-      }),
+      cerrarCita(cita(), { appointmentId: 'cita-1', attended: true }),
     ).rejects.toThrow('sin conexión');
-
-    expect(notas.createLeadNote).not.toHaveBeenCalled();
-    expect(tareas.createTaskRow).not.toHaveBeenCalled();
   });
 });
 
@@ -170,15 +171,12 @@ describe('mensajeDeCierre', () => {
    * agenda eso se lee como que el boton no hace nada.
    */
   it('explica que falta aplicar la migracion cuando la funcion no existe', () => {
-    const err = { code: 'PGRST202', message: 'Could not find the function public.record_my_appointment_outcome' };
+    const err = {
+      code: 'PGRST202',
+      message: 'Could not find the function public.close_my_appointment',
+    };
 
-    expect(mensajeDeCierre(err)).toContain('migración 139');
-  });
-
-  it('reconoce el caso aunque no venga el codigo', () => {
-    const err = { message: 'Could not find the function public.record_my_appointment_outcome(...)' };
-
-    expect(mensajeDeCierre(err)).toContain('migración 139');
+    expect(mensajeDeCierre(err)).toContain('migración');
   });
 
   it('deja pasar el resto de errores tal como llegan', () => {

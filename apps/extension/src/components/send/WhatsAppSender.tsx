@@ -95,16 +95,27 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
    * solo sobrevivia uno, mientras el historial ya los daba todos por enviados.
    * La cola abre uno, espera a que se envie, y sigue.
    */
+  /*
+   * LA PLANTILLA DE LA TANDA SE CONGELA AL EMPEZAR.
+   *
+   * El selector sigue usable con una cola en marcha, y este callback leia
+   * `selectedTemplate` en cada avance. Cambiar de plantilla entre destinatarios
+   * mandaba el texto de la vieja -ya resuelto en los mensajes de la cola- y lo
+   * registraba bajo el id y el nombre de la nueva: el historial y los
+   * contadores por plantilla quedaban cruzados, que es justo lo que la cola
+   * vino a arreglar.
+   */
+  const plantillaDeLaTanda = useRef<{ id: string | number; nombre: string } | null>(null);
+
   const cola = useWhatsAppQueue({
     onAbierto: async (mensaje) => {
       const session = await getCurrentSession();
       const userId = session?.user?.id;
-      if (!userId || !selectedTemplate) return;
+      const plantilla = plantillaDeLaTanda.current;
+      if (!userId || !plantilla) return;
 
       // Se registra el que se acaba de abrir, no el envio entero.
-      setSentLog(
-        await logWhatsAppSend(userId, selectedTemplate.id!, [mensaje], selectedTemplate.nombre),
-      );
+      setSentLog(await logWhatsAppSend(userId, plantilla.id, [mensaje], plantilla.nombre));
       await sesion.refrescarContador();
     },
   });
@@ -254,7 +265,12 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     if (!selectedTemplate || recipients.length === 0) return;
 
     // Se resuelve una sola vez: lo que se guarda en el historial y lo que se
-    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones.
+    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones. La
+    // plantilla se anota junto a los mensajes, por el mismo motivo.
+    plantillaDeLaTanda.current = {
+      id: selectedTemplate.id!,
+      nombre: selectedTemplate.nombre,
+    };
     await cola.iniciar(buildLeadMessages(recipients, customBody, motivoTexto));
   };
 

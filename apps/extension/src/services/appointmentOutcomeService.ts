@@ -1,6 +1,4 @@
-import { recordMyAppointmentOutcomeRow } from '../repositories/agendaRepository';
-import { createTaskRow } from '../repositories/tasksRepository';
-import { createLeadNote } from './leadDetailService';
+import { closeMyAppointmentRow } from '../repositories/agendaRepository';
 import type { AgendaAppointment } from '../types';
 import { getErrorMessage } from '../utils/errorMessage';
 
@@ -67,7 +65,7 @@ function esFuncionInexistente(err: unknown): boolean {
 
 export function mensajeDeCierre(err: unknown): string {
   if (esFuncionInexistente(err)) {
-    return 'Falta aplicar la migración 139 en la base de datos: todavía no existe la función que registra la reunión.';
+    return 'Falta aplicar la migración pendiente en la base de datos: todavía no existe la función que registra la reunión.';
   }
 
   return getErrorMessage(err, 'No se pudo registrar cómo fue la reunión');
@@ -77,55 +75,44 @@ export function mensajeDeCierre(err: unknown): string {
  * Cierra una cita: deja constancia de si el contacto se conecto, guarda la
  * minuta y crea el seguimiento que salga de la reunion.
  *
- * ## Por que el orden importa
+ * ## Todo o nada
  *
- * Primero la cita. Si algo falla despues -la nota, una tarea- el cierre ya
- * quedo registrado y no se vuelve a pedir; al reves, un fallo al cerrar
- * dejaria notas y tareas colgando de una reunion que el sistema sigue
- * considerando sin registrar.
+ * Las tres escrituras -el cierre, la nota del lead y las tareas- van en una
+ * sola llamada porque ocurren en una sola transaccion del servidor.
+ *
+ * Antes eran tres llamadas encadenadas, la cita primero, para que un fallo no
+ * dejara notas y tareas colgando de una reunion sin registrar. Ese orden
+ * evitaba la basura huerfana y creaba el problema opuesto: si la cita se
+ * cerraba y fallaba lo de despues, quedaba cerrada -y fuera de "Por
+ * registrar"- con el seguimiento a medias y sin forma de reintentarlo. Ahora
+ * un fallo no guarda nada y reintentar es igual que la primera vez.
  */
 export async function cerrarCita(
-  userId: string,
   cita: AgendaAppointment,
   cierre: CierreDeCita,
 ): Promise<ResultadoDeCierre> {
   const minuta = (cierre.outcomeNotes ?? '').trim();
-
-  const fila = await recordMyAppointmentOutcomeRow(
-    cierre.appointmentId,
-    cierre.attended,
-    minuta || undefined,
-  );
-
-  let notaCreada = false;
-  if (cierre.tambienComoNotaDelLead && minuta && cita.leadId) {
-    await createLeadNote(cita.leadId, userId, minuta);
-    notaCreada = true;
-  }
-
   const tareas = (cierre.tareas ?? []).filter((tarea) => tarea.title.trim().length > 0);
-  for (const tarea of tareas) {
-    await createTaskRow({
+
+  const fila = await closeMyAppointmentRow({
+    appointmentId: cierre.appointmentId,
+    attended: cierre.attended,
+    outcomeNotes: minuta || undefined,
+    // Sin minuta no hay nota que copiar, aunque se haya pedido.
+    alsoLeadNote: !!cierre.tambienComoNotaDelLead && !!minuta && !!cita.leadId,
+    tasks: tareas.map((tarea) => ({
       title: tarea.title.trim(),
-      // Deja dicho de donde sale, que es lo que se pregunta al verla suelta
-      // en la lista de tareas dos semanas despues.
-      description: `Seguimiento de la reunión con ${cita.leadName}`,
-      lead_id: cita.leadId ?? null,
-      lead_list_ids: [],
-      due_date: tarea.dueDateIso || null,
-      status: 'pendiente',
-      user_id: userId,
-      created_at: new Date().toISOString(),
-    });
-  }
+      dueDate: tarea.dueDateIso ?? null,
+    })),
+  });
 
   return {
     cita: {
-      id: fila.id,
+      id: fila.appointment_id,
       status: fila.status,
       outcomeRecordedAt: fila.outcome_recorded_at || undefined,
     },
-    notaCreada,
-    tareasCreadas: tareas.length,
+    notaCreada: fila.note_created,
+    tareasCreadas: fila.tasks_created,
   };
 }
