@@ -11,9 +11,8 @@ interface Props {
   error?: string;
   /**
    * `agendarAhora` lo decide el seguimiento "Agendar otra cita": ademas de
-   * dejar la tarea, hay que llevar a donde se agenda. Desde la agenda no se
-   * puede crear una cita -la unica via es la ficha del lead-, asi que la
-   * opcion sola dejaba un recordatorio y nada mas.
+   * dejar la tarea, al guardar se abre el selector de fecha. La opcion sola
+   * dejaba un recordatorio y nada mas.
    */
   onGuardar: (
     cierre: Omit<CierreDeCita, 'appointmentId'>,
@@ -148,7 +147,7 @@ export default function AppointmentOutcomeModal({
               label="Crear seguimiento"
               hint={
                 seguimientos.has('cita')
-                  ? 'Se agregan a Tareas. Al guardar te llevo a la ficha del lead para agendar.'
+                  ? 'Se agregan a Tareas. Al guardar se abre el selector para elegir fecha y hora.'
                   : 'Se agregan a Tareas, con fecha propuesta.'
               }
             >
