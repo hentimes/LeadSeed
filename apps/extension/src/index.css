@@ -1,0 +1,192 @@
+/* Inter se empaqueta con la extension en vez de pedirla a fonts.googleapis.com.
+   Motivos: la extension debe funcionar sin red, y una fuente remota le informa
+   a un tercero cada vez que un usuario abre el panel. Los pesos son los mismos
+   que traia la URL.
+
+   Se usa el subset latino: el paquete completo trae tambien cirilico, griego
+   y vietnamita, que este producto no necesita. */
+@import '@fontsource/inter/latin-300.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
+
+@import './design/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: var(--ls-font-sans);
+    background-color: var(--ls-bg);
+    color: var(--ls-text);
+    font-size: var(--ls-text-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--ls-font-sans);
+    color: var(--ls-text);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+}
+
+@layer components {
+  /* Las clases .btn* vivieron aca hasta el 2026-08-13. Se retiraron al pasar
+     los 30 botones que las usaban a la primitiva `design/Button.tsx`: dos
+     sistemas de botones en paralelo era justo la duplicacion que el bloque 7
+     venia a cerrar. Si hace falta una variante nueva, se agrega a la
+     primitiva, no se reabre este bloque. */
+
+  /* --- Sistema Base de Tarjetas (Dashboard Cards) --- */
+  .card-standard {
+    @apply bg-surface border border-line rounded-lg p-3 shadow-card;
+  }
+
+  .card-header {
+    @apply flex justify-between items-center mb-2;
+  }
+
+  .card-title {
+    @apply text-card-title font-semibold text-ink;
+  }
+
+  /* --- Modales y Paneles Maestros --- */
+  /* .modal-container se retiro el 2026-08-13: su ultimo consumidor, el modal
+     de importacion, adopto la primitiva `design/Modal.tsx`, que ademas del
+     aspecto trae Escape, clic fuera, role="dialog" y bloqueo de scroll. */
+
+  .panel-container {
+    @apply bg-surface rounded-md border border-line;
+  }
+
+}
+
+/**
+ * FOCO VISIBLE
+ *
+ * Existe desde el 2026-08-25. Hasta entonces no habia ninguna regla global de
+ * foco: `@tailwind base` quita el `outline` que trae el navegador, y solo dos
+ * o tres controles del producto dibujaban su propio anillo. El resto -las
+ * decenas de botones de solo icono del chat, las tarjetas del feed, los chips
+ * de categoria- no daban NINGUNA pista de donde estaba el teclado. Eso es un
+ * incumplimiento de WCAG 2.2 AA 2.4.7 en toda la extension, no solo aca.
+ *
+ * Se usa `:focus-visible` y no `:focus` a proposito: el navegador solo lo
+ * activa cuando el foco llego por teclado, asi que hacer clic en un boton con
+ * el mouse no deja un anillo pegado.
+ *
+ * `outline` y no `box-shadow`: el outline no participa del layout ni lo
+ * recorta un `overflow-hidden` del contenedor, que es justo lo que pasaria en
+ * las filas de la lista de mensajes.
+ */
+:focus-visible {
+  outline: 2px solid var(--ls-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--ls-radius-sm);
+}
+
+/**
+ * MOVIMIENTO REDUCIDO
+ *
+ * El sistema operativo tiene una casilla para pedir que las interfaces no se
+ * muevan; la usa gente con vestibulopatias o sensible al mareo. Este archivo
+ * definia ocho animaciones y ninguna la miraba.
+ *
+ * Se anulan por duracion en vez de por `animation: none` porque varias
+ * animaciones del producto terminan en `forwards`: quitarlas del todo dejaria
+ * el elemento en su estado inicial (opacidad 0, o sea invisible) en vez de en
+ * el final.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Ocultar scrollbars globalmente pero permitir el scroll */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Animaciones puras */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ios-slide-up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-8px); } }
+@keyframes alert-ring {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(5deg); }
+  40% { transform: rotate(-5deg); }
+  50%, 100% { transform: rotate(0); }
+}
+
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
+.animate-slide-up { animation: slide-up 0.25s var(--easing-spring); }
+.animate-ios-slide-up { animation: ios-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scale-in { animation: scale-in 0.15s var(--easing-spring); }
+.animate-toast-in { animation: toast-in 0.2s var(--easing-spring); }
+.animate-toast-out { animation: toast-out 0.2s var(--easing-spring) forwards; }
+.animate-alert-ring {
+  animation: alert-ring 2s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/*
+ * LA BARRA DEL TABLERO DE TAREAS
+ *
+ * Un `input[type=range]` con el pulgar del ancho de lo que se ve. Se estiliza
+ * aca y no con clases porque los pseudoelementos del control nativo
+ * -`::-webkit-slider-thumb`- no se alcanzan desde Tailwind.
+ *
+ * El pulgar mide `--proporcion`, que el componente calcula como
+ * visible/total: con dos columnas de diez queda corto, y ese largo es la
+ * unica pista de cuanto tablero falta. Es lo que hace un scrollbar de verdad,
+ * y aca hay que dibujarlo porque el del sistema esta oculto en todo el
+ * producto.
+ */
+.board-scroll-range::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--proporcion, 40%);
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--ls-border-strong);
+  transition: background 150ms var(--ls-easing);
+}
+.board-scroll-range:hover::-webkit-slider-thumb,
+.board-scroll-range:focus-visible::-webkit-slider-thumb {
+  background: var(--ls-primary-ink);
+}
+
+/*
+ * EFECTO IMANTADO AL CAMBIAR EL ANCHO DEL PANEL
+ *
+ * Al angostar el panel lateral, las columnas del tablero se salen de la vista
+ * de golpe; al ensancharlo, aparecen igual de seco. Con la curva imantada el
+ * movimiento se nota: arrancan lentas, aceleran y se pasan apenas de largo
+ * antes de asentarse, como si tuvieran peso.
+ *
+ * Se anima `transform` y no `width` ni `left`: son las propiedades que el
+ * compositor puede mover sin recalcular el diseno en cada fotograma.
+ */
+.tablero-imantado {
+  transition: transform 320ms var(--ls-easing-magnet);
+}

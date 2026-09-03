@@ -1,0 +1,16 @@
+{
+  "name": "@leadseed/extension",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Extension de Chrome de LeadSeed. Vive en el panel lateral.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  }
+}

@@ -1,0 +1,482 @@
+/**
+ * FUENTE UNICA DE VERDAD DEL DISENO
+ *
+ * Todo color, radio, sombra, espaciado y tipografia del producto sale de
+ * aca. Cambiar un valor en este archivo lo cambia en toda la extension.
+ *
+ * Regla: en los componentes NO se escriben colores literales. Se usa el
+ * token, ya sea como var(--ls-*) o via las utilidades de Tailwind que los
+ * exponen (bg-primary, text-body, border-line, etc).
+ *
+ * Antes existian dos sistemas conviviendo (--ls-* y --color-*) con valores
+ * duplicados y contradictorios, y ademas 759 colores escritos a mano en 46
+ * archivos. Los alias del final existen para que el codigo previo siga
+ * funcionando mientras se termina de migrar.
+ */
+
+:root {
+  /*
+   * QUE TEMA USAN LOS CONTROLES QUE DIBUJA EL NAVEGADOR
+   *
+   * No estaba declarado en ningun sitio, y esa ausencia es la causa de que
+   * varias cosas se vieran mal en oscuro:
+   *
+   *   - `<input type="date">` y `type="time"` salian con fondo BLANCO y su
+   *     icono de calendario negro, porque el reloj y el calendario los dibuja
+   *     Chrome, no nuestro CSS. Ninguna clase de Tailwind los alcanza.
+   *   - la lista desplegada de un `<select>` salia clara aunque el control
+   *     cerrado fuera oscuro
+   *   - el relleno automatico de contrasenas pintaba su amarillo de siempre
+   *   - los spinners de `type="number"` y la barra de `type="range"`
+   *
+   * `color-scheme` es lo unico que le dice al navegador de que lado esta la
+   * pagina. Va aca y no en cada campo: es una propiedad heredada, asi que
+   * declararla en la raiz alcanza a todo el arbol de una vez.
+   *
+   * Ojo con una consecuencia deseada: en oscuro, un campo SIN clase de fondo
+   * deja de ser blanco, pero pasa a ser el gris que elige el navegador, que no
+   * es `--ls-surface`. Por eso los campos igual declaran su fondo; esto es la
+   * red de seguridad y el arreglo de lo que el CSS no puede tocar.
+   */
+  color-scheme: light;
+
+  /* ---------------------------------------------------------------
+   * MARCA
+   * El Dashboard usaba #635BFF y Leads #6C4CF6. Se unifica en #6C4CF6,
+   * que es el color del logo y el mas extendido en el producto.
+   * --------------------------------------------------------------- */
+  --ls-primary: #6c4cf6;
+  --ls-primary-hover: #5b3ce0;
+  --ls-primary-deep: #4a2bb5;
+  --ls-primary-light: #8f85ff;
+
+  /* Fondos teñidos de marca, para chips, badges y estados activos */
+  --ls-primary-soft: #f2eeff;
+  --ls-primary-soft-strong: #e0d4ff;
+
+  /* ---------------------------------------------------------------
+   * TEXTO
+   * --------------------------------------------------------------- */
+  --ls-text: #161a24;
+  --ls-text-secondary: #5b6475;
+  /* Medido el 2026-08-12: el valor anterior (#8c95a6) daba 3.02:1 sobre
+     --ls-surface y 2.86:1 sobre --ls-bg. WCAG 2.2 AA pide 4.5:1 para texto
+     normal, y este token se usa sobre todo en las etiquetas de ejes de los
+     graficos, que son de 10px: texto normal, no grande. Este valor da 4.77 y
+     4.53. Se movio solo la luminosidad, conservando tono y saturacion, para
+     que siga siendo el mismo gris azulado y no cambie el caracter de la
+     paleta. */
+  --ls-text-muted: #697387;
+  --ls-text-inverse: #ffffff;
+
+  /* ---------------------------------------------------------------
+   * SUPERFICIES Y BORDES
+   * --------------------------------------------------------------- */
+  --ls-bg: #f8f9fc;
+  --ls-surface: #ffffff;
+  --ls-surface-hover: #f6f7fa;
+  --ls-border: #e6eaf0;
+
+  /* Fila de un lead que todavia no fue abierto. Es un teñido de marca muy
+     leve: tiene que distinguirse de un vistazo sin competir con la seleccion
+     ni cansar en una tabla de 50 filas. */
+  --ls-surface-unread: #f7f4ff;
+  --ls-surface-unread-hover: #efe9ff;
+  --ls-border-strong: #d5dae3;
+
+  /* Pozo: contenido hundido DENTRO de una tarjeta (una lista con scroll, una
+     vista previa, un ejemplo). No sirve --ls-bg para esto: sobre una tarjeta
+     blanca casi no se distingue, y en oscuro es mas claro que la tarjeta, o
+     sea que hunde en un tema y eleva en el otro. */
+  --ls-surface-sunken: #f1f3f8;
+
+  /* Separador entre filas repetidas. --ls-border repetido veinte veces
+     construye una reja que compite con el contenido; se reserva para el
+     perimetro de los contenedores. */
+  --ls-line-soft: #eef1f6;
+
+  /* ---------------------------------------------------------------
+   * ESTADO
+   * --------------------------------------------------------------- */
+  --ls-success: #22c55e;
+  --ls-success-soft: #ecfdf5;
+  --ls-warning: #f59e0b;
+  --ls-warning-soft: #fffbeb;
+  /*
+   * EL AMBAR, PERO LEGIBLE COMO TEXTO.
+   *
+   * `--ls-warning` no se puede escribir. Medido sobre las superficies del
+   * producto da 2.15:1 en `surface`, 2.09 en `bg` y 2.07 sobre su propio
+   * `warning-soft`: no hay ni una sola donde llegue al 4.5:1 de WCAG 1.4.3.
+   * O sea que `text-state-warning` estaba roto en todos sus usos de texto,
+   * incluido el `tone="warning"` de `Badge`.
+   *
+   * `--ls-accent` resolveria el contraste pero su propia ficha prohibe este
+   * uso: el ambar de estado tiene que quedar libre para avisar de verdad.
+   * Hace falta la pieza simetrica, que es esta.
+   *
+   * Solo se movio la luminosidad: #f59e0b tiene tono 38.0 y #a06400 tiene
+   * 37.5 con saturacion plena, asi que el ambar no cambia de caracter. Es la
+   * misma receta con la que se corrigio --ls-text-muted.
+   *
+   * Da 4.86:1 sobre `surface`, 4.62 sobre `bg` y 4.69 sobre `warning-soft`.
+   * OJO: sobre `surface-sunken` da 4.38 y NO alcanza. Ahi no se usa.
+   */
+  --ls-warning-ink: #a06400;
+  /*
+   * EL ROJO QUE SE PUEDE ESCRIBIR.
+   *
+   * `--ls-danger` como TEXTO da 3.76:1 sobre la superficie clara y 3.44 sobre
+   * su propio tinte: por debajo del 4.5 de WCAG 1.4.3. O sea que
+   * `Button variant="ghost-danger"` y `variant="danger"` incumplen en TODOS
+   * sus usos en tema claro, no solo en Agenda.
+   *
+   * Lo curioso: `ghost-danger` se creo para unificar el "Cancelar" de esta
+   * misma seccion, y nacio con ese contraste.
+   *
+   * Misma receta que `--ls-warning-ink`: solo se mueve la luminosidad.
+   * #ef4444 es hsl(0, 84%, 60%); este es hsl(0, 84%, 46%). Mismo rojo.
+   * Da 5.22 sobre surface, 4.96 sobre el fondo y 4.77 sobre danger-soft.
+   *
+   * `--ls-danger` se queda para lo que siempre debio ser: rellenos y formas,
+   * donde el umbral es 3:1 y lo cumple.
+   */
+  --ls-danger-ink: #d81313;
+  /*
+   * EL VERDE DE 'CONVERTIDO', LEGIBLE COMO RELLENO.
+   *
+   * `STATUS_COLORS.convertido` es #10b981, y sobre el fondo de pagina da
+   * 2.41:1: por debajo del 3:1 que WCAG 1.4.11 pide para un grafico. En la
+   * franja de un cuadrante se tolera, porque ahi el color es identidad al lado
+   * de su palabra; en una barra donde EL LARGO ES EL DATO, no: si no se ve
+   * donde termina el segmento, no se lee la proporcion.
+   *
+   * Solo baja la luminosidad: #10b981 es hsl(160, 84%, 39%) y este es
+   * hsl(160, 84%, 32%). Mismo verde, no otro. Da 3.57:1, que es exactamente
+   * lo mismo que el rojo de descartado, asi que ningun segmento de la barra
+   * pesa mas que los otros.
+   *
+   * Ojo: es el hermano de #10b981, no de `--ls-success` (#22c55e), que es un
+   * verde mas calido y se usa para otra cosa.
+   */
+  --ls-success-ink: #0d9669;
+  /*
+   * LA TINTA DE MARCA QUE SE LEE EN LOS DOS TEMAS.
+   *
+   * `--ls-primary` sobre `--ls-surface` en oscuro da 3.32:1, y como anillo
+   * sobre `--ls-primary-soft` da 2.88. O sea que hoy, en tema oscuro,
+   * cualquier `text-primary` de tamano normal incumple 1.4.3, y el anillo que
+   * dice 'soltá acá' no llega ni al 3:1 de 1.4.11.
+   *
+   * Este token es a `--ls-primary` lo que `--ls-warning-ink` es al ambar: el
+   * mismo color, con la luminosidad que hace falta en cada tema. En claro es
+   * el morado de siempre; en oscuro usa `--ls-primary-light`, que da 5.78
+   * sobre la superficie y 5.02 como anillo.
+   */
+  --ls-primary-ink: #6c4cf6;
+  --ls-danger: #ef4444;
+  --ls-danger-soft: #fef2f2;
+  --ls-info: #3b82f6;
+  --ls-info-soft: #eff6ff;
+
+  /* ---------------------------------------------------------------
+   * ENFASIS
+   *
+   * El ambar del producto: mensaje fijado, anuncio del staff, mensaje
+   * destacado, mencion a una publicacion. Existe desde el 2026-08-25.
+   *
+   * Hasta entonces esos seis componentes usaban el ambar crudo de Tailwind
+   * (`bg-amber-50 border-amber-300 text-amber-600`), que no sale de ninguna
+   * ficha y por lo tanto no seguia al tema: en oscuro cada uno improvisaba su
+   * propio `dark:` a mano.
+   *
+   * No se reusa --ls-warning a proposito. "Advertencia" significa que algo va
+   * mal, y un anuncio del staff o un mensaje fijado no son un problema: si se
+   * gastara el amarillo de estado en decorar avisos normales, el chat se
+   * quedaria sin ningun color libre para avisar de verdad.
+   *
+   * El valor se eligio midiendo, no a ojo. El primer candidato (#d97a06) daba
+   * 3.12:1 sobre --ls-surface y 2.90:1 sobre el fondo tenido: por debajo del
+   * 4.5:1 que WCAG 2.2 AA pide para texto normal, y estos tokens se usan sobre
+   * todo en etiquetas de 10-11px. Este da 5.00:1 sobre --ls-surface y 4.65:1
+   * sobre --ls-accent-soft.
+   * --------------------------------------------------------------- */
+  --ls-accent: #a85c04;
+  --ls-accent-strong: #7d4503;
+  --ls-accent-soft: #fdf6e8;
+  --ls-accent-border: #f0dcb4;
+
+  /* ---------------------------------------------------------------
+   * BURBUJA PROPIA DEL CHAT
+   *
+   * No sirve --ls-primary-soft, que es el fondo de todo chip y estado activo
+   * del producto: con el, la burbuja propia y la ajena se leen igual de claras
+   * sobre --ls-bg y el hilo no se distingue de un vistazo. Subirle el
+   * contraste a ese token cambiaria los ~40 sitios que ya lo usan.
+   *
+   * El degradado es de un 4% y solo da volumen. Sus dos extremos estan
+   * medidos contra el blanco del texto: 4.67:1 arriba y 5.25:1 abajo, los dos
+   * por encima del 4.5:1 de AA. Un tope mas claro (#7d60f7) daba 4.30:1 y se
+   * descarto.
+   * --------------------------------------------------------------- */
+  --ls-bubble-own: linear-gradient(180deg, #7658f6 0%, #6c4cf6 100%);
+  --ls-bubble-own-solid: #6c4cf6;
+  /* Cita y separadores DENTRO de la burbuja propia, donde el fondo ya es
+     morado y --ls-border no se ve. */
+  --ls-bubble-own-line: rgba(255, 255, 255, 0.22);
+  /*
+   * COLOR DE LA BURBUJA AJENA
+   *
+   * Ocho fondos en morado, verde, azul y gris. No se eligen al azar en cada
+   * pintado -eso haria parpadear el color en cada render-: se derivan del autor
+   * del mensaje, asi que quedan repartidos como al azar pero estables, y de
+   * paso dicen quien habla sin tener que mirar el avatar.
+   *
+   * Son tintes muy claros a proposito. El texto sigue siendo `--ls-text`, y
+   * medido da entre 13.6:1 y 15.7:1 sobre estos fondos: el color no le quita
+   * legibilidad a nada.
+   *
+   * Contra el fondo de la pagina contrastan poco (1.06-1.22:1), y no es un
+   * descuido: el canto de la burbuja lo dibuja su borde, no el relleno. El
+   * color esta para identificar al autor, no para separar la burbuja del fondo.
+   */
+  --ls-bubble-1: #f1ecfe; /* morado */
+  --ls-bubble-2: #e6f7ee; /* verde */
+  --ls-bubble-3: #e6f0fe; /* azul */
+  --ls-bubble-4: #eef0f5; /* gris */
+  --ls-bubble-5: #e7dffd; /* morado oscuro */
+  --ls-bubble-6: #d6f2e2; /* verde oscuro */
+  --ls-bubble-7: #d7e7fd; /* azul oscuro */
+  --ls-bubble-8: #e2e6ee; /* gris oscuro */
+
+  /* ---------------------------------------------------------------
+   * RADIOS
+   * Escala corta a proposito: mas opciones solo generan inconsistencia.
+   * --------------------------------------------------------------- */
+  --ls-radius-sm: 4px;
+  --ls-radius-md: 6px;
+  --ls-radius-lg: 8px;
+  --ls-radius-xl: 10px;
+  /* Burbuja de chat y tarjeta del feed. Existe porque esos dos componentes
+     usaban `rounded-2xl` (16px, el valor por defecto de Tailwind, que este
+     proyecto NO redefine), `rounded-[20px]` y `rounded-[14px]`: tres radios
+     fuera de escala en dos secciones. */
+  --ls-radius-2xl: 14px;
+  --ls-radius-full: 9999px;
+
+  /* ---------------------------------------------------------------
+   * FOCO
+   * El anillo que marca donde esta el teclado. Existe desde el
+   * 2026-08-20: hasta entonces no habia ficha para esto y los dos
+   * sitios que dibujaban un anillo -la tabla de listas y el buscador
+   * del pipeline- usaban `ring-blue-500` literal de Tailwind. Era un
+   * azul generico, ajeno a la marca, y ademas distinto del morado que
+   * usa el resto del producto para senalar lo activo.
+   *
+   * Se iguala a --ls-primary a proposito: el foco es una senal de
+   * interaccion, y la marca ya es el color de la interaccion aca.
+   * --------------------------------------------------------------- */
+  --ls-focus-ring: var(--ls-primary);
+
+  /* ---------------------------------------------------------------
+   * SOMBRAS
+   * --------------------------------------------------------------- */
+  --ls-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --ls-shadow-card: 0 4px 16px rgba(17, 24, 39, 0.06);
+  /*
+   * Sombra de una barra pegada al borde inferior. Es `--ls-shadow-card` con la
+   * Y invertida: la luz cae desde arriba, asi que una barra de abajo proyecta
+   * hacia arriba. `--ls-shadow-sticky` no sirve, es horizontal.
+   *
+   * El canto lo dibuja el borde y no la sombra, que va suave a proposito: la
+   * barra esta siempre a la vista, asi que una sombra marcada la convertiria
+   * en un objeto pesado permanente en vez de en el borde de la pantalla.
+   */
+  --ls-shadow-bar: 0 -4px 16px rgba(17, 24, 39, 0.06);
+  --ls-shadow-float: 0 16px 40px rgba(17, 24, 39, 0.14);
+  --ls-shadow-sticky: -4px 0 12px -4px rgba(0, 0, 0, 0.05);
+
+  /* ---------------------------------------------------------------
+   * TIPOGRAFIA
+   * La extension vive en un panel angosto: la escala es deliberadamente
+   * compacta. Cambiar aca cambia el tamano en todas las secciones.
+   * --------------------------------------------------------------- */
+  --ls-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --ls-text-page-title: 17px;
+  --ls-text-section-title: 15px;
+  --ls-text-card-title: 13px;
+  --ls-text-body: 13px;
+  --ls-text-sm: 12px;
+  --ls-text-xs: 11px;
+  --ls-text-micro: 10px;
+
+  --ls-weight-normal: 400;
+  --ls-weight-medium: 500;
+  --ls-weight-semibold: 600;
+  --ls-weight-bold: 700;
+
+  /* ---------------------------------------------------------------
+   * ESPACIADO Y ALTURAS DE CONTROL
+   * --------------------------------------------------------------- */
+  --ls-space-1: 4px;
+  --ls-space-2: 8px;
+  --ls-space-3: 12px;
+  --ls-space-4: 16px;
+  --ls-space-5: 20px;
+  --ls-space-6: 24px;
+
+  --ls-control-height: 34px;
+  --ls-control-height-sm: 28px;
+  /*
+   * Alto de una accion que es el destino de toda una pantalla, no un control
+   * de formulario. No es un valor nuevo en el producto: `PageTabs` ya usa 44px
+   * como objetivo comodo. El token solo le pone nombre a algo que ya andaba
+   * suelto, y coincide con el minimo tactil que conviene de cara al movil.
+   */
+  --ls-control-height-lg: 44px;
+
+  /*
+   * Alto FIJO de una fila de registro: 32px.
+   *
+   * `ListPanel` reparte por relleno (`py-1.5`), asi que el alto sale del
+   * contenido. En el historial no sirve: la fila viva lleva texto de 11px y la
+   * lapida va en cursiva del mismo tamano pero sin los mismos elementos, y con
+   * relleno cada una mediria distinto. Una lista donde las filas cambian de
+   * alto segun su estado tartamudea al recorrerla.
+   *
+   * 32 y no 28: a 28 el boton de borrar (`control-sm`, 28px) toca los dos
+   * bordes y no queda aire.
+   */
+  --ls-row-dense: 32px;
+
+  /*
+   * Rail de navegacion. El contenido solo reserva el ancho contraido: al
+   * expandirse el rail flota por encima, para que ninguna seccion cambie de
+   * ancho al abrir el menu. Por eso `--ls-rail-width` es constante y no
+   * sigue al estado del rail.
+   */
+  --ls-rail-width: 48px;
+  --ls-rail-width-expanded: 176px;
+
+  --ls-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /*
+   * Curva imantada: arranca lenta -como si costara despegarse-, acelera y
+   * pasa apenas de largo antes de asentarse. Ese pequeno exceso al final es lo
+   * que se lee como "pegajoso": el elemento parece tener peso y quedar
+   * atraido a su sitio, en vez de frenar en seco.
+   *
+   * Es para desplazamientos cortos donde se quiere notar el movimiento. No
+   * sirve para aparecer/desaparecer: sobre una opacidad, pasarse de largo
+   * significaria superar el 100%, que no existe.
+   */
+  --ls-easing-magnet: cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+
+/**
+ * Modo oscuro: solo se redefinen superficies, texto y bordes. La marca y
+ * los colores de estado se mantienen para no perder identidad.
+ */
+.dark {
+  /* Ver la nota de `color-scheme` en `:root`. Sin esta linea, los calendarios
+     y los desplegables nativos se siguen dibujando en claro. */
+  color-scheme: dark;
+
+  --ls-text: #f1f5f9;
+  --ls-text-secondary: #94a3b8;
+  /* Mismo caso en oscuro: #64748b daba 3.66:1 sobre --ls-surface. Este da
+     4.51 y 4.90, y mantiene la distancia con --ls-text-secondary (6.79). */
+  --ls-text-muted: #73839a;
+
+  --ls-bg: #0f1115;
+  --ls-surface: #171a21;
+  --ls-surface-hover: #1f232c;
+  --ls-border: rgba(255, 255, 255, 0.09);
+  --ls-surface-unread: rgba(108, 76, 246, 0.10);
+  --ls-surface-unread-hover: rgba(108, 76, 246, 0.16);
+  --ls-border-strong: rgba(255, 255, 255, 0.16);
+  /* En oscuro un pozo se hunde quitando luz, no agregandola. */
+  --ls-surface-sunken: rgba(0, 0, 0, 0.24);
+  --ls-line-soft: rgba(255, 255, 255, 0.055);
+
+  --ls-primary-soft: rgba(108, 76, 246, 0.16);
+  --ls-primary-soft-strong: rgba(108, 76, 246, 0.28);
+
+  --ls-success-soft: rgba(34, 197, 94, 0.14);
+  --ls-warning-soft: rgba(245, 158, 11, 0.14);
+  /* En oscuro el saturado ya da 8.11:1 sobre `surface`: el token existe para
+     que los componentes no tengan que saber en que tema estan. */
+  --ls-warning-ink: #f59e0b;
+  /* En oscuro hace falta aclararlo, no oscurecerlo: 5.66 sobre surface. */
+  --ls-danger-ink: #f26565;
+  /* En oscuro los saturados ya rinden: 7.45 el verde, 5.78 el morado. */
+  --ls-success-ink: #10b981;
+  --ls-primary-ink: #8f85ff;
+  --ls-danger-soft: rgba(239, 68, 68, 0.14);
+  --ls-info-soft: rgba(59, 130, 246, 0.14);
+
+  /* En oscuro el ambar se aclara en vez de oscurecerse: 9.34:1 sobre
+     --ls-surface. */
+  --ls-accent: #f0b429;
+  --ls-accent-strong: #f7cc5f;
+  --ls-accent-soft: rgba(240, 180, 41, 0.13);
+  --ls-accent-border: rgba(240, 180, 41, 0.28);
+
+  --ls-bubble-own: linear-gradient(180deg, #7458f0 0%, #6244d8 100%);
+  --ls-bubble-own-solid: #6244d8;
+  --ls-bubble-own-line: rgba(255, 255, 255, 0.16);
+  /* Los mismos ocho, en version profunda. El texto pasa a ser claro y da
+     entre 11.3:1 y 13.5:1. */
+  --ls-bubble-1: #2b2447;
+  --ls-bubble-2: #15302a;
+  --ls-bubble-3: #192a44;
+  --ls-bubble-4: #232830;
+  --ls-bubble-5: #342a55;
+  --ls-bubble-6: #1a3a32;
+  --ls-bubble-7: #1e3352;
+  --ls-bubble-8: #2b313b;
+
+  --ls-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --ls-shadow-bar: 0 -4px 20px rgba(0, 0, 0, 0.35);
+  --ls-shadow-float: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+/**
+ * ALIAS DE COMPATIBILIDAD
+ *
+ * El codigo previo referencia estos nombres. Se mantienen apuntando a los
+ * tokens canonicos para no romper nada mientras se completa la migracion.
+ * No usar en codigo nuevo.
+ */
+:root,
+.dark {
+  --color-primary: var(--ls-primary);
+  --color-primary-hover: var(--ls-primary-hover);
+  --color-primary-light: var(--ls-primary-soft);
+  --color-accent: var(--ls-info);
+
+  --color-bg-base: var(--ls-bg);
+  --color-bg-surface: var(--ls-surface);
+  --color-bg-surface-hover: var(--ls-surface-hover);
+
+  --color-text-primary: var(--ls-text);
+  --color-text-secondary: var(--ls-text-secondary);
+  --color-text-muted: var(--ls-text-muted);
+
+  --color-border: var(--ls-border);
+  --color-border-hover: var(--ls-border-strong);
+
+  --shadow-premium: var(--ls-shadow-card);
+
+  --radius-sm: var(--ls-radius-sm);
+  --radius-md: var(--ls-radius-md);
+  --radius-lg: var(--ls-radius-lg);
+
+  --font-sans: var(--ls-font-sans);
+  --font-heading: var(--ls-font-sans);
+  --easing-spring: var(--ls-easing);
+
+  --ls-soft-purple: var(--ls-primary-soft);
+  --ls-primary-2: var(--ls-primary-light);
+  --ls-blue: var(--ls-info);
+}

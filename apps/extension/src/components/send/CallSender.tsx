@@ -1,0 +1,266 @@
+import { useState, useMemo, useRef } from 'react';
+import type { Lead, CallTemplate, CallTemplateList, LeadList } from '../../types';
+import { getAssignedLeads } from '../../hooks/useTemplates';
+import { Icon } from '../../utils/icons';
+import { getCurrentSession } from '../../services/authService';
+import { logCallSend } from '../../services/sendService';
+import { applyReason } from '../../utils/waHelper';
+import { useMessageReasons } from '../../hooks/useMessageReasons';
+import { ReasonPicker } from './ReasonPicker';
+import { Field, Panel, Select } from '../../design';
+import { SendStep, SendRequisito } from './SendStep';
+import type { SendActionState } from './channels';
+import { useSendAction } from './useSendAction';
+import { TemplatePicker } from './TemplatePicker';
+import { puedeRecibirPor } from '../../utils/leadContacto';
+
+interface Props {
+  leads: Lead[];
+  templates: CallTemplate[];
+  templateLists: CallTemplateList[];
+  leadLists: LeadList[];
+  /** Le dice al pie fijo de `SendPage` como tiene que verse su boton. */
+  onActionChange: (action: SendActionState) => void;
+}
+
+export default function CallSender({ leads, templates, templateLists, onActionChange }: Props) {
+  /** Para llevar el foco a lo que falta cuando el boton del pie lo pide. */
+  const guionRef = useRef<HTMLDivElement>(null);
+  const leadRef = useRef<HTMLDivElement>(null);
+  const [selectedListId, setSelectedListId] = useState<number | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [assignedLeadIds, setAssignedLeadIds] = useState<string[]>([]);
+  const [selectedLeadId, setSelectedLeadId] = useState<string>('');
+  const [logging, setLogging] = useState(false);
+  const [message, setMessage] = useState('');
+  /** Si el ultimo aviso fue de exito. Ver el comentario del `Panel`. */
+  const [messageOk, setMessageOk] = useState(false);
+
+  // Motivo del mensaje: aqui alimenta el guion que se lee al llamar.
+  const { motivos: reasons } = useMessageReasons();
+  const [motivoId, setMotivoId] = useState<number | null>(null);
+
+  const findTemplateById = (value: string) =>
+    templates.find((template) => String(template.id ?? '') === value) || null;
+
+  const handleTemplateSelect = async (template: CallTemplate | null) => {
+    const value = String(template?.id ?? '');
+    setSelectedTemplateId(value);
+    if (!value) {
+      setAssignedLeadIds([]);
+      setSelectedLeadId('');
+      setMotivoId(null);
+      return;
+    }
+
+    setMotivoId(template?.defaultReasonId ?? null);
+
+    if (template) {
+      const session = await getCurrentSession();
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      const { allIds } = await getAssignedLeads(template, userId);
+      setAssignedLeadIds(allIds);
+      if (!allIds.includes(String(selectedLeadId))) {
+        setSelectedLeadId('');
+      }
+    }
+  };
+
+  /*
+   * `validLeads` se llamaba asi sin comprobar nada: eran los asignados al
+   * guion, con telefono o sin el. Una llamada a un lead sin numero no es una
+   * llamada, asi que ahora el nombre dice la verdad.
+   */
+  const validLeads = useMemo(() => {
+    if (!selectedTemplateId) return [];
+    return leads.filter(
+      (lead) => assignedLeadIds.includes(lead.id!) && puedeRecibirPor(lead, 'call'),
+    );
+  }, [leads, assignedLeadIds, selectedTemplateId]);
+
+  const selectedTemplate = findTemplateById(selectedTemplateId);
+  const usaMotivo = /\{motivo\}/i.test(selectedTemplate?.contenido || '');
+  const motivoTexto = reasons.find((reason) => reason.id === motivoId)?.text;
+  // El guion que se lee y el que se registra son el mismo texto.
+  const guionResuelto = applyReason(selectedTemplate?.contenido || '', motivoTexto);
+  const selectedLead = validLeads.find((lead) => lead.id === selectedLeadId);
+  const telefonoElegido = selectedLead?.phone?.trim() || '';
+
+  const handleLogCall = async () => {
+    if (!selectedTemplate || !selectedLead) return;
+    setLogging(true);
+
+    try {
+      const session = await getCurrentSession();
+      const userId = session?.user?.id;
+      if (!userId) {
+        setMessageOk(false);
+        setMessage('Sesión no disponible');
+        return;
+      }
+
+      await logCallSend(userId, selectedTemplate.id!, selectedLead, {
+        nombre: selectedTemplate.nombre,
+        contenido: guionResuelto,
+      });
+      setMessageOk(true);
+      setMessage('Llamada registrada con éxito');
+    } catch {
+      setMessageOk(false);
+      setMessage('No se pudo registrar la llamada');
+    } finally {
+      setLogging(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  /*
+   * Que hace el boton del pie.
+   *
+   * Llamadas no envia nada: registra una llamada que ya se hizo por fuera. Por
+   * eso reutiliza `razonPendiente` con otro contenido -guion en vez de
+   * plantilla, un lead en vez de destinatarios-, pero el comportamiento es el
+   * mismo: nunca apagado, y al pulsarlo lleva a lo que falta.
+   */
+  const razonPendiente: SendActionState['razonPendiente'] = !selectedTemplateId
+    ? 'plantilla'
+    : !selectedLeadId
+      ? 'destinatarios'
+      : logging
+        ? 'enviando'
+        : null;
+
+  const etiquetaAccion = !selectedTemplateId
+    ? 'Elegí un guion'
+    : !selectedLeadId
+      ? 'Elegí a quién llamaste'
+      : logging
+        ? 'Registrando…'
+        : 'Registrar llamada completada';
+
+  const alPulsar = () => {
+    if (!selectedTemplateId) {
+      guionRef.current?.scrollIntoView({ block: 'nearest' });
+      guionRef.current?.querySelector('select')?.focus();
+      return;
+    }
+    if (!selectedLeadId) {
+      leadRef.current?.scrollIntoView({ block: 'nearest' });
+      leadRef.current?.querySelector('select')?.focus();
+      return;
+    }
+    void handleLogCall();
+  };
+
+  useSendAction(onActionChange, etiquetaAccion, razonPendiente, alPulsar);
+
+  return (
+    <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
+      <div ref={guionRef}>
+      <SendStep title="Guion">
+        <TemplatePicker
+          templates={templates}
+          templateLists={templateLists}
+          categoryId={selectedListId}
+          onCategoryChange={(id) => {
+            setSelectedListId(id);
+            setSelectedTemplateId('');
+            setAssignedLeadIds([]);
+            setSelectedLeadId('');
+          }}
+          selectedId={selectedTemplateId}
+          onSelect={handleTemplateSelect}
+          itemLabel="guion"
+        />
+      </SendStep>
+      </div>
+
+      {selectedTemplate ? (
+        <SendStep title="Script">
+        {usaMotivo && (
+          <div className="mb-2.5">
+            <Field
+              label="Motivo del mensaje"
+              hint={
+                reasons.length === 0
+                  ? 'No hay motivos todavia. Crealos en Plantillas, con "Gestionar motivos".'
+                  : 'Sustituye a {motivo} en el guion.'
+              }
+            >
+              <ReasonPicker motivos={reasons} seleccionado={motivoId} onSeleccionar={setMotivoId} />
+            </Field>
+          </div>
+        )}
+        <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-surface-muted p-2.5 text-body text-ink">
+          {guionResuelto}
+        </p>
+        </SendStep>
+      ) : (
+        <SendRequisito title="Script" requisito="Elegí un guion para ver el script." />
+      )}
+
+      {selectedTemplateId ? (
+        <SendStep title="Lead a llamar">
+        <div ref={leadRef}>
+        <Field
+          label="Lead"
+          hint={
+            selectedTemplateId && validLeads.length === 0
+              ? 'Este guion no tiene leads asignados.'
+              : undefined
+          }
+        >
+          <Select
+            value={selectedLeadId}
+            onChange={(event) => setSelectedLeadId(event.target.value)}
+            disabled={!selectedTemplateId}
+          >
+            <option value="">Elegir lead...</option>
+            {validLeads.map((lead) => (
+              <option key={lead.id} value={lead.id}>
+                {lead.name} ({lead.phone || 'Sin número'})
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        {/*
+          El numero solo existia dentro del `<option>`: no se podia copiar ni
+          tocar. La pantalla se llama "Llamadas" y no dejaba llamar; el unico
+          boton era el de registrar una llamada que habia que hacer por fuera.
+        */}
+        {telefonoElegido && (
+          <a
+            href={`tel:${telefonoElegido}`}
+            className="mt-2 flex h-control items-center justify-center gap-2 rounded-md border border-line bg-surface text-body font-semibold text-primary transition-colors hover:bg-surface-hover"
+          >
+            <span className="[&_svg]:h-4 [&_svg]:w-4">
+              <Icon.Phone />
+            </span>
+            Llamar a {telefonoElegido}
+          </a>
+        )}
+        </div>
+        </SendStep>
+      ) : (
+        <SendRequisito title="Lead a llamar" requisito="Elegí un guion para ver a quién llamar." />
+      )}
+
+      {/* El parte de como salio se queda arriba del pie, al lado del boton que
+          lo provoco. El tono se decide con una bandera y no buscando la palabra
+          "exito" dentro del mensaje: al corregirle la tilde, ese truco pasaba a
+          marcar como error un registro que habia salido bien. */}
+      {message && (
+        <Panel tone={messageOk ? 'success' : 'danger'}>
+          <div className="flex items-center gap-2 text-body font-medium">
+            {messageOk ? <Icon.Check /> : <Icon.Warning />}
+            {message}
+          </div>
+        </Panel>
+      )}
+
+    </div>
+  );
+}
