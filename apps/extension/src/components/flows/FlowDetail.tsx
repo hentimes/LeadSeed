@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, IconButton, Select } from '../../design';
+import {
+  Button,
+  Card,
+  IconButton,
+  Input,
+  ListPagination,
+  ListPanel,
+  ListRow,
+  Select,
+} from '../../design';
 import { Icon } from '../../utils/icons';
-import { nombreVisible } from '../../utils/leadDisplay';
+import { nombreCorto, nombreVisible } from '../../utils/leadDisplay';
 import { FlowProgressRail, MAX_PASOS_RIEL } from './FlowProgressRail';
 import { fetchEnrollments, fetchProgress } from '../../services/messageFlowsService';
 import { computeFlowProgress, estadosDePasos, tocaAhora } from '../../services/flowProgress';
@@ -30,6 +39,15 @@ const MOTIVOS_SALIDA: Array<{ valor: ExitReason; label: string }> = [
 
 /** Dia y mes: en esta lista la hora no cambia ninguna decision. */
 const FECHA_INSCRITO = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit' });
+
+/**
+ * Cuantos inscritos por pagina.
+ *
+ * Doce, que es lo que entra sin empujar el pie fuera de la ventana contando lo
+ * que esta pantalla lleva encima: cabecera del flujo, sus botones, la lista de
+ * pasos y la fila de filtros.
+ */
+const INSCRITOS_POR_PAGINA = 12;
 
 const ETIQUETA_SALIDA: Record<ExitReason, string> = {
   convertido: 'Convertido',
@@ -87,6 +105,62 @@ export function FlowDetail({
   const cerrados = inscritos.filter((e) => e.status !== 'activa');
   const esCorreo = flujo.channel === 'email';
 
+  /*
+   * BUSCAR, FILTRAR POR ETAPA Y PAGINAR.
+   *
+   * La lista pintaba a los inscritos enteros, sin corte. Con dieciocho ya
+   * obliga a scrollear; con doscientos es una lista infinita en la unica
+   * pantalla donde uno viene a buscar a UNA persona -"¿por que paso va
+   * Marcela?"- y no habia ni caja de busqueda.
+   *
+   * El filtro es por ETAPA y no por flujo: esta vista ya es la de un flujo
+   * concreto, asi que "elegir entre flujos" aqui no acota nada. Lo que si
+   * acota es "mostrame a los que van por el paso 2", que es como se lee una
+   * cohorte y como se decide a quien empujar.
+   */
+  const [busqueda, setBusqueda] = useState('');
+  const [etapa, setEtapa] = useState<string>('');
+  const [pagina, setPagina] = useState(1);
+
+  /** En que paso esta cada inscripcion, para poder filtrar y pintar sin repetir. */
+  const avancePorInscrito = new Map(
+    activos.map((inscrito) => [
+      inscrito.id,
+      computeFlowProgress(
+        pasos,
+        progreso.filter((p) => p.enrollmentId === inscrito.id),
+      ),
+    ]),
+  );
+
+  const q = busqueda.trim().toLocaleLowerCase('es');
+  const filtrados = activos.filter((inscrito) => {
+    const suPaso = avancePorInscrito.get(inscrito.id)?.siguiente?.stepOrder ?? null;
+    if (etapa === 'terminados' ? suPaso !== null : etapa && String(suPaso) !== etapa) return false;
+    return q ? nombreVisible(inscrito.leadName).toLocaleLowerCase('es').includes(q) : true;
+  });
+
+  /* Al filtrar, la pagina 4 puede dejar de existir. Se ajusta durante el
+     render, no en un efecto que pintaria la pagina vieja antes de corregirse. */
+  const filtroActual = `${q}|${etapa}`;
+  const [filtroAnterior, setFiltroAnterior] = useState(filtroActual);
+  if (filtroAnterior !== filtroActual) {
+    setFiltroAnterior(filtroActual);
+    setPagina(1);
+  }
+
+  /** Cuantos inscritos hay en una etapa. `null` = ya terminaron el flujo. */
+  const contarEnEtapa = (stepOrder: number | null): number =>
+    activos.filter((i) => (avancePorInscrito.get(i.id)?.siguiente?.stepOrder ?? null) === stepOrder)
+      .length;
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / INSCRITOS_POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const visibles = filtrados.slice(
+    (paginaActual - 1) * INSCRITOS_POR_PAGINA,
+    paginaActual * INSCRITOS_POR_PAGINA,
+  );
+
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -141,73 +215,140 @@ export function FlowDetail({
       </div>
 
       <div className="flex min-w-0 flex-col gap-1.5">
-        <span className="text-micro font-bold uppercase tracking-wider text-ink-muted">
-          Inscritos · {activos.length}
-        </span>
-
         {activos.length === 0 ? (
-          <p className="text-micro text-ink-muted">
-            Nadie inscrito todavia. Al inscribir se elige en que paso empieza cada lead: los
-            anteriores quedan como hechos y ese queda programado.
-          </p>
+          <>
+            <span className="text-micro font-bold uppercase tracking-wider text-ink-muted">
+              Inscritos
+            </span>
+            <p className="text-micro text-ink-muted">
+              Nadie inscrito todavia. Al inscribir se elige en que paso empieza cada lead: los
+              anteriores quedan como hechos y ese queda programado.
+            </p>
+          </>
         ) : (
-          <Card padding="none">
-            <ul className="min-w-0">
-              {activos.map((inscrito) => {
+          <>
+            {/* Buscador y etapa en una fila. El selector solo con mas de un
+                paso: con uno, filtrar por etapa no acota nada. */}
+            <div className="flex items-center gap-1.5">
+              <Input
+                type="search"
+                value={busqueda}
+                onChange={(evento) => setBusqueda(evento.target.value)}
+                placeholder="Buscar inscrito..."
+                aria-label="Buscar entre los inscritos"
+                className="flex-1"
+              />
+              {pasos.length > 1 && (
+                <Select
+                  value={etapa}
+                  onChange={(evento) => setEtapa(evento.target.value)}
+                  compact
+                  fullWidth={false}
+                  aria-label="Ver solo una etapa del flujo"
+                  className="w-[128px]"
+                >
+                  <option value="">Todas ({activos.length})</option>
+                  {pasos.map((paso) => (
+                    <option key={paso.id} value={String(paso.stepOrder)}>
+                      Paso {paso.stepOrder} ({contarEnEtapa(paso.stepOrder)})
+                    </option>
+                  ))}
+                  <option value="terminados">Terminados ({contarEnEtapa(null)})</option>
+                </Select>
+              )}
+            </div>
+
+            <ListPanel
+              title="Inscritos"
+              count={filtrados.length}
+              footer={
+                <ListPagination
+                  page={paginaActual}
+                  pageCount={totalPaginas}
+                  onPageChange={setPagina}
+                />
+              }
+              empty={
+                <p className="px-3 py-6 text-center text-micro text-ink-muted">
+                  Ningun inscrito coincide con el filtro.
+                </p>
+              }
+            >
+              {visibles.map((inscrito) => {
                 const suyo = progreso.filter((p) => p.enrollmentId === inscrito.id);
                 const estados = estadosDePasos(pasos, suyo);
-                const hechos = estados.filter((e) => e !== 'pendiente' && e !== 'toca').length;
-                /*
-                  Que paso le toca y cuando. El riel dice cuanto lleva andado,
-                  que no es lo mismo: con "2 de 3" sigue sin saberse si el
-                  tercero sale manana o ya esta atrasado, que es justo lo que se
-                  viene a mirar a esta lista.
-                */
-                const avance = computeFlowProgress(pasos, suyo);
+                const avance = avancePorInscrito.get(inscrito.id);
+                const nombre = nombreVisible(inscrito.leadName);
+                const siguiente = avance?.siguiente ?? null;
+                const urgente = avance !== undefined && siguiente !== null && tocaAhora(avance, ahora);
 
                 return (
-                  <li
-                    key={inscrito.id}
-                    className="flex min-w-0 flex-col gap-1.5 border-b border-line-soft px-3 py-2.5 last:border-0"
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">
-                        {nombreVisible(inscrito.leadName)}
-                      </span>
-                      <IconButton
-                        icon={<Icon.Close />}
-                        label={`Sacar a ${nombreVisible(inscrito.leadName)} del flujo`}
-                        size="sm"
-                        onClick={() => setSacando(inscrito.id)}
-                      />
-                    </div>
+                  <ListRow key={inscrito.id} className="flex-wrap gap-1.5">
+                    {/*
+                      UNA SOLA LINEA. Antes eran dos bloques apilados -nombre y
+                      boton arriba, riel y estado abajo- y unos 70px por fila.
 
-                    <div className="flex min-w-0 items-center gap-2">
-                      {/* Por encima de doce pasos el riel deja de leerse y se
-                          cambia por el conteo, que informa lo mismo peor pero
-                          sin mentir. */}
-                      {pasos.length <= MAX_PASOS_RIEL && (
-                        <FlowProgressRail estados={estados} esCorreo={esCorreo} />
-                      )}
-                      <span className="text-micro text-ink-secondary">
-                        {hechos} de {pasos.length}
+                      El nombre va abreviado con la misma regla que el resto de
+                      la aplicacion: "Henry Jose Daniel Farias Pacheco" ocupaba
+                      la fila entera y dejaba al riel y a la fecha sin sitio. El
+                      completo queda en el `title`.
+                    */}
+                    <span
+                      className="min-w-0 flex-1 truncate text-body font-semibold text-ink"
+                      title={nombre}
+                    >
+                      {nombreCorto(nombre)}
+                    </span>
+
+                    {/* Por encima de doce pasos el riel deja de leerse y se
+                        cambia por el conteo, que informa lo mismo peor pero sin
+                        mentir. */}
+                    {pasos.length <= MAX_PASOS_RIEL ? (
+                      <FlowProgressRail estados={estados} esCorreo={esCorreo} />
+                    ) : (
+                      <span className="shrink-0 text-micro tabular-nums text-ink-secondary">
+                        {estados.filter((e) => e !== 'pendiente' && e !== 'toca').length} de{' '}
+                        {pasos.length}
                       </span>
-                      <span className="min-w-0 truncate text-micro text-ink-muted">
-                        {avance.siguiente === null
-                          ? 'Sin pasos pendientes'
-                          : tocaAhora(avance, ahora)
-                            ? `Paso ${avance.siguiente.stepOrder} · toca ya`
-                            : avance.venceAt === null
-                              ? `Paso ${avance.siguiente.stepOrder}`
-                              : `Paso ${avance.siguiente.stepOrder} · ${FECHA_INSCRITO.format(
-                                  new Date(avance.venceAt),
-                                )}`}
-                      </span>
-                    </div>
+                    )}
+
+                    {/*
+                      "N de M" desaparece cuando el riel esta: era su
+                      transcripcion literal y le robaba el ancho a la fecha, que
+                      es el dato que no se puede deducir mirando el riel.
+                    */}
+                    <span
+                      className={`shrink-0 text-micro tabular-nums ${
+                        urgente ? 'text-state-warning-ink' : 'text-ink-secondary'
+                      }`}
+                    >
+                      {siguiente === null
+                        ? 'Terminado'
+                        : urgente
+                          ? `Paso ${siguiente.stepOrder} · ya`
+                          : avance?.venceAt
+                            ? `Paso ${siguiente.stepOrder} · ${FECHA_INSCRITO.format(
+                                new Date(avance.venceAt),
+                              )}`
+                            : `Paso ${siguiente.stepOrder}`}
+                    </span>
+
+                    <IconButton
+                      icon={<Icon.Close />}
+                      label={`Sacar a ${nombre} del flujo`}
+                      size="sm"
+                      variant="ghost-danger"
+                      onClick={() => setSacando(inscrito.id)}
+                    />
 
                     {sacando === inscrito.id && (
-                      <div className="flex flex-col gap-2 rounded-md border border-line bg-surface-sunken p-2.5">
-                        <label className="text-micro text-ink-secondary" htmlFor={`motivo-${inscrito.id}`}>
+                      /* El formulario de salida rompe la linea y toma el ancho
+                         entero: es una decision, no un dato de la fila. */
+                      <div className="flex w-full flex-col gap-2 rounded-md border border-line bg-surface-sunken p-2.5">
+                        <label
+                          className="text-micro text-ink-secondary"
+                          htmlFor={`motivo-${inscrito.id}`}
+                        >
                           ¿Por que sale del flujo?
                         </label>
                         <Select
@@ -216,14 +357,18 @@ export function FlowDetail({
                           onChange={(e) => setMotivoSalida(e.target.value as ExitReason)}
                         >
                           {MOTIVOS_SALIDA.map((m) => (
-                            <option key={m.valor} value={m.valor}>{m.label}</option>
+                            <option key={m.valor} value={m.valor}>
+                              {m.label}
+                            </option>
                           ))}
                         </Select>
                         <p className="text-micro text-ink-muted">
                           Los pasos que faltan se cancelan. Lo ya registrado se conserva.
                         </p>
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" onClick={() => setSacando(null)}>Cancelar</Button>
+                          <Button size="sm" onClick={() => setSacando(null)}>
+                            Cancelar
+                          </Button>
                           <Button
                             size="sm"
                             variant="danger"
@@ -237,11 +382,11 @@ export function FlowDetail({
                         </div>
                       </div>
                     )}
-                  </li>
+                  </ListRow>
                 );
               })}
-            </ul>
-          </Card>
+            </ListPanel>
+          </>
         )}
       </div>
 

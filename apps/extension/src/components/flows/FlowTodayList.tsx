@@ -71,6 +71,19 @@ function fechaLocal(momento: Date): string {
   return `${momento.getFullYear()}-${mes}-${dia}`;
 }
 
+/**
+ * Un `YYYY-MM-DD` como fecha LOCAL, no como instante UTC.
+ *
+ * `new Date("2026-09-09")` da medianoche UTC, que en Santiago es el 8 a las
+ * 21:00: formateado se veia "8/9" para un dia que era el 9. La base ya agrupa
+ * en la zona de quien mira -migracion 170-, asi que aqui solo hay que dejar de
+ * torcerlo al leerlo.
+ */
+function comoFechaLocal(dia: string): Date {
+  const [anio, mes, numero] = dia.split('-').map(Number);
+  return new Date(anio ?? 1970, (mes ?? 1) - 1, numero ?? 1);
+}
+
 interface Props {
   cola: PendingFlowStep[];
   ahora: Date;
@@ -157,7 +170,7 @@ export function FlowTodayList({
             ? 'No hay pasos programados. Inscribí gente en un flujo para que aparezcan acá el día que les toque.'
             : esHoy
               ? `${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje vence' : 'mensajes vencen'} hoy más tarde: la espera del flujo cuenta también la hora del envío anterior. Van a aparecer acá solos.`
-              : `Lo próximo son ${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje' : 'mensajes'} el ${FECHA_CORTA.format(new Date(siguiente.dia))}.${
+              : `Lo próximo son ${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje' : 'mensajes'} el ${FECHA_CORTA.format(comoFechaLocal(siguiente.dia))}.${
                   enEspera > siguiente.cantidad ? ` En total hay ${enEspera} programados.` : ''
                 }`
         }
@@ -179,7 +192,7 @@ export function FlowTodayList({
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Button
                 variant={esHoy ? 'secondary' : 'primary'}
-                onClick={() => onAdelantar(new Date(siguiente.dia), siguiente.cantidad, esHoy)}
+                onClick={() => onAdelantar(comoFechaLocal(siguiente.dia), siguiente.cantidad, esHoy)}
                 title={
                   esHoy
                     ? 'Los adelanta unas horas, en vez de esperar a su hora'
