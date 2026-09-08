@@ -10,11 +10,15 @@ interface Props {
 // misma lista porque para quien escribe la plantilla es un hueco igual que
 // los demas.
 //
-// 'nombre' abrevia -nombre de pila y apellido paterno- y 'nombrecompleto' da el
-// nombre entero; ver `replaceVariables`. Van juntas y en ese orden porque la
-// primera es la que se quiere casi siempre.
+// Las tres formas del nombre, de la mas corta a la mas larga. Van juntas y en
+// ese orden porque `{nombre}` -el de pila- es la que se quiere casi siempre:
+//
+//   {nombre}          Jorge
+//   {nombresimple}    Jorge Moreno
+//   {nombrecompleto}  Jorge Ignacio Moreno Castro
 const VARIABLES = [
   'nombre',
+  'nombresimple',
   'nombrecompleto',
   'telefono',
   'email',
@@ -29,7 +33,7 @@ const VARIABLES = [
 // por variable. Si se agrega otra, hay que subir ALTO ~29px o el panel se
 // coloca mal cuando no cabe debajo del boton.
 const ANCHO = 152;
-const ALTO = 261;
+const ALTO = 290;
 const MARGEN = 8;
 
 /**

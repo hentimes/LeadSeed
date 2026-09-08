@@ -3,6 +3,7 @@ import {
   SIN_NOMBRE,
   nombreVisible,
   nombreCorto,
+  nombreDePila,
   telefonoEnmascarado,
   telefonoVisible,
 } from './leadDisplay';
@@ -33,6 +34,30 @@ describe('nombreVisible', () => {
 
   it('no lleva parentesis: un lector de pantalla los verbaliza', () => {
     expect(SIN_NOMBRE).toBe('Sin nombre');
+  });
+});
+
+describe('nombreDePila', () => {
+  it('devuelve solo la primera palabra', () => {
+    expect(nombreDePila('Jorge Moreno')).toBe('Jorge');
+    expect(nombreDePila('Henry Jose Daniel Farias Pacheco')).toBe('Henry');
+  });
+
+  it('con una sola palabra la devuelve entera', () => {
+    expect(nombreDePila('Betzabeth')).toBe('Betzabeth');
+  });
+
+  /* El limite conocido: un nombre compuesto separado por espacios es
+     indistinguible de un nombre mas un segundo nombre. Para ese caso esta
+     `{nombresimple}`. */
+  it('un nombre compuesto se queda con la primera mitad', () => {
+    expect(nombreDePila('Maria Jose Rebolledo')).toBe('Maria');
+  });
+
+  it('tolera espacios de sobra y la cadena vacia', () => {
+    expect(nombreDePila('   Ana   Soto  ')).toBe('Ana');
+    expect(nombreDePila('   ')).toBe('');
+    expect(nombreDePila('')).toBe('');
   });
 });
 

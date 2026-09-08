@@ -82,24 +82,44 @@ describe('replaceVariables', () => {
   } as Lead;
 
   test('reemplaza las variables en español y en ingles', () => {
-    expect(replaceVariables('Hola {nombre}, {name}', lead)).toBe('Hola Ana Perez, Ana Perez');
+    expect(replaceVariables('Hola {nombre}, {name}', lead)).toBe('Hola Ana, Ana');
     expect(replaceVariables('{empresa}/{company}', lead)).toBe('Acme/Acme');
   });
 
   test('no distingue mayusculas', () => {
-    expect(replaceVariables('{NOMBRE} {Nombre}', lead)).toBe('Ana Perez Ana Perez');
+    expect(replaceVariables('{NOMBRE} {Nombre}', lead)).toBe('Ana Ana');
   });
 
   test('reemplaza todas las ocurrencias, no solo la primera', () => {
-    expect(replaceVariables('{nombre} y {nombre}', lead)).toBe('Ana Perez y Ana Perez');
+    expect(replaceVariables('{nombre} y {nombre}', lead)).toBe('Ana y Ana');
   });
 
-  test('{nombre} abrevia: nombre de pila y apellido paterno', () => {
-    // Es la razon de ser del cambio: "Hola Henry Jose Daniel Farias Pacheco"
-    // en un WhatsApp se lee como un envio automatico.
+  test('{nombre} es solo el nombre de pila', () => {
+    // Asi se saluda de verdad. "Hola Jorge Moreno" ya suena a formulario, y
+    // "Hola Henry Jose Daniel Farias Pacheco" directamente a robot.
     const largo = { ...lead, name: 'Henry Jose Daniel Farias Pacheco' } as Lead;
 
-    expect(replaceVariables('Hola {nombre}', largo)).toBe('Hola Henry Farias');
+    expect(replaceVariables('Hola {nombre}', largo)).toBe('Hola Henry');
+    expect(replaceVariables('Hola {nombre}', { ...lead, name: 'Jorge Moreno' } as Lead)).toBe(
+      'Hola Jorge',
+    );
+  });
+
+  test('{nombresimple} agrega el apellido paterno', () => {
+    const largo = { ...lead, name: 'Henry Jose Daniel Farias Pacheco' } as Lead;
+
+    expect(replaceVariables('{nombresimple}', largo)).toBe('Henry Farias');
+    expect(replaceVariables('{nombre_simple}', largo)).toBe('Henry Farias');
+  });
+
+  test('las tres formas conviven en el mismo texto', () => {
+    // La razon de tener tres variables en vez de una regla por canal: cada una
+    // se elige a proposito y se lee igual en cualquier sitio.
+    const largo = { ...lead, name: 'Jorge Ignacio Moreno Castro' } as Lead;
+
+    expect(replaceVariables('{nombre} / {nombresimple} / {nombrecompleto}', largo)).toBe(
+      'Jorge / Jorge Moreno / Jorge Ignacio Moreno Castro',
+    );
   });
 
   test('{nombrecompleto} conserva el nombre entero', () => {
@@ -114,13 +134,16 @@ describe('replaceVariables', () => {
     const largo = { ...lead, name: 'Juan Carlos Perez Soto' } as Lead;
 
     expect(replaceVariables('{nombrecompleto} alias {nombre}', largo)).toBe(
-      'Juan Carlos Perez Soto alias Juan Perez',
+      'Juan Carlos Perez Soto alias Juan',
     );
   });
 
-  test('un nombre de una o dos partes se deja como esta', () => {
-    expect(replaceVariables('{nombre}', { ...lead, name: 'Ana' } as Lead)).toBe('Ana');
-    expect(replaceVariables('{nombre}', { ...lead, name: 'Ana Soto' } as Lead)).toBe('Ana Soto');
+  test('con un nombre de una sola palabra las tres formas coinciden', () => {
+    const sola = { ...lead, name: 'Ana' } as Lead;
+
+    expect(replaceVariables('{nombre}', sola)).toBe('Ana');
+    expect(replaceVariables('{nombresimple}', sola)).toBe('Ana');
+    expect(replaceVariables('{nombrecompleto}', sola)).toBe('Ana');
   });
 
   test('un lead sin nombre no rompe el mensaje', () => {
@@ -148,8 +171,8 @@ describe('buildLeadMessages', () => {
     const mensajes = buildLeadMessages(leads, 'Hola {nombre} de {empresa}');
 
     expect(mensajes).toHaveLength(2);
-    expect(mensajes[0]?.message).toBe('Hola Ana Perez de Acme');
-    expect(mensajes[1]?.message).toBe('Hola Luis Soto de Beta');
+    expect(mensajes[0]?.message).toBe('Hola Ana de Acme');
+    expect(mensajes[1]?.message).toBe('Hola Luis de Beta');
   });
 
   test('conserva el lead junto a su mensaje, para poder registrarlos juntos', () => {

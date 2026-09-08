@@ -1,7 +1,7 @@
 import type { Lead } from '../types';
 import { getSettings } from '../services/appSettingsService';
 import { getPlatform } from '../platform/registry';
-import { nombreCorto } from './leadDisplay';
+import { nombreCorto, nombreDePila } from './leadDisplay';
 
 /**
  *   - < 9 dígitos → rechazar
@@ -20,33 +20,42 @@ export function normalizePhone(phone: string): string {
 }
 
 /**
- * `{nombre}` ES EL NOMBRE CORTO, no el nombre completo.
+ * TRES FORMAS DEL NOMBRE, y `{nombre}` es la mas corta.
  *
  * En la base los leads vienen del registro civil o de un padron, asi que el
  * nombre suele ser "Henry Jose Daniel Farias Pacheco". Puesto tal cual en un
- * saludo de WhatsApp, el mensaje arranca con "Hola Henry Jose Daniel Farias
- * Pacheco": nadie escribe asi, y el destinatario lee de inmediato que eso lo
- * mando una maquina, que es justo lo que un mensaje de contacto en frio no se
- * puede permitir.
+ * saludo, el mensaje arranca con eso entero: nadie escribe asi, y el
+ * destinatario lee de inmediato que lo mando una maquina.
  *
- * La regla de abreviar -nombre de pila + apellido paterno- ya existia y ya
- * estaba probada en `leadDisplay.nombreCorto`, que es la que usan las tablas de
- * leads y de listas. Se reutiliza para que el nombre con el que se saluda a
- * alguien sea el mismo con el que aparece en pantalla.
+ *   {nombre}          Henry                              el de pila
+ *   {nombresimple}    Henry Farias                       con apellido paterno
+ *   {nombrecompleto}  Henry Jose Daniel Farias Pacheco   tal cual esta
  *
- * El nombre completo no se pierde: queda en `{nombrecompleto}`, para el correo
- * formal o el documento donde si hace falta entero.
+ * `{nombre}` es el de pila porque es como se saluda de verdad: "Hola Jorge".
+ * Antes resolvia a "nombre + apellido", que para un saludo sigue sonando a
+ * formulario. Las otras dos formas no se pierden, tienen su propia variable.
+ *
+ * POR QUE TRES VARIABLES Y NO UNA REGLA POR CANAL
+ *
+ * La alternativa era que `{nombre}` se acortara solo en WhatsApp y no en
+ * correo. Se descarto: la misma variable significaria dos cosas segun donde se
+ * use, y quien escribe la plantilla no tendria forma de saber cual le toca
+ * mirando el texto. Tres nombres explicitos se eligen a proposito y se leen
+ * igual en cualquier canal.
  */
 export function replaceVariables(text: string, lead: Lead): string {
   const completo = lead.name ?? '';
-  const corto = nombreCorto(completo);
+  const simple = nombreCorto(completo);
+  const pila = nombreDePila(completo);
   return text
-    // Antes que `{nombre}` por claridad. No compiten: `\{nombre\}` exige la
-    // llave de cierre pegada, asi que nunca muerde `{nombrecompleto}`.
+    // Las largas primero, por claridad. No compiten: `\{nombre\}` exige la
+    // llave de cierre pegada, asi que nunca muerde a las otras dos.
     .replace(/\{nombre[_ ]?completo\}/gi, completo)
     .replace(/\{fullname\}/gi, completo)
-    .replace(/\{nombre\}/gi, corto)
-    .replace(/\{name\}/gi, corto)
+    .replace(/\{nombre[_ ]?simple\}/gi, simple)
+    .replace(/\{nombre[_ ]?corto\}/gi, simple)
+    .replace(/\{nombre\}/gi, pila)
+    .replace(/\{name\}/gi, pila)
     .replace(/\{telefono\}/gi, lead.phone)
     .replace(/\{phone\}/gi, lead.phone)
     .replace(/\{email\}/gi, lead.email)

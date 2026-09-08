@@ -74,6 +74,25 @@ export function nombreVisible(nombre: string | null | undefined): string {
  * `nombreVisible`. Separarlas deja abreviar un nombre que ya se sabe presente
  * sin volver a comprobarlo.
  */
+/**
+ * Solo el nombre de pila: la primera palabra.
+ *
+ *   Jorge Moreno                      -> Jorge
+ *   Henry Jose Daniel Farias Pacheco  -> Henry
+ *
+ * Es como se saluda a alguien por WhatsApp. "Hola Jorge Moreno" ya suena a
+ * formulario; "Hola Jorge" suena a persona. Por eso es lo que resuelve
+ * `{nombre}` en las plantillas, y las otras dos formas -con apellido y
+ * completa- tienen su propia variable.
+ *
+ * Un nombre compuesto -"Maria Jose"- se queda en "Maria". Es el limite conocido
+ * y se acepta: separado por espacios es indistinguible de un nombre y un
+ * segundo nombre, y para ese caso esta `{nombresimple}`.
+ */
+export function nombreDePila(nombre: string): string {
+  return nombre.trim().split(/\s+/).filter(Boolean)[0] ?? '';
+}
+
 export function nombreCorto(nombre: string): string {
   const partes = nombre.trim().split(/\s+/).filter(Boolean);
   if (partes.length <= 2) return partes.join(' ');
