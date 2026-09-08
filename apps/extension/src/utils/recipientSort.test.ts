@@ -13,6 +13,7 @@ function resumen(
     lastTemplateId: null,
     lastTemplateName,
     lastTemplateType: 'whatsapp',
+    templateIds: [],
   };
 }
 
@@ -60,6 +61,20 @@ describe('orden por ultimo envio', () => {
     const orden = ordenarDestinatarios([SIN_ENVIOS, ANA, BRUNO], 'ultimo-envio', mapa, () => '');
 
     expect(orden.map((l) => l.name)).toEqual(['Bruno', 'Ana', 'Zoe']);
+  });
+
+  it('al reves saca la cola: lo mas antiguo primero', () => {
+    // Es el orden con el que se decide a quien le toca el proximo mensaje.
+    const orden = ordenarDestinatarios([ANA, BRUNO, CARLA], 'mas-antiguo', mapa, () => '');
+
+    expect(orden.map((l) => l.name)).toEqual(['Ana', 'Carla', 'Bruno']);
+  });
+
+  it('lo mas antiguo primero tampoco sube a los que nunca recibieron nada', () => {
+    // Si subieran, taparian justo a los que se estaban buscando.
+    const orden = ordenarDestinatarios([SIN_ENVIOS, BRUNO, ANA], 'mas-antiguo', mapa, () => '');
+
+    expect(orden.map((l) => l.name)).toEqual(['Ana', 'Bruno', 'Zoe']);
   });
 
   it('dos sin envios se ordenan entre si por nombre', () => {

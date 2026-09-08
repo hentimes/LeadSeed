@@ -7,7 +7,12 @@ import type { LeadSendSummary } from '../services/historyService';
  * y sin red, asi que se prueba solo y sirve igual en la app movil.
  */
 
-export type CriterioDestinatario = 'nombre' | 'ultimo-envio' | 'plantilla' | 'categoria';
+export type CriterioDestinatario =
+  | 'nombre'
+  | 'ultimo-envio'
+  | 'mas-antiguo'
+  | 'plantilla'
+  | 'categoria';
 
 export interface LeadOrdenable {
   id?: string;
@@ -29,15 +34,27 @@ const comparador = new Intl.Collator('es', { sensitivity: 'base', numeric: true 
  */
 const AL_FINAL = 1;
 
+/**
+ * Las dos direcciones de la fecha existen porque contestan preguntas distintas.
+ *
+ * De lo mas reciente hacia atras se revisa lo que se acaba de mandar. Al reves
+ * -`antiguoPrimero`- sale la cola: a quien hace mas tiempo que no se le
+ * escribe, que es a quien le toca el proximo mensaje. Esa segunda es la que
+ * faltaba, y sin ella habia que llegar a la ultima pagina para verla.
+ *
+ * En las dos, quien nunca recibio nada va al final; ver `AL_FINAL`.
+ */
 function compararPorUltimoEnvio(
   a: LeadSendSummary | undefined,
   b: LeadSendSummary | undefined,
+  antiguoPrimero: boolean,
 ): number | null {
   if (!a && !b) return null;
   if (!a) return AL_FINAL;
   if (!b) return -AL_FINAL;
-  // Mas reciente primero: es lo que alguien espera de "ultimo envio".
-  return b.lastSentAt.localeCompare(a.lastSentAt);
+  return antiguoPrimero
+    ? a.lastSentAt.localeCompare(b.lastSentAt)
+    : b.lastSentAt.localeCompare(a.lastSentAt);
 }
 
 /**
@@ -58,8 +75,8 @@ export function ordenarDestinatarios<T extends LeadOrdenable>(
     const ra = a.id ? resumen.get(a.id) : undefined;
     const rb = b.id ? resumen.get(b.id) : undefined;
 
-    if (criterio === 'ultimo-envio') {
-      const porFecha = compararPorUltimoEnvio(ra, rb);
+    if (criterio === 'ultimo-envio' || criterio === 'mas-antiguo') {
+      const porFecha = compararPorUltimoEnvio(ra, rb, criterio === 'mas-antiguo');
       // Empate real -mismo instante, o ninguno de los dos tiene envios-: se
       // desempata por nombre para que el orden sea estable entre recargas.
       return porFecha !== null && porFecha !== 0
@@ -83,7 +100,8 @@ export function ordenarDestinatarios<T extends LeadOrdenable>(
 /** Los rotulos del selector, en el orden en que se ofrecen. */
 export const ORDENES_DESTINATARIO: { value: CriterioDestinatario; label: string }[] = [
   { value: 'nombre', label: 'Nombre' },
-  { value: 'ultimo-envio', label: 'Último envío' },
+  { value: 'ultimo-envio', label: 'Último envío (reciente)' },
+  { value: 'mas-antiguo', label: 'Último envío (antiguo)' },
   { value: 'plantilla', label: 'Plantilla' },
   { value: 'categoria', label: 'Categoría' },
 ];

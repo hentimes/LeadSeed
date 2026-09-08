@@ -99,6 +99,24 @@ interface ListPanelProps {
    * su contenido y, si el padre es flex, se estira para ocupar lo que haya.
    */
   maxHeight?: string;
+  /**
+   * Corta el encadenado del scroll: al llegar al final, la rueda NO sigue
+   * moviendo el contenedor de atras.
+   *
+   * Lo activa quien sabe que su lista tiene el alto acotado -por `maxHeight` o
+   * porque el padre se lo fija- y vive dentro de otra caja que scrollea. Es el
+   * caso del selector de destinatarios, con cuatro cajas anidadas: sin esto el
+   * ultimo giro de rueda movia la hoja entera con el puntero sobre una casilla.
+   *
+   * Apagado por defecto, y esto es una correccion de un arreglo anterior que se
+   * paso de largo. Se habia puesto en TODAS las listas, pero una lista sin alto
+   * acotado crece con su contenido y no scrollea nunca por dentro: el navegador
+   * la sigue tratando como contenedor de scroll -tiene `overflow-y-auto`- asi
+   * que le prohibia pasarle el scroll al padre sin tener ella nada que
+   * scrollear. En la pantalla de inscribir la rueda sobre la lista dejo de
+   * hacer nada. Un arreglo que rompio la pantalla que no tenia el problema.
+   */
+  cortarScroll?: boolean;
   children?: ReactNode;
   className?: string;
 }
@@ -117,6 +135,7 @@ export function ListPanel({
   footer,
   flush = false,
   maxHeight,
+  cortarScroll = false,
   children,
   className = '',
 }: ListPanelProps) {
@@ -147,7 +166,11 @@ export function ListPanel({
         </div>
       )}
 
-      <div className={`min-h-0 flex-1 ${maxHeight ? `overflow-y-auto ${maxHeight}` : 'overflow-y-auto'}`}>
+      <div
+        className={`min-h-0 flex-1 overflow-y-auto ${cortarScroll ? 'overscroll-contain' : ''} ${
+          maxHeight ?? ''
+        }`}
+      >
         {vacia && empty !== undefined ? empty : children}
       </div>
 
