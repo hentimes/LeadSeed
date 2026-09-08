@@ -124,12 +124,23 @@ export default function FlowsPage() {
    * Se confirma porque cambia la agenda de golpe y no hay un "deshacer": lo
    * adelantado queda vencido, y volver a repartirlo es otra decision.
    */
-  const adelantar = async (hasta: Date, cuantos: number) => {
+  const adelantar = async (hasta: Date, cuantos: number, esHoy: boolean) => {
+    /*
+     * El dialogo cambia segun si la fecha pautada ya es hoy.
+     *
+     * Con "¿Traer 17 a hoy?" sobre pasos que vencian HOY, la pregunta no
+     * significaba nada: ya era hoy. Lo que se adelanta en ese caso son horas,
+     * no dias, y eso es lo que hay que preguntar.
+     */
     const confirmado = await getPlatform().dialogs.confirm(
-      `Quedan listos para mandar ahora, sin esperar a su fecha. El resto del flujo sigue igual: el paso siguiente se contará desde hoy.`,
+      esHoy
+        ? 'Vencen hoy más tarde. Esto los deja listos ahora, sin esperar a su hora. Si podés esperar, aparecen solos.'
+        : 'Quedan listos para mandar ahora, sin esperar a su fecha. El resto del flujo sigue igual: el paso siguiente se contará desde hoy.',
       {
-        title: `¿Traer ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} a hoy?`,
-        confirmLabel: `Traer ${cuantos}`,
+        title: esHoy
+          ? `¿Mandar ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} antes de tiempo?`
+          : `¿Traer ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} a hoy?`,
+        confirmLabel: esHoy ? `Adelantar ${cuantos}` : `Traer ${cuantos}`,
       },
     );
     if (!confirmado) return;
@@ -142,7 +153,9 @@ export default function FlowsPage() {
       const movidos = await adelantarPasos(finDelDia);
       await flujos.recargarCola();
       setProximos(await fetchCargaProxima());
-      setAviso(`${movidos} pasos listos para mandar ahora.`);
+      setAviso(
+        `${movidos} ${movidos === 1 ? 'paso listo' : 'pasos listos'} para mandar ahora.`,
+      );
     } catch (error) {
       setAviso(error instanceof Error ? error.message : 'No se pudo adelantar la cola.');
     }
@@ -409,7 +422,7 @@ export default function FlowsPage() {
           seMoverian={repartoPropuesto.length}
           proximos={proximos}
           onDespacharGrupo={despacharGrupo}
-          onAdelantar={(hasta, cuantos) => void adelantar(hasta, cuantos)}
+          onAdelantar={(hasta, cuantos, esHoy) => void adelantar(hasta, cuantos, esHoy)}
           tandaEnCurso={tanda.cola.activa || tanda.procesando}
           onDespachar={despachar}
           onOmitir={omitir}

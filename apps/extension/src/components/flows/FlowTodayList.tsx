@@ -64,11 +64,11 @@ const FILAS_POR_PAGINA = 10;
 
 const FECHA_CORTA = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit' });
 
-/** Medianoche local, para comparar dias sin que la hora estorbe. */
-function comienzoDelDia(momento: Date): number {
-  const inicio = new Date(momento);
-  inicio.setHours(0, 0, 0, 0);
-  return inicio.getTime();
+/** El dia local como `YYYY-MM-DD`, para comparar contra los dias de la base. */
+function fechaLocal(momento: Date): string {
+  const mes = String(momento.getMonth() + 1).padStart(2, '0');
+  const dia = String(momento.getDate()).padStart(2, '0');
+  return `${momento.getFullYear()}-${mes}-${dia}`;
 }
 
 interface Props {
@@ -89,8 +89,8 @@ interface Props {
   onDespacharGrupo: (filas: PendingFlowStep[]) => void;
   /** Hay una tanda en curso: no se puede empezar otra. */
   tandaEnCurso: boolean;
-  /** Trae a hoy lo que vencia hasta esa fecha. La espera es una intencion. */
-  onAdelantar: (hasta: Date, cuantos: number) => void;
+  /** Trae a ahora lo que vencia hasta esa fecha. La espera es una intencion. */
+  onAdelantar: (hasta: Date, cuantos: number, esHoy: boolean) => void;
 }
 
 export function FlowTodayList({
@@ -120,18 +120,46 @@ export function FlowTodayList({
      * pendientes". No era falso -hoy no habia nada vencido- pero era la mitad
      * de la frase, y la que faltaba es la que devuelve la confianza: cuando si.
      */
-    const siguiente = proximos.find((dia) => new Date(dia.dia).getTime() >= comienzoDelDia(ahora));
+    /*
+     * La comparacion es entre CADENAS de fecha, no entre instantes.
+     *
+     * `dia.dia` viene como "2026-09-08" y `new Date()` de eso da medianoche
+     * UTC, que en Chile es la tarde del dia anterior. Comparado contra la
+     * medianoche local, un dia entero podia caer del lado equivocado y la
+     * pantalla saltarse el primero. Dos cadenas `YYYY-MM-DD` se ordenan solas y
+     * no tienen zona horaria que las tuerza.
+     */
+    const hoy = fechaLocal(ahora);
+    const siguiente = proximos.find((dia) => dia.dia >= hoy);
     const enEspera = proximos.reduce((total, dia) => total + dia.cantidad, 0);
+
+    /*
+     * VENCE HOY MAS TARDE, o vence otro dia. No es lo mismo y la pantalla lo
+     * decia igual.
+     *
+     * La espera de un paso arrastra la HORA del envio anterior: si el paso 1
+     * salio a las 14:00 y espera 3 dias, el 2 vence hoy a las 14:00. A las 8 de
+     * la mañana la cola no lo da por vencido -y hace bien-, pero el cartel
+     * decia "traer 17 a hoy" cuando la fecha pautada YA era hoy, que leido asi
+     * no significa nada.
+     *
+     * Con `esHoy` el mensaje cambia: no hay que traer nada, hay que esperar
+     * unas horas, y el boton pasa a ser lo que de verdad hace -mandarlos antes
+     * de tiempo- por si no vas a poder mas tarde.
+     */
+    const esHoy = siguiente?.dia === hoy;
 
     return (
       <EmptyState
-        title="Hoy no toca nada"
+        title={esHoy ? 'Todavía no toca nada' : 'Hoy no toca nada'}
         description={
-          siguiente
-            ? `Lo próximo son ${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje' : 'mensajes'} el ${FECHA_CORTA.format(new Date(siguiente.dia))}.${
-                enEspera > siguiente.cantidad ? ` En total hay ${enEspera} programados.` : ''
-              }`
-            : 'No hay pasos programados. Inscribí gente en un flujo para que aparezcan acá el día que les toque.'
+          !siguiente
+            ? 'No hay pasos programados. Inscribí gente en un flujo para que aparezcan acá el día que les toque.'
+            : esHoy
+              ? `${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje vence' : 'mensajes vencen'} hoy más tarde: la espera del flujo cuenta también la hora del envío anterior. Van a aparecer acá solos.`
+              : `Lo próximo son ${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje' : 'mensajes'} el ${FECHA_CORTA.format(new Date(siguiente.dia))}.${
+                  enEspera > siguiente.cantidad ? ` En total hay ${enEspera} programados.` : ''
+                }`
         }
         action={
           /*
@@ -150,10 +178,15 @@ export function FlowTodayList({
           siguiente ? (
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Button
-                variant="primary"
-                onClick={() => onAdelantar(new Date(siguiente.dia), siguiente.cantidad)}
+                variant={esHoy ? 'secondary' : 'primary'}
+                onClick={() => onAdelantar(new Date(siguiente.dia), siguiente.cantidad, esHoy)}
+                title={
+                  esHoy
+                    ? 'Los adelanta unas horas, en vez de esperar a su hora'
+                    : 'Los trae al día de hoy, sin esperar a su fecha'
+                }
               >
-                Traer {siguiente.cantidad} a hoy
+                {esHoy ? `Mandar los ${siguiente.cantidad} ya` : `Traer ${siguiente.cantidad} a hoy`}
               </Button>
               <Button variant="ghost" onClick={onIrAFlujos}>
                 Ver mis flujos
