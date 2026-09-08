@@ -4,6 +4,8 @@ import { useLists } from '../hooks/useLists';
 import { useLeads } from '../hooks/useLeads';
 import { Icon } from '../utils/icons';
 import type { Lead, LeadList, AppSettings } from '../types';
+import { LoadError } from '../design';
+import { describeError } from '../utils/errorMessage';
 import { useSort } from '../hooks/useSort';
 import { useAuth } from '../contexts/AuthContext';
 import ListLeadsTable from '../components/lists/ListLeadsTable';
@@ -23,6 +25,14 @@ type UnifiedList = {
   description?: string;
 };
 
+/**
+ * Cuantas sugerencias se ofrecen al buscar un lead para agregarlo.
+ *
+ * El corte existe para que el desplegable no tape la pantalla, no para
+ * esconder resultados: cuando hay mas, se dice cuantos son.
+ */
+const MAX_SUGERENCIAS = 15;
+
 export default function ListsPage() {
   const { hasFeature } = useAuth();
   const { getAll: getLists, save, remove: removeList, setColor: setListsColor } = useLists();
@@ -36,6 +46,8 @@ export default function ListsPage() {
   const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [leadSearch, setLeadSearch] = useState('');
+  /** El fallo de carga, para no confundirlo con una cuenta vacia. */
+  const [fallo, setFallo] = useState('');
   
   const [showSmartSettings, setShowSmartSettings] = useState(false);
   
@@ -45,12 +57,36 @@ export default function ListsPage() {
   const [draggedListId, setDraggedListId] = useState<string | number | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | number | null>(null);
 
+  /**
+   * Las cuatro cargas, EN PARALELO y con su fallo a la vista.
+   *
+   * Eran cuatro `await` encadenados y sin `try`. Dos consecuencias:
+   *
+   * - Coste. `load()` corre despues de CADA accion -crear una lista, agregar un
+   *   lead, cambiar un color, renombrar una carpeta- y cada vez traia de nuevo
+   *   los mil novecientos leads y los borrados, en cuatro viajes de ida y
+   *   vuelta uno detras de otro. Agregar un lead a una lista se sentia lento
+   *   comparado con el resto de la aplicacion.
+   * - Mentira. Sin `try`, un fallo de red dejaba el estado a medias y sin
+   *   aviso: la pantalla decia "No hay listas creadas", que es exactamente lo
+   *   que veria alguien que no tiene ninguna.
+   */
   const load = async () => {
-    const s = await getSettings();
-    setSettings(s);
-    setLists(await getLists());
-    setAllLeads(await getLeads());
-    setDeletedLeads(await getDeleted());
+    try {
+      const [s, listas, leads, borrados] = await Promise.all([
+        getSettings(),
+        getLists(),
+        getLeads(),
+        getDeleted(),
+      ]);
+      setSettings(s);
+      setLists(listas);
+      setAllLeads(leads);
+      setDeletedLeads(borrados);
+      setFallo('');
+    } catch (error) {
+      setFallo(describeError(error));
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -293,7 +329,17 @@ export default function ListsPage() {
     const isExpanded = expandedId === list.id;
     const leads = list.isSmart ? getSmartListLeads(list.id as string, allLeads, deletedLeads) : allLeads.filter(l => l.listaIds.includes(list.id as number));
     
+    if (fallo) {
     return (
+      <LoadError
+        title="No se pudieron cargar las listas"
+        description={fallo}
+        onRetry={() => void load()}
+      />
+    );
+  }
+
+  return (
       <div 
         key={list.id} 
         draggable
@@ -398,9 +444,19 @@ export default function ListsPage() {
                   className="w-full rounded-lg border border-line-strong bg-surface px-4 py-2 text-body text-ink shadow-sm outline-none transition-colors placeholder:text-ink-muted focus:border-focus focus:ring-1 focus:ring-focus" 
                 />
                 
+                {leadSearch && filteredNotInList.length > MAX_SUGERENCIAS && (
+                  /* Se dice cuantos quedaron fuera. Antes cortaba en quince sin
+                     avisar: el lead dieciseis no existia para esta pantalla y
+                     nada lo delataba. */
+                  <p className="mt-1 text-micro text-ink-muted">
+                    Se muestran {MAX_SUGERENCIAS} de {filteredNotInList.length}. Afiná la búsqueda
+                    para ver el resto.
+                  </p>
+                )}
+
                 {leadSearch && filteredNotInList.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-surface border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredNotInList.slice(0, 15).map((lead) => (
+                    {filteredNotInList.slice(0, MAX_SUGERENCIAS).map((lead) => (
                       <button 
                         key={lead.id} 
                         onClick={() => handleAddLead(lead.id!)}

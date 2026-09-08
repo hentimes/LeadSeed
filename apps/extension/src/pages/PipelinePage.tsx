@@ -565,7 +565,8 @@ export default function PipelinePage() {
           lead={viewLead}
           lists={lists}
           onClose={() => setViewLead(null)}
-          onEdit={() => { /* Solo lectura en pipeline */ }}
+          /* Sin `onEdit`: en Pipeline la ficha es de lectura, asi que el lapiz
+             directamente no se pinta en vez de pintarse muerto. */
         />
       )}
     </div>
