@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { getSettings } from '../services/appSettingsService';
 import { fetchDashboardSnapshot, type DashboardSnapshot } from '../services/dashboardService';
 import type { AppSettings, Page } from '../types';
+import { LoadError } from '../design';
+import { describeError } from '../utils/errorMessage';
 
 
 // Tabs modulares
@@ -22,25 +24,54 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
   const [reportType, setReportType] = useState<'acquisition' | 'funnel' | null>(null);
   const { user } = useAuth();
 
+  /** El fallo de carga y el contador que permite reintentar. */
+  const [fallo, setFallo] = useState('');
+  const [intento, setIntento] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
 
+    /*
+     * El `catch` que faltaba.
+     *
+     * Sin el, un fallo de red dejaba la promesa rechazada, `snapshot` en nulo y
+     * el esqueleto girando PARA SIEMPRE: sin mensaje, sin reintento y sin
+     * salida. Es el peor de los estados posibles -peor que un error- porque no
+     * se distingue de "todavia esta cargando" y no invita a hacer nada.
+     */
     (async () => {
-      const nextSettings = await getSettings();
-      if (cancelled) return;
-      setSettings(nextSettings);
+      try {
+        const nextSettings = await getSettings();
+        if (cancelled) return;
+        setSettings(nextSettings);
 
-      if (!user) {
-        setSnapshot(null);
-        return;
+        if (!user) {
+          setSnapshot(null);
+          return;
+        }
+
+        const nextSnapshot = await fetchDashboardSnapshot(nextSettings.dashboardComparePeriod);
+        if (!cancelled) setSnapshot(nextSnapshot);
+      } catch (error) {
+        if (!cancelled) setFallo(describeError(error));
       }
-
-      const nextSnapshot = await fetchDashboardSnapshot(nextSettings.dashboardComparePeriod);
-      if (!cancelled) setSnapshot(nextSnapshot);
     })();
 
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, intento]);
+
+  if (fallo) {
+    return (
+      <LoadError
+        title="No se pudo cargar el panel"
+        description={fallo}
+        onRetry={() => {
+          setFallo('');
+          setIntento((n) => n + 1);
+        }}
+      />
+    );
+  }
 
   if (!settings || !snapshot) {
     // Skeleton genérico simple

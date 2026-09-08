@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types';
 import { getCurrentSession, logoutCurrentUser, mapSessionToUser, onAuthSessionChange, persistGoogleCalendarConnectionFromSession } from '../services/authService';
@@ -40,13 +40,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const requestVersionRef = useRef(0);
   const sessionRef = useRef<Session | null>(null);
 
-  const loadFeatures = async (requestVersion: number) => {
+  /* Estables las dos: son dependencia del valor del contexto, y recrearlas en
+     cada render anularia su memo -que es justo lo que vino a arreglarse-. */
+  const loadFeatures = useCallback(async (requestVersion: number) => {
     const nextFeatures = await loadActiveFeatures();
     if (requestVersionRef.current !== requestVersion) return;
     setActiveFeatures(nextFeatures);
-  };
+  }, []);
 
-  const refreshProfile = async (targetUserId = user?.id) => {
+  const refreshProfile = useCallback(async (targetUserId = user?.id) => {
     if (!targetUserId) return;
     const nextProfile = await loadUserProfile(targetUserId);
     if (requestVersionRef.current === 0) return;
@@ -54,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (targetUserId === user?.id) {
       await loadFeatures(requestVersionRef.current);
     }
-  };
+  }, [user?.id, loadFeatures]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +116,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, []);
+    /* `loadFeatures` es estable (`useCallback` sin dependencias), asi que
+       declararla no reabre la suscripcion en cada render. */
+  }, [loadFeatures]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -129,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         void loadFeatures(requestVersionRef.current).catch(() => undefined);
       }
     );
-  }, [user?.id]);
+  }, [user?.id, loadFeatures]);
 
   useEffect(() => {
     if (!user?.id || !profile?.plan_id) return;
@@ -141,24 +145,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         void loadFeatures(requestVersionRef.current).catch(() => undefined);
       }
     );
-  }, [profile?.plan_id, user?.id]);
+  }, [profile?.plan_id, user?.id, loadFeatures]);
 
-  const signOut = async () => {
+  /* Estable: es dependencia del valor del contexto, y recrearla en cada render
+     anularia el memo de abajo. */
+  const signOut = useCallback(async () => {
     setActiveFeatures([]);
     setProfile(null);
     await logoutCurrentUser();
-  };
+  }, []);
 
   const isAdmin = profile?.role === 'admin';
 
-  const hasFeature = (feat: string) => {
-    if (isAdmin) return true;
-    return activeFeatures.includes(feat);
-  };
-
-  return (
-    <AuthContext.Provider value={{ session, user, profile, signOut, loading, activeFeatures, hasFeature, refreshProfile: () => refreshProfile(), isAdmin }}>
-      {children}
-    </AuthContext.Provider>
+  const hasFeature = useCallback(
+    (feat: string) => (isAdmin ? true : activeFeatures.includes(feat)),
+    [isAdmin, activeFeatures],
   );
+
+  /*
+   * EL VALOR DEL CONTEXTO VA MEMOIZADO.
+   *
+   * Era un objeto literal, o sea uno nuevo en cada render de este proveedor.
+   * `useAuth()` lo consume casi toda la aplicacion -Leads, Pipeline, Tareas,
+   * Listas, Comunidad-, asi que cualquier cambio de perfil o de plan, incluidos
+   * los que llegan solos por realtime desde otra pestaña, repintaba entera
+   * cualquier pantalla abierta aunque el dato que esa pantalla mira no hubiera
+   * cambiado.
+   *
+   * `refreshProfile` se envuelve para no exponer el parametro interno, y esa
+   * envoltura tambien tenia que dejar de recrearse en cada render.
+   */
+  const refrescar = useCallback(() => refreshProfile(), [refreshProfile]);
+
+  const valor = useMemo(
+    () => ({
+      session,
+      user,
+      profile,
+      signOut,
+      loading,
+      activeFeatures,
+      hasFeature,
+      refreshProfile: refrescar,
+      isAdmin,
+    }),
+    [session, user, profile, signOut, loading, activeFeatures, hasFeature, refrescar, isAdmin],
+  );
+
+  return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 };
