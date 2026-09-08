@@ -4,7 +4,7 @@ import { Icon } from '../../utils/icons';
 import { nombreVisible } from '../../utils/leadDisplay';
 import { FlowProgressRail, MAX_PASOS_RIEL } from './FlowProgressRail';
 import { fetchEnrollments, fetchProgress } from '../../services/messageFlowsService';
-import { estadosDePasos } from '../../services/flowProgress';
+import { computeFlowProgress, estadosDePasos, tocaAhora } from '../../services/flowProgress';
 import type {
   ExitReason,
   MessageFlow,
@@ -27,6 +27,9 @@ const MOTIVOS_SALIDA: Array<{ valor: ExitReason; label: string }> = [
   { valor: 'respondio', label: 'Respondio' },
   { valor: 'manual', label: 'Otro motivo' },
 ];
+
+/** Dia y mes: en esta lista la hora no cambia ninguna decision. */
+const FECHA_INSCRITO = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit' });
 
 const ETIQUETA_SALIDA: Record<ExitReason, string> = {
   convertido: 'Convertido',
@@ -58,6 +61,13 @@ export function FlowDetail({
   onSacar,
   refreshKey,
 }: Props) {
+  /*
+   * El reloj se lee UNA vez por render y se pasa a `tocaAhora`, que es pura y
+   * no lo lee por su cuenta. Dentro del bucle darian marcas distintas para
+   * filas de la misma pantalla, y en el limite de un minuto dos inscritos con
+   * el mismo vencimiento se contarian distinto.
+   */
+  const ahora = new Date();
   const [inscritos, setInscritos] = useState<MessageFlowEnrollment[]>([]);
   const [progreso, setProgreso] = useState<MessageFlowProgress[]>([]);
   const [sacando, setSacando] = useState<number | null>(null);
@@ -103,7 +113,7 @@ export function FlowDetail({
 
       {!flujo.isActive && (
         <p className="rounded-md border border-line bg-surface-sunken px-3 py-2 text-micro text-ink-secondary">
-          Pausado: no se puede inscribir a nadie nuevo. Los que ya estan dentro conservan su progreso.
+          Pausado: sus pasos no aparecen en Hoy hasta que lo reanudes. Los inscritos conservan su progreso.
         </p>
       )}
 
@@ -137,7 +147,8 @@ export function FlowDetail({
 
         {activos.length === 0 ? (
           <p className="text-micro text-ink-muted">
-            Nadie inscrito todavia. Al inscribir un lead se le programa el primer paso.
+            Nadie inscrito todavia. Al inscribir se elige en que paso empieza cada lead: los
+            anteriores quedan como hechos y ese queda programado.
           </p>
         ) : (
           <Card padding="none">
@@ -146,6 +157,13 @@ export function FlowDetail({
                 const suyo = progreso.filter((p) => p.enrollmentId === inscrito.id);
                 const estados = estadosDePasos(pasos, suyo);
                 const hechos = estados.filter((e) => e !== 'pendiente' && e !== 'toca').length;
+                /*
+                  Que paso le toca y cuando. El riel dice cuanto lleva andado,
+                  que no es lo mismo: con "2 de 3" sigue sin saberse si el
+                  tercero sale manana o ya esta atrasado, que es justo lo que se
+                  viene a mirar a esta lista.
+                */
+                const avance = computeFlowProgress(pasos, suyo);
 
                 return (
                   <li
@@ -173,6 +191,17 @@ export function FlowDetail({
                       )}
                       <span className="text-micro text-ink-secondary">
                         {hechos} de {pasos.length}
+                      </span>
+                      <span className="min-w-0 truncate text-micro text-ink-muted">
+                        {avance.siguiente === null
+                          ? 'Sin pasos pendientes'
+                          : tocaAhora(avance, ahora)
+                            ? `Paso ${avance.siguiente.stepOrder} · toca ya`
+                            : avance.venceAt === null
+                              ? `Paso ${avance.siguiente.stepOrder}`
+                              : `Paso ${avance.siguiente.stepOrder} · ${FECHA_INSCRITO.format(
+                                  new Date(avance.venceAt),
+                                )}`}
                       </span>
                     </div>
 

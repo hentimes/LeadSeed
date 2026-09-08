@@ -1,11 +1,13 @@
 import type { Lead, LeadList } from '../../types';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LeadHistoryView } from './LeadHistoryView';
 import type { EmailTemplate, WhatsAppTemplate } from '../../types';
 import { useLeadSendSummary } from '../../hooks/useLeadSendSummary';
-import { Button, Modal } from '../../design';
+import { Button, IconButton, Modal } from '../../design';
+import { Icon } from '../../utils/icons';
 import { RecipientPicker } from './RecipientPicker';
-import type { CanalContacto } from '../../utils/leadContacto';
+import { RecipientListPicker } from './RecipientListBar';
+import { puedeRecibirPor, type CanalContacto } from '../../utils/leadContacto';
 
 /**
  * HOJA DE DESTINATARIOS
@@ -46,6 +48,7 @@ export function RecipientSheet({
   selectedLeadIds,
   selectedListIds,
   onToggleLead,
+  onToggleLeads,
   onToggleList,
   onClear,
   search,
@@ -66,6 +69,7 @@ export function RecipientSheet({
   selectedLeadIds: Set<string>;
   selectedListIds: Set<number>;
   onToggleLead: (id: string) => void;
+  onToggleLeads: (ids: string[], seleccionar: boolean) => void;
   onToggleList: (id: number) => void;
   onClear: () => void;
   search: string;
@@ -82,8 +86,31 @@ export function RecipientSheet({
   count: number;
   onClose: () => void;
 }) {
-  const resumenDeEnvios = useLeadSendSummary();
+  const { resumen: resumenDeEnvios, estado: estadoDelResumen } = useLeadSendSummary();
   const [leadEnHistorial, setLeadEnHistorial] = useState<string | null>(null);
+
+  /*
+   * Quien puede recibir por este canal. Se calcula aca, arriba de todo, porque
+   * lo necesitan dos piezas que estan en extremos opuestos de la hoja: la lista
+   * de leads y el desplegable de listas del pie, que promete la misma cifra.
+   * Calculado dos veces podian discrepar.
+   */
+  const contactables = useMemo(
+    () => leads.filter((lead) => puedeRecibirPor(lead, canal)),
+    [leads, canal],
+  );
+
+  /*
+   * VER SOLO UNA LISTA. Es filtro de vista y nada mas: no toca la seleccion.
+   *
+   * Antes esto no existia y el filtrado lo hacia `selectedListIds`, el mismo
+   * estado con el que se AGREGAN listas enteras al envio. Un unico estado con
+   * dos significados: mirar y elegir. Ahora son dos, y cada control hace una
+   * sola cosa.
+   *
+   * Vive aca y no en el picker porque el control que lo cambia esta en el pie.
+   */
+  const [verListaId, setVerListaId] = useState<number | null>(null);
 
   const leadDelHistorial = leadEnHistorial
     ? leads.find((l) => l.id === leadEnHistorial) ?? null
@@ -99,7 +126,12 @@ export function RecipientSheet({
    */
   if (leadDelHistorial) {
     return (
-      <Modal onClose={onClose} maxWidth="520px" label={`Mensajes enviados a ${leadDelHistorial.name}`}>
+      <Modal
+        onClose={onClose}
+        maxWidth="520px"
+        align="top"
+        label={`Mensajes enviados a ${leadDelHistorial.name}`}
+      >
         <div className="flex h-[85vh] flex-col">
           <LeadHistoryView
             lead={leadDelHistorial}
@@ -114,7 +146,7 @@ export function RecipientSheet({
   }
 
   return (
-    <Modal onClose={onClose} maxWidth="520px" label="Elegir destinatarios">
+    <Modal onClose={onClose} maxWidth="520px" align="top" label="Elegir destinatarios">
       <div className="flex max-h-[85vh] flex-col">
         <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
           <h2 className="text-section-title font-semibold text-ink">Destinatarios</h2>
@@ -127,8 +159,10 @@ export function RecipientSheet({
             selectedLeadIds={selectedLeadIds}
             selectedListIds={selectedListIds}
             onToggleLead={onToggleLead}
+            onToggleLeads={onToggleLeads}
             onToggleList={onToggleList}
-            onClear={onClear}
+            contactables={contactables}
+            verListaId={verListaId}
             search={search}
             onSearchChange={onSearchChange}
             pagina={pagina}
@@ -137,6 +171,7 @@ export function RecipientSheet({
             onOcultarSinNombreChange={onOcultarSinNombreChange}
             sentLeadIds={sentLeadIds}
             resumenDeEnvios={resumenDeEnvios}
+            estadoDelResumen={estadoDelResumen}
             onVerHistorial={setLeadEnHistorial}
             plantillas={plantillas}
             categorias={categorias}
@@ -144,8 +179,48 @@ export function RecipientSheet({
           />
         </div>
 
-        <div className="border-t border-line px-4 py-2.5">
-          <Button variant="primary" onClick={onClose} className="h-control-lg w-full font-semibold">
+        {/*
+          EL PIE: elegir una lista, limpiar, y cerrar. Todo en un renglon.
+          
+          Las tres cosas se hacen en el mismo momento -justo antes de cerrar- y
+          cada una vivia en su propia fila, tres renglones sobre una lista que ya
+          peleaba por el alto. Juntas ahorran dos.
+
+          Ademas resuelve donde poner "Limpiar". Estaba al fondo de la zona que
+          scrollea: al desplegar los filtros se iba de vista, justo cuando mas
+          falta hace. El pie no scrollea nunca.
+
+          "Limpiar" es un icono y no una palabra por el ancho: en 470px, con el
+          desplegable de listas y su boton en la misma fila, no entra un tercer
+          rotulo. Lleva `aria-label`, asi que para un lector de pantalla se
+          anuncia igual de claro que antes.
+        */}
+        <div className="flex items-center gap-1.5 border-t border-line px-4 py-2.5">
+          <RecipientListPicker
+            leadLists={leadLists}
+            contactables={contactables}
+            verListaId={verListaId}
+            onVerListaChange={setVerListaId}
+            selectedListIds={selectedListIds}
+            onToggleList={onToggleList}
+          />
+
+          {count > 0 && (
+            <IconButton
+              icon={<Icon.Close />}
+              label="Limpiar los destinatarios elegidos"
+              onClick={onClear}
+              size="sm"
+            />
+          )}
+
+          {/* Se queda con el ancho que sobra: es la accion de la barra, y sin
+              listas -cuenta nueva- toma la fila entera sin caso especial. */}
+          <Button
+            variant="primary"
+            onClick={onClose}
+            className="h-control-lg flex-1 px-4 font-semibold"
+          >
             Listo{count > 0 ? ` (${count})` : ''}
           </Button>
         </div>

@@ -24,6 +24,12 @@ const PAGE_TITLES: Record<Page, string> = {
   flows: 'Mensajes',
   send: 'Mensajes',
   history: 'Historial de Envíos',
+  /*
+   * Titulo propio, como el Historial: Playbooks pertenece al grupo Mensajes
+   * pero no es una de sus tres pestanas, asi que decir "Mensajes" dejaria la
+   * cabecera sin nombrar donde estas.
+   */
+  playbooks: 'Playbooks',
   tasks: 'Mis Tareas',
   pipeline: 'Pipeline Comercial',
   agenda: 'Agenda y Citas',

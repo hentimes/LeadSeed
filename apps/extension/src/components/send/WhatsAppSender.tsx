@@ -21,6 +21,8 @@ import { useSendSession } from './useSendSession';
 import { RecipientSummaryRow } from './RecipientSummaryRow';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
+import { contarWhatsAppDelDia } from '../../services/historyService';
+import { comienzoDelDia } from '../../services/whatsappQuota';
 import WhatsAppQueuePanel from './WhatsAppQueuePanel';
 
 interface Props {
@@ -95,16 +97,27 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
    * solo sobrevivia uno, mientras el historial ya los daba todos por enviados.
    * La cola abre uno, espera a que se envie, y sigue.
    */
+  /*
+   * LA PLANTILLA DE LA TANDA SE CONGELA AL EMPEZAR.
+   *
+   * El selector sigue usable con una cola en marcha, y este callback leia
+   * `selectedTemplate` en cada avance. Cambiar de plantilla entre destinatarios
+   * mandaba el texto de la vieja -ya resuelto en los mensajes de la cola- y lo
+   * registraba bajo el id y el nombre de la nueva: el historial y los
+   * contadores por plantilla quedaban cruzados, que es justo lo que la cola
+   * vino a arreglar.
+   */
+  const plantillaDeLaTanda = useRef<{ id: string | number; nombre: string } | null>(null);
+
   const cola = useWhatsAppQueue({
     onAbierto: async (mensaje) => {
       const session = await getCurrentSession();
       const userId = session?.user?.id;
-      if (!userId || !selectedTemplate) return;
+      const plantilla = plantillaDeLaTanda.current;
+      if (!userId || !plantilla) return;
 
       // Se registra el que se acaba de abrir, no el envio entero.
-      setSentLog(
-        await logWhatsAppSend(userId, selectedTemplate.id!, [mensaje], selectedTemplate.nombre),
-      );
+      setSentLog(await logWhatsAppSend(userId, plantilla.id, [mensaje], plantilla.nombre));
       await sesion.refrescarContador();
     },
   });
@@ -193,9 +206,42 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     if (leadEnCola) setPreviewLead(leadEnCola);
   }, [leadEnCola]);
 
+  /*
+   * El cupo de WhatsApp de hoy, para poder avisar antes de confirmar.
+   *
+   * Se lee al montar el compositor y no en cada render: el numero cambia cuando
+   * mandas, y despues de mandar esta pantalla se recarga igual.
+   */
+  const [cupo, setCupo] = useState({ usados: 0, tope: 50 });
+  useEffect(() => {
+    void (async () => {
+      const ajustes = await getSettings();
+      const usados = await contarWhatsAppDelDia(comienzoDelDia(new Date()));
+      setCupo({ usados, tope: ajustes.whatsappDailyLimit });
+    })();
+  }, [sentLeadIds]);
+
   const toggleLead = (id: string) => {
     setSelectedLeadIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
       else n.add(id); return n; });
+  };
+  /*
+   * Marcar o desmarcar varios de una vez, en UNA actualizacion de estado.
+   *
+   * Lo pide la casilla de "esta pagina" del selector. Llamar ocho veces a
+   * `toggleLead` habria hecho lo mismo, pero con semantica de alternar: los que
+   * ya estaban marcados se habrian desmarcado, que es lo contrario de lo que
+   * promete una casilla de "marcar todos".
+   */
+  const toggleLeads = (ids: string[], seleccionar: boolean) => {
+    setSelectedLeadIds((prev) => {
+      const n = new Set(prev);
+      for (const id of ids) {
+        if (seleccionar) n.add(id);
+        else n.delete(id);
+      }
+      return n;
+    });
   };
   const toggleList = (id: number) => {
     setSelectedListIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
@@ -254,7 +300,12 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     if (!selectedTemplate || recipients.length === 0) return;
 
     // Se resuelve una sola vez: lo que se guarda en el historial y lo que se
-    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones.
+    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones. La
+    // plantilla se anota junto a los mensajes, por el mismo motivo.
+    plantillaDeLaTanda.current = {
+      id: selectedTemplate.id!,
+      nombre: selectedTemplate.nombre,
+    };
     await cola.iniciar(buildLeadMessages(recipients, customBody, motivoTexto));
   };
 
@@ -386,6 +437,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
           selectedLeadIds={selectedLeadIds}
           selectedListIds={selectedListIds}
           onToggleLead={toggleLead}
+          onToggleLeads={toggleLeads}
           onToggleList={toggleList}
           onClear={clearRecipients}
           search={navegacion.search}
@@ -423,6 +475,30 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
             {
               label: `Destinatarios (${recipients.length})`,
               value: <RecipientSummary names={recipients.map((r) => r.name)} />,
+            },
+            /*
+              EL CUPO SE AVISA, NO SE BLOQUEA.
+              
+              En los flujos el tope apaga los botones, porque ahi la maquina
+              decide a quien le toca. Aca decide una persona, y puede haber algo
+              urgente que justifique pasarse. Lo que no puede es enterarse
+              despues: la fila aparece SIEMPRE, en el momento de confirmar, y se
+              pinta en tono de aviso cuando esta tanda se pasa del tope.
+            */
+            {
+              label: 'WhatsApp de hoy',
+              value: (
+                <span
+                  className={
+                    cupo.usados + recipients.length > cupo.tope ? 'text-state-warning-ink' : undefined
+                  }
+                >
+                  {cupo.usados} de {cupo.tope} enviados
+                  {cupo.usados + recipients.length > cupo.tope
+                    ? ` · con estos ${recipients.length} te pasás del tope`
+                    : ''}
+                </span>
+              ),
             },
           ]}
         />

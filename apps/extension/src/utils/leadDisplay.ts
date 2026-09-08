@@ -44,13 +44,25 @@ export function nombreVisible(nombre: string | null | undefined): string {
 /**
  * Abrevia un nombre chileno a "nombre + apellido paterno".
  *
- *   1-2 partes  Ana Soto                 -> Ana Soto
- *   3 partes    Juan Perez Soto          -> Juan Perez
- *   4+ partes   Juan Carlos Perez Soto   -> Juan Perez
+ *   1-2 partes  Ana Soto                          -> Ana Soto
+ *   3 partes    Juan Perez Soto                   -> Juan Perez
+ *   4 partes    Juan Carlos Perez Soto            -> Juan Perez
+ *   5+ partes   Henry Jose Daniel Farias Pacheco  -> Henry Farias
  *
- * En Chile el nombre completo es uno o dos nombres de pila seguidos de dos
- * apellidos, paterno y luego materno. Con cuatro partes el apellido paterno es
- * la tercera, y por eso el salto de `parts[1]` a `parts[2]`.
+ * En Chile el registro civil anota SIEMPRE dos apellidos -paterno y materno- y
+ * uno, dos o tres nombres de pila. Por eso la cuenta se hace desde el final:
+ * el apellido paterno es la penultima parte, sea cual sea el largo.
+ *
+ * La primera version contaba desde el principio y tomaba la tercera palabra,
+ * dando por hecho que los nombres de pila eran como mucho dos. Con cuatro
+ * partes las dos cuentas coinciden; con cinco no, y ahi la vieja devolvia el
+ * tercer nombre de pila como si fuera el apellido: "Henry Jose Daniel Farias
+ * Pacheco" salia como "Henry Daniel".
+ *
+ * Queda un caso que ninguna de las dos resuelve: el apellido compuesto -"San
+ * Martin", "de la Fuente"-, porque separado por espacios es indistinguible de
+ * un nombre de pila mas. Se acepta a sabiendas: son menos que los nombres de
+ * tres pilas y no hay forma de decidirlo sin un campo aparte de apellidos.
  *
  * Esta regla convivia con otra, en la tabla de listas, que tomaba la primera
  * palabra y **la ultima**. Con cuatro partes eso devolvia "Juan Soto": el
@@ -65,8 +77,7 @@ export function nombreVisible(nombre: string | null | undefined): string {
 export function nombreCorto(nombre: string): string {
   const partes = nombre.trim().split(/\s+/).filter(Boolean);
   if (partes.length <= 2) return partes.join(' ');
-  if (partes.length === 3) return `${partes[0]} ${partes[1]}`;
-  return `${partes[0]} ${partes[2]}`;
+  return `${partes[0]} ${partes[partes.length - 2]}`;
 }
 
 /**

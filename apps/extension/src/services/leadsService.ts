@@ -12,6 +12,7 @@ import {
   fetchLeadPageRows,
   fetchLeadRowById,
   fetchLeadRows,
+  fetchLeadRowsByIds,
   fetchLeadRowsByList,
   fetchPinnedLeads,
   importLeadRows,
@@ -191,6 +192,11 @@ export async function fetchLeadById(id: string): Promise<Lead | undefined> {
 
   const [lead] = await attachCrossExecAlerts([mapLeadRowToDomain(data)]);
   return lead;
+}
+
+/** Varios leads por id, en una consulta. Ver `fetchLeadRowsByIds`. */
+export async function fetchLeadsByIds(ids: string[]): Promise<Lead[]> {
+  return (await fetchLeadRowsByIds(ids)).map(mapLeadRowToDomain);
 }
 
 export async function fetchLeadsByList(listaId: number): Promise<Lead[]> {

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import type { Lead, LeadList, Page } from '../../types';
+import PlaybookPicker from '../playbooks/PlaybookPicker';
 import { getPlatform } from '../../platform/registry';
 import { Icon } from '../../utils/icons';
 import { useLeadDetail, toJourneyLabel } from '../../hooks/useLeadDetail';
@@ -16,6 +18,15 @@ interface Props {
   onClose: () => void;
   onEdit: (lead: Lead) => void;
   onNavigate?: (page: Page) => void;
+  /**
+   * De donde se abrio esta ficha.
+   *
+   * Decide que ACCIONES EXTRA se ofrecen, nunca que secciones se pintan. Esa
+   * distincion es la que evita que dentro de tres meses haya tres detalles de
+   * lead distintos disfrazados de uno: si `contexto` empezara a decidir que se
+   * muestra, dejaria de ser la misma ventana.
+   */
+  contexto?: 'leads' | 'pipeline';
 }
 
 function formatAppointmentDate(value?: string | null) {
@@ -36,6 +47,20 @@ function openMeetLink(meetLink: string): void {
 
 export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props) {
   const detail = useLeadDetail(lead);
+  const [eligiendoGuion, setEligiendoGuion] = useState(false);
+
+  /**
+   * Abre el recorrido en Playbooks y cierra la ficha.
+   *
+   * Misma secuencia que el boton "Ver cita": escribir la ruta, cerrar el
+   * modal, navegar. Por el puerto de navegacion y no tocando el hash a mano,
+   * que es deuda que arrastra este archivo y no conviene copiar.
+   */
+  const abrirRecorrido = (runId: string) => {
+    getPlatform().navigation.replace({ name: 'playbooks', runId });
+    onClose();
+    onNavigate?.('playbooks');
+  };
 
   const documentId =
     (lead as unknown as { documentId?: string }).documentId ||
@@ -290,7 +315,14 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
                   <div className="flex items-center gap-2 shrink-0">
                     {detail.visibleMeetLink && (
                       <button
-                        onClick={() => openMeetLink(detail.visibleMeetLink as string)}
+                        onClick={() => {
+                          openMeetLink(detail.visibleMeetLink as string);
+                          // El Meet se abre en otra pestaña y el panel queda
+                          // libre: se aprovecha para ofrecer el guion con el
+                          // que conducir esa reunion, que es lo siguiente que
+                          // hace falta.
+                          setEligiendoGuion(true);
+                        }}
                         className="px-3 py-1.5 bg-primary-soft border border-primary-soft-strong rounded-[4px] text-[11px] font-bold text-primary shadow-sm hover:bg-primary-soft-strong transition-colors"
                       >
                         Abrir Meet
@@ -364,6 +396,38 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
               </div>
             )}
           </div>
+
+          {/* Guion de conversacion.
+              Seccion propia y no un boton dentro de la cita: un recorrido no
+              pertenece a una cita, abarca todo el proceso con este lead y
+              sobrevive a varias reuniones. */}
+          {/* `lead.id` es opcional en el tipo: sin id el lead no esta guardado
+              todavia y no puede tener recorridos. */}
+          {!!lead.id && (
+          <div>
+            <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-widest mb-2">
+              Guion de conversación
+            </h3>
+            {eligiendoGuion ? (
+              <PlaybookPicker
+                leadId={lead.id}
+                originAppointmentId={detail.activeAppointment?.id}
+                onAbrirRecorrido={abrirRecorrido}
+                onIrAGuiones={() => {
+                  onClose();
+                  onNavigate?.('playbooks');
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setEligiendoGuion(true)}
+                className="w-full rounded-[6px] border border-line bg-surface-muted px-3 py-2 text-[11px] font-bold text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+              >
+                Conducir con un guion
+              </button>
+            )}
+          </div>
+          )}
 
           <LeadDetailHistory
             notes={detail.notes}

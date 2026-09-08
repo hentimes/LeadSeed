@@ -220,6 +220,40 @@ export async function fetchMyAppointmentRows(args: DateRangeArgs): Promise<Agend
   return (data ?? []) as AgendaAppointmentRow[];
 }
 
+/** Lo que devuelve el cierre atomico de una cita. */
+export interface CloseAppointmentRow {
+  appointment_id: string;
+  status: string;
+  outcome_recorded_at: string | null;
+  note_created: boolean;
+  tasks_created: number;
+}
+
+/**
+ * Cierra una cita y crea su nota y sus tareas en UNA transaccion.
+ *
+ * Sustituye a la cadena de tres llamadas: si fallaba una de las de despues, la
+ * cita quedaba cerrada -y por tanto fuera de "Por registrar"- con el
+ * seguimiento sin crear y sin forma de reintentarlo.
+ */
+export async function closeMyAppointmentRow(args: {
+  appointmentId: string;
+  attended: boolean;
+  outcomeNotes?: string;
+  alsoLeadNote: boolean;
+  tasks: { title: string; dueDate: string | null }[];
+}): Promise<CloseAppointmentRow> {
+  const { data, error } = await supabase.rpc('close_my_appointment', {
+    p_appointment_id: args.appointmentId,
+    p_attended: args.attended,
+    p_outcome_notes: args.outcomeNotes || null,
+    p_also_lead_note: args.alsoLeadNote,
+    p_tasks: args.tasks,
+  });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as CloseAppointmentRow;
+}
+
 export async function recordMyAppointmentOutcomeRow(
   appointmentId: string,
   attended: boolean,

@@ -9,10 +9,27 @@ interface Props {
 // 'motivo' no sale del lead: se elige de un catalogo al enviar. Va en la
 // misma lista porque para quien escribe la plantilla es un hueco igual que
 // los demas.
-const VARIABLES = ['nombre', 'telefono', 'email', 'empresa', 'notas', 'rut', 'motivo'];
+//
+// 'nombre' abrevia -nombre de pila y apellido paterno- y 'nombrecompleto' da el
+// nombre entero; ver `replaceVariables`. Van juntas y en ese orden porque la
+// primera es la que se quiere casi siempre.
+const VARIABLES = [
+  'nombre',
+  'nombrecompleto',
+  'telefono',
+  'email',
+  'empresa',
+  'notas',
+  'rut',
+  'motivo',
+];
 
-const ANCHO = 132;
-const ALTO = 232;
+// Medidos a ojo pero acoplados a la lista: ANCHO tiene que dar para
+// `{nombrecompleto}`, que es la mas larga, y ALTO es la cabecera mas una fila
+// por variable. Si se agrega otra, hay que subir ALTO ~29px o el panel se
+// coloca mal cuando no cabe debajo del boton.
+const ANCHO = 152;
+const ALTO = 261;
 const MARGEN = 8;
 
 /**

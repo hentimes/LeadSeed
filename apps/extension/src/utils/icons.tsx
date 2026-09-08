@@ -8,7 +8,7 @@ import {
   faInbox, faRobot, faArrowLeft, faCheckCircle, faThumbsUp, faThumbsDown, faReply,
   faCrown, faUser, faUserSlash, faBell, faCommentDots, faArrowRight, faFilter,
   faLightbulb, faLayerGroup, faCalendarDays, faShareNodes, faCircleQuestion, faClock,
-  faAddressBook, faFileLines
+  faAddressBook, faFileLines, faCircle, faCircleMinus, faBan
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -87,6 +87,19 @@ export const Icon = {
   ArrowLeft: () => <I icon={faArrowLeft} className="text-xs" />,
   ArrowRight: () => <I icon={faArrowRight} className="text-sm" />,
   CheckCircle: () => <I icon={faCheckCircle} className="text-xs" />,
+  /*
+   * Los tres estados de un punto del guion se distinguen por FORMA antes que
+   * por color: circulo hueco pendiente, check resuelto, guion descartado. El
+   * color solo refuerza, porque en escala de grises o con daltonismo tenia que
+   * seguir leyendose (WCAG 1.4.1).
+   *
+   * El hueco se dibuja con el circulo solido a tamaño pequeño y opacidad
+   * reducida por quien lo usa; FontAwesome free no trae el contorno en solid.
+   */
+  CircleEmpty: () => <I icon={faCircle} className="text-[8px]" />,
+  CircleMinus: () => <I icon={faCircleMinus} className="text-xs" />,
+  /** Circulo con una linea cruzada: "no aplica". */
+  Ban: () => <I icon={faBan} className="text-xs" />,
   Logout: () => <I icon={faArrowRightFromBracket} className="text-sm" />,
   Email: () => <I icon={faEnvelope} className="text-xs" />,
   Palette: () => <I icon={faPalette} className="text-xs" />,

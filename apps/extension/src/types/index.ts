@@ -6,6 +6,7 @@ export * from './agenda';
 export * from './lists';
 export * from './templates';
 export * from './messageFlows';
+export * from './playbooks';
 export * from './settings';
 export * from './tasks';
 export * from './saas';

@@ -59,8 +59,21 @@ describe('nombreCorto', () => {
     expect(nombreCorto('Juan Carlos Perez Soto')).toBe('Juan Perez');
   });
 
-  it('aplica la misma regla con cinco partes o mas', () => {
-    expect(nombreCorto('Maria Jose Rebolledo Kehr Diaz')).toBe('Maria Rebolledo');
+  /*
+   * Con cinco partes -tres nombres de pila y los dos apellidos de siempre- el
+   * paterno sigue siendo el penultimo. La regla vieja contaba desde el
+   * principio y devolvia "Henry Daniel": el tercer nombre de pila ascendido a
+   * apellido. Salio a la luz al abreviar el saludo de los WhatsApp, donde el
+   * error se lee en cada mensaje.
+   */
+  it('con cinco partes toma el apellido paterno, no el tercer nombre', () => {
+    expect(nombreCorto('Henry Jose Daniel Farias Pacheco')).toBe('Henry Farias');
+    expect(nombreCorto('Maria Jose Rebolledo Kehr Diaz')).toBe('Maria Kehr');
+  });
+
+  /* El limite conocido: un apellido compuesto se ve igual que un nombre mas. */
+  it('con un apellido compuesto se queda con la segunda mitad', () => {
+    expect(nombreCorto('Alejandra San Martin Escobar')).toBe('Alejandra Martin');
   });
 
   it('normaliza los espacios repetidos', () => {

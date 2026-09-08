@@ -11,6 +11,8 @@ export interface ProfileSettingsRow {
   resend_from_name: string | null;
   resend_from_email: string | null;
   export_format: 'json' | 'excel' | null;
+  /** Tope diario de WhatsApp. Nulo mientras la 161 no este aplicada. */
+  whatsapp_daily_limit: number | null;
   daily_goal_whatsapp: number | null;
   daily_goal_email: number | null;
   daily_goal_calls: number | null;
@@ -22,7 +24,7 @@ export interface ProfileSettingsRow {
 }
 
 const PROFILE_SETTINGS_SELECT =
-  'compact_mode, dark_mode, visible_cols, email_provider, resend_from_name, resend_from_email, export_format, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period, whatsapp_client_preference, hide_unnamed_leads, active_smart_lists, list_groups';
+  'compact_mode, dark_mode, visible_cols, email_provider, resend_from_name, resend_from_email, export_format, whatsapp_daily_limit, daily_goal_whatsapp, daily_goal_email, daily_goal_calls, dashboard_compare_period, whatsapp_client_preference, hide_unnamed_leads, active_smart_lists, list_groups';
 
 export async function fetchAuthenticatedUserId(): Promise<string | undefined> {
   const session = await fetchCurrentSession();

@@ -52,6 +52,15 @@ export interface AppSettings {
   darkMode: boolean;
   visibleCols: { key: string; label: string; visible: boolean }[];
 
+  /**
+   * TOPE de WhatsApp por dia, distinto de la META de abajo.
+   *
+   * La meta motiva -"hoy quiero llegar a 50"- y se puede bajar un dia flojo. El
+   * tope frena: pasarse arriesga que WhatsApp bloquee la cuenta. Con un solo
+   * numero, bajar la meta apagaria los flujos, que no es lo que nadie quiso.
+   */
+  whatsappDailyLimit: number;
+
   // Nuevas Metas Diarias
   dailyGoalWhatsApp: number;
   dailyGoalEmail: number;

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { rangoParaPeriodo } from '../utils/agendaGrid';
 import { isActiveAppointment } from '../utils/appointmentStatus';
-import { getCurrentSession } from '../services/authService';
 import {
   cerrarCita,
   estaPendienteDeCierre,
@@ -344,19 +343,11 @@ export function useAgenda() {
     appointment: AgendaAppointment,
     cierre: Omit<CierreDeCita, 'appointmentId'>,
   ): Promise<boolean> => {
-    const userId = (await getCurrentSession())?.user?.id;
-    if (!userId) {
-      // Salia sin decir nada y la pantalla se quedaba igual, que es
-      // indistinguible de "no hizo nada".
-      setError('No hay sesión activa. Volvé a entrar para registrar la reunión.');
-      return false;
-    }
-
     setAppointmentActionId(appointment.id);
     setMessage('');
     setError('');
     try {
-      const resultado = await cerrarCita(userId, appointment, {
+      const resultado = await cerrarCita(appointment, {
         ...cierre,
         appointmentId: appointment.id,
       });

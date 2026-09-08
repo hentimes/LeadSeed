@@ -94,6 +94,39 @@ describe('replaceVariables', () => {
     expect(replaceVariables('{nombre} y {nombre}', lead)).toBe('Ana Perez y Ana Perez');
   });
 
+  test('{nombre} abrevia: nombre de pila y apellido paterno', () => {
+    // Es la razon de ser del cambio: "Hola Henry Jose Daniel Farias Pacheco"
+    // en un WhatsApp se lee como un envio automatico.
+    const largo = { ...lead, name: 'Henry Jose Daniel Farias Pacheco' } as Lead;
+
+    expect(replaceVariables('Hola {nombre}', largo)).toBe('Hola Henry Farias');
+  });
+
+  test('{nombrecompleto} conserva el nombre entero', () => {
+    const largo = { ...lead, name: 'Henry Jose Daniel Farias Pacheco' } as Lead;
+
+    expect(replaceVariables('{nombrecompleto}', largo)).toBe('Henry Jose Daniel Farias Pacheco');
+    expect(replaceVariables('{nombre_completo}', largo)).toBe('Henry Jose Daniel Farias Pacheco');
+    expect(replaceVariables('{fullname}', largo)).toBe('Henry Jose Daniel Farias Pacheco');
+  });
+
+  test('el completo no se come al corto ni al reves', () => {
+    const largo = { ...lead, name: 'Juan Carlos Perez Soto' } as Lead;
+
+    expect(replaceVariables('{nombrecompleto} alias {nombre}', largo)).toBe(
+      'Juan Carlos Perez Soto alias Juan Perez',
+    );
+  });
+
+  test('un nombre de una o dos partes se deja como esta', () => {
+    expect(replaceVariables('{nombre}', { ...lead, name: 'Ana' } as Lead)).toBe('Ana');
+    expect(replaceVariables('{nombre}', { ...lead, name: 'Ana Soto' } as Lead)).toBe('Ana Soto');
+  });
+
+  test('un lead sin nombre no rompe el mensaje', () => {
+    expect(replaceVariables('Hola {nombre}', { ...lead, name: '  ' } as Lead)).toBe('Hola ');
+  });
+
   test('deja intacto lo que no es una variable conocida', () => {
     expect(replaceVariables('Hola {inventada}', lead)).toBe('Hola {inventada}');
   });

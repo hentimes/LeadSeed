@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
 import { getPlatform } from '../platform/registry';
+import { getSettings } from '../services/appSettingsService';
+import { contarWhatsAppDelDia } from '../services/historyService';
+import { adelantarPasos, fetchCargaProxima, reprogramarPasos } from '../services/messageFlowsService';
+import { useFlowBatchDispatch } from '../hooks/useFlowBatchDispatch';
+import WhatsAppQueuePanel from '../components/send/WhatsAppQueuePanel';
+import {
+  comienzoDelDia,
+  diasQueAbarca,
+  estadoDelCupo,
+  repartirEnDias,
+} from '../services/whatsappQuota';
 import { Button, Card, EmptyState, IconButton, SegmentedControl } from '../design';
 import { Icon } from '../utils/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -52,11 +63,125 @@ export default function FlowsPage() {
    */
   const [ahora, setAhora] = useState(() => new Date());
 
+  /*
+   * EL CUPO DE WHATSAPP DE HOY.
+   *
+   * Se recarga junto con la cola: son el mismo momento -abrir esta pantalla- y
+   * la decision que se toma con los dos es una sola, "¿mando ahora o no?".
+   *
+   * El corte del dia lo pone el reloj del usuario: quien manda a las 22:00 en
+   * Santiago no quiere que su cupo se reinicie porque en UTC ya es otro dia.
+   */
+  /** Que vence cada uno de los proximos dias. Explica el "hoy no toca nada". */
+  const [proximos, setProximos] = useState<Array<{ dia: string; cantidad: number }>>([]);
+  const [enviadosHoy, setEnviadosHoy] = useState(0);
+  const [topeDiario, setTopeDiario] = useState(50);
+
+  /*
+   * `cancelado` en las tres cargas.
+   *
+   * Van en paralelo y el efecto se vuelve a disparar con cada refresco. Sin la
+   * guarda, dos refrescos seguidos pueden resolver en el orden contrario y una
+   * respuesta vieja pisar a una nueva: la cola diria una cosa y el cupo otra,
+   * sin que nada lo delate.
+   */
   useEffect(() => {
+    let cancelado = false;
     setAhora(new Date());
     flujos.recargarCola();
-    flujos.getAll().then(setLista);
+    flujos.getAll().then((lista) => {
+      if (!cancelado) setLista(lista);
+    });
+    void (async () => {
+      const ajustes = await getSettings();
+      const usados = await contarWhatsAppDelDia(comienzoDelDia(new Date()));
+      const carga = await fetchCargaProxima();
+      if (cancelado) return;
+      setTopeDiario(ajustes.whatsappDailyLimit);
+      setEnviadosHoy(usados);
+      setProximos(carga);
+    })();
+    return () => {
+      cancelado = true;
+    };
   }, [flujos.refreshKey]);
+
+  const cupo = estadoDelCupo(enviadosHoy, topeDiario);
+
+  /*
+   * LA TANDA. Convierte "a estos 47 les toca el mismo mensaje" en mandarlo.
+   *
+   * El contador del cupo sube con cada chat que se abre -no al final- porque el
+   * tope tiene que frenar en el mensaje 50, no enterarse en el 51.
+   */
+  const tanda = useFlowBatchDispatch(user?.id, () => {
+    setEnviadosHoy((usados) => usados + 1);
+  });
+
+  /*
+   * Traer a hoy lo que estaba para mas adelante.
+   *
+   * Se confirma porque cambia la agenda de golpe y no hay un "deshacer": lo
+   * adelantado queda vencido, y volver a repartirlo es otra decision.
+   */
+  const adelantar = async (hasta: Date, cuantos: number) => {
+    const confirmado = await getPlatform().dialogs.confirm(
+      `Quedan listos para mandar ahora, sin esperar a su fecha. El resto del flujo sigue igual: el paso siguiente se contará desde hoy.`,
+      {
+        title: `¿Traer ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} a hoy?`,
+        confirmLabel: `Traer ${cuantos}`,
+      },
+    );
+    if (!confirmado) return;
+
+    try {
+      /* Hasta el final de ese dia: la fecha viene como el dia agrupado, y a
+         medianoche dejaria fuera todo lo que vence esa misma jornada. */
+      const finDelDia = new Date(hasta);
+      finDelDia.setHours(23, 59, 59, 999);
+      const movidos = await adelantarPasos(finDelDia);
+      await flujos.recargarCola();
+      setProximos(await fetchCargaProxima());
+      setAviso(`${movidos} pasos listos para mandar ahora.`);
+    } catch (error) {
+      setAviso(error instanceof Error ? error.message : 'No se pudo adelantar la cola.');
+    }
+  };
+
+  const despacharGrupo = (filas: PendingFlowStep[]) => {
+    const tope = filas[0]?.channel === 'whatsapp' ? cupo.quedan : filas.length;
+    void tanda.despacharGrupo(filas, tope);
+  };
+
+  /*
+   * El reparto se calcula sobre la cola de WhatsApp, no sobre toda: un correo
+   * no gasta cupo de WhatsApp y moverlo de dia no arregla nada.
+   */
+  const repartoPropuesto = repartirEnDias(
+    flujos.cola
+      .filter((fila) => fila.channel === 'whatsapp')
+      .map((fila) => ({ progressId: fila.progressId, dueAt: fila.dueAt ?? ahora.toISOString() })),
+    topeDiario,
+    cupo.quedan,
+    ahora,
+  );
+
+  const repartir = async () => {
+    const dias = diasQueAbarca(repartoPropuesto, ahora);
+    const confirmado = await getPlatform().dialogs.confirm(
+      `Se mueven ${repartoPropuesto.length} pasos para que ningún día pase de ${topeDiario}. El último queda para dentro de ${dias} ${dias === 1 ? 'día' : 'días'}. Los atrasados y los de hoy que caben en el cupo no se tocan.`,
+      { title: '¿Repartir en los próximos días?', confirmLabel: 'Repartir' },
+    );
+    if (!confirmado) return;
+
+    try {
+      const movidos = await reprogramarPasos(repartoPropuesto);
+      await flujos.recargarCola();
+      setAviso(`${movidos} pasos repartidos en los próximos ${dias} días.`);
+    } catch (error) {
+      setAviso(error instanceof Error ? error.message : 'No se pudo repartir la cola.');
+    }
+  };
 
   /** Cuantos pasos tocan hoy o estan atrasados: el numero que va en la barra. */
   const pendientes = flujos.cola.length;
@@ -81,6 +206,21 @@ export default function FlowsPage() {
     setAviso('');
     try {
       await dispatchFlowStep(user.id, fila);
+      /*
+       * EL CUPO SUBE AQUI, no en el efecto.
+       *
+       * El efecto que lo carga depende de `refreshKey`, y `recargarCola` no lo
+       * incrementa: el contador se quedaba en "0 de 50" toda la sesion aunque
+       * mandaras cincuenta, y por lo tanto `agotado` no se cumplia nunca y los
+       * botones no se apagaban jamas. El unico guardarrail de la cuenta de
+       * WhatsApp estaba muerto justo durante la sesion en la que se manda.
+       *
+       * Se suma en local en vez de volver a contar: el envio acaba de ocurrir y
+       * lo sabemos con certeza, y una consulta por mensaje pondria una espera
+       * entre cada apertura de chat. La cifra exacta se vuelve a leer sola en el
+       * proximo refresco.
+       */
+      if (fila.channel === 'whatsapp') setEnviadosHoy((usados) => usados + 1);
       await flujos.recargarCola();
       // "Abierto", no "enviado": con WhatsApp solo consta que se abrio el chat.
       setAviso(
@@ -156,6 +296,25 @@ export default function FlowsPage() {
         </p>
       )}
 
+      {/*
+        LA COLA EN MARCHA, encima de todo.
+        
+        Mientras hay una tanda abierta, lo unico que importa es a quien le toca
+        y cuantos faltan. Es la misma barra del envio masivo: la tarea es la
+        misma y no tiene por que verse distinta segun de donde salio.
+      */}
+      <WhatsAppQueuePanel cola={tanda.cola} />
+      {tanda.error && (
+        <p role="alert" className="text-micro text-state-danger">
+          {tanda.error}
+        </p>
+      )}
+      {tanda.ultimoResultado && (
+        <p role="status" className="text-micro text-ink-secondary">
+          {tanda.ultimoResultado}
+        </p>
+      )}
+
       {vista === 'inscribir' && inscribiendoEn ? (
         /*
          * Inscribir era el unico paso de esta pagina que se abria en un modal.
@@ -163,13 +322,21 @@ export default function FlowsPage() {
          * igual, y la lista de leads se ve como la de envio masivo.
          */
         <FlowEnrollPanel
+          /* `key` por flujo: el panel guarda estado propio -busqueda, filtro,
+             orden, el paso elegido de cada lead- que se inicializa al montar.
+             Sin esto, reusarlo para otro flujo arrastraria decisiones tomadas
+             sobre el anterior. */
+          key={inscribiendoEn.id}
           flujo={inscribiendoEn}
           /* Se vuelve de donde se vino: al detalle si se entro desde ahi, a la
              lista si se entro desde el boton de la fila del flujo. */
           onVolver={() => { setInscribiendoEn(null); setVista(viendo ? 'detalle' : 'flujos'); }}
-          onInscribir={async (leadId: string) => {
-            await flujos.inscribir(inscribiendoEn.id, leadId);
+          onInscribir={async (leadId: string, ultimoPasoHecho: number, desde: string | null) => {
+            await flujos.inscribir(inscribiendoEn.id, leadId, ultimoPasoHecho, desde);
           }}
+          onInscribirTodos={async (leadIds: string[]) =>
+            flujos.inscribirTodos(inscribiendoEn.id, leadIds, true)
+          }
         />
       ) : vista === 'detalle' && viendo ? (
         <FlowDetail
@@ -206,7 +373,28 @@ export default function FlowsPage() {
           pasosIniciales={pasosEditando}
           onCancelar={() => setVista('flujos')}
           onGuardar={async (datos, pasos) => {
-            await flujos.save(datos, pasos);
+            /*
+             * Guardar puede estar PROHIBIDO, y hasta ahora no se decia.
+             *
+             * `replaceFlowSteps` borra los pasos y los reinserta, y un paso con
+             * progreso no se puede borrar (`message_flow_progress.step_id` es
+             * `on delete restrict`). Sin este `try`, el error tumbaba la
+             * promesa: el editor se quedaba abierto, sin aviso y sin guardar,
+             * o sea igual que si no hubieras pulsado nada.
+             *
+             * El borrado del flujo, unas lineas mas abajo, ya traducia su error
+             * desde el primer dia; guardar se habia quedado atras.
+             */
+            try {
+              await flujos.save(datos, pasos);
+            } catch (error) {
+              setAviso(
+                error instanceof Error && /violates foreign key|restrict/i.test(error.message)
+                  ? 'No se pueden cambiar los pasos: alguno ya tiene envíos registrados. Pausá el flujo o creá uno nuevo.'
+                  : 'No se pudo guardar el flujo.',
+              );
+              return;
+            }
             setLista(await flujos.getAll());
             setVista('flujos');
             setAviso(`Flujo ${datos.name} guardado.`);
@@ -216,6 +404,13 @@ export default function FlowsPage() {
         <FlowTodayList
           cola={flujos.cola}
           ahora={ahora}
+          cupo={cupo}
+          onRepartir={repartir}
+          seMoverian={repartoPropuesto.length}
+          proximos={proximos}
+          onDespacharGrupo={despacharGrupo}
+          onAdelantar={(hasta, cuantos) => void adelantar(hasta, cuantos)}
+          tandaEnCurso={tanda.cola.activa || tanda.procesando}
           onDespachar={despachar}
           onOmitir={omitir}
           onIrAFlujos={() => setVista('flujos')}
@@ -263,8 +458,16 @@ export default function FlowsPage() {
                   className="shrink-0"
                   onClick={async () => {
                     if (
+                      /*
+                        El dialogo dice las dos mitades. Antes solo decia que
+                        los inscritos dejaban de recibir sus pasos, y con eso no
+                        se podia decidir: lo que frena a cualquiera es no saber
+                        si borrar el flujo borra tambien lo ya enviado. No lo
+                        borra -eso vive en send_logs- y decirlo es la diferencia
+                        entre poder decidir y no tocar el boton.
+                      */
                       !(await getPlatform().dialogs.confirm(
-                        'Los leads inscritos dejan de recibir sus pasos pendientes.',
+                        'Se pierde quién estaba inscrito y por qué paso iba. Los mensajes ya enviados NO se borran: quedan en el historial de cada lead.',
                         { title: `¿Eliminar el flujo ${flujo.name}?`, confirmLabel: 'Eliminar', tone: 'danger' },
                       ))
                     ) {

@@ -91,6 +91,11 @@ function parseHash(hash: string): AppRoute | null {
     return route;
   }
 
+  if (name === 'playbooks') {
+    const runId = params.get('run');
+    return runId ? { name: 'playbooks', runId } : { name: 'playbooks' };
+  }
+
   return null;
 }
 
@@ -112,9 +117,28 @@ function buildHash(route: AppRoute): string {
     return query ? `#tasks?${query}` : '#tasks';
   }
 
-  return route.appointmentId
-    ? `#agenda?appointment=${route.appointmentId}`
-    : '#agenda';
+  if (route.name === 'playbooks') {
+    return route.runId ? `#playbooks?run=${route.runId}` : '#playbooks';
+  }
+
+  if (route.name === 'agenda') {
+    return route.appointmentId
+      ? `#agenda?appointment=${route.appointmentId}`
+      : '#agenda';
+  }
+
+  /*
+   * La agenda era el `return` final sin condicion, asi que una ruta declarada
+   * en `AppRoute` a la que se le olvidara su rama aqui no fallaba: navegaba a
+   * la agenda en silencio, y TypeScript no tenia como avisar.
+   *
+   * Con la rama explicita arriba y este `never`, olvidarse de una ruta nueva
+   * es un error de compilacion. El `throw` no se alcanza mientras el tipo se
+   * respete; esta para que anadir un miembro a la union no compile hasta
+   * atenderlo aqui.
+   */
+  const noAtendida: never = route;
+  throw new Error(`Ruta sin hash declarado: ${JSON.stringify(noAtendida)}`);
 }
 
 export const webNavigation: NavigationPort = {
