@@ -73,7 +73,16 @@ export const pageTabGroups: PageTabGroupDef[] = [
     icon: Icon.Send,
     landing: 'send',
     pages: ['send', 'templates', 'flows'],
-    extras: ['history'],
+    /*
+     * `playbooks` es `extra` y no una cuarta pestana por el reparto de ancho
+     * que documenta `PageTabs`: en los 288px del suelo, tres pestanas dan 96px
+     * cada una y "Plantillas" pide los 72 justos. Con cuatro serian 72 de
+     * caja y el rotulo se truncaria.
+     *
+     * Igual que el Historial, se alcanza por un boton desde la pagina hermana
+     * -Plantillas- y la barra se sigue pintando estando dentro.
+     */
+    extras: ['history', 'playbooks'],
   },
 ];
 

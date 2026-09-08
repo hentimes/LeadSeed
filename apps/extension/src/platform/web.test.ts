@@ -63,11 +63,38 @@ describe('buildHash', () => {
       { name: 'leads' as const, leadId: 'abc-123' },
       { name: 'agenda' as const },
       { name: 'agenda' as const, appointmentId: 'cita-9' },
+      { name: 'playbooks' as const },
+      { name: 'playbooks' as const, runId: 'run-7' },
     ];
 
     for (const ruta of rutas) {
       expect(parseHash(buildHash(ruta))).toEqual(ruta);
     }
+  });
+
+  /*
+   * La agenda era el `return` final sin condicion de `buildHash`, asi que una
+   * ruta sin su rama no fallaba: navegaba a la agenda. Esta prueba es la que
+   * habria delatado ese fallo, porque es el unico sitio donde se comprueba que
+   * cada ruta produzca SU hash y no el de otra.
+   */
+  test('playbooks no cae en la agenda', () => {
+    expect(buildHash({ name: 'playbooks' })).toBe('#playbooks');
+    expect(buildHash({ name: 'playbooks', runId: 'run-7' })).toBe('#playbooks?run=run-7');
+  });
+});
+
+describe('ruta de playbooks', () => {
+  test('reconoce la ruta sin recorrido', () => {
+    expect(parseHash('#playbooks')).toEqual({ name: 'playbooks' });
+  });
+
+  test('extrae el recorrido', () => {
+    expect(parseHash('#playbooks?run=run-7')).toEqual({ name: 'playbooks', runId: 'run-7' });
+  });
+
+  test('un recorrido vacio no cuenta como valor', () => {
+    expect(parseHash('#playbooks?run=')).toEqual({ name: 'playbooks' });
   });
 });
 

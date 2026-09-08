@@ -13,6 +13,7 @@
  */
 export { Card, Panel } from './Surface';
 export { Button, IconButton } from './Button';
+export { ToggleIconButton } from './ToggleIconButton';
 export { Badge } from './Badge';
 export { Avatar, AvatarStack } from './Avatar';
 export { Chip, SegmentedControl, CountBadge } from './Chip';

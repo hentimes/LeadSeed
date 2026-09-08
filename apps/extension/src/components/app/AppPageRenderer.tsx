@@ -12,6 +12,7 @@ const ListsPage = lazy(() => import('../../pages/ListsPage'));
 const TemplatesPage = lazy(() => import('../../pages/TemplatesPage'));
 const SendPage = lazy(() => import('../../pages/SendPage'));
 const FlowsPage = lazy(() => import('../../pages/FlowsPage'));
+const PlaybooksPage = lazy(() => import('../../pages/PlaybooksPage'));
 const SendHistoryPage = lazy(() => import('../../pages/SendHistoryPage'));
 const TasksPage = lazy(() => import('../../pages/TasksPage'));
 const DashboardPage = lazy(() => import('../../pages/DashboardPage'));
@@ -41,6 +42,7 @@ const PAGE_WIDTH: Partial<Record<Page, 'full' | 'md' | 'lg'>> = {
   lists: 'lg',
   templates: 'lg',
   flows: 'lg',
+  playbooks: 'lg',
   send: 'lg',
   history: 'lg',
   community: 'lg',
@@ -193,10 +195,13 @@ export default function AppPageRenderer({
       pageContent = <ListsPage />;
       break;
     case 'templates':
-      pageContent = <TemplatesPage highlightTemplate={highlightTemplate} onClearHighlight={onClearHighlightTemplate} />;
+      pageContent = <TemplatesPage highlightTemplate={highlightTemplate} onClearHighlight={onClearHighlightTemplate} onNavigate={onNavigate} />;
       break;
     case 'flows':
       pageContent = <FlowsPage />;
+      break;
+    case 'playbooks':
+      pageContent = <PlaybooksPage />;
       break;
     case 'send':
       pageContent = <SendPage onNavigate={onNavigate} />;

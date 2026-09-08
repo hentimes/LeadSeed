@@ -46,6 +46,14 @@ export const secondaryRoutes: RouteDef[] = [
    * Hasta que eso exista, la ruta se comporta como hasta ahora: abierta.
    */
   { page: 'flows', label: 'Flujos', icon: Icon.Share },
+  /*
+   * Sin `requiredFeature`, por lo mismo que Flujos: `module:playbooks` no
+   * existe en el catalogo del SaaS, y como `hasFeature` falla cerrado,
+   * declararla dejaria Playbooks cerrado a todo el que no sea admin -sin que
+   * se note probando con una cuenta de admin, para la que siempre devuelve
+   * true-. Cobrarlo es una decision de producto con su alta en el catalogo.
+   */
+  { page: 'playbooks', label: 'Playbooks', icon: Icon.Bullseye },
   { page: 'lists', label: 'Listas', icon: Icon.Lists, requiredFeature: 'module:lists' },
   { page: 'chat', label: 'Chat', icon: Icon.Messages, badge: true },
   { page: 'community', label: 'Comunidad', icon: Icon.Users, requiredFeature: 'module:community' },
