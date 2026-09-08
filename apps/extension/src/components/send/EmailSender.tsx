@@ -214,6 +214,24 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
     setSelectedLeadIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
       else n.add(id); return n; });
   };
+  /*
+   * Marcar o desmarcar varios de una vez, en UNA actualizacion de estado.
+   *
+   * Lo pide la casilla de "esta pagina" del selector. Llamar ocho veces a
+   * `toggleLead` habria hecho lo mismo, pero con semantica de alternar: los que
+   * ya estaban marcados se habrian desmarcado, que es lo contrario de lo que
+   * promete una casilla de "marcar todos".
+   */
+  const toggleLeads = (ids: string[], seleccionar: boolean) => {
+    setSelectedLeadIds((prev) => {
+      const n = new Set(prev);
+      for (const id of ids) {
+        if (seleccionar) n.add(id);
+        else n.delete(id);
+      }
+      return n;
+    });
+  };
   const toggleList = (id: number) => {
     setSelectedListIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
       else n.add(id); return n; });
@@ -419,6 +437,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
           selectedLeadIds={selectedLeadIds}
           selectedListIds={selectedListIds}
           onToggleLead={toggleLead}
+          onToggleLeads={toggleLeads}
           onToggleList={toggleList}
           onClear={clearRecipients}
           search={navegacion.search}

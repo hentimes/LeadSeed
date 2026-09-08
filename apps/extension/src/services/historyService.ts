@@ -4,6 +4,7 @@ import {
   fetchRecentLeadNoteRows,
   fetchRecentSendLogRows,
   fetchSendLogRowsByUser,
+  contarEnviosWhatsAppDesde,
   fetchLeadSendSummaryRows,
   fetchSendLogRowsByLeadId,
   fetchSendLogRowsByTemplateId,
@@ -120,13 +121,49 @@ export async function fetchLeadSendHistory(
   return enrichSendLogs(rows.map(mapSendLogRowToDomain), waTemplates, emailTemplates);
 }
 
+/**
+ * EL ENVIO EXACTO que se le hizo a un lead en un instante dado.
+ *
+ * Devuelve la copia guardada del mensaje -`content`, con las variables ya
+ * sustituidas- y no el texto de la plantilla viva. Es lo unico que contesta de
+ * verdad "¿que se le mando?": la plantilla se pudo editar despues, y se pudo
+ * borrar -y entonces ya no hay plantilla que mirar-.
+ *
+ * Se busca por instante porque es lo que devuelve la deteccion de flujos junto
+ * al paso: el mismo `sent_at` identifica la fila sin ambiguedad.
+ */
+export async function fetchEnvioDeLeadEn(
+  leadId: string,
+  sentAt: string,
+): Promise<SendLog | null> {
+  const filas = await fetchSendLogRowsByLeadId(leadId);
+  const dominio = filas.map(mapSendLogRowToDomain);
+  const exacto = dominio.find((log) => log.sentAt === sentAt);
+  // Si no cuadra el instante -un redondeo, un dato viejo- se cae al mas
+  // reciente, que es mejor que no mostrar nada.
+  return exacto ?? dominio[0] ?? null;
+}
+
 /** Lo que la pantalla necesita saber de un lead antes de escribirle. */
+/** Cuantos WhatsApp salieron desde ese instante. Ver `contarEnviosWhatsAppDesde`. */
+export async function contarWhatsAppDelDia(desde: Date): Promise<number> {
+  return contarEnviosWhatsAppDesde(desde.toISOString());
+}
+
 export interface LeadSendSummary {
   total: number;
   lastSentAt: string;
   lastTemplateId: string | null;
   lastTemplateName: string | null;
   lastTemplateType: 'whatsapp' | 'email' | 'call';
+  /**
+   * Ids de TODAS las plantillas que recibio el lead, no solo la ultima.
+   *
+   * Hace falta para poder preguntar "¿a quien le mande este mensaje?" sin
+   * mentir: con la ultima plantilla sola, un lead que recibio A y despues B
+   * contestaba que no habia recibido A.
+   */
+  templateIds: string[];
 }
 
 /**
@@ -148,6 +185,7 @@ export async function fetchLeadSendSummary(): Promise<Map<string, LeadSendSummar
         lastTemplateId: row.last_template_id,
         lastTemplateName: row.last_template_name,
         lastTemplateType: row.last_template_type,
+        templateIds: row.template_ids ?? [],
       },
     ]),
   );

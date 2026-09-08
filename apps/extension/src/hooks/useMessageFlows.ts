@@ -4,6 +4,8 @@ import { useRealtimeRefresh } from './useRealtimeRefresh';
 import {
   deleteFlow,
   enrollLead,
+  enrollLeadFrom,
+  enrollLeadsFrom,
   exitEnrollment,
   fetchDispatchQueue,
   fetchFlows,
@@ -87,11 +89,28 @@ export function useMessageFlows() {
     [triggerRefresh]
   );
 
+  /**
+   * Inscribe, opcionalmente dando por hechos los pasos que el lead ya recibio.
+   *
+   * Sin los dos ultimos argumentos se comporta como siempre: desde el paso 1.
+   */
   const inscribir = useCallback(
-    async (flowId: string, leadId: string) => {
-      await enrollLead(flowId, leadId);
+    async (flowId: string, leadId: string, ultimoPasoHecho = 0, desde: string | null = null) => {
+      if (ultimoPasoHecho > 0) await enrollLeadFrom(flowId, leadId, ultimoPasoHecho, desde);
+      else await enrollLead(flowId, leadId);
       triggerRefresh();
       await recargarCola();
+    },
+    [recargarCola, triggerRefresh]
+  );
+
+  /** Inscribe a varios de una vez. Devuelve las cuentas para poder contarlas. */
+  const inscribirTodos = useCallback(
+    async (flowId: string, leadIds: string[], usarDeteccion: boolean, pasoInicial = 1) => {
+      const resultado = await enrollLeadsFrom(flowId, leadIds, usarDeteccion, pasoInicial);
+      triggerRefresh();
+      await recargarCola();
+      return resultado;
     },
     [recargarCola, triggerRefresh]
   );
@@ -130,6 +149,7 @@ export function useMessageFlows() {
     remove,
     setActivo,
     inscribir,
+    inscribirTodos,
     sacar,
     registrarPaso,
     omitirPaso,

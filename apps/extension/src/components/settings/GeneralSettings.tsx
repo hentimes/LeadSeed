@@ -49,11 +49,23 @@ export default function GeneralSettings({
   const [callGoal, setCallGoal] = useState(5);
   const [comparePeriod, setComparePeriod] = useState<ComparePeriod>('yesterday');
 
+  /*
+   * El TOPE es otra cosa que la META, aunque se editen cerca.
+   *
+   * La meta motiva -"hoy quiero llegar a 50"- y bajarla un dia flojo no tiene
+   * consecuencias. El tope frena los flujos al alcanzarlo, porque pasarse
+   * arriesga que WhatsApp bloquee la cuenta. Se editan juntos porque se piensan
+   * juntos, pero son dos numeros y el rotulo lo dice.
+   */
+  const [waLimit, setWaLimit] = useState(50);
+
+
   useEffect(() => {
     let activo = true;
     void getSettings().then((s) => {
       if (!activo) return;
       if (s.dailyGoalWhatsApp !== undefined) setWaGoal(s.dailyGoalWhatsApp);
+      if (s.whatsappDailyLimit !== undefined) setWaLimit(s.whatsappDailyLimit);
       if (s.dailyGoalEmail !== undefined) setEmailGoal(s.dailyGoalEmail);
       if (s.dailyGoalCalls !== undefined) setCallGoal(s.dailyGoalCalls);
       if (s.dashboardComparePeriod) setComparePeriod(s.dashboardComparePeriod);
@@ -167,6 +179,27 @@ export default function GeneralSettings({
                 }
               />
             ))}
+
+            <SettingRow
+              label="Tope de WhatsApp"
+              hint="Los flujos se frenan al llegar. Distinto de la meta: la meta motiva, el tope protege la cuenta."
+              control={
+                <div className="flex items-center gap-1.5">
+                  {visto('waLimit')}
+                  <Input
+                    type="number"
+                    min="1"
+                    fullWidth={false}
+                    aria-label="Tope diario de mensajes de WhatsApp"
+                    value={waLimit}
+                    onChange={(event) => setWaLimit(Number(event.target.value))}
+                    onBlur={() => void guardarMetas({ whatsappDailyLimit: waLimit }, 'waLimit')}
+                    className="w-[72px] text-right"
+                  />
+                  <span className="text-meta text-ink-muted">/día</span>
+                </div>
+              }
+            />
 
             <SettingRow
               label="Comparar contra"

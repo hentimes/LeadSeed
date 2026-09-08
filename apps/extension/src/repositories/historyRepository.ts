@@ -146,7 +146,7 @@ export async function setSendLogDeletedAt(logId: number, deletedAt: string | nul
   if (error) throw error;
 }
 
-/** Una fila por lead: ver la migracion 138. */
+/** Una fila por lead: ver las migraciones 138 y 156. */
 export interface LeadSendSummaryRow {
   lead_id: string;
   total: number;
@@ -154,6 +154,13 @@ export interface LeadSendSummaryRow {
   last_template_id: string | null;
   last_template_name: string | null;
   last_template_type: 'whatsapp' | 'email' | 'call';
+  /**
+   * Todas las plantillas distintas que recibio el lead, sin orden ni fecha.
+   * Opcional en el tipo a proposito: si la 156 todavia no esta aplicada, la
+   * funcion devuelve las columnas viejas y la pantalla tiene que seguir
+   * funcionando sin el filtro por plantilla, no romperse.
+   */
+  template_ids?: string[] | null;
 }
 
 /**
@@ -163,15 +170,53 @@ export interface LeadSendSummaryRow {
  * politica de `send_logs` filtra sola. Poner el filtro aca daria a entender que
  * la seguridad la pone el cliente.
  */
+/**
+ * LANZA si la consulta falla, en vez de devolver una lista vacia.
+ *
+ * Es la excepcion a la norma de este archivo, y tiene motivo. El resto de estas
+ * funciones alimenta cosas que se ven; esta alimenta un FILTRO -"a quien no le
+ * escribi todavia"- y un cero no se distingue de un vacio: si el fallo se
+ * tragara en silencio, el filtro contestaria que a nadie se le escribio nunca y
+ * el usuario mandaria el mismo mensaje por segunda vez a mil personas.
+ *
+ * Quien llama decide que hacer con el fallo; `useLeadSendSummary` lo convierte
+ * en un estado que la pantalla puede mostrar.
+ */
 export async function fetchLeadSendSummaryRows(): Promise<LeadSendSummaryRow[]> {
   const { data, error } = await supabase.rpc('lead_send_summary');
 
   if (error || !data) {
-    if (error) console.error('fetchLeadSendSummaryRows failed', error);
-    return [];
+    console.error('fetchLeadSendSummaryRows failed', error);
+    throw new Error('No se pudo leer el resumen de envios');
   }
 
   return data as LeadSendSummaryRow[];
+}
+
+/**
+ * Cuantos mensajes de WhatsApp salieron desde `desde`.
+ *
+ * Cuenta en el servidor con `head: true`: no viaja ninguna fila, solo la cifra.
+ * Traerse los envios del dia para contarlos en el navegador seria pagar por
+ * dato lo que cuesta por numero.
+ *
+ * Cuenta TODOS los de WhatsApp, no solo los de flujos: el limite es de la
+ * cuenta de WhatsApp, no del flujo. Si mandaste 40 a mano, a los flujos les
+ * quedan 10.
+ */
+export async function contarEnviosWhatsAppDesde(desde: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('send_logs')
+    .select('id', { count: 'exact', head: true })
+    .eq('template_type', 'whatsapp')
+    .gte('sent_at', desde);
+
+  if (error) {
+    console.error('contarEnviosWhatsAppDesde failed', error);
+    return 0;
+  }
+
+  return count ?? 0;
 }
 
 /**

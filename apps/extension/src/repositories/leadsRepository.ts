@@ -459,6 +459,31 @@ export async function fetchLeadRowById(id: string): Promise<LeadRow | undefined>
   return data as LeadRow;
 }
 
+/**
+ * Varios leads por id, en una consulta.
+ *
+ * Existe para el despacho en tanda de un flujo: la fila de la cola trae nombre
+ * y telefono, pero el mensaje puede usar `{empresa}` o `{rut}`, y resolverlo
+ * con datos a medias dejaria esas variables sin sustituir en el texto que se
+ * manda. Pedirlos de a uno serian cuarenta y siete viajes.
+ */
+export async function fetchLeadRowsByIds(ids: string[]): Promise<LeadRow[]> {
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEAD_SELECT)
+    .in('id', ids)
+    .is('deleted_at', null);
+
+  if (error || !data) {
+    if (error) console.error('fetchLeadRowsByIds failed', error);
+    return [];
+  }
+
+  return data as LeadRow[];
+}
+
 export async function fetchLeadRowsByList(listaId: number): Promise<LeadRow[]> {
   const { data, error } = await supabase
     .from('leads')

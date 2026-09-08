@@ -1,9 +1,17 @@
 import {
+  callDeleteFlowConInscripciones,
   callDispatchQueue,
   callEnrollLeadInFlow,
-  deleteFlowRow,
+  callEnrollLeadInFlowFrom,
+  callEnrollLeadsInFlow,
+  callRescheduleFlowSteps,
+  fetchFlowPositionRows,
+  callAdvanceFlowSteps,
+  fetchFlowUpcomingRows,
+  fetchFlowResumePoints,
   fetchEnrollmentRows,
   fetchFlowRows,
+  fetchFlowNamesUsingTemplate,
   fetchFlowStepRows,
   fetchProgressRows,
   insertFlow,
@@ -11,9 +19,14 @@ import {
   updateEnrollment,
   updateFlow,
   updateProgress,
+  type MessageFlowEnrollmentRow,
+  type ResultadoDeTanda,
   type MessageFlowRow,
   type MessageFlowStepRow,
 } from '../repositories/messageFlowsRepository';
+import type { PuntoDeRetoma } from './flowResume';
+import type { PosicionEnFlujo } from './flowEnrollSort';
+import type { Reprogramacion } from './whatsappQuota';
 import type {
   ExitReason,
   FlowChannel,
@@ -53,6 +66,23 @@ export async function fetchFlowSteps(flowId: string): Promise<MessageFlowStep[]>
   return (await fetchFlowStepRows(flowId)).map(mapStep);
 }
 
+/** Que flujos usan esta plantilla. Vacio si ninguno. */
+export async function fetchFlowsUsingTemplate(templateId: string): Promise<string[]> {
+  return fetchFlowNamesUsingTemplate(templateId);
+}
+
+/**
+ * El nombre del lead que viene incrustado en la fila de inscripcion.
+ *
+ * PostgREST devuelve un objeto en una relacion de uno y un arreglo en una de
+ * muchos. Se aceptan las dos: leer solo una de las formas es lo que dejaba a
+ * todos los inscritos como "Sin nombre".
+ */
+function nombreIncrustado(leads: MessageFlowEnrollmentRow['leads']): string | null {
+  if (!leads) return null;
+  return (Array.isArray(leads) ? leads[0]?.name : leads.name) ?? null;
+}
+
 export async function fetchEnrollments(flowId: string): Promise<MessageFlowEnrollment[]> {
   return (await fetchEnrollmentRows(flowId)).map((row) => ({
     id: row.id,
@@ -61,7 +91,7 @@ export async function fetchEnrollments(flowId: string): Promise<MessageFlowEnrol
     channel: row.channel,
     status: row.status,
     enrolledAt: row.enrolled_at,
-    ...(row.leads?.[0]?.name ? { leadName: row.leads[0].name } : {}),
+    ...(nombreIncrustado(row.leads) ? { leadName: nombreIncrustado(row.leads) as string } : {}),
     ...(row.exited_at ? { exitedAt: row.exited_at } : {}),
     ...(row.exit_reason ? { exitReason: row.exit_reason } : {}),
   }));
@@ -110,26 +140,114 @@ export async function setFlowActive(id: string, activo: boolean): Promise<void> 
 }
 
 /**
- * Borra un flujo.
+ * Borra un flujo, con sus inscripciones y su progreso.
  *
- * Falla si alguno de sus pasos tiene progreso: la base lo protege con
- * `on delete restrict`. Es deliberado -perder el rastro de lo enviado para
- * limpiar una definicion es mal intercambio- asi que aqui se traduce el error
- * de Postgres a algo que se entienda en pantalla.
+ * Antes esto era un `delete` a secas y fallaba en cuanto el flujo tenia un solo
+ * inscrito, por el `on delete restrict` que protege los pasos con progreso. El
+ * mensaje que se daba entonces -"tiene envios registrados... puedes pausarlo"-
+ * era ademas equivocado en lo que importaba: el historial de envios no vive en
+ * el progreso sino en `send_logs`, que esto no toca. Lo que se pierde es el
+ * rastro de la inscripcion, no los mensajes.
+ *
+ * Y pausar no era una alternativa: dejaba el flujo, sus pasos y sus plantillas
+ * congelados para siempre. La migracion 157 cuenta el callejon completo.
  */
 export async function deleteFlow(id: string): Promise<void> {
-  try {
-    await deleteFlowRow(id);
-  } catch (error) {
-    const mensaje = error instanceof Error ? error.message : String(error);
-    if (/violates foreign key|restrict/i.test(mensaje)) {
-      throw new Error(
-        'Este flujo ya tiene envios registrados y no se puede borrar sin perder ese historial. Puedes pausarlo.',
-        { cause: error }
-      );
-    }
-    throw error;
+  const borrados = await callDeleteFlowConInscripciones(id);
+  if (borrados === 0) {
+    throw new Error('El flujo ya no existe. Actualizá la lista.');
   }
+}
+
+/** Trae a hoy los pasos que vencian hasta esa fecha. Devuelve cuantos movio. */
+export async function adelantarPasos(hasta: Date): Promise<number> {
+  return callAdvanceFlowSteps(hasta.toISOString());
+}
+
+/** Cuantos pasos vencen cada uno de los proximos dias. Ver migracion 168. */
+export async function fetchCargaProxima(dias = 14): Promise<Array<{ dia: string; cantidad: number }>> {
+  return fetchFlowUpcomingRows(dias);
+}
+
+/**
+ * Quien de la agenda esta en un flujo y por que paso va.
+ *
+ * Se pide una vez al abrir la pantalla de inscribir. Devuelve una fila por
+ * inscripcion activa -como mucho una por lead y canal-, no una por lead.
+ */
+export async function fetchFlowPositions(): Promise<PosicionEnFlujo[]> {
+  return (await fetchFlowPositionRows()).map((row) => ({
+    leadId: row.lead_id,
+    flowId: row.flow_id,
+    flowName: row.flow_name,
+    channel: row.channel,
+    stepOrder: row.step_order,
+    dueAt: row.due_at,
+  }));
+}
+
+/**
+ * Por que paso va cada lead de la agenda frente a este flujo.
+ *
+ * Se pide una vez al abrir la pantalla de inscribir, no una por lead: es una
+ * fila por lead que tenga algun envio de las plantillas del flujo, y en la
+ * mayoria de las cuentas son unas pocas.
+ */
+export async function fetchResumePoints(flowId: string): Promise<PuntoDeRetoma[]> {
+  return (await fetchFlowResumePoints(flowId)).map((row) => ({
+    leadId: row.lead_id,
+    ultimoPasoHecho: row.last_done_order,
+    ultimoEnvioAt: row.last_sent_at,
+  }));
+}
+
+/**
+ * Inscribe un lead dando por hechos los pasos que ya recibio.
+ *
+ * `ultimoPasoHecho` en cero es la inscripcion normal, desde el primer paso.
+ * `desde` es la fecha del ultimo envio: la espera del paso siguiente se cuenta
+ * desde ahi y no desde el momento de inscribir, o retomar castigaria con una
+ * espera que ya paso.
+ */
+export async function enrollLeadFrom(
+  flowId: string,
+  leadId: string,
+  ultimoPasoHecho: number,
+  desde: string | null,
+): Promise<void> {
+  await callEnrollLeadInFlowFrom(flowId, leadId, ultimoPasoHecho, desde);
+}
+
+/**
+ * Aplica una reprogramacion ya decidida.
+ *
+ * El reparto lo calcula `whatsappQuota`, que es puro y esta probado; aqui solo
+ * se escribe. Devuelve cuantos pasos se movieron de verdad, que no tiene por
+ * que coincidir con los pedidos: uno que se registro entre que se calculo y se
+ * pulso ya no se toca.
+ */
+export async function reprogramarPasos(movimientos: Reprogramacion[]): Promise<number> {
+  if (movimientos.length === 0) return 0;
+  return callRescheduleFlowSteps(movimientos);
+}
+
+/**
+ * Inscribe a varios de una vez.
+ *
+ * Con `usarDeteccion`, cada uno entra por el paso que ya recibio; la deteccion
+ * la rehace la base, no se le manda calculada desde aqui. Devuelve las cuentas
+ * porque una tanda casi nunca sale redonda: los que ya estaban en un flujo del
+ * mismo canal se saltan, y eso hay que poder decirlo.
+ */
+export type { ResultadoDeTanda };
+
+export async function enrollLeadsFrom(
+  flowId: string,
+  leadIds: string[],
+  usarDeteccion: boolean,
+  pasoInicial = 1,
+): Promise<ResultadoDeTanda> {
+  return callEnrollLeadsInFlow(flowId, leadIds, usarDeteccion, pasoInicial);
 }
 
 /**

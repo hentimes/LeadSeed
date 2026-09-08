@@ -5,10 +5,13 @@ import {
   useEmailTemplates, useEmailTemplateLists,
   useCallTemplates, useCallTemplateLists,
 } from '../hooks/useTemplates';
-import type { SendLog } from '../types';
+import type { Page, SendLog } from '../types';
 import type { AnyTemplate, AnyTemplateList, EditableTemplate } from '../types';
 import TemplateEditor from '../components/templates/TemplateEditor';
 import { fetchSendLogsForTemplate } from '../services/historyService';
+import { fetchFlowsUsingTemplate } from '../services/messageFlowsService';
+import { esReferenciaEnUso } from '../utils/postgrestErrors';
+import { getErrorMessage } from '../utils/errorMessage';
 import { Icon } from '../utils/icons';
 import { Button, Card, IconButton, Input, Modal, EmptyState, LoadError, Skeleton } from '../design';
 import { ChannelSegmented } from '../components/channels/ChannelSegmented';
@@ -35,6 +38,8 @@ const COLORS = [
 interface Props {
   highlightTemplate?: { type: 'whatsapp' | 'email' | 'call'; id: number } | null;
   onClearHighlight?: () => void;
+  /** Para llegar a Playbooks, que cuelga de aqui y no del rail. */
+  onNavigate?: (page: Page) => void;
 }
 
 /** Ficha de filtro por categoria. El punto de color lo identifica sin teñir el fondo. */
@@ -66,7 +71,7 @@ function FiltroChip({
   );
 }
 
-export default function TemplatesPage({ highlightTemplate }: Props = {}) {
+export default function TemplatesPage({ highlightTemplate, onNavigate }: Props = {}) {
   const [tab, setTab] = useState<Tab>(highlightTemplate?.type || 'whatsapp');
   const waT = useWhatsAppTemplates(); const waL = useWhatsAppTemplateLists();
   const emT = useEmailTemplates(); const emL = useEmailTemplateLists();
@@ -212,11 +217,52 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     load();
   };
 
-  const handleDelete = async (id: string | number) => {
-    if (!(await getPlatform().dialogs.confirm('No se puede deshacer.', { title: '¿Eliminar esta plantilla?', confirmLabel: 'Eliminar', tone: 'danger' }))) return;
-    if (tab === 'whatsapp') await waT.remove(id); 
+  /**
+   * BORRAR UNA PLANTILLA PUEDE ESTAR PROHIBIDO, Y HAY QUE DECIRLO.
+   *
+   * `message_flow_steps.template_id` es `on delete restrict`: una plantilla que
+   * es paso de un flujo no se borra, porque borrarla dejaria el paso roto en
+   * silencio. La base contesta con un 23503, que es lo correcto.
+   *
+   * Lo que estaba mal era la pantalla. Ninguna de estas dos funciones tenia
+   * `try`, asi que el error tumbaba la promesa, `load()` no llegaba a correr y
+   * el resultado visible era **ninguno**: el dialogo se cerraba, la plantilla
+   * seguia ahi y no habia forma de saber por que. En el borrado en tanda era
+   * peor, porque la primera bloqueada abortaba el bucle y las demas tampoco se
+   * borraban, tambien en silencio.
+   *
+   * Cuando la base lo impide se pregunta QUIEN la usa: "no se puede" sin decir
+   * quien obliga a abrir los flujos de a uno hasta encontrarlo.
+   */
+  const motivoDelBloqueo = async (id: string | number, error: unknown): Promise<string> => {
+    if (!esReferenciaEnUso(error)) {
+      return getErrorMessage(error, 'No se pudo eliminar la plantilla.');
+    }
+    const flujos = await fetchFlowsUsingTemplate(String(id));
+    if (flujos.length === 0) {
+      return 'La usa un flujo o un recorrido en curso. Sacala de ahí y volvé a intentarlo.';
+    }
+    return `La usa ${flujos.length === 1 ? 'el flujo' : 'los flujos'} ${flujos
+      .map((nombre) => `«${nombre}»`)
+      .join(', ')}. Quitá ese paso del flujo y volvé a intentarlo.`;
+  };
+
+  const borrarPlantilla = async (id: string | number): Promise<void> => {
+    if (tab === 'whatsapp') await waT.remove(id);
     else if (tab === 'email') await emT.remove(id);
     else await caT.remove(id);
+  };
+
+  const handleDelete = async (id: string | number) => {
+    if (!(await getPlatform().dialogs.confirm('No se puede deshacer.', { title: '¿Eliminar esta plantilla?', confirmLabel: 'Eliminar', tone: 'danger' }))) return;
+    try {
+      await borrarPlantilla(id);
+    } catch (error) {
+      await getPlatform().dialogs.alert(await motivoDelBloqueo(id, error), {
+        title: 'No se puede eliminar',
+      });
+      return;
+    }
     if (editing?.id === id) setEditing(null);
     setSelectedIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
     load();
@@ -225,13 +271,32 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     if (!(await getPlatform().dialogs.confirm('No se puede deshacer.', { title: `¿Eliminar ${selectedIds.size} plantillas?`, confirmLabel: 'Eliminar', tone: 'danger' }))) return;
+
+    /*
+     * La tanda sigue aunque una falle: que una plantilla este en un flujo no es
+     * motivo para no borrar las otras nueve. Las que quedan se nombran al final,
+     * en un solo aviso, y siguen marcadas para poder actuar sobre ellas.
+     */
+    const bloqueadas = new Map<string | number, string>();
     for (const id of selectedIds) {
-      if (tab === 'whatsapp') await waT.remove(id); 
-      else if (tab === 'email') await emT.remove(id);
-      else await caT.remove(id);
+      try {
+        await borrarPlantilla(id);
+      } catch (error) {
+        const nombre = templates.find((t) => t.id === id)?.nombre ?? 'Sin nombre';
+        bloqueadas.set(id, `«${nombre}»: ${await motivoDelBloqueo(id, error)}`);
+      }
     }
-    setSelectedIds(new Set());
+
+    // Las que no se pudieron borrar siguen marcadas: es sobre esas sobre las
+    // que hay que hacer algo, y desmarcarlas obligaria a volver a buscarlas.
+    setSelectedIds(new Set(bloqueadas.keys()));
     load();
+
+    if (bloqueadas.size > 0) {
+      await getPlatform().dialogs.alert([...bloqueadas.values()].join('\n\n'), {
+        title: bloqueadas.size === 1 ? 'Una no se pudo eliminar' : `${bloqueadas.size} no se pudieron eliminar`,
+      });
+    }
   };
 
   /**
@@ -325,7 +390,23 @@ export default function TemplatesPage({ highlightTemplate }: Props = {}) {
     // padre y la pagina entera se desborda hacia la derecha, que es lo que
     // pasaba aunque los textos tuvieran `truncate`.
     <div className="flex min-w-0 flex-col gap-3">
-      <ChannelSegmented active={tab} onChange={setTab} label="Canal de las plantillas" />
+      {/* Playbooks no es un canal, asi que no puede ser un cuarto segmento del
+          carril de arriba; y como pertenece al grupo Mensajes sin ser una de
+          sus tres pestañas, tampoco lo pinta la barra. Se entra por aqui, que
+          es el mismo patron con el que el Historial cuelga de Enviar. */}
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <ChannelSegmented active={tab} onChange={setTab} label="Canal de las plantillas" />
+        </div>
+        {onNavigate && (
+          <IconButton
+            icon={Icon.Bullseye()}
+            label="Playbooks: guiones de conversación"
+            size="sm"
+            onClick={() => onNavigate('playbooks')}
+          />
+        )}
+      </div>
 
       {/* Una sola fila: buscar, crear, y el resto detras del menu. Antes eran
           cuatro controles con etiquetas largas que se partian en tres filas. */}
