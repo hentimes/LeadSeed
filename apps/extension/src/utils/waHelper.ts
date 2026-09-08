@@ -1,6 +1,7 @@
 import type { Lead } from '../types';
 import { getSettings } from '../services/appSettingsService';
 import { getPlatform } from '../platform/registry';
+import { nombreCorto } from './leadDisplay';
 
 /**
  *   - < 9 dígitos → rechazar
@@ -18,10 +19,34 @@ export function normalizePhone(phone: string): string {
   return `+569${digits.slice(-8)}`;
 }
 
+/**
+ * `{nombre}` ES EL NOMBRE CORTO, no el nombre completo.
+ *
+ * En la base los leads vienen del registro civil o de un padron, asi que el
+ * nombre suele ser "Henry Jose Daniel Farias Pacheco". Puesto tal cual en un
+ * saludo de WhatsApp, el mensaje arranca con "Hola Henry Jose Daniel Farias
+ * Pacheco": nadie escribe asi, y el destinatario lee de inmediato que eso lo
+ * mando una maquina, que es justo lo que un mensaje de contacto en frio no se
+ * puede permitir.
+ *
+ * La regla de abreviar -nombre de pila + apellido paterno- ya existia y ya
+ * estaba probada en `leadDisplay.nombreCorto`, que es la que usan las tablas de
+ * leads y de listas. Se reutiliza para que el nombre con el que se saluda a
+ * alguien sea el mismo con el que aparece en pantalla.
+ *
+ * El nombre completo no se pierde: queda en `{nombrecompleto}`, para el correo
+ * formal o el documento donde si hace falta entero.
+ */
 export function replaceVariables(text: string, lead: Lead): string {
+  const completo = lead.name ?? '';
+  const corto = nombreCorto(completo);
   return text
-    .replace(/\{nombre\}/gi, lead.name)
-    .replace(/\{name\}/gi, lead.name)
+    // Antes que `{nombre}` por claridad. No compiten: `\{nombre\}` exige la
+    // llave de cierre pegada, asi que nunca muerde `{nombrecompleto}`.
+    .replace(/\{nombre[_ ]?completo\}/gi, completo)
+    .replace(/\{fullname\}/gi, completo)
+    .replace(/\{nombre\}/gi, corto)
+    .replace(/\{name\}/gi, corto)
     .replace(/\{telefono\}/gi, lead.phone)
     .replace(/\{phone\}/gi, lead.phone)
     .replace(/\{email\}/gi, lead.email)
