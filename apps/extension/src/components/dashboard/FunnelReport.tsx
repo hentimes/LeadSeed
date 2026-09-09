@@ -31,6 +31,24 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
   const conversionRate = Math.round((convertidos / total) * 100);
   const churnRate = Math.round((descartados / total) * 100);
 
+  /*
+   * EL CICLO DE VENTAS SALE DEL SNAPSHOT. ANTES DECIA "14.2 DIAS" SIEMPRE.
+   *
+   * Estos cuatro indicadores mostraban numeros escritos a mano que nunca
+   * cambiaban: "14.2 dias", "+ 1.5 dias vs ant.", "+ 3 pp", "↑ 2 pp" y
+   * "$12.4k". Ninguno venia de la cuenta de quien miraba.
+   *
+   * El ciclo si es calculable: `stageDurations` trae los dos tramos en dias,
+   * que sumados son el tiempo de nuevo a cierre. Cuando todavia no hay ningun
+   * lead que haya recorrido el camino completo llegan en nulo, y entonces se
+   * dice "sin datos" en vez de inventar una cifra.
+   */
+  const duraciones = leadSummary.stageDurations;
+  const cicloDias =
+    duraciones && duraciones.nuevoAContactado !== null && duraciones.contactadoACierre !== null
+      ? duraciones.nuevoAContactado + duraciones.contactadoACierre
+      : null;
+
   return (
     <div className="flex flex-col gap-4 animate-ios-slide-up pb-2">
       
@@ -71,10 +89,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[11px] font-semibold leading-none">Tasa de conversión</span>
           </div>
           <div className="flex items-baseline gap-1.5 mt-1">
-            <span className="text-[20px] font-bold text-ink leading-none">{conversionRate}%</span>
-            <span className="text-[10px] font-bold text-state-success">+ 3 pp</span>
+            <span className="text-[20px] font-bold text-ink leading-none tabular-nums">{conversionRate}%</span>
           </div>
-          <span className="text-[9px] text-ink-muted mt-1 leading-none">vs periodo anterior</span>
+          <span className="text-[9px] text-ink-muted mt-1 leading-none">convertidos sobre el total</span>
         </Card>
 
         {/* Ciclo de ventas */}
@@ -86,10 +103,20 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[11px] font-semibold leading-none">Ciclo de ventas</span>
           </div>
           <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-[20px] font-bold text-ink leading-none">14.2</span>
-            <span className="text-[10px] font-medium text-ink-secondary">días</span>
+            {cicloDias === null ? (
+              <span className="text-[13px] font-semibold text-ink-muted leading-none">Sin datos</span>
+            ) : (
+              <>
+                <span className="text-[20px] font-bold text-ink leading-none tabular-nums">
+                  {cicloDias.toFixed(1)}
+                </span>
+                <span className="text-[10px] font-medium text-ink-secondary">días</span>
+              </>
+            )}
           </div>
-          <span className="text-[9px] text-state-success mt-1 font-bold leading-none">+ 1.5 días vs ant.</span>
+          <span className="text-[9px] text-ink-muted mt-1 leading-none">
+            {cicloDias === null ? 'Ningún lead completó el recorrido' : 'de nuevo a cierre'}
+          </span>
         </Card>
 
         {/* Tasa de pérdida */}
@@ -101,24 +128,39 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
             <span className="text-[11px] font-semibold leading-none">Tasa de pérdida (Churn)</span>
           </div>
           <div className="flex items-baseline gap-1.5 mt-1">
-            <span className="text-[20px] font-bold text-ink leading-none">{churnRate}%</span>
-            <span className="text-[10px] font-bold text-state-danger">↑ 2 pp</span>
+            <span className="text-[20px] font-bold text-ink leading-none tabular-nums">{churnRate}%</span>
           </div>
-          <span className="text-[9px] text-ink-muted mt-1 leading-none">vs periodo anterior</span>
+          <span className="text-[9px] text-ink-muted mt-1 leading-none">descartados sobre el total</span>
         </Card>
 
-        {/* Valor de Oportunidades */}
+        {/*
+          AQUI HABIA UNA TARJETA DE "VALOR POTENCIAL DEL PIPE: $12.4K".
+
+          Se retira, no se arregla. En toda la base de datos no existe ningun
+          importe: ni precio por lead, ni valor de oportunidad, ni moneda. Ese
+          "$12.4k" era un literal, y no habia forma de calcularlo aunque se
+          quisiera.
+
+          Para que vuelva hace falta primero decidir el dato -de donde sale el
+          valor de un lead- y guardarlo. Mientras tanto, una tarjeta menos es
+          mejor que una cifra inventada sobre el dinero de quien la lee.
+
+          En su lugar va el total de leads en el embudo, que si es real y
+          mantiene la rejilla de cuatro.
+        */}
         <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1.5 text-ink-secondary">
             <div className="w-5 h-5 flex items-center justify-center bg-primary-soft text-primary-light rounded-full shrink-0">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             </div>
-            <span className="text-[11px] font-semibold leading-none">Valor potencial del pipe</span>
+            <span className="text-[11px] font-semibold leading-none">Leads en el embudo</span>
           </div>
           <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-[20px] font-bold text-ink leading-none">$12.4k</span>
+            <span className="text-[20px] font-bold text-ink leading-none tabular-nums">
+              {leadSummary.total || 0}
+            </span>
           </div>
-          <span className="text-[9px] text-ink-muted mt-1 leading-none">Basado en leads activos</span>
+          <span className="text-[9px] text-ink-muted mt-1 leading-none">en total</span>
         </Card>
       </div>
 

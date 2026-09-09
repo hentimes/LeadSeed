@@ -121,12 +121,22 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         </div>
 
         <div className="flex">
+          {/*
+            LOS PIES DE ESTAS CIFRAS DECIAN "- 0% vs ayer", ESCRITO A MANO.
+
+            Cuatro comparativas que no comparaban nada y no cambiaban nunca,
+            justo en la pantalla que deberia dar confianza en los numeros. El
+            snapshot no trae un acumulado anterior con que comparar un total
+            historico, asi que ahora dicen DE QUE son los numeros en vez de
+            fingir una tendencia. Las tendencias reales -las que si tienen con
+            que compararse- viven en Resumen, calculadas con `trend.ts`.
+          */}
           {/* Total Leads Column */}
           <div className="w-[140px] shrink-0 border-r border-line pr-4 flex flex-col">
             <div className="flex-1 flex flex-col justify-center">
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Total leads</span>
               <span className="text-[32px] font-bold text-ink leading-none mb-1.5">{total}</span>
-              <span className="text-[10px] text-ink-secondary">- 0% vs ayer</span>
+              <span className="text-[10px] text-ink-secondary">en total</span>
             </div>
 
             <div className="w-full h-[1px] bg-line" />
@@ -134,7 +144,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
             <div className="flex-1 flex flex-col justify-center">
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Tasa de conversión</span>
               <span className="text-[32px] font-bold text-primary leading-none mb-1.5">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
-              <span className="text-[10px] text-ink-secondary">- 0 pp vs ayer</span>
+              <span className="text-[10px] text-ink-secondary">convertidos sobre el total</span>
             </div>
           </div>
 
@@ -189,7 +199,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
               <span className="text-[24px] font-bold text-state-success leading-none mb-1">{counts.convertido}</span>
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Leads convertidos</span>
               <span className="text-[10px] text-ink-secondary">
-                - 0% vs periodo anterior
+                en total
               </span>
             </div>
             
@@ -199,7 +209,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
               <span className="text-[24px] font-bold text-primary leading-none mb-1">{total ? Math.round((counts.convertido / total) * 100) : 0}%</span>
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Tasa de conversión</span>
               <span className="text-[10px] text-ink-secondary">
-                - 0 pp vs periodo anterior
+                convertidos sobre el total
               </span>
             </div>
           </div>

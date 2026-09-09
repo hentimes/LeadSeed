@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import { Icon } from '../../utils/icons';
+import { calcularTendencia, type Trend } from './trend';
 import SourceBreakdownChart from './charts/SourceBreakdownChart';
 import StageConversionChart from './charts/StageConversionChart';
 import DynamicAcquisitionChart, { ChartVisualType } from './charts/DynamicAcquisitionChart';
@@ -8,6 +9,57 @@ import DynamicAcquisitionChart, { ChartVisualType } from './charts/DynamicAcquis
 interface PipelineReportProps {
   snapshot: DashboardSnapshot;
   onClose: () => void;
+}
+
+/** Sin cambios no es ni bueno ni malo: no se pinta de verde. */
+const COLOR_TENDENCIA: Record<Trend['direction'], string> = {
+  up: 'text-state-success',
+  down: 'text-state-danger',
+  flat: 'text-ink-muted',
+};
+
+/**
+ * Un indicador del reporte.
+ *
+ * Existe porque los cuatro eran el mismo bloque copiado con los numeros
+ * cambiados, y era justo lo que permitia que tres de ellos llevaran una
+ * tendencia escrita a mano sin que se notara al leer el archivo.
+ *
+ * `tendencia` es opcional a proposito: si no hay con que comparar, la linea de
+ * abajo dice de que periodo es el numero y no finge una flecha.
+ */
+function KpiCard({
+  icon,
+  label,
+  valor,
+  pie,
+  tendencia,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  valor: string;
+  pie?: string;
+  tendencia?: Trend;
+}) {
+  return (
+    <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5">
+        <div className="text-primary flex items-center justify-center shrink-0">{icon}</div>
+        <span className="text-[11px] font-medium text-ink-secondary leading-tight">{label}</span>
+      </div>
+      <div className="flex flex-col gap-1 mt-1">
+        <div className="flex items-end gap-2">
+          <span className="text-[22px] font-bold text-ink leading-none tabular-nums">{valor}</span>
+          {tendencia && (
+            <span className={`text-[11px] font-bold leading-none mb-0.5 ${COLOR_TENDENCIA[tendencia.direction]}`}>
+              {tendencia.direction === 'up' ? '↑' : tendencia.direction === 'down' ? '↓' : ''} {tendencia.value}
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] font-normal text-ink-muted">{tendencia ? tendencia.label : pie}</span>
+      </div>
+    </div>
+  );
 }
 
 export default function PipelineReport({ snapshot, onClose }: PipelineReportProps) {
@@ -22,6 +74,25 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
   const converted = convertedKey ? (leadSummary.statusCounts[convertedKey] || 0) : 0;
   
   const conversionRate = acquired > 0 ? Math.round((converted / acquired) * 100) : 0;
+
+  /*
+   * EL CRECIMIENTO MENSUAL SE CALCULA. ANTES DECIA "+42%" SIEMPRE.
+   *
+   * Los cuatro indicadores de esta pantalla tenian numeros escritos a mano:
+   * valores de reserva (`{acquired || 598}`) que hacian que una cuenta VACIA
+   * mostrara 598 leads, y flechas de tendencia literales -"↑ 42%", "↑ 23%",
+   * "↑ 2 pp", "+42%"- que decian que todo subia aunque hubiera caido.
+   *
+   * De los cuatro, el unico con una comparacion posible es este: `monthlyCounts`
+   * trae la serie por mes, asi que el ultimo contra el anterior es un dato de
+   * verdad. Los otros tres son acumulados desde el principio y en el snapshot
+   * no hay un acumulado anterior con que compararlos, asi que **se quedan sin
+   * flecha**. Un numero sin tendencia es honesto; una tendencia inventada no.
+   */
+  const meses = leadSummary.monthlyCounts || [];
+  const mesActual = meses[meses.length - 1]?.count ?? 0;
+  const mesAnterior = meses[meses.length - 2]?.count ?? 0;
+  const tendenciaMensual = calcularTendencia(mesActual, mesAnterior, 'vs mes anterior');
 
   // Extract funnel stages safely
   const getCount = (key: string) => {
@@ -53,72 +124,30 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
 
       {/* KPIs Grid */}
       <div className="grid grid-cols-4 gap-3 mb-3">
-        {/* Leads adquiridos */}
-        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <div className="text-primary flex items-center justify-center shrink-0">
-              <Icon.Users />
-            </div>
-            <span className="text-[11px] font-medium text-ink-secondary leading-tight">Leads adquiridos</span>
-          </div>
-          <div className="flex flex-col gap-1 mt-1">
-            <div className="flex items-end gap-2">
-              <span className="text-[22px] font-bold text-ink leading-none">{acquired || 598}</span>
-              <span className="text-[11px] font-bold text-state-success leading-none mb-0.5">↑ 42%</span>
-            </div>
-            <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
-          </div>
-        </div>
-
-        {/* Leads convertidos */}
-        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <div className="text-primary flex items-center justify-center shrink-0">
-              <Icon.CheckCircle />
-            </div>
-            <span className="text-[11px] font-medium text-ink-secondary leading-tight">Leads convertidos</span>
-          </div>
-          <div className="flex flex-col gap-1 mt-1">
-            <div className="flex items-end gap-2">
-              <span className="text-[22px] font-bold text-ink leading-none">{converted || 27}</span>
-              <span className="text-[11px] font-bold text-state-success leading-none mb-0.5">↑ 23%</span>
-            </div>
-            <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
-          </div>
-        </div>
-
-        {/* Tasa de conversión */}
-        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <div className="text-primary flex items-center justify-center shrink-0">
-              <Icon.ChartPie />
-            </div>
-            <span className="text-[11px] font-medium text-ink-secondary leading-tight">Tasa de conversión</span>
-          </div>
-          <div className="flex flex-col gap-1 mt-1">
-            <div className="flex items-end gap-2">
-              <span className="text-[22px] font-bold text-ink leading-none">{conversionRate || 6}%</span>
-              <span className="text-[11px] font-bold text-state-success leading-none mb-0.5">↑ 2 pp</span>
-            </div>
-            <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
-          </div>
-        </div>
-
-        {/* Crecimiento mensual */}
-        <div className="bg-surface border border-line rounded-[8px] p-3 flex flex-col gap-1.5">
-          <div className="flex items-center gap-1.5">
-            <div className="text-primary flex items-center justify-center shrink-0">
-              <Icon.TrendUp />
-            </div>
-            <span className="text-[11px] font-medium text-ink-secondary leading-tight">Crecimiento mensual</span>
-          </div>
-          <div className="flex flex-col gap-1 mt-1">
-            <div className="flex items-end gap-2">
-              <span className="text-[22px] font-bold text-ink leading-none">+42%</span>
-            </div>
-            <span className="text-[10px] font-normal text-ink-muted">vs periodo anterior</span>
-          </div>
-        </div>
+        <KpiCard
+          icon={<Icon.Users />}
+          label="Leads adquiridos"
+          valor={String(acquired)}
+          pie="desde el principio"
+        />
+        <KpiCard
+          icon={<Icon.CheckCircle />}
+          label="Leads convertidos"
+          valor={String(converted)}
+          pie="desde el principio"
+        />
+        <KpiCard
+          icon={<Icon.ChartPie />}
+          label="Tasa de conversión"
+          valor={`${conversionRate}%`}
+          pie="convertidos sobre el total"
+        />
+        <KpiCard
+          icon={<Icon.TrendUp />}
+          label="Leads del último mes"
+          valor={String(mesActual)}
+          tendencia={tendenciaMensual}
+        />
       </div>
 
       {/* Main dynamic chart placeholder */}
