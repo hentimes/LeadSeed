@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import { Icon } from '../../utils/icons';
 import { calcularTendencia, type Trend } from './trend';
+import { porcentaje } from './porcentaje';
 import SourceBreakdownChart from './charts/SourceBreakdownChart';
 import StageConversionChart from './charts/StageConversionChart';
 import DynamicAcquisitionChart, { ChartVisualType } from './charts/DynamicAcquisitionChart';
@@ -73,7 +74,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
   const convertedKey = Object.keys(leadSummary.statusCounts || {}).find(k => k.toLowerCase() === 'convertido');
   const converted = convertedKey ? (leadSummary.statusCounts[convertedKey] || 0) : 0;
   
-  const conversionRate = acquired > 0 ? Math.round((converted / acquired) * 100) : 0;
+  const conversionRate = porcentaje(converted, acquired);
 
   /*
    * EL CRECIMIENTO MENSUAL SE CALCULA. ANTES DECIA "+42%" SIEMPRE.

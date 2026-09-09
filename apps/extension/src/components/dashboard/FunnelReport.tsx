@@ -1,5 +1,6 @@
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import { Icon } from '../../utils/icons';
+import { porcentaje } from './porcentaje';
 
 // Import our new charts (we will create them next)
 import AdvancedFunnelChart from './charts/AdvancedFunnelChart';
@@ -26,8 +27,8 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
   const convertidos = getCount('convertido');
   const descartados = getCount('descartado');
 
-  const conversionRate = Math.round((convertidos / total) * 100);
-  const churnRate = Math.round((descartados / total) * 100);
+  const conversionRate = porcentaje(convertidos, total);
+  const churnRate = porcentaje(descartados, total);
 
   /*
    * EL CICLO DE VENTAS SALE DEL SNAPSHOT. ANTES DECIA "14.2 DIAS" SIEMPRE.
