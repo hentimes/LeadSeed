@@ -13,9 +13,20 @@ import { nombreDePeriodo } from '../../components/dashboard/comparePeriod';
 import type { ComparePeriod } from '../../types';
 
 /** Como se llama cada origen en pantalla. */
+/**
+ * Como se nombra cada origen.
+ *
+ * `web_form` se quedo por si queda algun lead sin reclasificar: hasta la
+ * migracion 178 todo lo que entraba por un formulario caia bajo esa clave, y
+ * "Formulario 100%" no distinguia al que llego por su cuenta desde la web del
+ * que llego por un anuncio que se pago.
+ */
 const ETIQUETAS_ORIGEN: Record<string, string> = {
   manual: 'Manual',
   imported: 'Importado',
+  form_web: 'Web',
+  form_campaign: 'Campañas',
+  form_retiro: 'Retiro',
   web_form: 'Formulario',
 };
 
@@ -102,6 +113,16 @@ export default function OverviewTab({ snapshot, settings, compareLabel, periodo,
   const tasaGlobal = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
 
   const mejorFuente = fuentes[0];
+
+  /*
+   * La campaña que mas trajo, si hay alguna.
+   *
+   * `campaignCounts` viene ordenado de mas a menos desde el RPC, asi que la
+   * primera es la mejor. Solo trae leads de canal 'pb' -los que entraron por
+   * un enlace de captura-, asi que en una cuenta que no hace publicidad la
+   * lista viene vacia y este hallazgo no se pinta.
+   */
+  const mejorCampana = leadSummary.campaignCounts[0];
   const mejorMes = leadSummary.monthlyCounts.reduce<{ name: string; count: number } | null>(
     (mejor, mes) => (mejor === null || mes.count > mejor.count ? mes : mejor),
     null
@@ -358,6 +379,20 @@ export default function OverviewTab({ snapshot, settings, compareLabel, periodo,
                 <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
                   <strong className="text-ink font-medium">Mejor fuente: </strong>
                   {ETIQUETAS_ORIGEN[mejorFuente.origen] ?? mejorFuente.origen} ({mejorFuente.porcentaje}%).
+                </li>
+              )}
+              {/*
+                Se nombra el ENLACE y la campaña, no solo la campaña: una
+                campaña puede tener varios enlaces -"PP: Ventas" y "PP:
+                Retiros" dentro de "Videos Agosto 2026"- y saber cual de los
+                dos funciono es el motivo de tenerlos separados.
+              */}
+              {mejorCampana && (
+                <li className="relative pl-2.5 before:content-[''] before:absolute before:left-0 before:top-1 before:w-1 before:h-1 before:bg-primary before:rounded-full">
+                  <strong className="text-ink font-medium">Mejor campaña: </strong>
+                  <span title={`${mejorCampana.enlace} · ${mejorCampana.campana}`}>
+                    {mejorCampana.enlace} ({mejorCampana.leads}).
+                  </span>
                 </li>
               )}
               {mejorMes && mejorMes.count > 0 && (

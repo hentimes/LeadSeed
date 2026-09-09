@@ -12,8 +12,16 @@ export interface DashboardSnapshot {
     createdCompare: number;
     statusCounts: Record<string, number>;
     monthlyCounts: Array<{ name: string; count: number }>;
-    /** Como entro el lead: manual, imported, web_form. */
+    /**
+     * Como entro el lead.
+     *
+     * Desde la 178 el formulario ya no es una sola cosa: `form_web` es el de
+     * la web, `form_campaign` el que se abre desde un enlace de campaña, y
+     * `form_retiro` el de retiro. `manual` e `imported` no cambiaron.
+     */
     originCounts: Record<string, number>;
+    /** Que enlace y campaña trajo cuantos leads, de mas a menos. */
+    campaignCounts: Array<{ enlace: string; campana: string; leads: number }>;
     /** De que formulario publico vino, si vino de uno: pb, general, retiro, form. */
     channelCounts: Record<string, number>;
     /** Motivos de descarte contados. Los que nadie declaro salen como 'Sin motivo'. */
@@ -84,6 +92,7 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       statusCounts: row.leadSummary?.statusCounts ?? {},
       monthlyCounts: row.leadSummary?.monthlyCounts ?? [],
       originCounts: row.leadSummary?.originCounts ?? {},
+      campaignCounts: row.leadSummary?.campaignCounts ?? [],
       channelCounts: row.leadSummary?.channelCounts ?? {},
       lossReasons: row.leadSummary?.lossReasons ?? [],
       originQuality: row.leadSummary?.originQuality ?? [],

@@ -12,6 +12,8 @@ export interface DashboardSnapshotRow {
     statusCounts?: Record<string, number>;
     monthlyCounts?: Array<{ name: string; count: number }>;
     originCounts?: Record<string, number>;
+    /** Que enlace y campaña trajo cuantos leads. Solo los de canal 'pb'. */
+    campaignCounts?: Array<{ enlace: string; campana: string; leads: number }>;
     channelCounts?: Record<string, number>;
     lossReasons?: Array<{ name: string; value: number }>;
     originQuality?: Array<{ origin: string; leads: number; converted: number; avgCycleDays: number | null }>;
