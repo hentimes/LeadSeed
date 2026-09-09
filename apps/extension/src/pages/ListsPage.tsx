@@ -324,22 +324,49 @@ export default function ListsPage() {
     else setSelectedLeadIds(new Set(sorted.map((l) => l.id!)));
   };
 
+  /*
+   * LOS LEADS DE CADA LISTA, CALCULADOS UNA VEZ.
+   *
+   * Estaba dentro de `renderListRow`, o sea que cada fila recorria los ~1.900
+   * leads por su cuenta y en CADA render: abrir una lista, escribir una letra
+   * en el buscador o arrastrar una fila disparaba tantos recorridos completos
+   * como listas hubiera. Con doce listas son mas de veinte mil vueltas para
+   * pintar una pantalla que no cambio de datos.
+   *
+   * Ahora las listas manuales salen de un solo recorrido que reparte cada lead
+   * en sus canastas, y las inteligentes se calculan una vez cada una. Se
+   * rehace solo cuando cambian los leads o las listas.
+   */
+  const leadsPorLista = useMemo(() => {
+    const mapa = new Map<string | number, Lead[]>();
+
+    for (const lead of allLeads) {
+      for (const listaId of lead.listaIds) {
+        const actual = mapa.get(listaId);
+        if (actual) actual.push(lead);
+        else mapa.set(listaId, [lead]);
+      }
+    }
+
+    for (const lista of unifiedLists) {
+      if (lista.isSmart) {
+        mapa.set(lista.id, getSmartListLeads(lista.id as string, allLeads, deletedLeads));
+      } else if (!mapa.has(lista.id)) {
+        // Una lista sin leads no aparece en el recorrido de arriba, y sin esto
+        // la fila leeria `undefined` en vez de una lista vacia.
+        mapa.set(lista.id, []);
+      }
+    }
+
+    return mapa;
+  }, [allLeads, deletedLeads, unifiedLists]);
+
   // Helper to render a single list row
   const renderListRow = (list: UnifiedList, insideGroup = false) => {
     const isExpanded = expandedId === list.id;
-    const leads = list.isSmart ? getSmartListLeads(list.id as string, allLeads, deletedLeads) : allLeads.filter(l => l.listaIds.includes(list.id as number));
-    
-    if (fallo) {
-    return (
-      <LoadError
-        title="No se pudieron cargar las listas"
-        description={fallo}
-        onRetry={() => void load()}
-      />
-    );
-  }
+    const leads = leadsPorLista.get(list.id) ?? [];
 
-  return (
+    return (
       <div 
         key={list.id} 
         draggable
@@ -487,6 +514,23 @@ export default function ListsPage() {
       </div>
     );
   };
+
+  /*
+   * El aviso de fallo va aqui, antes de la pantalla.
+   *
+   * Estaba dentro de `renderListRow`, asi que un fallo de carga pintaba un
+   * panel de error entero POR CADA lista: la misma frase repetida tantas veces
+   * como filas hubiera, cada una con su boton de reintentar.
+   */
+  if (fallo) {
+    return (
+      <LoadError
+        title="No se pudieron cargar las listas"
+        description={fallo}
+        onRetry={() => void load()}
+      />
+    );
+  }
 
   return (
     <div className="pb-20">

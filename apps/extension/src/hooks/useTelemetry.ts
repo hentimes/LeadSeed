@@ -15,7 +15,12 @@ export const useTelemetry = (currentPage: Page) => {
       const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
       if (timeSpent > 0) {
-        trackPageTime(user.id, prevPageRef.current, timeSpent).catch((error) => {
+        /*
+         * El id ya no viaja: la base lo toma de la sesion. `user` se sigue
+         * mirando arriba para no llamar sin sesion, que es cuando la funcion
+         * de la base sale en silencio sin escribir nada.
+         */
+        trackPageTime(prevPageRef.current, timeSpent).catch((error) => {
           console.error('Error telemetry:', error);
         });
       }

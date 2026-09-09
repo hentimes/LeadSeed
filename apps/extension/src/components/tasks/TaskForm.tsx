@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useHideUnnamedLeads } from '../../hooks/useHideUnnamedLeads';
 import type { Task, Lead, LeadList } from '../../types';
 import { Button, Input, Modal, Textarea } from '../../design';
 import { Icon } from '../../utils/icons';
@@ -70,7 +71,9 @@ export default function TaskForm({ task, leads, lists, onSave, onCancel, modo = 
 
   const [leadsAbiertos, setLeadsAbiertos] = useState(false);
   const [busqueda, setBusqueda] = useState('');
-  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  /* El mismo ajuste de cuenta que el resto de la aplicacion, no un estado de
+     este formulario. */
+  const [ocultarSinNombre, setOcultarSinNombre] = useHideUnnamedLeads();
 
   useEffect(() => {
     if (task) {
@@ -244,7 +247,7 @@ export default function TaskForm({ task, leads, lists, onSave, onCancel, modo = 
                     <SinNombreToggle
                       count={sinNombreTotal}
                       ocultos={ocultarSinNombre}
-                      onToggle={() => setOcultarSinNombre((v) => !v)}
+                      onToggle={() => setOcultarSinNombre(!ocultarSinNombre)}
                     />
                   </div>
 
