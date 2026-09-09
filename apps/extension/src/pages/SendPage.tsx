@@ -86,7 +86,7 @@ export default function SendPage({ onNavigate }: { onNavigate: (page: Page) => v
   const registrarAccion = useCallback((canal: SendChannel, accion: SendActionState) => {
     setAcciones((previas) => ({ ...previas, [canal]: accion }));
   }, []);
-  const { getAll } = useLeads();
+  const { getAllParaSelector } = useLeads();
   const { getAll: getLeadLists } = useLists();
   const waTemplates = useWhatsAppTemplates();
   const waLists = useWhatsAppTemplateLists();
@@ -127,7 +127,7 @@ export default function SendPage({ onNavigate }: { onNavigate: (page: Page) => v
         call,
         callL,
       ] = await Promise.all([
-        getAll(),
+        getAllParaSelector(),
         getLeadLists(),
         waTemplates.getAll(),
         waLists.getAll(),

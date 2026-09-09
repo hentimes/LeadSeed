@@ -215,29 +215,12 @@ export async function replaceFlowSteps(
   if (error) throw error;
 }
 
-export async function insertEnrollment(flowId: string, leadId: string): Promise<number> {
-  // `channel` y `user_id` los pone el trigger desde el flujo; mandarlos desde
-  // aqui seria darle al cliente una decision que no le corresponde.
-  const { data, error } = await supabase
-    .from(ENROLLMENTS)
-    .insert({ flow_id: flowId, lead_id: leadId })
-    .select('id')
-    .single();
-
-  if (error || !data) throw error || new Error('No se pudo inscribir el lead');
-  return data.id as number;
-}
 
 export async function updateEnrollment(id: number, payload: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.from(ENROLLMENTS).update(payload).eq('id', id);
   if (error) throw error;
 }
 
-export async function insertProgressRows(rows: Record<string, unknown>[]): Promise<void> {
-  if (rows.length === 0) return;
-  const { error } = await supabase.from(PROGRESS).insert(rows);
-  if (error) throw error;
-}
 
 /** Inscribe un lead. Toda la logica vive en el RPC para que sea atomica. */
 /**

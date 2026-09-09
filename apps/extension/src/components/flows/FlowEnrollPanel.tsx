@@ -4,7 +4,7 @@ import { useHideUnnamedLeads } from '../../hooks/useHideUnnamedLeads';
 import { Button, IconButton, ListPagination, ListPanel, ListRow, Modal, Select } from '../../design';
 import { Icon } from '../../utils/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { fetchActiveLeads } from '../../services/leadsService';
+import { fetchLeadsParaSelector } from '../../services/leadsService';
 import {
   fetchFlowPositions,
   fetchFlowSteps,
@@ -169,7 +169,7 @@ export function FlowEnrollPanel({ flujo, onInscribir, onInscribirTodos, onVolver
   useEffect(() => {
     let cancelado = false;
     if (user) {
-      void fetchActiveLeads(user.id).then((suyos) => {
+      void fetchLeadsParaSelector(user.id).then((suyos) => {
         if (!cancelado) setLeads(suyos);
       });
     }

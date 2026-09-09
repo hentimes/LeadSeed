@@ -254,19 +254,6 @@ export async function closeMyAppointmentRow(args: {
   return (Array.isArray(data) ? data[0] : data) as CloseAppointmentRow;
 }
 
-export async function recordMyAppointmentOutcomeRow(
-  appointmentId: string,
-  attended: boolean,
-  outcomeNotes?: string,
-): Promise<AgendaAppointmentRow> {
-  const { data, error } = await supabase.rpc('record_my_appointment_outcome', {
-    p_appointment_id: appointmentId,
-    p_attended: attended,
-    p_outcome_notes: outcomeNotes || null,
-  });
-  if (error) throw error;
-  return (Array.isArray(data) ? data[0] : data) as AgendaAppointmentRow;
-}
 
 export async function createMyAppointmentFromLeadRow(args: CreateAppointmentFromLeadArgs): Promise<AgendaAppointmentRow> {
   const { data, error } = await supabase.rpc('create_my_appointment_from_lead', args);

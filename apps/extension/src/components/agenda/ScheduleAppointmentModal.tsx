@@ -44,7 +44,7 @@ export default function ScheduleAppointmentModal({
   onAgendada,
   onClose,
 }: Props) {
-  const { getAll } = useLeads();
+  const { getAllParaSelector } = useLeads();
   /*
    * Con el lead ya decidido -se agenda desde una reunion concreta- no se
    * pregunta. Abriendo desde la cabecera de la agenda no hay lead todavia, y
@@ -70,7 +70,7 @@ export default function ScheduleAppointmentModal({
     setCargandoLeads(true);
     void (async () => {
       try {
-        const todos = await getAll();
+        const todos = await getAllParaSelector();
         if (!cancelado) setLeads(todos);
       } catch (err) {
         if (!cancelado) setError(getErrorMessage(err, 'No se pudieron cargar los leads'));
@@ -82,7 +82,7 @@ export default function ScheduleAppointmentModal({
     return () => {
       cancelado = true;
     };
-  }, [leadId, getAll]);
+  }, [leadId, getAllParaSelector]);
 
   /*
    * Busca por nombre Y por telefono, como el resto de la aplicacion.

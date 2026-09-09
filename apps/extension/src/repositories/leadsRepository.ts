@@ -122,6 +122,23 @@ export interface LeadIdentityRow {
 export const LEAD_SELECT =
   'id, user_id, name, phone, email, company, rut, status, score, lista_ids, notes, scheduled_at, utm_source, utm_medium, utm_campaign, utm_term, utm_content, assigned_at, first_contacted_at, closed_at, discard_reason, estimated_value, metadata, created_at, updated_at, deleted_at';
 
+/**
+ * Lo mismo que `LEAD_SELECT`, SIN `metadata`.
+ *
+ * `metadata` guarda el JSON crudo del formulario de captura, que es con
+ * diferencia la columna mas pesada de la tabla. Traerla para los ~1.900 leads
+ * tiene sentido al exportar; no lo tiene para pintar un buscador de nombres.
+ *
+ * Los tres selectores que la pedian sin usarla -agendar una cita, inscribir en
+ * un flujo y abrir Enviar- se abren cada vez desde cero, asi que pagaban ese
+ * JSON entero en cada apertura.
+ *
+ * `notes` SI se conserva: `waHelper` la usa para rellenar las variables de las
+ * plantillas, asi que quitarla romperia los envios.
+ */
+export const LEAD_SELECT_LIGERO =
+  'id, user_id, name, phone, email, company, rut, status, score, lista_ids, notes, scheduled_at, utm_source, utm_medium, utm_campaign, utm_term, utm_content, assigned_at, first_contacted_at, closed_at, discard_reason, estimated_value, created_at, updated_at, deleted_at';
+
 export const CROSS_EXEC_EVENT_SELECT =
   'id, lead_id, related_lead_id, event_kind, counterpart_captured_at, matched_by, is_read, created_at';
 
@@ -281,6 +298,33 @@ export async function fetchLeadRows(userId: string): Promise<LeadRow[]> {
   }
 
   return (data ?? []) as LeadRow[];
+}
+
+/**
+ * Los leads para un selector: sin `metadata` y con tope.
+ *
+ * El tope existe para que la consulta no crezca sin limite con la cartera. Es
+ * alto a proposito -un selector con mas de dos mil entradas ya no se recorre a
+ * ojo, se busca escribiendo- y sirve de red, no de paginacion.
+ */
+export async function fetchLeadRowsParaSelector(userId: string): Promise<LeadRow[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select(LEAD_SELECT_LIGERO)
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .limit(2000);
+
+  if (error) {
+    console.error('Error fetching leads para selector:', error);
+    return [];
+  }
+
+  // `metadata` no viene en la consulta; se rellena vacia para que el mapeo al
+  // dominio no tenga que saber de que consulta salio la fila.
+  return (data ?? []).map((fila) => ({ ...fila, metadata: {} })) as LeadRow[];
 }
 
 export async function fetchPinnedLeads(userId: string): Promise<LeadRow[]> {

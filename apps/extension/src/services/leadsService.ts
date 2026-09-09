@@ -12,6 +12,7 @@ import {
   fetchLeadPageRows,
   fetchLeadRowById,
   fetchLeadRows,
+  fetchLeadRowsParaSelector,
   fetchLeadRowsByIds,
   fetchLeadRowsByList,
   fetchPinnedLeads,
@@ -133,6 +134,18 @@ export async function attachCrossExecAlertsToLeads(leads: Lead[], sortByPriority
 
 export async function fetchActiveLeads(userId: string): Promise<Lead[]> {
   return attachCrossExecAlerts((await fetchLeadRows(userId)).map(mapLeadRowToDomain));
+}
+
+/**
+ * Los leads para un selector de busqueda.
+ *
+ * Misma forma que `fetchActiveLeads`, pero sin la columna `metadata`. Los tres
+ * sitios que lo usan -agendar cita, inscribir en flujo, abrir Enviar- solo
+ * necesitan nombre, telefono y correo, y reusaban la funcion pensada para
+ * exportar a Excel.
+ */
+export async function fetchLeadsParaSelector(userId: string): Promise<Lead[]> {
+  return attachCrossExecAlerts((await fetchLeadRowsParaSelector(userId)).map(mapLeadRowToDomain));
 }
 
 export async function fetchDeletedLeads(userId: string): Promise<Lead[]> {

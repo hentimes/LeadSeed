@@ -8,6 +8,7 @@ import {
   fetchLeadIdentities,
   fetchLeadPage,
   fetchActiveLeads,
+  fetchLeadsParaSelector,
   fetchDeletedLeads,
   fetchLeadById,
   fetchLeadsByList,
@@ -32,6 +33,20 @@ export function useLeads() {
   const getAll = useCallback(async (): Promise<Lead[]> => {
     if (!user) return [];
     return fetchActiveLeads(user.id);
+  }, [user]);
+
+  /**
+   * Todos los leads, pero SIN la columna `metadata`, para los selectores.
+   *
+   * `getAll` se queda para exportar, que es cuando de verdad hace falta la
+   * fila entera. Los buscadores de leads -agendar cita, inscribir en un flujo,
+   * abrir Enviar- solo pintan nombre, telefono y correo, y estaban pagando el
+   * JSON crudo del formulario de cada uno de los ~1.900 leads en cada
+   * apertura.
+   */
+  const getAllParaSelector = useCallback(async (): Promise<Lead[]> => {
+    if (!user) return [];
+    return fetchLeadsParaSelector(user.id);
   }, [user]);
 
   const getDeleted = useCallback(async (): Promise<Lead[]> => {
@@ -152,6 +167,7 @@ export function useLeads() {
 
   return {
     getAll,
+    getAllParaSelector,
     getPinned,
     reorderPinned,
     getDeleted,
