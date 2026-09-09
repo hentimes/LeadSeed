@@ -3,12 +3,41 @@ import {
   fetchProfileSettingsRow,
   updateProfileSettingsRow,
 } from '../repositories/settingsRepository';
-import type { AppSettings } from '../types';
+import type { AppSettings, ComparePeriod } from '../types';
 import { DEFAULT_LEAD_COLUMNS } from '../config/leadColumns';
 import { describeError } from '../utils/errorMessage';
 
 
 // Inicializar settings por defecto
+/**
+ * Traduce el periodo guardado al vocabulario nuevo.
+ *
+ * Hasta la migracion 177 el ajuste decia CONTRA QUE comparar ('yesterday',
+ * 'lastWeek'...), y ahora dice QUE VENTANA mostrar ('today', 'last7'...). Los
+ * perfiles que ya existen tienen guardado el valor viejo, y sin esto la
+ * pantalla arrancaria con un valor que el selector no reconoce: se veria
+ * vacio y el panel pediria un periodo que el RPC no entiende.
+ *
+ * Cada valor viejo va a la ventana de su mismo tamaño, que es lo mas parecido
+ * a lo que la persona habia elegido.
+ */
+const PERIODOS_VIEJOS: Record<string, ComparePeriod> = {
+  yesterday: 'today',
+  lastWeek: 'last7',
+  lastMonth: 'last30',
+  lastQuarter: 'last90',
+  lastHalf: 'last180',
+  lastYear: 'last365',
+};
+
+const PERIODOS_VALIDOS: ComparePeriod[] = ['today', 'last7', 'last30', 'last90', 'last180', 'last365'];
+
+export function periodoGuardado(valor: string | null | undefined): ComparePeriod {
+  if (!valor) return 'today';
+  if (PERIODOS_VALIDOS.includes(valor as ComparePeriod)) return valor as ComparePeriod;
+  return PERIODOS_VIEJOS[valor] ?? 'today';
+}
+
 export async function getSettings(): Promise<AppSettings> {
   const defaultSettings: AppSettings = {
     emailProvider: 'gmail',
@@ -25,7 +54,7 @@ export async function getSettings(): Promise<AppSettings> {
     dailyGoalWhatsApp: 50,
     dailyGoalEmail: 20,
     dailyGoalCalls: 10,
-    dashboardComparePeriod: 'lastWeek',
+    dashboardComparePeriod: 'today',
     whatsappClientPreference: 'web',
     hideUnnamedLeads: false,
     dailySendTaskEnabled: true,
@@ -55,7 +84,7 @@ export async function getSettings(): Promise<AppSettings> {
         dailyGoalWhatsApp: data.daily_goal_whatsapp ?? defaultSettings.dailyGoalWhatsApp,
         dailyGoalEmail: data.daily_goal_email ?? defaultSettings.dailyGoalEmail,
         dailyGoalCalls: data.daily_goal_calls ?? defaultSettings.dailyGoalCalls,
-        dashboardComparePeriod: data.dashboard_compare_period ?? defaultSettings.dashboardComparePeriod,
+        dashboardComparePeriod: periodoGuardado(data.dashboard_compare_period),
         whatsappClientPreference: data.whatsapp_client_preference ?? defaultSettings.whatsappClientPreference,
         hideUnnamedLeads: data.hide_unnamed_leads ?? defaultSettings.hideUnnamedLeads,
         dailySendTaskEnabled: data.daily_send_task_enabled ?? defaultSettings.dailySendTaskEnabled,

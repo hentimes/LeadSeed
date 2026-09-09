@@ -29,6 +29,20 @@ export interface DashboardSnapshot {
     stageDurations: { nuevoAContactado: number | null; contactadoACierre: number | null };
   };
   sendSummary: {
+    /**
+     * Envios de HOY, siempre, sin importar la ventana elegida.
+     *
+     * Alimenta las metas diarias, que no se escalan: el tope de WhatsApp es un
+     * tope POR DIA, y multiplicarlo por los dias de la ventana lo convertiria
+     * en una cuota que se puede gastar entera el primer dia.
+     */
+    hoy: {
+      whatsapp: number;
+      email: number;
+      call: number;
+      total: number;
+    };
+    /** Envios de la ventana. Conserva el nombre por compatibilidad. */
     today: {
       whatsapp: number;
       email: number;
@@ -77,6 +91,12 @@ function withDefaults(row: DashboardSnapshotRow): DashboardSnapshot {
       stageDurations: row.leadSummary?.stageDurations ?? { nuevoAContactado: null, contactadoACierre: null },
     },
     sendSummary: {
+      hoy: {
+        whatsapp: row.sendSummary?.hoy?.whatsapp ?? 0,
+        email: row.sendSummary?.hoy?.email ?? 0,
+        call: row.sendSummary?.hoy?.call ?? 0,
+        total: row.sendSummary?.hoy?.total ?? 0,
+      },
       today: {
         whatsapp: row.sendSummary?.today?.whatsapp ?? 0,
         email: row.sendSummary?.today?.email ?? 0,

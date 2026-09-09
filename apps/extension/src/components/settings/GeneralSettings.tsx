@@ -48,7 +48,7 @@ export default function GeneralSettings({
   const [waGoal, setWaGoal] = useState(30);
   const [emailGoal, setEmailGoal] = useState(20);
   const [callGoal, setCallGoal] = useState(5);
-  const [comparePeriod, setComparePeriod] = useState<ComparePeriod>('yesterday');
+  const [comparePeriod, setComparePeriod] = useState<ComparePeriod>('today');
   const [tareaDiaria, setTareaDiaria] = useState(true);
 
   /*

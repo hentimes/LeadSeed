@@ -198,7 +198,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
               <OverviewTab 
                 snapshot={snapshot} 
                 settings={settings} 
-                compareLabel={compareLabel} 
+                compareLabel={compareLabel}
+                periodo={settings.dashboardComparePeriod} 
                 onNavigate={onNavigate} 
               />
             )}

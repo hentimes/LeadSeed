@@ -9,6 +9,8 @@ import { chartColors } from '../../design/palette';
 import { Card } from '../../design';
 import { CardTitle } from '../../design';
 import { calcularTendencia } from '../../components/dashboard/trend';
+import { nombreDePeriodo } from '../../components/dashboard/comparePeriod';
+import type { ComparePeriod } from '../../types';
 
 /** Como se llama cada origen en pantalla. */
 const ETIQUETAS_ORIGEN: Record<string, string> = {
@@ -32,24 +34,40 @@ interface OverviewTabProps {
   snapshot: DashboardSnapshot;
   settings: AppSettings;
   compareLabel: string;
+  /** La ventana elegida, para nombrarla en los titulos. */
+  periodo: ComparePeriod;
   onNavigate?: (page: Page) => void;
 }
 
-export default function OverviewTab({ snapshot, settings, compareLabel, onNavigate }: OverviewTabProps) {
+export default function OverviewTab({ snapshot, settings, compareLabel, periodo, onNavigate }: OverviewTabProps) {
   const { leadSummary, sendSummary, taskSummary } = snapshot;
 
-  const waToday = sendSummary.today.whatsapp;
-  const emailToday = sendSummary.today.email;
-  const callToday = sendSummary.today.call;
+  /*
+   * Las metas leen `hoy`, no la ventana.
+   *
+   * El tope de WhatsApp es un tope POR DIA: con "ultimos 7 dias" elegido,
+   * escalar la meta a 350 permitiria mandarlos todos el lunes y salir "dentro
+   * de la meta" mientras te bloquean la cuenta. Esta tarjeta se queda en hoy
+   * siempre, y su titulo lo dice.
+   */
+  const waToday = sendSummary.hoy.whatsapp;
+  const emailToday = sendSummary.hoy.email;
+  const callToday = sendSummary.hoy.call;
 
   /**
    * Los anillos de metas pasaban `waToday - compare` con un `%` pegado detras,
    * asi que cinco mensajes mas que ayer se mostraban como "5%". Ahora es el
    * mismo calculo que el resto del panel.
    */
-  const waTrend = calcularTendencia(waToday, sendSummary.compare.whatsapp, compareLabel);
-  const emailTrend = calcularTendencia(emailToday, sendSummary.compare.email, compareLabel);
-  const callTrend = calcularTendencia(callToday, sendSummary.compare.call, compareLabel);
+  /*
+   * Sin tendencia en los anillos.
+   *
+   * La comparacion que trae el snapshot es la de la VENTANA, y estos numeros
+   * son de hoy: comparar los envios de hoy contra los de los treinta dias
+   * anteriores daria un "-97%" que no significa nada. Comparar hoy contra ayer
+   * pediria un tercer conjunto de cifras en el RPC para una flecha en una
+   * tarjeta que ya dice "2 / 50" -que es la informacion que importa aqui-.
+   */
 
   const totalLeads = leadSummary.total;
   const contacted = leadSummary.contacted;
@@ -136,7 +154,6 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             current={waToday}
             target={settings.dailyGoalWhatsApp}
             unit="Mensajes"
-            trend={waTrend}
             color={chartColors.primaryLight}
             tooltipText={`${waToday} de ${settings.dailyGoalWhatsApp} mensajes enviados hoy.`}
           />
@@ -147,7 +164,6 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             current={emailToday}
             target={settings.dailyGoalEmail}
             unit="Correos"
-            trend={emailTrend}
             color={chartColors.primary}
             tooltipText={`${emailToday} de ${settings.dailyGoalEmail} correos enviados hoy.`}
           />
@@ -158,7 +174,6 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
             current={callToday}
             target={settings.dailyGoalCalls}
             unit="Llamadas"
-            trend={callTrend}
             color={chartColors.primaryLight}
             tooltipText={`${callToday} de ${settings.dailyGoalCalls} llamadas registradas.`}
             className="hidden panel-lg:flex"
@@ -177,7 +192,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
       {/* Rendimiento hoy */}
       <Card className="mt-1">
         <div className="card-header">
-          <CardTitle as="h2">Rendimiento hoy</CardTitle>
+          <CardTitle as="h2">Rendimiento · {nombreDePeriodo(periodo)}</CardTitle>
         </div>
         
         {/*

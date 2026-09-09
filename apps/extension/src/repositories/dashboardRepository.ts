@@ -19,6 +19,14 @@ export interface DashboardSnapshotRow {
     stageDurations?: { nuevoAContactado: number | null; contactadoACierre: number | null };
   };
   sendSummary?: {
+    /** Envios de HOY, siempre, sin importar la ventana. Alimenta las metas diarias. */
+    hoy?: {
+      whatsapp?: number;
+      email?: number;
+      call?: number;
+      total?: number;
+    };
+    /** Envios de la ventana elegida. Conserva el nombre `today` por compatibilidad. */
     today?: {
       whatsapp?: number;
       email?: number;
@@ -43,9 +51,11 @@ export interface DashboardSnapshotRow {
   };
 }
 
-export async function fetchDashboardSnapshotRow(comparePeriod: ComparePeriod): Promise<DashboardSnapshotRow> {
+export async function fetchDashboardSnapshotRow(periodo: ComparePeriod): Promise<DashboardSnapshotRow> {
   const { data, error } = await supabase.rpc('get_my_dashboard_snapshot', {
-    p_compare_period: comparePeriod,
+    // `p_period` desde la 177: antes era `p_compare_period` y significaba
+    // "contra que dia comparar"; ahora es la ventana que se muestra.
+    p_period: periodo,
     /*
      * El dia lo corta el servidor, y lo cortaba en UTC: a las 20:00 de Chile
      * alli ya era el dia siguiente, asi que el contador de "hoy" se vaciaba

@@ -1,22 +1,16 @@
 export type ExportFormat = 'json' | 'excel';
 
 /**
- * Contra que se compara el panel.
+ * Que periodo muestra el panel.
  *
- * Ojo con lo que significa, porque no es obvio: la comparacion es contra el
- * MISMO DIA de hace N dias, no contra el acumulado del periodo. El panel dice
- * cuantos leads entraron hoy y cuantos entraron ese dia.
+ * Antes esto era "contra que se compara", y por eso el selector no hacia casi
+ * nada: movia tres campos de comparacion y dejaba el resto de la pantalla
+ * -total, conversion, embudo, fuentes- como acumulados de siempre.
  *
- * `lastQuarter` y `lastHalf` se añaden en la migracion 175: el mes se queda
- * corto y el año se queda largo para mirar un negocio comercial.
+ * Ahora es una VENTANA: el panel muestra las cifras de ese periodo y las
+ * compara contra el periodo anterior del mismo tamaño. Ver migracion 177.
  */
-export type ComparePeriod =
-  | 'yesterday'
-  | 'lastWeek'
-  | 'lastMonth'
-  | 'lastQuarter'
-  | 'lastHalf'
-  | 'lastYear';
+export type ComparePeriod = 'today' | 'last7' | 'last30' | 'last90' | 'last180' | 'last365';
 
 export type EmailProvider = 'emailjs' | 'resend' | 'gmail';
 
