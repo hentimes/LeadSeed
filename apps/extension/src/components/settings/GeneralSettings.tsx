@@ -49,6 +49,7 @@ export default function GeneralSettings({
   const [emailGoal, setEmailGoal] = useState(20);
   const [callGoal, setCallGoal] = useState(5);
   const [comparePeriod, setComparePeriod] = useState<ComparePeriod>('yesterday');
+  const [tareaDiaria, setTareaDiaria] = useState(true);
 
   /*
    * El TOPE es otra cosa que la META, aunque se editen cerca.
@@ -70,13 +71,16 @@ export default function GeneralSettings({
       if (s.dailyGoalEmail !== undefined) setEmailGoal(s.dailyGoalEmail);
       if (s.dailyGoalCalls !== undefined) setCallGoal(s.dailyGoalCalls);
       if (s.dashboardComparePeriod) setComparePeriod(s.dashboardComparePeriod);
+      setTareaDiaria(s.dailySendTaskEnabled);
     });
     return () => {
       activo = false;
     };
   }, []);
 
-  const guardarMetas = async (patch: Record<string, number | ComparePeriod>, campo: string) => {
+  // `boolean` desde que existe el interruptor de la tarea diaria; antes solo
+  // se guardaban numeros y el periodo de comparacion.
+  const guardarMetas = async (patch: Record<string, number | boolean | ComparePeriod>, campo: string) => {
     await patchSettings(patch);
     acusar(campo);
   };
@@ -198,6 +202,25 @@ export default function GeneralSettings({
                     className="w-[72px] text-right"
                   />
                   <span className="text-meta text-ink-muted">/día</span>
+                </div>
+              }
+            />
+
+            <SettingRow
+              label="Tarea diaria de envíos"
+              hint="Crea sola una tarea cada día con lo que toca enviar"
+              control={
+                <div className="flex items-center gap-2">
+                  {visto('tareaDiaria')}
+                  <Switch
+                    label="Crear la tarea diaria de envíos"
+                    checked={tareaDiaria}
+                    onChange={(evento) => {
+                      const activa = evento.target.checked;
+                      setTareaDiaria(activa);
+                      void guardarMetas({ dailySendTaskEnabled: activa }, 'tareaDiaria');
+                    }}
+                  />
                 </div>
               }
             />

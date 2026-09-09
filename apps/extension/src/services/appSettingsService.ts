@@ -28,6 +28,7 @@ export async function getSettings(): Promise<AppSettings> {
     dashboardComparePeriod: 'lastWeek',
     whatsappClientPreference: 'web',
     hideUnnamedLeads: false,
+    dailySendTaskEnabled: true,
     activeSmartLists: ['smart_nuevos', 'smart_sin_gestion', 'smart_eliminados'],
     listGroups: [],
   };
@@ -57,6 +58,7 @@ export async function getSettings(): Promise<AppSettings> {
         dashboardComparePeriod: data.dashboard_compare_period ?? defaultSettings.dashboardComparePeriod,
         whatsappClientPreference: data.whatsapp_client_preference ?? defaultSettings.whatsappClientPreference,
         hideUnnamedLeads: data.hide_unnamed_leads ?? defaultSettings.hideUnnamedLeads,
+        dailySendTaskEnabled: data.daily_send_task_enabled ?? defaultSettings.dailySendTaskEnabled,
         activeSmartLists: data.active_smart_lists ?? defaultSettings.activeSmartLists,
         listGroups: data.list_groups ?? defaultSettings.listGroups,
       };
@@ -87,6 +89,7 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
         dashboard_compare_period: settings.dashboardComparePeriod,
         whatsapp_client_preference: settings.whatsappClientPreference,
         hide_unnamed_leads: settings.hideUnnamedLeads,
+        daily_send_task_enabled: settings.dailySendTaskEnabled,
         active_smart_lists: settings.activeSmartLists,
         list_groups: settings.listGroups,
       });

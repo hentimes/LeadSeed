@@ -89,6 +89,14 @@ export interface AppSettings {
    * cambiar de seccion y a cerrar el panel. Ver migracion 116.
    */
   hideUnnamedLeads: boolean;
+  /**
+   * Si cada dia aparece sola una tarea "Enviar mensajes de hoy".
+   *
+   * Es una idea distinta del tope diario, y por eso es un ajuste aparte: el
+   * tope dice cuantos mensajes es prudente mandar, esto dice si quieres que te
+   * lo recuerden. Quien manda sin tope puede querer el recordatorio igual.
+   */
+  dailySendTaskEnabled: boolean;
 
   // Agrupación y Smart Lists
   activeSmartLists?: string[];

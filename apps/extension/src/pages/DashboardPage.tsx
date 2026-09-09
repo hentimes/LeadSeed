@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getSettings, saveSettings } from '../services/appSettingsService';
+import { asegurarTareaDiariaDeEnvios } from '../services/dailySendTaskService';
 import { fetchDashboardSnapshot, type DashboardSnapshot } from '../services/dashboardService';
 import type { AppSettings, ComparePeriod, Page } from '../types';
 import { Select } from '../design';
@@ -53,6 +54,19 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
 
         const nextSnapshot = await fetchDashboardSnapshot(nextSettings.dashboardComparePeriod);
         if (!cancelled) setSnapshot(nextSnapshot);
+
+        /*
+         * LA TAREA DIARIA DE ENVIOS, SI TOCA.
+         *
+         * Va DESPUES de pintar el panel y sin `await` que lo bloquee: es un
+         * efecto lateral util, no algo que el usuario este esperando. Si falla,
+         * el panel se ve igual.
+         *
+         * La comprobacion de "ya se creo hoy" no esta aqui sino dentro del RPC,
+         * con la fila del perfil bloqueada: dos ventanas abiertas a la vez
+         * llegarian las dos, y hacerlo aqui crearia dos tareas.
+         */
+        void asegurarTareaDiariaDeEnvios();
       } catch (error) {
         if (!cancelled) setFallo(describeError(error));
       }
