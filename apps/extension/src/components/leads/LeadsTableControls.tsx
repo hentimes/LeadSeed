@@ -147,7 +147,7 @@ export default function LeadsTableControls({
             <span className="shrink-0">Filtrar por:</span>
 
             <select value={filterType} onChange={(e) => setFilterType(e.target.value as TipoDeFiltro)}
-              className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0">
+              className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0">
               <option value="listas">Listas</option>
               <option value="estados">Estados</option>
               <option value="fechas">Fechas</option>
@@ -157,14 +157,14 @@ export default function LeadsTableControls({
 
             {filterType === 'listas' && (
               <select value={filterListId ?? ''} onChange={(e) => onFilterChange(e.target.value ? Number(e.target.value) : null)}
-                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0 max-w-[150px] truncate">
                 <option value="">Todas</option>
                 {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
             )}
             {filterType === 'estados' && (
               <select value={filterStatus ?? ''} onChange={(e) => onFilterStatusChange(e.target.value ? e.target.value as LeadStatus : null)}
-                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0 max-w-[150px] truncate">
                 <option value="">Todos</option>
                 {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
                   <option key={s} value={s}>{STATUS_LABELS[s]}</option>
@@ -173,7 +173,7 @@ export default function LeadsTableControls({
             )}
             {filterType === 'fechas' && (
               <select value={filterDate} onChange={(e) => onFilterDateChange(e.target.value)}
-                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0 max-w-[150px] truncate">
                 <option value="">Todas</option>
                 <option value="7d">Última semana</option>
                 <option value="30d">Último mes</option>
@@ -183,7 +183,7 @@ export default function LeadsTableControls({
             {filterType === 'origen' && (
               <>
                 <select value={filterOrigin ?? ''} onChange={(e) => onFilterOriginChange(e.target.value ? e.target.value as LeadOrigin : null)}
-                  className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                  className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0 max-w-[150px] truncate">
                   <option value="">Todos</option>
                   {(Object.keys(ORIGIN_LABELS) as LeadOrigin[]).map((o) => (
                     <option key={o} value={o}>{ORIGIN_LABELS[o]}</option>
@@ -191,7 +191,7 @@ export default function LeadsTableControls({
                 </select>
                 {filterOrigin === 'web_form' && (
                   <select value={filterCaptureLinkId ?? ''} onChange={(e) => onFilterCaptureLinkIdChange(e.target.value ? Number(e.target.value) : null)}
-                    className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[170px] truncate">
+                    className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0 max-w-[170px] truncate">
                     <option value="">Cualquier link</option>
                     {captureLinks.map((link) => (
                       <option key={link.id} value={link.id}>
@@ -205,7 +205,7 @@ export default function LeadsTableControls({
             )}
             {filterType === 'canal' && (
               <select value={filterSourceChannel ?? ''} onChange={(e) => onFilterSourceChannelChange(e.target.value ? e.target.value as LeadSourceChannel : null)}
-                className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0 max-w-[150px] truncate">
+                className="bg-transparent outline-none cursor-pointer hover:text-ink transition-colors focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm shrink-0 max-w-[150px] truncate">
                 <option value="">Todos</option>
                 {(Object.keys(SOURCE_CHANNEL_LABELS) as LeadSourceChannel[]).map((c) => (
                   <option key={c} value={c}>{SOURCE_CHANNEL_LABELS[c]}</option>
@@ -213,9 +213,12 @@ export default function LeadsTableControls({
               </select>
             )}
 
+            {/* h-6 y no h-5: 24px es el minimo de objetivo tactil que
+                `ToggleIconButton` ya documenta y respeta. */}
             {activeFiltersCount > 0 && (
-              <button onClick={clearAllFilters}
-                      className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-state-danger-soft text-state-danger-ink transition-colors hover:bg-state-danger hover:text-white"
+              <button type="button" onClick={clearAllFilters}
+                      className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-state-danger-soft text-state-danger-ink transition-colors hover:bg-state-danger hover:text-white focus-visible:ring-2 focus-visible:ring-focus"
+                      aria-label="Limpiar filtros"
                       title="Limpiar filtros">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>

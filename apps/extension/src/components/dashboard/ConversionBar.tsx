@@ -71,7 +71,7 @@ export default function ConversionBar({
         
         {onPeriodChange && (
           <select 
-            className="text-[13px] border border-surface-muted rounded-[8px] px-3 py-1.5 text-ink font-medium bg-surface-muted outline-none hover:bg-surface-hover transition-all cursor-pointer"
+            className="text-[13px] border border-surface-muted rounded-[8px] px-3 py-1.5 text-ink font-medium bg-surface-muted outline-none hover:bg-surface-hover transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm"
             onChange={onPeriodChange}
             value={periodLabel.toLowerCase()}
           >

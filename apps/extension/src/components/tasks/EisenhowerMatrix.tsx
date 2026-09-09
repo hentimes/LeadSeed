@@ -132,7 +132,7 @@ export function EisenhowerMatrix({
             aria-expanded={reglaVisible}
             title="Cómo se reparten las tareas"
             aria-label="Cómo se reparten las tareas"
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line text-micro text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink [&_svg]:h-2.5 [&_svg]:w-2.5"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line text-micro text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink [&_svg]:h-2.5 [&_svg]:w-2.5"
           >
             <Icon.Help />
           </button>

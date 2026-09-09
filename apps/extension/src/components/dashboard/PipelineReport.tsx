@@ -155,7 +155,7 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-[15px] font-bold text-ink">Adquisición mensual</h3>
           <select 
-            className="text-[12px] border border-line rounded-[6px] px-2 py-1 text-ink bg-surface cursor-pointer hover:border-primary outline-none"
+            className="text-[12px] border border-line rounded-[6px] px-2 py-1 text-ink bg-surface cursor-pointer hover:border-primary outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:rounded-sm"
             value={chartType}
             onChange={(e) => setChartType(e.target.value as ChartVisualType)}
           >

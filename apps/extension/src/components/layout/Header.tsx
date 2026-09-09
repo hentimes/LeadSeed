@@ -56,9 +56,26 @@ export default function Header({ onToggleUserMenu, currentPage, onOpenHelp }: Pr
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {pageTitle ? (
-            <span className="truncate text-section-title font-semibold text-ink tracking-tight">
+            /*
+             * `h1` Y NO `span`: ES EL UNICO TITULO DE LA PAGINA.
+             *
+             * Ninguna pantalla emitia un encabezado. Quien navega saltando por
+             * encabezados -la tecla H de un lector de pantalla, el rotor de
+             * VoiceOver- no encontraba punto de entrada a ninguna de las
+             * catorce paginas y tenia que recorrer el arbol entero cada vez.
+             *
+             * La correccion aparente era rellenar el `PAGE_HEADER` de
+             * `AppPageRenderer`, que existe y esta vacio. Es la equivocada: se
+             * vacio A PROPOSITO porque duplicaba este mismo titulo y costaba
+             * 44px de alto en una columna donde solo caben tres plantillas.
+             * Rellenarlo devolveria el problema que se resolvio.
+             *
+             * Lo correcto es que el titulo que YA se ve sea el encabezado. No
+             * cambia un pixel.
+             */
+            <h1 className="truncate text-section-title font-semibold text-ink tracking-tight">
               {pageTitle}
-            </span>
+            </h1>
           ) : (
             <>
               <div className="text-primary w-6 h-6 flex items-center justify-center">

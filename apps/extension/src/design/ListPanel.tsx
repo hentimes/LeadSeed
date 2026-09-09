@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { propsDeClicable } from './clicable';
 
 /**
  * La caja de una lista, y el aspecto de sus filas.
@@ -322,20 +323,9 @@ export function ListRow({
   className = '',
   ...resto
 }: ListRowProps) {
-  const esClicable = Etiqueta === 'div' && typeof resto.onClick === 'function';
-
-  const accesible = esClicable
-    ? {
-        role: 'button',
-        tabIndex: 0,
-        onKeyDown: (evento: React.KeyboardEvent<HTMLElement>) => {
-          if (evento.key !== 'Enter' && evento.key !== ' ') return;
-          // La barra espaciadora scrollea la pagina si no se corta aqui.
-          evento.preventDefault();
-          resto.onClick?.();
-        },
-      }
-    : {};
+  // Solo las filas que son `div`: si ya es un `button` o un `a`, el navegador
+  // pone el teclado y el rol por su cuenta.
+  const accesible = Etiqueta === 'div' ? propsDeClicable(resto.onClick) : {};
 
   return (
     <Etiqueta

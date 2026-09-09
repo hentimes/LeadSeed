@@ -1,4 +1,5 @@
 import { Icon } from '../../utils/icons';
+import { propsDeClicable } from '../../design/clicable';
 
 interface FunnelRowProps {
   id: string;
@@ -37,8 +38,9 @@ export default function FunnelRow({
 
   return (
     <div 
-      className="group flex flex-col cursor-pointer transition-colors hover:bg-[#F8F7FF] -mx-2 px-2 rounded-[8px]"
+      className="group flex flex-col cursor-pointer transition-colors hover:bg-surface-muted -mx-2 px-2 rounded-[8px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       onClick={onClick}
+      {...propsDeClicable(onClick)}
     >
       <div className="flex items-center h-[46px]">
         {/* Icono y Label */}

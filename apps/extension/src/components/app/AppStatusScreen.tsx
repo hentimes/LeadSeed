@@ -16,13 +16,13 @@ const toneClasses = {
   },
   neutral: {
     wrapper: 'bg-slate-50 dark:bg-slate-900 flex items-center justify-center',
-    title: 'text-slate-700 dark:text-slate-200',
-    description: 'text-slate-400 dark:text-slate-500',
+    title: 'text-ink',
+    description: 'text-ink-secondary',
   },
   warning: {
     wrapper: 'flex h-full items-center justify-center',
-    title: 'text-slate-700 dark:text-slate-200',
-    description: 'text-slate-400 dark:text-slate-500',
+    title: 'text-ink',
+    description: 'text-ink-secondary',
   },
 } as const;
 

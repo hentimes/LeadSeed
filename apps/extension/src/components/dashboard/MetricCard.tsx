@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Trend } from './trend';
+import { propsDeClicable } from '../../design/clicable';
 
 /** Sin cambios no es ni bueno ni malo: no debe pintarse de verde. */
 const COLOR_TENDENCIA: Record<Trend['direction'], string> = {
@@ -39,8 +40,9 @@ export default function MetricCard({
      */
     <div
       onClick={onClick}
+      {...propsDeClicable(onClick)}
       className={`flex-1 min-w-0 flex items-start justify-center panel-md:justify-start gap-2 panel-md:gap-3 px-1 panel-md:px-2 py-2 transition-all duration-300 ${
-        onClick ? 'cursor-pointer group' : ''
+        onClick ? 'cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus rounded-md' : ''
       } ${className}`}
     >
       <div className={`w-8 h-8 panel-sm:w-[40px] panel-sm:h-[40px] flex items-center justify-center shrink-0 ${iconColor} ${onClick ? 'group-hover:scale-105 transition-transform' : ''}`}>

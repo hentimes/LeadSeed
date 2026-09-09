@@ -1,6 +1,7 @@
 import { Icon } from '../../utils/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell } from '@fortawesome/free-solid-svg-icons';
+import { propsDeClicable } from '../../design/clicable';
 
 interface AlertCardProps {
   title: string;
@@ -53,8 +54,9 @@ export default function AlertCard({
   return (
     <div 
       onClick={onClick}
+      {...propsDeClicable(onClick)}
       className={`border rounded-[6px] py-2 px-4 flex justify-between items-center transition-all duration-300 group ${colors.bg} ${colors.border} ${
-        onClick ? 'cursor-pointer' : ''
+        onClick ? 'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus' : ''
       }`}
     >
       <div className="flex items-center gap-4">
