@@ -159,7 +159,9 @@ export default function GoalRingCard({
       {/* Contenido principal */}
       <div className="flex items-center gap-1.5 panel-md:gap-2 w-full min-w-0">
         {/* Gráfica Animada Custom */}
-        <div className="relative group/tooltip shrink-0 cursor-pointer" title={tooltipText}>
+        {/* Sin `cursor-pointer`: la mano anunciaba un clic que no existe, lo
+            unico que hay aqui es el texto de ayuda del `title`. */}
+        <div className="relative group/tooltip shrink-0" title={tooltipText}>
           <AnimatedDonut
             percent={percent}
             color={color}

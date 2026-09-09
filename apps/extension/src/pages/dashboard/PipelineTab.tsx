@@ -113,11 +113,24 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="card-header">
           <CardTitle as="h2">Embudo de ventas</CardTitle>
           
-          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none">
-            <option>Hoy</option>
-            <option>Últimos 7 días</option>
-            <option>Últimos 30 días</option>
-          </select>
+          {/*
+            AQUI HABIA UN SELECTOR DE PERIODO QUE NO FILTRABA NADA.
+
+            Sin `value` ni `onChange`: se veia vivo, cambiaba de opcion, y los
+            datos de debajo no se movian.
+
+            Se RETIRA en vez de cablearse, porque con lo que hay no se puede
+            cablear. El snapshot que alimenta esta pantalla trae acumulados sin
+            dimension temporal (`statusCounts`, `taskSummary`) y una ventana
+            FIJA de seis meses (`monthlyCounts`, migracion 146). No existe el
+            dato por el que el selector decia filtrar.
+
+            Para que vuelva hay que anadir el periodo como parametro del RPC
+            `get_my_dashboard_snapshot` y recargar al cambiarlo. Eso es una
+            funcionalidad nueva con su migracion, no un arreglo de este
+            fichero; hasta entonces, un control que no hace nada es peor que su
+            ausencia.
+          */}
         </div>
 
         <div className="flex">
@@ -177,10 +190,24 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="card-header">
           <CardTitle as="h2">Adquisición mensual</CardTitle>
           
-          <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none">
-            <option>Últimos 6 meses</option>
-            <option>Este año</option>
-          </select>
+          {/*
+            AQUI HABIA UN SELECTOR DE PERIODO QUE NO FILTRABA NADA.
+
+            Sin `value` ni `onChange`: se veia vivo, cambiaba de opcion, y los
+            datos de debajo no se movian.
+
+            Se RETIRA en vez de cablearse, porque con lo que hay no se puede
+            cablear. El snapshot que alimenta esta pantalla trae acumulados sin
+            dimension temporal (`statusCounts`, `taskSummary`) y una ventana
+            FIJA de seis meses (`monthlyCounts`, migracion 146). No existe el
+            dato por el que el selector decia filtrar.
+
+            Para que vuelva hay que anadir el periodo como parametro del RPC
+            `get_my_dashboard_snapshot` y recargar al cambiarlo. Eso es una
+            funcionalidad nueva con su migracion, no un arreglo de este
+            fichero; hasta entonces, un control que no hace nada es peor que su
+            ausencia.
+          */}
         </div>
 
         <div className="flex gap-4 mt-4">

@@ -129,11 +129,24 @@ export default function TasksTab({ snapshot, onNavigate }: TasksTabProps) {
            {/* Title & Dropdown */}
            <div className="flex items-center justify-between mb-4">
              <h3 className="text-[15px] font-medium text-ink">Eficiencia histórica</h3>
-             <select className="text-[12px] border border-line rounded-[6px] px-3 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none">
-               <option value="30d">Últimos 30 días</option>
-               <option value="7d">Últimos 7 días</option>
-               <option value="90d">Últimos 90 días</option>
-             </select>
+             {/*
+            AQUI HABIA UN SELECTOR DE PERIODO QUE NO FILTRABA NADA.
+
+            Sin `value` ni `onChange`: se veia vivo, cambiaba de opcion, y los
+            datos de debajo no se movian.
+
+            Se RETIRA en vez de cablearse, porque con lo que hay no se puede
+            cablear. El snapshot que alimenta esta pantalla trae acumulados sin
+            dimension temporal (`statusCounts`, `taskSummary`) y una ventana
+            FIJA de seis meses (`monthlyCounts`, migracion 146). No existe el
+            dato por el que el selector decia filtrar.
+
+            Para que vuelva hay que anadir el periodo como parametro del RPC
+            `get_my_dashboard_snapshot` y recargar al cambiarlo. Eso es una
+            funcionalidad nueva con su migracion, no un arreglo de este
+            fichero; hasta entonces, un control que no hace nada es peor que su
+            ausencia.
+          */}
            </div>
 
            {/* Large Percentage */}

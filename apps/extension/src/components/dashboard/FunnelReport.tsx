@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { DashboardSnapshot } from '../../services/dashboardService';
 import { Icon } from '../../utils/icons';
 
@@ -16,7 +15,6 @@ interface FunnelReportProps {
 
 export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
   const { leadSummary } = snapshot;
-  const [period, setPeriod] = useState('Hoy');
 
   // Helper to extract data from snapshot if needed
   const getCount = (key: string) => {
@@ -66,16 +64,18 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
           <h1 className="text-section-title font-semibold text-ink tracking-tight">Reporte completo del embudo</h1>
         </div>
         
-        <select 
-          className="text-[11px] border border-line rounded-[6px] px-2 py-1 text-ink bg-surface cursor-pointer hover:border-primary transition-colors outline-none"
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-        >
-          <option>Hoy</option>
-          <option>Últimos 7 días</option>
-          <option>Últimos 30 días</option>
-          <option>Este año</option>
-        </select>
+        {/*
+          AQUI HABIA UN SELECTOR DE PERIODO PEOR QUE LOS OTROS TRES.
+
+          Este SI estaba conectado a un estado -`value` y `onChange`-, lo que
+          lo hacia parecer correcto al leerlo por encima. Pero `period` no se
+          leia en ningun otro sitio del fichero: guardaba la eleccion y no la
+          usaba para nada. Cambiar la opcion no recalculaba ni la tasa de
+          conversion, ni la de perdida, ni ninguno de los cuatro graficos.
+
+          Se retira por el mismo motivo que los de la pestana Pipeline: el dato
+          por el que decia filtrar no existe en el snapshot. Ver la nota alli.
+        */}
       </div>
 
       {/* 1. KPIs */}
@@ -167,11 +167,24 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
       {/* 2. Gráfico Avanzado de Embudo y Razones de Pérdida */}
       <div className="grid grid-cols-3 gap-3">
         
+        {/*
+          LOS CUATRO INTERROGANTES DE ESTA REJILLA NO EXPLICABAN NADA.
+
+          Eran un `div` con un icono dentro: sin `title`, sin `onClick`, sin
+          nombre accesible. Prometian una explicacion que no existia en ninguna
+          forma, en una pantalla donde varios de los graficos necesitan que te
+          digan que estas mirando.
+
+          Ahora cada uno lleva la explicacion que prometia, y como `role="img"`
+          con `aria-label` para que tambien la reciba quien no ve el icono.
+        */}
         {/* Drop-off Analysis */}
         <Card className="col-span-2 flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
             <h3 className="text-card-title font-medium text-ink">Análisis de Fugas (Drop-offs)</h3>
-            <div className="text-ink-muted"><Icon.Help /></div>
+            <span className="text-ink-muted" role="img" title="En qué punto del embudo dejan de avanzar los leads. Cuanto más se estrecha un tramo, más se pierde ahí." aria-label="En qué punto del embudo dejan de avanzar los leads. Cuanto más se estrecha un tramo, más se pierde ahí.">
+              <Icon.Help />
+            </span>
           </div>
           <div className="flex-1 flex items-center justify-center min-h-[140px] max-w-[400px] w-full mx-auto">
             <AdvancedFunnelChart snapshot={snapshot} />
@@ -182,7 +195,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-card-title font-medium text-ink">Razones de descarte</h3>
-            <div className="text-ink-muted"><Icon.Help /></div>
+            <span className="text-ink-muted" role="img" title="El motivo que registraste al marcar un lead como descartado." aria-label="El motivo que registraste al marcar un lead como descartado.">
+              <Icon.Help />
+            </span>
           </div>
           <div className="flex-1 min-h-[140px]">
             <LossReasonsChart data={leadSummary.lossReasons} />
@@ -197,7 +212,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
             <h3 className="text-card-title font-medium text-ink">Tiempo promedio por etapa</h3>
-            <div className="text-ink-muted"><Icon.Help /></div>
+            <span className="text-ink-muted" role="img" title="Cuántos días pasa un lead en cada etapa antes de avanzar." aria-label="Cuántos días pasa un lead en cada etapa antes de avanzar.">
+              <Icon.Help />
+            </span>
           </div>
           <div className="flex-1">
             <TimeInStageChart data={leadSummary.stageDurations} />
@@ -208,7 +225,9 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         <Card className="flex flex-col overflow-hidden">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-card-title font-medium text-ink">Calidad de Leads por Fuente</h3>
-            <div className="text-ink-muted"><Icon.Help /></div>
+            <span className="text-ink-muted" role="img" title="Qué porcentaje de los leads de cada origen termina convertido." aria-label="Qué porcentaje de los leads de cada origen termina convertido.">
+              <Icon.Help />
+            </span>
           </div>
           <div className="flex-1 overflow-auto">
             <QualityMatrix data={leadSummary.originQuality} />

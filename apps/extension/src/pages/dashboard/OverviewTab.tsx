@@ -240,6 +240,17 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
           Con el rail de navegacion ocupando 48px, tres columnas mas dos
           separaciones de 16 dejaban 74px por tarjeta: no cabe ni el titulo. */}
       <div className="grid grid-cols-2 gap-2 mt-2 panel-sm:grid-cols-3 panel-sm:gap-4">
+        {/*
+          LOS TRES PIES DE ESTAS TARJETAS NO HACIAN NADA.
+
+          "Ver todas", "Ver detalle" y "Ver todos": color de enlace, flecha, y
+          ningun `onClick`. Lo llamativo es que el destino ya existia -este
+          componente recibe `onNavigate` y lo usa mas arriba en las tarjetas de
+          metricas-, asi que no faltaba nada por construir: faltaba cablearlos.
+
+          De paso, el separador usaba `border-[#F0F2F5]`, un gris escrito a
+          mano que no cambia con el tema. Pasa a `border-line`.
+        */}
         {/* Fuentes principales */}
         <div className="bg-surface border border-line rounded-[6px] p-2 flex flex-col justify-between">
           <div>
@@ -266,7 +277,12 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
               ))}
             </div>
           </div>
-          <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
+          {/* Las fuentes son de donde vienen los leads, asi que el detalle esta en Leads. */}
+          <button
+            type="button"
+            onClick={() => onNavigate?.('leads')}
+            className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-line hover:underline transition-colors leading-none"
+          >
             Ver todas
             <Icon.ArrowRight />
           </button>
@@ -300,7 +316,12 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
               <span className="text-[12px] font-bold text-ink">{tasaGlobal}%</span>
             </div>
           </div>
-          <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
+          {/* La conversion por etapa es el embudo, y el embudo vive en Pipeline. */}
+          <button
+            type="button"
+            onClick={() => onNavigate?.('pipeline')}
+            className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-line hover:underline transition-colors leading-none"
+          >
             Ver detalle
             <Icon.ArrowRight />
           </button>
@@ -329,7 +350,12 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
               </li>
             </ul>
           </div>
-          <button className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-[#F0F2F5] hover:text-primary transition-colors leading-none">
+          {/* Los hallazgos apuntan a leads concretos. */}
+          <button
+            type="button"
+            onClick={() => onNavigate?.('leads')}
+            className="text-[10px] font-semibold text-primary flex items-center justify-between w-full mt-2 pt-2 border-t border-line hover:underline transition-colors leading-none"
+          >
             Ver todos
             <Icon.ArrowRight />
           </button>

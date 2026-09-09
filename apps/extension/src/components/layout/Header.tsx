@@ -5,6 +5,13 @@ import type { Page } from '../../types';
 interface Props {
   onToggleUserMenu: () => void;
   currentPage: Page;
+  /**
+   * Abre la ayuda. El boton llevaba `aria-label="Ayuda"` y ningun manejador,
+   * permanentemente a la vista en las catorce pantallas, junto a un avatar que
+   * si funciona. El comentario de al lado -"Notificaciones / Ayuda
+   * (Opcional)"- delataba que habia quedado a medias.
+   */
+  onOpenHelp: () => void;
 }
 
 /*
@@ -40,7 +47,7 @@ const PAGE_TITLES: Record<Page, string> = {
   chat: 'Chats Activos',
 };
 
-export default function Header({ onToggleUserMenu, currentPage }: Props) {
+export default function Header({ onToggleUserMenu, currentPage, onOpenHelp }: Props) {
   const { user, profile } = useAuth();
   const pageTitle = PAGE_TITLES[currentPage];
 
@@ -64,8 +71,13 @@ export default function Header({ onToggleUserMenu, currentPage }: Props) {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Notificaciones / Ayuda (Opcional) */}
-        <button type="button" aria-label="Ayuda" className="p-2 text-ink-muted hover:text-ink-secondary transition-colors">
+        <button
+          type="button"
+          aria-label="Ayuda"
+          title="Ayuda"
+          onClick={onOpenHelp}
+          className="p-2 text-ink-muted hover:text-ink-secondary transition-colors"
+        >
           <Icon.Help />
         </button>
 

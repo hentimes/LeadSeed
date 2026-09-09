@@ -14,7 +14,6 @@ import TasksTab from './dashboard/TasksTab';
 import DashboardTabs, { type DashboardTab } from './dashboard/DashboardTabs';
 import PipelineReport from '../components/dashboard/PipelineReport';
 import FunnelReport from '../components/dashboard/FunnelReport';
-import { Button } from '../design';
 import { formatearFechaLarga } from '../utils/date';
 
 export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page) => void }) {
@@ -96,15 +95,20 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
       <div className="flex w-full mb-3 border-b border-line justify-between items-end pb-1">
         <DashboardTabs activeTab={activeTab} onSelect={(tab) => { setActiveTab(tab); setReportType(null); }} />
         
-        {/* Date Picker (Mock) */}
-        <div className="shrink-0 pb-2">
-          <Button
-            size="sm"
-            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>}
-          >
-            <span className="hidden panel-md:inline">Hoy, {formatearFechaLarga(new Date())}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-secondary ml-1"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </Button>
+        {/*
+          ERA UN BOTON, Y EL COMENTARIO LO LLAMABA "(Mock)".
+
+          Icono de calendario, chevron de desplegable, sin `onClick`: prometia
+          un selector de rango que no existe.
+
+          La FECHA si aporta -dice de cuando son los numeros que estas
+          mirando-, asi que el dato se conserva y lo que se quita es la
+          promesa: deja de ser un boton y deja de llevar el chevron. Cuando
+          exista el selector de rango de verdad, vuelve a ser un boton.
+        */}
+        <div className="flex shrink-0 items-center gap-1.5 pb-2 text-meta text-ink-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span className="hidden panel-md:inline">Hoy, {formatearFechaLarga(new Date())}</span>
         </div>
       </div>
 

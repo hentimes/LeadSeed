@@ -6,7 +6,15 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onOpenProfile: () => void;
-  onNavigateSettings: () => void;
+  /**
+   * Lleva a Configuracion, a la seccion que diga el hash.
+   *
+   * Recibe el destino porque tres entradas de este menu -"Cuenta y plan",
+   * "Apariencia" y "Ayuda"- no iban a ningun sitio: eran botones con icono,
+   * texto y resaltado al pasar el raton, sin `onClick`. La mitad del menu no
+   * respondia, al lado de la otra mitad que si.
+   */
+  onNavigateSettings: (hash: string) => void;
 }
 
 export default function UserMenu({ isOpen, onClose, onOpenProfile, onNavigateSettings }: Props) {
@@ -38,13 +46,17 @@ export default function UserMenu({ isOpen, onClose, onOpenProfile, onNavigateSet
           </button>
           
           <button 
+            onClick={() => { onNavigateSettings('#cuenta'); onClose(); }}
             className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-ink dark:text-slate-200 hover:bg-surface-muted transition-colors"
           >
             <span className="text-ink-muted w-4 h-4 flex justify-center items-center"><Icon.Crown /></span>
             Cuenta y plan
           </button>
           
+          {/* Lleva a la pestana General, que es donde vive el grupo "Apariencia"
+              con el interruptor de tema oscuro. */}
           <button 
+            onClick={() => { onNavigateSettings('#display'); onClose(); }}
             className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-ink dark:text-slate-200 hover:bg-surface-muted transition-colors"
           >
             <span className="text-ink-muted w-4 h-4 flex justify-center items-center">
@@ -54,14 +66,17 @@ export default function UserMenu({ isOpen, onClose, onOpenProfile, onNavigateSet
           </button>
 
           <button 
-            onClick={() => { onNavigateSettings(); onClose(); }}
+            onClick={() => { onNavigateSettings('#display'); onClose(); }}
             className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-ink dark:text-slate-200 hover:bg-surface-muted transition-colors"
           >
             <span className="text-ink-muted w-4 h-4 flex justify-center items-center"><Icon.Settings /></span>
             Configuración
           </button>
 
+          {/* `#support` abre el bloque de ayuda dentro de Cuenta, que es donde
+              se levanta un requerimiento. */}
           <button 
+            onClick={() => { onNavigateSettings('#support'); onClose(); }}
             className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-ink dark:text-slate-200 hover:bg-surface-muted transition-colors"
           >
             <span className="text-ink-muted w-4 h-4 flex justify-center items-center"><Icon.Help /></span>

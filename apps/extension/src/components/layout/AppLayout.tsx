@@ -36,6 +36,10 @@ export default function AppLayout({
       <Header
         onToggleUserMenu={() => setIsUserMenuOpen(prev => !prev)}
         currentPage={currentPage}
+        onOpenHelp={() => {
+          setLocationHash('#support');
+          onNavigate('settings');
+        }}
       />
 
       <NavigationRail
@@ -50,7 +54,13 @@ export default function AppLayout({
         isOpen={isUserMenuOpen}
         onClose={() => setIsUserMenuOpen(false)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
-        onNavigateSettings={() => onNavigate('settings')}
+        onNavigateSettings={(hash) => {
+          // El hash primero y la navegacion despues, igual que en
+          // `onEditAccount` de aqui abajo: asi Ajustes ya monta en la seccion
+          // pedida en vez de aterrizar en General y saltar.
+          setLocationHash(hash);
+          onNavigate('settings');
+        }}
       />
 
       {/*

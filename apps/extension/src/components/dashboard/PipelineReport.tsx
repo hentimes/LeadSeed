@@ -190,15 +190,22 @@ export default function PipelineReport({ snapshot, onClose }: PipelineReportProp
         </div>
       </div>
 
-      {/* Action footer */}
-      <div className="flex gap-3">
-        <button className="flex-1 py-2 bg-surface border border-primary rounded-[8px] text-primary font-medium text-[13px] hover:bg-primary-soft transition-colors flex items-center justify-center gap-2">
-          <Icon.Download /> Exportar PDF
-        </button>
-        <button className="flex-1 py-2 bg-primary border border-transparent rounded-[8px] text-white font-medium text-[13px] hover:bg-[#5249EC] transition-colors flex items-center justify-center gap-2">
-          <Icon.Share /> Compartir reporte
-        </button>
-      </div>
+      {/*
+        AQUI HABIA "EXPORTAR PDF" Y "COMPARTIR REPORTE".
+
+        Eran los dos controles con mas peso visual de la pantalla -uno con
+        borde primario, otro relleno a ancho completo, ambos con icono- y
+        ninguno tenia manejador.
+
+        Se retiran porque detras no hay nada que cablear. Exportar a PDF pide
+        una libreria de generacion y decidir el formato del documento;
+        compartir pide decidir a donde y con que permisos. Son dos
+        funcionalidades, no dos `onClick` que faltaban.
+
+        El proyecto SI sabe exportar (`utils/exportData.ts` guarda JSON y
+        Excel por el puerto `fileSaver`), asi que el dia que se retomen, ese es
+        el camino.
+      */}
       
     </div>
   );
