@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { porcentaje } from './porcentaje';
 
 interface ConversionBarProps {
   total: number;
@@ -22,10 +23,23 @@ export default function ConversionBar({
   const [greenWidth, setGreenWidth] = useState(0);
   const [displayContact, setDisplayContact] = useState(0);
   const [displayConversion, setDisplayConversion] = useState(0);
+  /*
+   * EL NUMERO QUE SE QUEDA AL FINAL NO ES EL QUE CUENTA LA ANIMACION.
+   *
+   * La animacion sube de cero a cien y baja al valor, y para eso necesita
+   * enteros. Pero el valor final con un convertido de 1936 es 0,05%, que como
+   * entero es CERO: la tarjeta decia "0% Convertidos" con un "1 convertidos"
+   * escrito justo debajo.
+   *
+   * Asi que la animacion se queda con sus enteros y el valor asentado se pinta
+   * con `porcentaje()`, el mismo criterio que el resto del panel.
+   */
+  const [animando, setAnimando] = useState(true);
 
   useEffect(() => {
     setBlueWidth(0);
     setGreenWidth(0);
+    setAnimando(true);
 
     const t1 = setTimeout(() => setBlueWidth(100), 400); // Blue starts filling
     const t2 = setTimeout(() => setGreenWidth(100), 700); // Green starts filling after a delay
@@ -58,6 +72,7 @@ export default function ConversionBar({
       }
 
       if (elapsed <= 2400) rafId = requestAnimationFrame(animate);
+      else setAnimando(false);
     };
     rafId = requestAnimationFrame(animate);
 
@@ -85,7 +100,9 @@ export default function ConversionBar({
 
       <div className="flex items-center justify-between mt-1 gap-4">
         <div className="flex flex-col items-center min-w-[70px]">
-          <span className="text-[24px] font-medium text-primary leading-none tracking-tight">{displayContact}%</span>
+          <span className="text-[24px] font-medium text-primary leading-none tracking-tight">
+            {animando ? displayContact : porcentaje(contacted, total)}%
+          </span>
           <span className="text-[12px] font-medium text-ink-secondary mt-1.5">Contactados</span>
         </div>
         
@@ -107,7 +124,9 @@ export default function ConversionBar({
         </div>
 
         <div className="flex flex-col items-center min-w-[70px]">
-          <span className="text-[24px] font-medium text-state-success leading-none tracking-tight">{displayConversion}%</span>
+          <span className="text-[24px] font-medium text-state-success leading-none tracking-tight">
+            {animando ? displayConversion : porcentaje(converted, total)}%
+          </span>
           <span className="text-[12px] font-medium text-ink-secondary mt-1.5">Convertidos</span>
         </div>
       </div>

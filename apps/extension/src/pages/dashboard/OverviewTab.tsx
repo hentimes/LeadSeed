@@ -97,11 +97,22 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
       {/* Progreso de metas */}
       <Card>
+        {/*
+          AQUI HABIA UNA ETIQUETA CON EL PERIODO ("vs ayer").
+
+          Se quita porque lo dice el desplegable de la cabecera, que ademas es
+          donde se cambia. Repetirlo en cada tarjeta era decir tres veces lo
+          mismo en la misma pantalla, y ocupaba el hueco de la derecha del
+          titulo en un panel de 500px.
+
+          Es la segunda poda del mismo dato: primero estuvo pegado a CADA
+          metrica dentro de `MetricCard` -~145px por tarjeta, sacaba la fila
+          del panel-, luego paso aqui, y ahora vive solo en la cabecera. Por
+          eso la cabecera se quedo pegada al desplazar: ya no hay una segunda
+          copia que rescate el contexto cuando esta se va de la vista.
+        */}
         <div className="card-header">
           <CardTitle as="h2">Progreso de metas (hoy)</CardTitle>
-          <div className="text-[11px] font-medium text-ink-secondary bg-surface-muted px-3 py-1 rounded-[6px]">
-            {compareLabel}
-          </div>
         </div>
 
         {/*
@@ -165,12 +176,8 @@ export default function OverviewTab({ snapshot, settings, compareLabel, onNaviga
 
       {/* Rendimiento hoy */}
       <Card className="mt-1">
-        {/* El periodo se declara aqui, no dentro de cada metrica. Ver MetricCard. */}
         <div className="card-header">
           <CardTitle as="h2">Rendimiento hoy</CardTitle>
-          <div className="text-[11px] font-medium text-ink-secondary bg-surface-muted px-3 py-1 rounded-[6px] whitespace-nowrap">
-            {compareLabel}
-          </div>
         </div>
         
         {/*

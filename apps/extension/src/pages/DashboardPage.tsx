@@ -17,7 +17,6 @@ import TasksTab from './dashboard/TasksTab';
 import DashboardTabs, { type DashboardTab } from './dashboard/DashboardTabs';
 import PipelineReport from '../components/dashboard/PipelineReport';
 import FunnelReport from '../components/dashboard/FunnelReport';
-import { formatearFechaLarga } from '../utils/date';
 
 export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page) => void }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -124,34 +123,54 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
   return (
     <div className="flex w-full flex-col">
       
-      {/* Navegación de Tabs Sticky y Date Picker */}
-      <div className="flex w-full mb-3 border-b border-line justify-between items-end pb-1">
+      {/*
+        LA CABECERA SE QUEDA PEGADA AL DESPLAZAR.
+
+        No es un adorno: es la consecuencia de haber quitado la etiqueta del
+        periodo de cada tarjeta. Antes cada una repetia "vs ayer" pegado al
+        dato, que era redundante pero sobrevivia al scroll. Ahora el periodo se
+        declara UNA vez, aqui, asi que si esta fila se fuera con el scroll las
+        flechas de las tarjetas de mas abajo se quedarian sin decir contra que
+        se comparan.
+
+        El fondo es opaco a proposito: sin el, el contenido se ve por debajo al
+        pasar.
+      */}
+      <div className="sticky top-0 z-10 flex w-full items-end justify-between border-b border-line bg-surface-muted pb-1 mb-3">
         <DashboardTabs activeTab={activeTab} onSelect={(tab) => { setActiveTab(tab); setReportType(null); }} />
-        
+
         {/*
-          AQUI HABIA UN BOTON DE CALENDARIO QUE NO HACIA NADA.
+          AQUI HUBO UN BOTON DE CALENDARIO QUE NO HACIA NADA, Y DESPUES LA
+          FECHA DE HOY AL LADO DE ESTE DESPLEGABLE.
 
-          El comentario del codigo lo llamaba "(Mock)": icono, chevron de
-          desplegable y ningun manejador.
+          Las dos sobraban. La fecha de hoy no es informacion -esto no es un
+          calendario, y el panel siempre muestra hoy-, y ocupaba la mitad de la
+          fila para decirlo.
 
-          Ahora es el selector de comparacion, que es lo que la fecha sugeria
-          sin serlo. No es un filtro de rango -el panel siempre muestra HOY-,
-          es contra que se mide ese hoy, y por eso el rotulo dice "Hoy" y el
-          desplegable dice "contra que".
+          Queda solo el control, con un "vs" delante. Ese "vs" hace que el
+          desplegable se lea como una frase completa -"vs Semana pasada"-, que
+          es exactamente lo que decian las etiquetas que se quitaron de las
+          tarjetas, dicho una sola vez y en el sitio donde ademas se cambia.
 
-          El control ya existia, enterrado en Ajustes. Se queda alli tambien:
-          es la misma preferencia y se guarda en el mismo sitio.
+          Se oculta por debajo de `panel-sm` (408px), donde las pestañas ya
+          caen a solo icono y cada pixel cuenta. No se pierde nada para quien
+          usa lector de pantalla: eso lo cubre el `aria-label`, no este texto.
         */}
-        <div className="flex shrink-0 items-center gap-2 pb-1.5">
-          <span className="hidden items-center gap-1.5 text-meta text-ink-secondary panel-md:flex">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            Hoy, {formatearFechaLarga(new Date())}
+        <div className="flex shrink-0 items-center gap-1.5 pb-1.5">
+          <span className="hidden text-micro font-medium text-ink-secondary panel-sm:inline" aria-hidden="true">
+            vs
           </span>
           <Select
             compact
             fullWidth={false}
-            aria-label="Comparar contra"
-            title="Contra qué período se comparan los números de hoy"
+            /*
+             * La frase entera y no "Comparar contra": un lector de pantalla
+             * anuncia esto seguido del valor y del rol, y asi se entiende de
+             * una vez que gobierna TODA la pagina y que la referencia es hoy.
+             * Sin `title` ademas: duplicarlo es la misma redundancia que se
+             * acaba de quitar, movida al arbol de accesibilidad.
+             */
+            aria-label="Contra qué período se comparan los números de hoy"
             value={settings.dashboardComparePeriod}
             onChange={(evento) => void cambiarPeriodo(evento.target.value as ComparePeriod)}
             className="w-[140px]"
