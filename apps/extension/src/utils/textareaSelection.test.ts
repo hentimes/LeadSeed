@@ -85,8 +85,8 @@ describe('insertBlockLine', () => {
 
 describe('insertLink', () => {
   it('usa el texto seleccionado como etiqueta', () => {
-    const r = insertLink('mirá la guía', 5, 12, 'https://leadseed.cl');
-    expect(r.text).toBe('mirá [la guía](https://leadseed.cl)');
+    const r = insertLink('mira la guía', 5, 12, 'https://leadseed.cl');
+    expect(r.text).toBe('mira [la guía](https://leadseed.cl)');
   });
 
   it('sin seleccion usa la direccion como etiqueta', () => {

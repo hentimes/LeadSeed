@@ -31,7 +31,7 @@ export type ChatReactionKind = (typeof CHAT_REACTIONS)[number];
  * Reacciones de un mensaje, ya agregadas por tipo.
  *
  * Llega agregado y no como la lista cruda de filas a proposito: lo unico que
- * necesita la interfaz es cuantos hay de cada uno y si reaccionaste vos. Traer
+ * necesita la interfaz es cuantos hay de cada uno y si reaccionaste tú. Traer
  * una fila por persona haria que un mensaje con doscientos pulgares pesara
  * doscientas filas en la respuesta para pintar un "200".
  */

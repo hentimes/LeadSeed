@@ -105,7 +105,7 @@ export default function FormTypeLinksSection({ formType }: Props) {
             <EmptyState
               icon={<Icon.Lists />}
               title="Sin links todavía"
-              description={`Creá el primero para medir visitas y cierre de ${formType.displayName}.`}
+              description={`Crea el primero para medir visitas y cierre de ${formType.displayName}.`}
             />
           </div>
         ) : (

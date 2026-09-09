@@ -136,7 +136,7 @@ export function RecipientListPicker({
         className="min-w-[92px] shrink-0 justify-center font-semibold"
         title={
           listaVista === null
-            ? 'Elegí una lista para agregarla entera al envío'
+            ? 'Elige una lista para agregarla entera al envío'
             : yaAgregada
               ? `Quitar del envío los ${enLaVista} de ${listaVista.name}`
               : `Agregar al envío los ${enLaVista} de ${listaVista.name}`

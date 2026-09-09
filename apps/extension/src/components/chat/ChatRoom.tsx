@@ -228,7 +228,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
       // Antes este error solo quedaba en consola: el usuario veia el boton
       // "no hacer nada" sin ninguna pista de que el envio habia fallado.
       setSendError(
-        getErrorMessage(err, 'No se pudo enviar el mensaje. Intentá de nuevo.')
+        getErrorMessage(err, 'No se pudo enviar el mensaje. Intenta de nuevo.')
       );
     }
   };
@@ -358,7 +358,7 @@ export default function ChatRoom({ roomId, onMentionClick }: ChatRoomProps) {
 
     if (isAnnouncementDraft) {
       if (!stripAnnouncementTrigger(draft)) {
-        setSendError('Escribí el contenido del anuncio además de "@todos".');
+        setSendError('Escribe el contenido del anuncio además de "@todos".');
         return;
       }
       // Un anuncio le llega a todos, esten o no conectados: se confirma antes

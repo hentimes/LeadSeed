@@ -25,7 +25,7 @@ export default function SavedMessagesPanel({ messages, onUnsave }: SavedMessages
           <EmptyState
             icon={<ChatIcon.Bookmark />}
             title="Todavía no guardaste nada"
-            description="Usá el marcador de un mensaje para guardarlo acá."
+            description="Usa el marcador de un mensaje para guardarlo aquí."
           />
         ) : (
           messages.map((message) => (

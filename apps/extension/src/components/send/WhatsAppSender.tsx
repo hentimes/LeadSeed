@@ -282,9 +282,9 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   const etiquetaAccion =
     razonPendiente === 'plantilla'
-      ? 'Elegí una plantilla'
+      ? 'Elige una plantilla'
       : razonPendiente === 'destinatarios'
-        ? 'Elegí destinatarios'
+        ? 'Elige destinatarios'
         : `Abrir WhatsApp para ${recipients.length} lead${recipients.length === 1 ? '' : 's'}`;
 
   /*
@@ -382,7 +382,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
               hint={
                 cola.activa
                   ? undefined
-                  : 'Solo cambia el ejemplo que se ve acá. Los destinatarios se eligen abajo.'
+                  : 'Solo cambia el ejemplo que se ve aquí. Los destinatarios se eligen abajo.'
               }
               action={
                 <Select
@@ -413,7 +413,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
                 </div>
                 {!previewLead && (
                   <p className="mt-1.5 text-center text-micro text-ink-secondary">
-                    Con datos de ejemplo. Elegí un destinatario para ver el suyo.
+                    Con datos de ejemplo. Elige un destinatario para ver el suyo.
                   </p>
                 )}
               </div>
@@ -421,7 +421,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
           </div>
         </SendStep>
       ) : (
-        <SendRequisito title="Mensaje" requisito="Elegí una plantilla para escribir el mensaje." />
+        <SendRequisito title="Mensaje" requisito="Elige una plantilla para escribir el mensaje." />
       )}
 
       <RecipientSummaryRow
@@ -465,7 +465,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
               ? clienteWhatsApp === 'app'
                 ? 'Se abrirá la app de escritorio de WhatsApp para completar el envío.'
                 : 'Se abrirá WhatsApp Web para completar el envío.'
-              : `Se abrirá el chat del primero. Los otros ${recipients.length - 1} van de a uno, avanzando desde acá.`
+              : `Se abrirá el chat del primero. Los otros ${recipients.length - 1} van de a uno, avanzando desde aquí.`
           }
           confirmLabel={recipients.length === 1 ? 'Abrir WhatsApp' : 'Empezar por el primero'}
           onCancel={() => setShowConfirmModal(false)}
@@ -495,7 +495,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
                 >
                   {cupo.usados} de {cupo.tope} enviados
                   {cupo.usados + recipients.length > cupo.tope
-                    ? ` · con estos ${recipients.length} te pasás del tope`
+                    ? ` · con estos ${recipients.length} te pasas del tope`
                     : ''}
                 </span>
               ),

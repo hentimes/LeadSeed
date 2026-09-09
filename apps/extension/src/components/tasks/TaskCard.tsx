@@ -22,7 +22,7 @@ interface TaskCardProps {
  * La ficha medía unos 95px: relleno de 12, titulo con su pastilla, descripcion
  * en su propia linea, la fecha entera en otra ("Venció: 21-08-2026, 11:59 p.
  * m.") y los chips de lead en una cuarta. Cuatro filas apiladas para una tarea
- * de la que casi siempre solo mirás el titulo y si esta vencida.
+ * de la que casi siempre solo miras el titulo y si esta vencida.
  *
  * Ahora son tres lineas y unos 58px. La fecha se abrevia -el ano y los segundos
  * no informan nada en una lista de tareas de esta semana- y los chips comparten

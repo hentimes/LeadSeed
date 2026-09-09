@@ -24,7 +24,7 @@ export default function ConfirmAnnouncementModal({
 
         <p className="text-body text-ink-muted">
           Este mensaje le va a llegar a <strong>todos los usuarios</strong>, estén o no conectados
-          ahora. ¿Confirmás el envío?
+          ahora. ¿Confirmas el envío?
         </p>
 
         <div className="rounded-xl bg-surface-sunken px-3 py-2 text-body text-ink break-words whitespace-pre-wrap">

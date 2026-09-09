@@ -82,7 +82,7 @@ export default function OpcionesAnswer({
   if (opciones.length === 0) {
     return (
       <p className="mt-1.5 text-micro text-ink-muted">
-        Todavía no hay nada que elegir: marcá opciones en los puntos anteriores primero.
+        Todavía no hay nada que elegir: marca opciones en los puntos anteriores primero.
       </p>
     );
   }

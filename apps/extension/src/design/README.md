@@ -1,6 +1,6 @@
 # Sistema de diseño de LeadSeed
 
-Todo el aspecto visual de la extensión sale de acá. La regla es una sola:
+Todo el aspecto visual de la extensión sale de aquí. La regla es una sola:
 
 > **Ningún componente escribe un color, radio o tamaño literal.**
 > Se usa el token, siempre.
@@ -63,7 +63,7 @@ que aparecían recortados y anclados a la lista en vez de al panel.
 
 `Modal` se monta con `createPortal` en `document.body`. Al quedar fuera del
 árbol de la app, ninguna clase que se agregue después a los contenedores puede
-volver a romperlo. **No armes overlays con `fixed inset-0` a mano: usá `Modal`.**
+volver a romperlo. **No armes overlays con `fixed inset-0` a mano: usa `Modal`.**
 
 ## Excepciones legítimas a la regla
 
@@ -81,4 +81,4 @@ Solo tres, y están documentadas en el código:
 1. ¿Existe ya una primitiva? Úsala.
 2. ¿Le falta una variante? Agrégala **a la primitiva**, no resuelvas con
    clases sueltas en el consumidor.
-3. ¿Necesitás un color que no existe? Agregá el token primero.
+3. ¿Necesitas un color que no existe? Agrega el token primero.

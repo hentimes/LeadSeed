@@ -11,7 +11,7 @@
 -- leer datos de otros usuarios (nombre, avatar, marco premium, quien es admin).
 -- Por eso se separa en dos superficies:
 --
---   profiles         -> solo la propia fila, o cualquiera si sos admin.
+--   profiles         -> solo la propia fila, o cualquiera si eres admin.
 --   profiles_public  -> vista con los campos no sensibles, para todos.
 --
 -- La vista NO lleva security_invoker, asi que se evalua con los permisos de su

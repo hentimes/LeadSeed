@@ -94,7 +94,7 @@ export default function ChatMessageList({
     >
       {visibleMessages.length === 0 && (
         <p className="mt-10 text-center text-meta text-ink-muted">
-          Todavía no hay mensajes. Empezá vos la conversación.
+          Todavía no hay mensajes. Empieza tú la conversación.
         </p>
       )}
 

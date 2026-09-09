@@ -113,7 +113,7 @@ export default function TemplatesPage({ highlightTemplate, onNavigate }: Props =
     e.preventDefault();
     const text = normalizeReasonText(reasonText);
     if (text === null) {
-      setReasonError(`Escribí un motivo de hasta ${MAX_REASON_LENGTH} caracteres.`);
+      setReasonError(`Escribe un motivo de hasta ${MAX_REASON_LENGTH} caracteres.`);
       return;
     }
     if (isDuplicateReason(text, reasons)) {
@@ -134,7 +134,7 @@ export default function TemplatesPage({ highlightTemplate, onNavigate }: Props =
 
   /*
    * `cargando` arranca en true. Antes no existia: mientras la red respondia,
-   * `templates` era `[]` y la pantalla afirmaba "todavia no tenes plantillas",
+   * `templates` era `[]` y la pantalla afirmaba "todavia no tienes plantillas",
    * con su boton de crear. Un fallo de red se veia exactamente igual que una
    * cuenta nueva, y quien lo leia creia que habia perdido su trabajo.
    */
@@ -240,11 +240,11 @@ export default function TemplatesPage({ highlightTemplate, onNavigate }: Props =
     }
     const flujos = await fetchFlowsUsingTemplate(String(id));
     if (flujos.length === 0) {
-      return 'La usa un flujo o un recorrido en curso. Sacala de ahí y volvé a intentarlo.';
+      return 'La usa un flujo o un recorrido en curso. Sácala de ahí y vuelve a intentarlo.';
     }
     return `La usa ${flujos.length === 1 ? 'el flujo' : 'los flujos'} ${flujos
       .map((nombre) => `«${nombre}»`)
-      .join(', ')}. Quitá ese paso del flujo y volvé a intentarlo.`;
+      .join(', ')}. Quita ese paso del flujo y vuelve a intentarlo.`;
   };
 
   const borrarPlantilla = async (id: string | number): Promise<void> => {
@@ -507,7 +507,7 @@ export default function TemplatesPage({ highlightTemplate, onNavigate }: Props =
       ) : fallo ? (
         <LoadError
           title={`No pudimos cargar tus ${plural}`}
-          description="Revisá la conexión y volvé a intentar."
+          description="Revisa la conexión y vuelve a intentar."
           onRetry={() => void load()}
         />
       ) : buscadas.length === 0 ? (
@@ -515,12 +515,12 @@ export default function TemplatesPage({ highlightTemplate, onNavigate }: Props =
           title={
             busqueda.trim()
               ? `Ningún resultado para "${busqueda.trim()}"`
-              : `Todavía no tenés ${plural} de ${canalLabel}`
+              : `Todavía no tienes ${plural} de ${canalLabel}`
           }
           description={
             busqueda.trim()
               ? undefined
-              : `Un${tab === 'call' ? ' guion' : 'a plantilla'} es un mensaje con huecos: escribís {nombre} y al enviar se completa con el de cada lead.`
+              : `Un${tab === 'call' ? ' guion' : 'a plantilla'} es un mensaje con huecos: escribes {nombre} y al enviar se completa con el de cada lead.`
           }
         />
       ) : (

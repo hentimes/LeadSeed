@@ -668,7 +668,7 @@ export function FlowEnrollPanel({ flujo, onInscribir, onInscribirTodos, onVolver
                   onClick={() => inscribir(lead, empiezaEn - 1, base)}
                   title={
                     bloqueadoPor
-                      ? `Ya está en «${bloqueadoPor.flowName}», que es del mismo canal. Sacalo de ahí para poder inscribirlo acá.`
+                      ? `Ya está en «${bloqueadoPor.flowName}», que es del mismo canal. Sacalo de ahí para poder inscribirlo aquí.`
                       : empiezaEn > pasos.length
                         ? 'Todos los pasos quedan como hechos y la inscripción se cierra: no se le manda nada.'
                         : `Los pasos anteriores al ${empiezaEn} quedan como hechos. El paso ${empiezaEn} queda pendiente para el ${FECHA_CORTA.format(vence)}.`

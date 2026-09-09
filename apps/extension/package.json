@@ -1,7 +1,7 @@
 {
   "name": "@leadseed/extension",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Extension de Chrome de LeadSeed. Vive en el panel lateral.",
   "scripts": {

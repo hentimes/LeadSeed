@@ -214,7 +214,7 @@ export default function PostDetail({
 
           {tree.length === 0 ? (
             <p className="text-meta text-ink-muted">
-              Todavía no hay comentarios. Empezá vos la conversación.
+              Todavía no hay comentarios. Empieza tú la conversación.
             </p>
           ) : (
             <ul className="space-y-3">
@@ -249,7 +249,7 @@ export default function PostDetail({
             onChange={(e) => setDraft(e.target.value)}
             maxLength={COMMENT_MAX}
             rows={2}
-            placeholder="Escribí un comentario…"
+            placeholder="Escribe un comentario…"
             aria-label="Comentario"
             className="flex-1 resize-none rounded-xl border border-line bg-surface px-3 py-2 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-focus"
           />

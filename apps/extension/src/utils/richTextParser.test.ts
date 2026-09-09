@@ -106,13 +106,13 @@ describe('parseBody', () => {
   });
 
   it('reconoce un enlace valido', () => {
-    const bloques = parseBody('mirá [la guía](https://leadseed.cl/guia) acá');
+    const bloques = parseBody('mira [la guía](https://leadseed.cl/guia) aquí');
     expect(bloques[0]).toEqual({
       type: 'paragraph',
       inline: [
-        { type: 'text', value: 'mirá ' },
+        { type: 'text', value: 'mira ' },
         { type: 'link', label: 'la guía', href: 'https://leadseed.cl/guia' },
-        { type: 'text', value: ' acá' },
+        { type: 'text', value: ' aquí' },
       ],
     });
   });
@@ -123,7 +123,7 @@ describe('parseBody', () => {
    * habia algo raro en vez de encontrar una etiqueta inocente que no hace nada.
    */
   it('degrada a texto un enlace con javascript:', () => {
-    const bloques = parseBody('[tocá acá](javascript:alert(1))');
+    const bloques = parseBody('[toca aquí](javascript:alert(1))');
     const inline = bloques[0]?.type === 'paragraph' ? bloques[0].inline : [];
     expect(inline.every((token) => token.type !== 'link')).toBe(true);
   });
@@ -161,7 +161,7 @@ describe('parseBody', () => {
   });
 
   it('toPlainBody no filtra la direccion de un enlace peligroso', () => {
-    const plano = toPlainBody('[tocá](javascript:alert(1))');
+    const plano = toPlainBody('[toca](javascript:alert(1))');
     expect(plano).not.toContain('<');
   });
 

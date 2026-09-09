@@ -52,7 +52,7 @@ export default function QuickTaskModal({
     try {
       const userId = (await getCurrentSession())?.user?.id;
       if (!userId) {
-        setError('No hay sesión activa. Volvé a entrar para crear la tarea.');
+        setError('No hay sesión activa. Vuelve a entrar para crear la tarea.');
         return;
       }
 

@@ -535,7 +535,7 @@ export function useLeadsPageController() {
 
   const handleImport = async (rows: ParsedRow[]) => {
     if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
-      await getPlatform().dialogs.alert('Actualizá tu plan para poder importar más leads.', {
+      await getPlatform().dialogs.alert('Actualiza tu plan para poder importar más leads.', {
         title: 'Llegaste al límite del plan Free',
       });
       return;
@@ -552,7 +552,7 @@ export function useLeadsPageController() {
 
   const handleNewLeadClick = async () => {
     if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
-      await getPlatform().dialogs.alert('Mejorá tu plan para tener leads ilimitados.', {
+      await getPlatform().dialogs.alert('Mejora tu plan para tener leads ilimitados.', {
         title: 'Llegaste al límite del plan Free',
       });
       return;

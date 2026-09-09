@@ -139,8 +139,8 @@ export function EisenhowerMatrix({
 
           {reglaVisible && (
             <p className="min-w-0 flex-1 text-micro text-ink-secondary">
-              Urgente = vencida o vence dentro de {DIAS_PARA_URGENTE} días. La importancia la marcás
-              vos al crear o editar la tarea.
+              Urgente = vencida o vence dentro de {DIAS_PARA_URGENTE} días. La importancia la marcas
+              tú al crear o editar la tarea.
             </p>
           )}
         </div>
@@ -168,7 +168,7 @@ export function EisenhowerMatrix({
 
             <div className="flex min-h-[104px] flex-col gap-1 px-2 pb-2">
               {cuadrante.tareas.length === 0 ? (
-                <p className="pt-5 text-center text-meta text-ink-secondary">Nada acá</p>
+                <p className="pt-5 text-center text-meta text-ink-secondary">Nada aquí</p>
               ) : (
                 <>
                   {cuadrante.tareas.slice(0, VISIBLES).map((task) => (

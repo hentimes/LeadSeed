@@ -264,6 +264,30 @@ export interface ProtectedFilePort {
   }): Promise<{ ok: true } | { ok: false; reason: string }>;
 }
 
+/**
+ * Cache SINCRONO de preferencias, para el primer fotograma.
+ *
+ * `StoragePort` ya guarda preferencias, pero es asincrono, y hay un caso que
+ * no cubre: el valor que hay que conocer ANTES de pintar. El filtro de "ocultar
+ * leads sin nombre" es asi -la hoja de destinatarios se abre de golpe con un
+ * toque, y leerlo en un efecto la hace parpadear de apagado a encendido-.
+ *
+ * No sustituye al ajuste de la cuenta: es su cache. La autoridad sigue siendo
+ * `AppSettings`, que llega despues y corrige lo que haya aqui.
+ *
+ * Que sea sincrono no lo ata al navegador: en la extension es `localStorage`,
+ * y en React Native es MMKV, que tambien lee sin esperar. Lo que no se puede
+ * es hacerlo con `AsyncStorage`, y por eso el puerto declara la sincronia como
+ * parte del contrato en vez de dejarla al azar de la implementacion.
+ *
+ * Solo para valores pequeños que se pueden perder sin consecuencia: si
+ * devuelve `null` la aplicacion tiene que funcionar igual.
+ */
+export interface PreferenceCachePort {
+  get(key: string): string | null;
+  set(key: string, value: string): void;
+}
+
 /** Conjunto completo de puertos que la capa de dominio puede pedir. */
 export interface Platform {
   dialogs: DialogsPort;
@@ -276,4 +300,5 @@ export interface Platform {
   fileSaver: FileSaverPort;
   scrollLock: ScrollLockPort;
   protectedFile: ProtectedFilePort;
+  preferenceCache: PreferenceCachePort;
 }

@@ -110,8 +110,8 @@ export function SectionHeader({
  *
  * Las paginas de Mensajes cargaban con `useState([])` y sin `catch`: mientras
  * la red respondia -o cuando fallaba- la lista estaba vacia y la pantalla
- * afirmaba "Todavia no tenes plantillas", con su boton de crear. Es la peor
- * variante del parpadeo: no dice "esperá", dice "no tenés nada", y quien lo lee
+ * afirmaba "Todavia no tienes plantillas", con su boton de crear. Es la peor
+ * variante del parpadeo: no dice "espera", dice "no tienes nada", y quien lo lee
  * cree que perdio su trabajo.
  *
  * Un fallo de red y una cuenta nueva no se pueden ver igual.

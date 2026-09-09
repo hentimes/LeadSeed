@@ -31,34 +31,37 @@
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { getSettings, saveSettings } from '../services/appSettingsService';
+import { getPlatform } from '../platform/registry';
 
 const CLAVE_CACHE = 'ls.leads.ocultarSinNombre';
 
+/*
+ * Va por `preferenceCache` y no por `localStorage` directo porque esta carpeta
+ * es capa de dominio: el linter le prohibe los globales del navegador, y con
+ * razon -la aplicacion movil no los tiene-. El puerto declara la lectura
+ * sincrona como parte del contrato, que es lo unico que aqui hace falta y lo
+ * que `StoragePort`, siendo asincrono, no puede dar.
+ */
 function leerCache(): boolean {
-  try {
-    return localStorage.getItem(CLAVE_CACHE) === '1';
-  } catch {
-    // Sin almacenamiento se empieza mostrandolo todo. Fallar hacia "ocultar"
-    // esconderia filas que nadie pidio esconder, y asi se pierden contactos de
-    // vista.
-    return false;
-  }
+  // Ausente se lee como "mostrarlo todo". Fallar hacia "ocultar" esconderia
+  // filas que nadie pidio esconder, y asi se pierden contactos de vista.
+  return getPlatform().preferenceCache.get(CLAVE_CACHE) === '1';
 }
 
 function escribirCache(valor: boolean): void {
-  try {
-    localStorage.setItem(CLAVE_CACHE, valor ? '1' : '0');
-  } catch {
-    // Sin almacenamiento el interruptor funciona igual, solo que la proxima
-    // apertura empieza por el valor del servidor y puede parpadear.
-  }
+  getPlatform().preferenceCache.set(CLAVE_CACHE, valor ? '1' : '0');
 }
 
 /* -------------------------------------------------------------------------
    Almacen de modulo. Es minimo a proposito: un valor, una lista de avisos.
    ------------------------------------------------------------------------- */
 
-let valorActual = leerCache();
+/*
+ * Perezoso a proposito: `leerCache()` pide la plataforma, y en tiempo de
+ * modulo puede no estar registrada todavia -en los tests desde luego que no-.
+ * Se resuelve en la primera lectura, que siempre ocurre dentro de un render.
+ */
+let valorActual: boolean | null = null;
 const suscriptores = new Set<() => void>();
 
 function suscribir(avisar: () => void): () => void {
@@ -69,18 +72,19 @@ function suscribir(avisar: () => void): () => void {
 }
 
 function leer(): boolean {
+  if (valorActual === null) valorActual = leerCache();
   return valorActual;
 }
 
 function fijar(valor: boolean): void {
-  if (valor === valorActual) return;
+  if (valor === leer()) return;
   valorActual = valor;
   suscriptores.forEach((avisar) => avisar());
 }
 
 /** Solo para los tests: devuelve el almacen a su estado inicial. */
 export function reiniciarOcultarSinNombreParaTests(): void {
-  valorActual = false;
+  valorActual = null;
   suscriptores.forEach((avisar) => avisar());
 }
 

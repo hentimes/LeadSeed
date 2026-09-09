@@ -167,9 +167,9 @@ export function FlowTodayList({
         title={esHoy ? 'Todavía no toca nada' : 'Hoy no toca nada'}
         description={
           !siguiente
-            ? 'No hay pasos programados. Inscribí gente en un flujo para que aparezcan acá el día que les toque.'
+            ? 'No hay pasos programados. Inscribe gente en un flujo para que aparezcan aquí el día que les toque.'
             : esHoy
-              ? `${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje vence' : 'mensajes vencen'} hoy más tarde: la espera del flujo cuenta también la hora del envío anterior. Van a aparecer acá solos.`
+              ? `${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje vence' : 'mensajes vencen'} hoy más tarde: la espera del flujo cuenta también la hora del envío anterior. Van a aparecer aquí solos.`
               : `Lo próximo son ${siguiente.cantidad} ${siguiente.cantidad === 1 ? 'mensaje' : 'mensajes'} el ${FECHA_CORTA.format(comoFechaLocal(siguiente.dia))}.${
                   enEspera > siguiente.cantidad ? ` En total hay ${enEspera} programados.` : ''
                 }`
@@ -295,7 +295,7 @@ export function FlowTodayList({
                 title={
                   sinCupo
                     ? `Ya van ${cupo.usados} de ${cupo.tope} mensajes hoy.`
-                    : `Abre los chats de a uno: mandás, volvés, y se abre el siguiente.`
+                    : `Abre los chats de a uno: mandas, vuelves, y se abre el siguiente.`
                 }
               >
                 {cabeza.channel === 'whatsapp' ? `Abrir ${entran}, de a uno` : `Enviar ${entran}`}
@@ -346,7 +346,7 @@ export function FlowTodayList({
                 className="min-w-[72px] shrink-0 justify-center"
                 title={
                   sinCupo
-                    ? `Ya van ${cupo.usados} de ${cupo.tope} mensajes hoy. Sigue mañana o subí el tope en Ajustes.`
+                    ? `Ya van ${cupo.usados} de ${cupo.tope} mensajes hoy. Sigue mañana o sube el tope en Ajustes.`
                     : ACCION[fila.channel]
                 }
               >

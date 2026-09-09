@@ -138,7 +138,7 @@ export default function ChatComposer({
 
       {isFreezeDraft && (
         <AvisoDeComando tone="accent" icon={<ChatIcon.Lock />}>
-          Al enviar, elegís por cuánto tiempo pausar la sala.
+          Al enviar, eliges por cuánto tiempo pausar la sala.
         </AvisoDeComando>
       )}
 
@@ -288,12 +288,12 @@ export default function ChatComposer({
               mentions.syncFromInput(target.value, target.selectionStart ?? target.value.length);
             }}
             onBlur={() => setTimeout(mentions.close, 150)}
-            placeholder="Escribí tu mensaje…"
+            placeholder="Escribe tu mensaje…"
             aria-label="Mensaje"
             title={
               isStaff
-                ? 'Usá @ para mencionar; escribí @todos al inicio para anunciar'
-                : 'Usá @ para mencionar'
+                ? 'Usa @ para mencionar; escribe @todos al inicio para anunciar'
+                : 'Usa @ para mencionar'
             }
             className="max-h-28 min-h-[36px] flex-1 resize-none border-none bg-transparent p-1.5 text-body leading-relaxed text-ink placeholder:text-ink-muted focus:outline-none focus:ring-0"
             rows={1}

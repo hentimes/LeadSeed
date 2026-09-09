@@ -182,7 +182,7 @@ export function TaskBoard({
             <div className="flex flex-col gap-1 px-1.5 pb-1.5">
               {suyas.length === 0 ? (
                 <p className="px-1 py-4 text-center text-micro text-ink-secondary">
-                  Soltá tareas acá
+                  Suelta tareas aquí
                 </p>
               ) : (
                 suyas.map((task) => (

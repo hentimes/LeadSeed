@@ -137,7 +137,7 @@ export default function PostComposer({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={POST_TITLE_MAX}
-            placeholder="¿De qué querés hablar?"
+            placeholder="¿De qué quieres hablar?"
             className={fieldClass}
             autoFocus
           />
@@ -169,7 +169,7 @@ export default function PostComposer({
                 onChange={(e) => setBody(e.target.value)}
                 maxLength={POST_BODY_MAX}
                 rows={8}
-                placeholder="Compartí tu experiencia, consulta o consejo…"
+                placeholder="Comparte tu experiencia, consulta o consejo…"
                 aria-label="Contenido de la publicación"
                 className={`${fieldClass} resize-none`}
               />
@@ -184,7 +184,7 @@ export default function PostComposer({
                 <PostBody body={body} />
               ) : (
                 <p className="text-meta italic text-ink-muted">
-                  Todavía no escribiste nada. Lo que escribas se va a ver acá con su formato.
+                  Todavía no escribiste nada. Lo que escribas se va a ver aquí con su formato.
                 </p>
               )}
             </div>

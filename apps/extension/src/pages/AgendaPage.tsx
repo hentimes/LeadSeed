@@ -232,7 +232,7 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
               el texto describia el estado anterior al boton que ya existe.
             */}
             <p className="mt-1 text-micro text-ink-secondary">
-              Agendá una desde acá y elegí el lead en el mismo paso.
+              Agenda una desde aquí y elige el lead en el mismo paso.
             </p>
             <Button
               size="sm"

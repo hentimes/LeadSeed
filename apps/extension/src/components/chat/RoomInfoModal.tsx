@@ -261,7 +261,7 @@ export default function RoomInfoModal({
                 <EmptyState
                   icon={<ChatIcon.Paperclip />}
                   title="Sin imágenes"
-                  description="Las que se compartan en la sala aparecen acá."
+                  description="Las que se compartan en la sala aparecen aquí."
                 />
               ) : (
                 <div className="grid grid-cols-4 gap-1.5">
@@ -293,7 +293,7 @@ export default function RoomInfoModal({
               <EmptyState
                 icon={<ChatIcon.Document />}
                 title="Sin archivos"
-                description="Los adjuntos de la sala aparecen acá."
+                description="Los adjuntos de la sala aparecen aquí."
               />
             ) : (
               <div className="space-y-1.5">
@@ -325,7 +325,7 @@ export default function RoomInfoModal({
               <EmptyState
                 icon={<ChatIcon.Star />}
                 title="Sin destacados"
-                description="Acá aparecen los mensajes que alguien marcó como importantes."
+                description="Aquí aparecen los mensajes que alguien marcó como importantes."
               />
             ) : (
               <HighlightedMessagesCarousel highlights={highlights} onRemove={onRemoveHighlight} />

@@ -62,7 +62,7 @@ export default function SendPage({ onNavigate }: { onNavigate: (page: Page) => v
    * Al sacar el Historial del rail esa comprobacion desaparecia con el, asi que
    * se repone aca. Se OCULTA en vez de pintarse bloqueado -al reves que las
    * pestanas de arriba-: un icono sin rotulo con un candado no dice que es lo
-   * que no tenes, seria un boton mudo.
+   * que no tienes, seria un boton mudo.
    *
    * `AppPageRenderer` vuelve a comprobarlo al pintar la pagina, asi que esto es
    * lo que evita ofrecer un destino que va a rebotar, no lo que lo protege.
@@ -147,7 +147,7 @@ export default function SendPage({ onNavigate }: { onNavigate: (page: Page) => v
       setCallListData(callL);
     } catch (error) {
       // Sin este `catch` la promesa se rechazaba sin manejar y la pantalla
-      // quedaba igual que una cuenta nueva: "todavia no tenes nada".
+      // quedaba igual que una cuenta nueva: "todavia no tienes nada".
       console.error('[send] no se pudieron cargar los catalogos', error);
       setFallo(true);
     } finally {
@@ -188,7 +188,7 @@ export default function SendPage({ onNavigate }: { onNavigate: (page: Page) => v
         ) : fallo ? (
           <LoadError
             title="No pudimos cargar tus plantillas"
-            description="Revisá la conexión y volvé a intentar."
+            description="Revisa la conexión y vuelve a intentar."
             onRetry={() => void load()}
           />
         ) : (

@@ -27,7 +27,7 @@ export default function ReportMessageMenu({ onSubmit, onClose, align = 'right' }
       <textarea
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        placeholder="¿Por qué lo reportás? (opcional)"
+        placeholder="¿Por qué lo reportas? (opcional)"
         aria-label="Motivo del reporte"
         rows={2}
         maxLength={REASON_MAX_LENGTH}

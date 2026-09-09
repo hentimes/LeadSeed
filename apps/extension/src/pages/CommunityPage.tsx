@@ -232,7 +232,7 @@ export default function CommunityPage({
           <EmptyState
             icon={<Icon.Messages />}
             title="Todavía no hay publicaciones"
-            description="Abrí vos la primera conversación."
+            description="Abre tú la primera conversación."
             action={
               <Button variant="primary" onClick={() => setIsComposerOpen(true)}>
                 Crear publicación

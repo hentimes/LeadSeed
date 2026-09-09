@@ -277,13 +277,13 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
   const cuenta = recipients.length;
   const plural = cuenta === 1 ? '' : 's';
   const etiquetaAccion = !selectedTemplate
-    ? 'Elegí una plantilla'
+    ? 'Elige una plantilla'
     : cuenta === 0
-      ? 'Elegí destinatarios'
+      ? 'Elige destinatarios'
       : sending
         ? 'Enviando mensajes…'
         : faltanDatosDeProgramacion
-          ? 'Completá la fecha y la hora'
+          ? 'Completa la fecha y la hora'
           : schedule
             ? `Programar envío a ${cuenta} lead${plural}`
             : `Enviar ahora a ${cuenta} lead${plural}`;
@@ -409,7 +409,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
         />
         </SendStep>
       ) : (
-        <SendRequisito title="Mensaje" requisito="Elegí una plantilla para escribir el correo." />
+        <SendRequisito title="Mensaje" requisito="Elige una plantilla para escribir el correo." />
       )}
 
       <RecipientSummaryRow
@@ -500,7 +500,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
               />
             ) : (
               <p className="py-8 text-center text-micro text-ink-muted">
-                Elegí un destinatario para ver la previsualización.
+                Elige un destinatario para ver la previsualización.
               </p>
             )}
           </div>

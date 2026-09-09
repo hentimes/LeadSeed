@@ -389,7 +389,7 @@ export default function LeadsTable({
               <tr><td colSpan={100} className="px-3 py-12 text-center text-ink-muted">
                 <div className="text-3xl mb-2 opacity-30 flex justify-center">{Icon.Leads()}</div>
                 <p className="text-sm font-medium">No hay leads</p>
-                <p className="text-xs mt-1">Creá uno o importá desde un archivo</p>
+                <p className="text-xs mt-1">Crea uno o importa desde un archivo</p>
               </td></tr>
             ) : (
               leads.map((lead, idx) => (

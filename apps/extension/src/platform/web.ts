@@ -28,6 +28,7 @@ import type {
   ProtectedFilePort,
   ScrollLockPort,
   StoragePort,
+  PreferenceCachePort,
 } from './types';
 
 /**
@@ -317,6 +318,32 @@ export const webScrollLock: ScrollLockPort = {
   },
 };
 
+/**
+ * En el navegador el cache sincrono es `localStorage`.
+ *
+ * Todo va envuelto en `try`: en una ventana privada, con las cookies de sitio
+ * bloqueadas o durante una captura de miniatura, el simple acceso al objeto ya
+ * lanza. Como es un cache, fallar significa "no habia nada guardado", no un
+ * error que haya que contarle a nadie.
+ */
+export const webPreferenceCache: PreferenceCachePort = {
+  get(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Sin almacenamiento la preferencia sigue funcionando en memoria; lo
+      // unico que se pierde es que la proxima apertura empiece acertando.
+    }
+  },
+};
+
 export const webProtectedFile: ProtectedFilePort = {
   async open({ url, fields, key }) {
     // Se abre la ventana ANTES de construir nada: si se hace despues, el
@@ -364,6 +391,7 @@ export const webPlatform: Platform = {
   fileSaver: webFileSaver,
   scrollLock: webScrollLock,
   protectedFile: webProtectedFile,
+  preferenceCache: webPreferenceCache,
 };
 
 /** Exportadas para test: son funciones puras y concentran el parseo fragil. */

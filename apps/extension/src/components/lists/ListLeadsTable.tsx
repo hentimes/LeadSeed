@@ -53,7 +53,7 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
                 type="checkbox"
                 onChange={onSelectAll}
                 checked={isAllSelected}
-                className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
+                className="cursor-pointer rounded border-line-strong accent-[var(--ls-primary)] focus:ring-focus"
               />
             </th>
             <th

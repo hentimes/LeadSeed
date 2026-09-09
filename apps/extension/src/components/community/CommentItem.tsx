@@ -80,7 +80,7 @@ export default function CommentItem({
         maxLength={COMMENT_MAX}
         rows={2}
         autoFocus
-        placeholder={editando ? 'Editá tu comentario…' : `Respondele a ${autor}…`}
+        placeholder={editando ? 'Edita tu comentario…' : `Respóndele a ${autor}…`}
         aria-label={editando ? 'Editar comentario' : 'Responder al comentario'}
         className="w-full resize-none rounded-lg border border-line bg-surface px-2.5 py-1.5 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-focus"
       />

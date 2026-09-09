@@ -1283,7 +1283,7 @@ Estado del bloque al `2026-08-12`: `parcial`. Los cuatro gates existen y estan e
 
   - `DirectMessageWindow.tsx`: el bloqueo entre usuarios lo impone un trigger con `RAISE EXCEPTION`
     (`079_chat_blocks_mutes.sql`) y llega como `PostgrestError`. El `instanceof Error` daba false
-    siempre, asi que el aviso "no podes enviarle mensajes a este usuario" **nunca se mostro**: el
+    siempre, asi que el aviso "no puedes enviarle mensajes a este usuario" **nunca se mostro**: el
     usuario veia "No se pudo enviar el mensaje" y no entendia por que.
   - `adminService.loadAdminUserBase`: descartaba el `reason` de un `Promise.allSettled` cuando no era
     `Error`, o sea siempre que fallaba una consulta, y lo cambiaba por el mensaje generico.

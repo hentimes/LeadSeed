@@ -58,7 +58,7 @@ Extensión de Chrome para gestionar leads, enviar mensajes de WhatsApp y correos
 npm install
 npm run dev
 ```
-Luego cargá la carpeta `dist/` como extensión sin empaquetar en `chrome://extensions`.
+Luego carga la carpeta `dist/` como extensión sin empaquetar en `chrome://extensions`.
 
 ### Producción
 ```bash

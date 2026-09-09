@@ -7,7 +7,7 @@ export interface ActiveBanDisplay extends ChatUserBan {
   userName: string;
 }
 
-/** Baneos activos, solo tiene sentido pedirlo si sos staff. */
+/** Baneos activos, solo tiene sentido pedirlo si eres staff. */
 export function useActiveBans(enabled: boolean) {
   const { user } = useAuth();
   const [bans, setBans] = useState<ActiveBanDisplay[]>([]);

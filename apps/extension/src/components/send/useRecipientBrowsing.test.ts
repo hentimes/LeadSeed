@@ -8,6 +8,16 @@ vi.mock('../../services/appSettingsService', () => ({
 
 import { useRecipientBrowsing } from './useRecipientBrowsing';
 import { reiniciarOcultarSinNombreParaTests } from '../../hooks/useHideUnnamedLeads';
+import { resetPlatformForTesting } from '../../platform/registry';
+import type { Platform } from '../../platform/types';
+
+/*
+ * El cache sincrono de preferencias va por la plataforma, y `getPlatform()`
+ * lanza si nadie la registro -a proposito: un fallback silencioso a la
+ * implementacion web reintroduciria el acoplamiento que el registro cierra-.
+ * Aqui se instala un cache en memoria, que es lo que el hook necesita.
+ */
+const cache = new Map<string, string>();
 
 /*
  * El filtro de leads sin nombre ya no vive aqui: es el ajuste de cuenta
@@ -19,6 +29,15 @@ const CLAVE = 'ls.leads.ocultarSinNombre';
 
 beforeEach(() => {
   localStorage.clear();
+  cache.clear();
+  resetPlatformForTesting({
+    preferenceCache: {
+      get: (k: string) => cache.get(k) ?? null,
+      set: (k: string, v: string) => {
+        cache.set(k, v);
+      },
+    },
+  } as unknown as Platform);
   reiniciarOcultarSinNombreParaTests();
 });
 
@@ -80,7 +99,7 @@ describe('useRecipientBrowsing', () => {
    * recien abierta arranca con lo que dejo la otra pantalla.
    */
   it('arranca con el valor que dejo el resto de la aplicacion', () => {
-    localStorage.setItem(CLAVE, '1');
+    cache.set(CLAVE, '1');
     reiniciarOcultarSinNombreParaTests();
 
     // El almacen de modulo se relee al reiniciar; se simula otra apertura.

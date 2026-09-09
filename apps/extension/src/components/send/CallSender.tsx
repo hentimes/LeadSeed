@@ -133,9 +133,9 @@ export default function CallSender({ leads, templates, templateLists, onActionCh
         : null;
 
   const etiquetaAccion = !selectedTemplateId
-    ? 'Elegí un guion'
+    ? 'Elige un guion'
     : !selectedLeadId
-      ? 'Elegí a quién llamaste'
+      ? 'Elige a quién llamaste'
       : logging
         ? 'Registrando…'
         : 'Registrar llamada completada';
@@ -198,7 +198,7 @@ export default function CallSender({ leads, templates, templateLists, onActionCh
         </p>
         </SendStep>
       ) : (
-        <SendRequisito title="Script" requisito="Elegí un guion para ver el script." />
+        <SendRequisito title="Script" requisito="Elige un guion para ver el script." />
       )}
 
       {selectedTemplateId ? (
@@ -245,7 +245,7 @@ export default function CallSender({ leads, templates, templateLists, onActionCh
         </div>
         </SendStep>
       ) : (
-        <SendRequisito title="Lead a llamar" requisito="Elegí un guion para ver a quién llamar." />
+        <SendRequisito title="Lead a llamar" requisito="Elige un guion para ver a quién llamar." />
       )}
 
       {/* El parte de como salio se queda arriba del pie, al lado del boton que

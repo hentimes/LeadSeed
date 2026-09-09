@@ -87,7 +87,7 @@ export default function ScheduleAppointmentModal({
   /*
    * Busca por nombre Y por telefono, como el resto de la aplicacion.
    *
-   * Solo por nombre dejaba fuera el caso mas comun de una agenda: tenes el
+   * Solo por nombre dejaba fuera el caso mas comun de una agenda: tienes el
    * numero de quien te acaba de escribir y no te acordas de como lo guardaste.
    */
   const termino = busqueda.trim().toLowerCase();
@@ -102,7 +102,7 @@ export default function ScheduleAppointmentModal({
 
   const agendar = async () => {
     if (!elegido) {
-      setError('Elegí a quién le vas a agendar la cita');
+      setError('Elige a quién le vas a agendar la cita');
       return;
     }
 
@@ -204,7 +204,7 @@ export default function ScheduleAppointmentModal({
                        silencio, y con un apellido comun el que buscabas podia
                        no estar sin ninguna pista de que faltaban. */
                     <p className="mt-1 text-micro text-ink-muted">
-                      Se muestran {MAX_COINCIDENCIAS} de {todasLasCoincidencias.length}. Afiná la
+                      Se muestran {MAX_COINCIDENCIAS} de {todasLasCoincidencias.length}. Ajusta la
                       búsqueda para ver el resto.
                     </p>
                   )}

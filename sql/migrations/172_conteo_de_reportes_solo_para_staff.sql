@@ -26,7 +26,7 @@
 -- pendientes de moderacion. Es un solo numero, no el contenido, asi que el
 -- daño es chico. Pero es un salto de RLS, y el numero no es inocuo: dice
 -- cuanta gente esta denunciando mensajes en este momento, que es justo lo que
--- no queres que sepa el que los esta escribiendo.
+-- no quieres que sepa el que los esta escribiendo.
 --
 -- POR QUE NO SE CORRIGE EN EL GRANT
 --

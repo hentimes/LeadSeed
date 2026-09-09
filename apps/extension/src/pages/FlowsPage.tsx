@@ -134,7 +134,7 @@ export default function FlowsPage() {
      */
     const confirmado = await getPlatform().dialogs.confirm(
       esHoy
-        ? 'Vencen hoy más tarde. Esto los deja listos ahora, sin esperar a su hora. Si podés esperar, aparecen solos.'
+        ? 'Vencen hoy más tarde. Esto los deja listos ahora, sin esperar a su hora. Si puedes esperar, aparecen solos.'
         : 'Quedan listos para mandar ahora, sin esperar a su fecha. El resto del flujo sigue igual: el paso siguiente se contará desde hoy.',
       {
         title: esHoy
@@ -274,7 +274,7 @@ export default function FlowsPage() {
         Dos cosas mas, que no son de estilo:
 
         1. **El contador se muda a "Hoy".** Decia `Flujos · 3`, que es cuantos
-           flujos tenes: inventario, no urgencia. Nadie abre esta pantalla para
+           flujos tienes: inventario, no urgencia. Nadie abre esta pantalla para
            saber eso. El numero que importa es cuantos pasos te tocan hoy.
 
         2. **No se dibuja en las vistas profundas.** En detalle, editor e
@@ -403,7 +403,7 @@ export default function FlowsPage() {
             } catch (error) {
               setAviso(
                 error instanceof Error && /violates foreign key|restrict/i.test(error.message)
-                  ? 'No se pueden cambiar los pasos: alguno ya tiene envíos registrados. Pausá el flujo o creá uno nuevo.'
+                  ? 'No se pueden cambiar los pasos: alguno ya tiene envíos registrados. Pausa el flujo o crea uno nuevo.'
                   : 'No se pudo guardar el flujo.',
               );
               return;
@@ -430,7 +430,7 @@ export default function FlowsPage() {
         />
       ) : lista.length === 0 ? (
         <EmptyState
-          title="Todavía no tenés flujos"
+          title="Todavía no tienes flujos"
           description="Un flujo es una secuencia: el paso 1 hoy, el 2 a los tres dias. LeadSeed te avisa el dia que toca; tu decides si se envia."
           action={<Button variant="primary" onClick={() => abrirEditor(null)}>Crear el primero</Button>}
         />

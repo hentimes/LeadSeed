@@ -65,7 +65,7 @@ export function SendStep({
  *
  * `text-ink-secondary` para el requisito y no `text-ink-muted`: medido, `muted`
  * da 4.30:1 sobre `surface-sunken` y se queda corto. La frase que explica por
- * que no podes seguir es lo ultimo que se puede atenuar.
+ * que no puedes seguir es lo ultimo que se puede atenuar.
  */
 export function SendRequisito({ title, requisito }: { title: string; requisito: string }) {
   return (

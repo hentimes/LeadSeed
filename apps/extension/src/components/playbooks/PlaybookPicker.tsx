@@ -45,7 +45,7 @@ export default function PlaybookPicker({
       <EmptyState
         icon={Icon.Bullseye()}
         title="No hay guiones activos"
-        description="Creá uno para poder conducir la reunión con él."
+        description="Crea uno para poder conducir la reunión con él."
         action={
           <Button variant="primary" size="sm" onClick={onIrAGuiones}>
             Ir a Playbooks

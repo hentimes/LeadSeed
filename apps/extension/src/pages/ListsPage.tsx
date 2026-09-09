@@ -135,7 +135,7 @@ export default function ListsPage() {
 
   const handleCreateList = async ({ name, color }: { name: string; color: string }) => {
     if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
-      throw new Error('El plan Free permite 2 listas. Pasá a Pro para crear las que quieras.');
+      throw new Error('El plan Free permite 2 listas. Pasa a Pro para crear las que quieras.');
     }
 
     await save({ name, color, createdAt: '' });
@@ -374,7 +374,7 @@ export default function ListsPage() {
         onDragOver={(e) => handleDragOver(e, list.id)}
         onDragLeave={handleDragLeave}
         onDrop={() => handleDropOnList(list.id)}
-        className={`bg-[#ffffff] dark:bg-slate-800 border-b border-line dark:border-slate-700/50 last:border-b-0 transition-colors group ${dragOverTarget === list.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-primary' : ''}`}
+        className={`bg-surface border-b border-line last:border-b-0 transition-colors group ${dragOverTarget === list.id ? 'bg-surface-muted ring-2 ring-focus' : ''}`}
       >
         <div
           onClick={() => { setExpandedId(isExpanded ? null : list.id); setSelectedLeadIds(new Set()); setLeadSearch(''); }}
@@ -447,12 +447,12 @@ export default function ListsPage() {
           <div className="border-t border-line bg-surface-muted/50 p-5">
             {!list.isSmart && selectedLeadIds.size > 0 && (
               <div className="mb-4 flex items-center gap-3 rounded-lg border border-state-info-soft bg-state-info-soft p-2.5 text-body text-ink">
-                <span className="text-blue-800 font-semibold">{selectedLeadIds.size} seleccionados</span>
+                <span className="font-semibold text-primary-ink">{selectedLeadIds.size} seleccionados</span>
                 <div className="mx-2 h-4 w-px bg-line"></div>
                 <button onClick={handleBulkRemove} className="text-orange-700 font-medium hover:text-orange-900 flex items-center gap-1">
                   Quitar de lista
                 </button>
-                <button onClick={handleBulkDelete} className="text-red-700 font-medium hover:text-red-900 flex items-center gap-1">
+                <button onClick={handleBulkDelete} className="flex items-center gap-1 font-medium text-state-danger hover:underline">
                   Eliminar permanentemente
                 </button>
                 <button onClick={() => setSelectedLeadIds(new Set())} className="text-ink-muted font-medium ml-auto hover:text-ink-secondary">
@@ -476,7 +476,7 @@ export default function ListsPage() {
                      avisar: el lead dieciseis no existia para esta pantalla y
                      nada lo delataba. */
                   <p className="mt-1 text-micro text-ink-muted">
-                    Se muestran {MAX_SUGERENCIAS} de {filteredNotInList.length}. Afiná la búsqueda
+                    Se muestran {MAX_SUGERENCIAS} de {filteredNotInList.length}. Ajusta la búsqueda
                     para ver el resto.
                   </p>
                 )}
@@ -542,11 +542,11 @@ export default function ListsPage() {
         onOpenSettings={() => setShowSmartSettings(true)}
       />
 
-      <div className="bg-[#ffffff] dark:bg-slate-800 rounded-md shadow-sm border border-line dark:border-slate-700 overflow-hidden">
+      <div className="overflow-hidden rounded-md border border-line bg-surface shadow-sm">
          {renderedItems.groups.map(group => (
             <div 
                key={group.id} 
-               className={`border-b border-line dark:border-slate-700/50 last:border-0 ${dragOverTarget === group.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-primary' : ''}`}
+               className={`border-b border-line last:border-0 ${dragOverTarget === group.id ? 'bg-surface-muted ring-2 ring-focus' : ''}`}
                onDragOver={(e) => handleDragOver(e, group.id)}
                onDragLeave={handleDragLeave}
                onDrop={() => handleDropOnGroup(group.id)}
@@ -558,10 +558,10 @@ export default function ListsPage() {
                         type="text" 
                         value={group.name}
                         onChange={(e) => handleRenameGroup(group.id, e.target.value)}
-                        className="bg-transparent font-semibold text-ink text-sm outline-none border-b border-transparent focus:border-blue-500 hover:border-line-strong px-1 py-0.5 w-48"
+                        className="w-48 border-b border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-ink outline-none hover:border-line-strong focus:border-focus"
                      />
                   </div>
-                  <span className="text-[10px] text-ink-secondary font-medium bg-[#ffffff] dark:bg-slate-800 border border-line dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">
+                  <span className="rounded-md border border-line bg-surface px-2 py-0.5 text-micro font-medium text-ink-secondary shadow-sm">
                      {group.listIds.length} listas
                   </span>
                </div>
