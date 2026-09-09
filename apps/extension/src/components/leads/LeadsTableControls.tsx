@@ -43,6 +43,16 @@ interface Props {
   onOcultarSinNombreChange: (ocultar: boolean) => void;
 }
 
+/**
+ * Que grupo de filtros se esta viendo.
+ *
+ * Estaba escrito en linea dentro del `useState`, asi que el `select` que lo
+ * cambia no tenia como nombrarlo y salia del paso con `as any`. Con nombre, el
+ * casteo dice la verdad: lo unico que no sabe TypeScript es que el `value` de
+ * ese `select` solo puede ser una de estas cinco palabras.
+ */
+type TipoDeFiltro = 'listas' | 'estados' | 'fechas' | 'origen' | 'canal';
+
 export default function LeadsTableControls({
   leftActions, bulkActions, search, onSearchChange, lists, filterListId, onFilterChange, filterStatus, onFilterStatusChange,
   filterDate, onFilterDateChange, filterOrigin, onFilterOriginChange,
@@ -51,7 +61,7 @@ export default function LeadsTableControls({
   ocultarSinNombre, onOcultarSinNombreChange,
 }: Props) {
   const [showFilters, setShowFilters] = useState(false);
-  const [filterType, setFilterType] = useState<'listas' | 'estados' | 'fechas' | 'origen' | 'canal'>('listas');
+  const [filterType, setFilterType] = useState<TipoDeFiltro>('listas');
   const [captureLinks, setCaptureLinks] = useState<CaptureLink[]>([]);
   const activeFiltersCount = (filterListId ? 1 : 0) + (filterStatus ? 1 : 0) + (filterDate ? 1 : 0) + (filterOrigin ? 1 : 0) + (filterSourceChannel ? 1 : 0);
 
@@ -136,7 +146,7 @@ export default function LeadsTableControls({
 
             <span className="shrink-0">Filtrar por:</span>
 
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value as any)}
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value as TipoDeFiltro)}
               className="bg-transparent outline-none cursor-pointer hover:text-gray-900 transition-colors shrink-0">
               <option value="listas">Listas</option>
               <option value="estados">Estados</option>

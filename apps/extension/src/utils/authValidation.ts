@@ -65,7 +65,7 @@ export function validatePassword(value: string): string | null {
   }
   if (!/[a-z]/.test(value)) return 'La contrasena necesita alguna minuscula.';
   if (!/[A-Z]/.test(value)) return 'La contrasena necesita alguna mayuscula.';
-  if (!/[0-9]/.test(value)) return 'La contrasena necesita algun numero.';
+  if (!/[0-9]/.test(value)) return 'La contraseña necesita algún número.';
   return null;
 }
 
@@ -90,7 +90,7 @@ export function normalizeOtpCode(value: string): string {
 
 export function validateOtpCode(value: string): string | null {
   const code = normalizeOtpCode(value);
-  if (!code) return 'Escribe el codigo que te llego por correo.';
-  if (code.length < OTP_MIN_LENGTH) return 'Ese codigo esta incompleto.';
+  if (!code) return 'Escribe el código que te llegó por correo.';
+  if (code.length < OTP_MIN_LENGTH) return 'Ese código está incompleto.';
   return null;
 }

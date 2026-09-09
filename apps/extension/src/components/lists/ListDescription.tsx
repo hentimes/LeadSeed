@@ -100,7 +100,7 @@ export default function ListDescription({
           maxLength={MAX_LIST_DESCRIPTION}
           disabled={guardando}
           placeholder="De que va esta lista"
-          aria-label={`Descripcion de la lista ${listName}`}
+          aria-label={`Descripción de la lista ${listName}`}
           className="text-[11px] px-1.5 py-0.5 rounded border border-primary-soft bg-surface text-ink outline-none focus:ring-1 focus:ring-primary-soft w-[170px] disabled:opacity-60"
         />
         <span className="text-[10px] text-ink-muted tabular-nums">
@@ -119,8 +119,8 @@ export default function ListDescription({
       }}
       aria-label={
         description
-          ? `Editar la descripcion de ${listName}`
-          : `Anadir una descripcion a ${listName}`
+          ? `Editar la descripción de ${listName}`
+          : `Añadir una descripción a ${listName}`
       }
       /*
        * El ancho lo decide quien lo monta con `className`, no este componente:

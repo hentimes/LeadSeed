@@ -190,7 +190,7 @@ describe('la contrasena en memoria', () => {
 
   it('aguanta un codigo equivocado sin obligar a reescribir la contrasena', async () => {
     vi.mocked(auth.confirmCurrentUserPassword).mockRejectedValue(
-      new Error('El codigo no es correcto.')
+      new Error('El código no es correcto.')
     );
     const { result } = await montar();
 
@@ -207,7 +207,7 @@ describe('la contrasena en memoria', () => {
 
   it('pero al tercer fallo vuelve al principio y la olvida', async () => {
     vi.mocked(auth.confirmCurrentUserPassword).mockRejectedValue(
-      new Error('El codigo no es correcto.')
+      new Error('El código no es correcto.')
     );
     const { result } = await montar();
 

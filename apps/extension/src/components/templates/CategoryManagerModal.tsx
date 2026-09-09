@@ -54,8 +54,8 @@ export function CategoryManagerModal({
           <Input
             value={nombre}
             onChange={(e) => onNombreChange(e.target.value)}
-            placeholder="Nueva categoria"
-            aria-label="Nombre de la categoria"
+            placeholder="Nueva categoría"
+            aria-label="Nombre de la categoría"
             className="min-w-0 flex-1"
             required
             autoFocus
@@ -93,7 +93,7 @@ export function CategoryManagerModal({
                   <span className="min-w-0 flex-1 truncate text-body text-ink">{cat.name}</span>
                   <IconButton
                     icon={<Icon.Trash />}
-                    label={`Eliminar la categoria ${cat.name}`}
+                    label={`Eliminar la categoría ${cat.name}`}
                     size="sm"
                     variant="ghost-danger"
                     className="shrink-0"

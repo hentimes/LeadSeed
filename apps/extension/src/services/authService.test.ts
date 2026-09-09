@@ -145,7 +145,7 @@ describe('beginPasswordRecovery', () => {
     );
 
     await expect(beginPasswordRecovery('ana@ejemplo.com')).rejects.toThrow(
-      'Espera un minuto antes de pedir otro codigo.'
+      'Espera un minuto antes de pedir otro código.'
     );
   });
 });
@@ -260,7 +260,7 @@ describe('completePasswordRecovery', () => {
 
     await expect(
       completePasswordRecovery('ana@ejemplo.com', '000000', 'ContrasenaNueva1')
-    ).rejects.toThrow('Ese codigo ya caduco. Pide uno nuevo.');
+    ).rejects.toThrow('Ese código ya caducó. Pide uno nuevo.');
 
     expect(repo.updateCurrentUserPassword).not.toHaveBeenCalled();
   });
@@ -279,7 +279,7 @@ describe('confirmEmailSignUp', () => {
     vi.mocked(repo.verifyEmailOtp).mockRejectedValue(supabaseError('otp_expired'));
 
     await expect(confirmEmailSignUp('ana@ejemplo.com', '123456')).rejects.toThrow(
-      'Ese codigo ya caduco. Pide uno nuevo.'
+      'Ese código ya caducó. Pide uno nuevo.'
     );
   });
 
@@ -287,7 +287,7 @@ describe('confirmEmailSignUp', () => {
     vi.mocked(repo.verifyEmailOtp).mockRejectedValue(supabaseError('invalid_otp'));
 
     await expect(confirmEmailSignUp('ana@ejemplo.com', '000000')).rejects.toThrow(
-      'El codigo no es correcto.'
+      'El código no es correcto.'
     );
   });
 });
@@ -322,7 +322,7 @@ describe('resendSignUpCode', () => {
     vi.mocked(repo.sendSignUpOtp).mockRejectedValue(supabaseError('over_email_send_rate_limit'));
 
     await expect(resendSignUpCode('ana@ejemplo.com')).rejects.toThrow(
-      'Espera un minuto antes de pedir otro codigo.'
+      'Espera un minuto antes de pedir otro código.'
     );
   });
 });
@@ -359,7 +359,7 @@ describe('traduccion de errores', () => {
     vi.mocked(repo.signInWithEmailPassword).mockRejectedValue(supabaseError('algo_raro'));
 
     await expect(loginWithEmailPassword('ana@ejemplo.com', 'Contrasena1')).rejects.toThrow(
-      'No se pudo iniciar sesion.'
+      'No se pudo iniciar sesión.'
     );
   });
 });

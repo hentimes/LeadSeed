@@ -206,7 +206,7 @@ export function FlowDetail({
                 <span className="min-w-0 flex-1 truncate text-micro text-ink-secondary">
                   {paso.waitDays === 0
                     ? 'Al inscribir'
-                    : `${paso.waitDays} dia${paso.waitDays === 1 ? '' : 's'} despues del anterior`}
+                    : `${paso.waitDays} día${paso.waitDays === 1 ? '' : 's'} después del anterior`}
                 </span>
               </li>
             ))}

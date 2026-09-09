@@ -424,7 +424,7 @@ export default function LeadsTable({
       {/* Bottom Pagination */}
       {pageCount > 1 && (
         <div className="flex justify-center items-center mt-6 gap-1">
-          <button aria-label="Pagina anterior" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1 || !!isLoadingPage} className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors text-ink-secondary hover:bg-surface-hover disabled:opacity-40 disabled:pointer-events-none">
+          <button aria-label="Página anterior" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1 || !!isLoadingPage} className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors text-ink-secondary hover:bg-surface-hover disabled:opacity-40 disabled:pointer-events-none">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           
@@ -442,7 +442,7 @@ export default function LeadsTable({
             return null;
           })}
           
-          <button aria-label="Pagina siguiente" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= pageCount || !!isLoadingPage} className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors text-ink-secondary hover:bg-surface-hover disabled:opacity-40 disabled:pointer-events-none">
+          <button aria-label="Página siguiente" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= pageCount || !!isLoadingPage} className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[13px] font-medium transition-colors text-ink-secondary hover:bg-surface-hover disabled:opacity-40 disabled:pointer-events-none">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
         </div>

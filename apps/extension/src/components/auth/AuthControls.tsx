@@ -130,7 +130,7 @@ export function OtpCodeInput({
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
         maxLength={OTP_MAX_LENGTH}
-        placeholder="Pegalo aqui"
+        placeholder="Pégalo aquí"
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         className={`w-full px-3.5 py-[11px] rounded-[12px] border bg-surface text-center text-[22px] font-semibold tracking-[0.25em] text-ink placeholder:text-[15px] placeholder:font-normal placeholder:tracking-normal placeholder:text-ink-secondary/60 focus:outline-none focus:ring-2 transition-all disabled:opacity-60 ${

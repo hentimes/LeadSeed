@@ -119,7 +119,7 @@ export default function CaptureLinkRow({
       {/*
         La ultima visita aprovecha la linea que ya existia: cero pixeles de
         alto nuevos. Se reserva sitio a la derecha y las cifras truncan antes
-        que ella, porque "cuando fue la ultima" es lo que no se puede deducir
+        que ella, porque "cuando fue la última" es lo que no se puede deducir
         de lo demas.
 
         Sin dato no se pinta nada -ni un guion- y las cifras recuperan el

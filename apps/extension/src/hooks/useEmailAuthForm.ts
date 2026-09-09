@@ -132,7 +132,7 @@ export function useEmailAuthForm(): EmailAuthForm {
       setView('verificar-otp');
       setBanner({
         tone: 'info',
-        text: 'Tenias una verificacion a medias. Escribe el codigo o pide uno nuevo.',
+        text: 'Tenías una verificación a medias. Escribe el código o pide uno nuevo.',
       });
     });
 
@@ -214,7 +214,7 @@ export function useEmailAuthForm(): EmailAuthForm {
           setView('verificar-otp');
           setBanner({
             tone: 'info',
-            text: 'Falta confirmar tu correo. Te enviamos un codigo nuevo.',
+            text: 'Falta confirmar tu correo. Te enviamos un código nuevo.',
           });
           await resendSignUpCode(limpio);
           setResendCooldownSeconds(RESEND_COOLDOWN_SECONDS);
@@ -312,7 +312,7 @@ export function useEmailAuthForm(): EmailAuthForm {
         // nunca se persiste. Se vuelve a pedir uno en vez de fallar en el
         // servidor con un mensaje que no explicaria nada.
         setView('verificar-otp');
-        setBanner({ tone: 'info', text: 'Vuelve a escribir el codigo para continuar.' });
+        setBanner({ tone: 'info', text: 'Vuelve a escribir el código para continuar.' });
         return;
       }
 
@@ -352,7 +352,7 @@ export function useEmailAuthForm(): EmailAuthForm {
         await resendSignUpCode(email);
       }
       setResendCooldownSeconds(RESEND_COOLDOWN_SECONDS);
-      setBanner({ tone: 'info', text: 'Te enviamos otro codigo.' });
+      setBanner({ tone: 'info', text: 'Te enviamos otro código.' });
     });
   }, [ejecutar, email, purpose]);
 

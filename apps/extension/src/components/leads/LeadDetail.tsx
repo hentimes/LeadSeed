@@ -10,7 +10,7 @@ import LeadDetailOrigin from './detail/LeadDetailOrigin';
 import LeadDetailCrossExecAlert from './detail/LeadDetailCrossExecAlert';
 import LeadDetailHistory from './detail/LeadDetailHistory';
 import { Modal } from '../../design/Modal';
-import { formatearFecha } from '../../utils/date';
+import { formatearFecha, formatearFechaHora } from '../../utils/date';
 
 interface Props {
   lead: Lead;
@@ -43,7 +43,7 @@ function formatAppointmentDate(value?: string | null) {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('es-CL');
+  return formatearFechaHora(date);
 }
 
 function openAgendaAppointment(appointmentId?: string): void {

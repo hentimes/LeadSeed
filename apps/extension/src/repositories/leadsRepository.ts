@@ -143,11 +143,26 @@ export function tokenizeSearch(rawSearch?: string): string[] {
     .slice(0, MAX_SEARCH_TOKENS);
 }
 
-function applyLeadPageFilters(
-  query: any,
-  userId: string,
-  params: LeadPageQuery,
-) {
+/*
+ * `any` A PROPOSITO, no por descuido.
+ *
+ * Los dos sitios que llaman a esta funcion le pasan constructores DISTINTOS
+ * -uno pide las filas, el otro solo el conteo-, y encadenan `.order()` y
+ * `.range()` sobre lo que devuelve. Para no perder eso hace falta un generico
+ * que propague el tipo de entrada a la salida.
+ *
+ * Se intento, y no compila: los tipos de `PostgrestFilterBuilder` son
+ * recursivos, y hacerlos coincidir con una interfaz cuyos metodos devuelven
+ * `this` termina en "Type instantiation is excessively deep and possibly
+ * infinite" (TS2589). Es una limitacion conocida de los tipos de Supabase, no
+ * algo que se arregle escribiendolo mejor aqui.
+ *
+ * Los siete metodos que se usan son `eq`, `neq`, `gte`, `is`, `not`, `or` y
+ * `contains`; un error al escribirlos sale en tiempo de ejecucion, no al
+ * compilar. Es el precio, y esta escrito para que se sepa que se pago.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyLeadPageFilters(query: any, userId: string, params: LeadPageQuery) {
   let nextQuery = query.eq('user_id', userId);
 
   if (params.deleted) {

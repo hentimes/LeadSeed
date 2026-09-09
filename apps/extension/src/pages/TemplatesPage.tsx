@@ -211,7 +211,15 @@ export default function TemplatesPage({ highlightTemplate, onNavigate }: Props =
       createdAt: existing?.createdAt || '' 
     };
     if (tab === 'whatsapp') await waT.save(base);
-    else if (tab === 'email') await emT.save({ ...base, isHtml: data.isHtml || false } as any);
+    /*
+     * `asunto` se completa aqui, no se castea.
+     *
+     * `EmailTemplate` lo exige obligatorio y `data.asunto` es opcional, asi
+     * que habia un `as any` tapando el hueco: guardar una plantilla de correo
+     * sin asunto mandaba `undefined` donde el tipo prometia un texto.
+     */
+    else if (tab === 'email')
+      await emT.save({ ...base, asunto: data.asunto || '', isHtml: data.isHtml || false });
     else await caT.save(base);
     setEditing(null); setSaving(false);
     load();

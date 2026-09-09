@@ -31,6 +31,7 @@ import { isActiveAppointment } from '../utils/appointmentStatus';
 import { getErrorMessage } from '../utils/errorMessage';
 import { getPlatform } from '../platform/registry';
 import { toIsoLocal, todayDate } from '../utils/appointmentDateTime';
+import { formatearFechaHora } from '../utils/date';
 
 const TECHNICAL_METADATA_KEYS = new Set([
   'raw_payload',
@@ -221,7 +222,7 @@ export function useLeadDetail(lead: Lead) {
   );
 
   const getCrossExecMessage = (event: LeadCrossExecEvent) => {
-    const dateText = new Date(event.counterpartCapturedAt).toLocaleString('es-CL');
+    const dateText = formatearFechaHora(event.counterpartCapturedAt);
     if (event.eventKind === 'captured_previously') {
       return `Lead captado previamente por otro ejecutivo el ${dateText}`;
     }
@@ -336,7 +337,7 @@ export function useLeadDetail(lead: Lead) {
 
     if (!accessToken) {
       setPdfLoading(false);
-      setPdfError('Debes iniciar sesion para abrir el PDF.');
+      setPdfError('Debes iniciar sesión para abrir el PDF.');
       return;
     }
 

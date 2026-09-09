@@ -4,6 +4,7 @@ import { Icon } from '../../utils/icons';
 import { usePlaybookRunsForLead } from '../../hooks/usePlaybookRunsForLead';
 import { fetchPlaybooks } from '../../services/playbooksService';
 import type { Playbook } from '../../types';
+import { formatearFecha } from '../../utils/date';
 
 /**
  * Elegir el guion con el que conducir la reunion de un lead.
@@ -69,7 +70,7 @@ export default function PlaybookPicker({
                 <p className="truncate text-body font-medium text-ink">{guion.name}</p>
                 {enCurso && (
                   <Badge tone="warning" className="mt-1">
-                    En curso desde {new Date(enCurso.startedAt).toLocaleDateString('es-CL')}
+                    En curso desde {formatearFecha(enCurso.startedAt)}
                   </Badge>
                 )}
               </div>

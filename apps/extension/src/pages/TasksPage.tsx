@@ -203,7 +203,9 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
 
   const guardarCambios = (cambios: Partial<Task>) => {
     if (!abierta || !user) return;
-    const { id, createdAt, status, ...resto } = { ...abierta, ...cambios };
+    // Solo `createdAt` se descarta: no se manda en la actualizacion. `id` y
+    // `status` si se usan, justo debajo.
+    const { id, createdAt: _createdAt, status, ...resto } = { ...abierta, ...cambios };
     void saveTaskForUser(user.id, resto, status, id).then(loadData);
   };
 

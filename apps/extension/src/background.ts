@@ -130,7 +130,7 @@ async function openAppFromNotification() {
 
     await chrome.tabs.create({ url, active: true });
   } catch (error) {
-    console.error('No se pudo abrir la extension desde la notificacion:', error);
+    console.error('No se pudo abrir la extensión desde la notificación:', error);
   }
 }
 

@@ -167,7 +167,7 @@ export function FlowEditor({ flujo, pasosIniciales, onGuardar, onCancelar }: Pro
                       type="number"
                       min={0}
                       value={paso.waitDays}
-                      aria-label={`Dias de espera del paso ${i + 1}`}
+                      aria-label={`Días de espera del paso ${i + 1}`}
                       onChange={(e) => {
                         const copia = [...pasos];
                         copia[i] = { ...paso, waitDays: Math.max(0, Number(e.target.value) || 0) };

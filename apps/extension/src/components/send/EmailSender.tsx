@@ -32,6 +32,7 @@ import { RecipientSummaryRow } from './RecipientSummaryRow';
 import { SendConfirmModal, RecipientSummary } from './SendConfirmModal';
 import { SendHistoryDisclosure } from './SendHistoryDisclosure';
 import { getPlatform } from '../../platform/registry';
+import { formatearFechaHora } from '../../utils/date';
 
 interface Props {
   leads: Lead[];
@@ -311,7 +312,7 @@ export default function EmailSender({ leads, templates, templateLists, leadLists
       setSchedule(false);
       setScheduledDate('');
       setScheduledTime('');
-      setResult({ total: recipients.length, sent: 0, errors: [`${recipients.length} email(s) programados para ${new Date(scheduledFor).toLocaleString('es-CL')}`] });
+      setResult({ total: recipients.length, sent: 0, errors: [`${recipients.length} email(s) programados para ${formatearFechaHora(scheduledFor)}`] });
       return;
     }
 

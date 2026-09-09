@@ -70,7 +70,7 @@ export async function persistGoogleCalendarConnection(
     const message =
       payload && typeof payload === 'object' && 'error' in payload
         ? String(payload.error)
-        : 'No se pudo guardar la conexion con Google Calendar';
+        : 'No se pudo guardar la conexión con Google Calendar';
     throw new Error(message);
   }
 }
@@ -158,7 +158,7 @@ export async function signInWithEmailPassword(email: string, password: string): 
   }
 
   if (!data.session) {
-    throw new Error('El servidor no devolvio una sesion.');
+    throw new Error('El servidor no devolvió una sesión.');
   }
 
   return data.session;
@@ -214,7 +214,7 @@ export async function verifyEmailOtp(
   }
 
   if (!data.session) {
-    throw new Error('El codigo se acepto pero no llego la sesion.');
+    throw new Error('El código se aceptó pero no llegó la sesión.');
   }
 
   return data.session;

@@ -323,7 +323,7 @@ export async function syncMyGoogleCalendarRows(days = 30): Promise<GoogleCalenda
   const accessToken = sessionData.session?.access_token;
 
   if (!accessToken) {
-    throw new Error('Sesion requerida para sincronizar Google Calendar');
+    throw new Error('Sesión requerida para sincronizar Google Calendar');
   }
 
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-sync`, {
@@ -354,7 +354,7 @@ export async function createMyGoogleCalendarEventRow(appointmentId: string): Pro
   const accessToken = sessionData.session?.access_token;
 
   if (!accessToken) {
-    throw new Error('Sesion requerida para crear evento Google Calendar');
+    throw new Error('Sesión requerida para crear evento Google Calendar');
   }
 
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-create-event`, {
@@ -385,7 +385,7 @@ export async function syncMyGoogleCalendarAttendeesRow(appointmentId: string): P
   const accessToken = sessionData.session?.access_token;
 
   if (!accessToken) {
-    throw new Error('Sesion requerida para sincronizar participantes');
+    throw new Error('Sesión requerida para sincronizar participantes');
   }
 
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-sync-attendees`, {
@@ -416,7 +416,7 @@ export async function syncMyGoogleCalendarEventRow(appointmentId: string, action
   const accessToken = sessionData.session?.access_token;
 
   if (!accessToken) {
-    throw new Error('Sesion requerida para sincronizar Google Calendar');
+    throw new Error('Sesión requerida para sincronizar Google Calendar');
   }
 
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-update-event`, {

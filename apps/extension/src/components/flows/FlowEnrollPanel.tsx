@@ -32,6 +32,7 @@ import { fetchEnvioDeLeadEn } from '../../services/historyService';
 import { puedeRecibirPor } from '../../utils/leadContacto';
 import LeadIdentity from '../leads/LeadIdentity';
 import { contarSinNombre, pasaFiltroDeNombre } from '../leads/SinNombreToggle';
+import { formatearFecha } from '../../utils/date';
 
 interface Props {
   flujo: MessageFlow;
@@ -84,7 +85,7 @@ const FECHA_CORTA = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2
 const AYUDA = (canal: string) =>
   'Elegi en que paso empieza cada uno: los anteriores quedan como hechos y ese queda programado. ' +
   'Si ya le enviaste alguno de los mensajes del flujo, el paso viene puesto solo y la espera se cuenta ' +
-  `desde ese envio. Solo aparecen leads con ${canal === 'email' ? 'correo' : 'telefono'}.`;
+  `desde ese envio. Solo aparecen leads con ${canal === 'email' ? 'correo' : 'teléfono'}.`;
 
 /**
  * Cuantos leads por pagina.
@@ -511,7 +512,7 @@ export function FlowEnrollPanel({ flujo, onInscribir, onInscribirTodos, onVolver
           <p className="px-3 py-6 text-center text-micro text-ink-muted">
             {leads.length === 0
               ? 'Todavia no tienes leads.'
-              : `Ningun lead con ${flujo.channel === 'email' ? 'correo' : 'telefono'} coincide.`}
+              : `Ningún lead con ${flujo.channel === 'email' ? 'correo' : 'teléfono'} coincide.`}
           </p>
         }
       >
@@ -704,7 +705,7 @@ export function FlowEnrollPanel({ flujo, onInscribir, onInscribirTodos, onVolver
               </h2>
               <p className="mt-0.5 text-micro text-ink-secondary">
                 {viendoEnvio.lead.name}
-                {envio ? ` · ${new Date(envio.sentAt).toLocaleDateString('es-CL')}` : ''}
+                {envio ? ` · ${formatearFecha(envio.sentAt)}` : ''}
               </p>
             </div>
 

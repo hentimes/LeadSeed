@@ -236,7 +236,7 @@ export function ListPagination({ page, pageCount, onPageChange, disabled = false
       type="button"
       onClick={() => onPageChange(p)}
       disabled={disabled}
-      aria-label={`Pagina ${p}`}
+      aria-label={`Página ${p}`}
       aria-current={p === page ? 'page' : undefined}
       className={`${BOTON_PAGINA} ${
         p === page ? 'bg-primary-soft text-primary' : 'text-ink-secondary hover:bg-surface-hover'
@@ -253,7 +253,7 @@ export function ListPagination({ page, pageCount, onPageChange, disabled = false
     <div className="flex items-center justify-center gap-0.5">
       <button
         type="button"
-        aria-label="Pagina anterior"
+        aria-label="Página anterior"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1 || disabled}
         className={`${BOTON_PAGINA} text-ink-secondary hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-40`}
@@ -274,7 +274,7 @@ export function ListPagination({ page, pageCount, onPageChange, disabled = false
 
       <button
         type="button"
-        aria-label="Pagina siguiente"
+        aria-label="Página siguiente"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= pageCount || disabled}
         className={`${BOTON_PAGINA} text-ink-secondary hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-40`}

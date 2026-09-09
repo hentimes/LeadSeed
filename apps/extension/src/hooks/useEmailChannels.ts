@@ -330,7 +330,7 @@ export function useEmailChannels() {
       });
 
       if (!oauthUrl) {
-        throw new Error('No se pudo iniciar la conexion con Google.');
+        throw new Error('No se pudo iniciar la conexión con Google.');
       }
 
       const callbackUrl = await getPlatform().oauth.launch(oauthUrl);

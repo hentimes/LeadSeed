@@ -176,7 +176,7 @@ export default function PipelineTab({ snapshot, onNavigate, onViewReport }: Pipe
         <div className="flex gap-4 mt-4">
           <div className="w-[140px] shrink-0 border-r border-line pr-4 flex flex-col gap-3 pt-2">
             <div className="flex flex-col">
-              <span className="text-[24px] font-bold text-primary leading-none mb-1">{chartData.reduce((a: any, b: any) => a + b.value, 0)}</span>
+              <span className="text-[24px] font-bold text-primary leading-none mb-1">{chartData.reduce((suma, punto) => suma + punto.value, 0)}</span>
               <span className="text-[11px] font-medium text-ink-secondary mb-1.5">Leads adquiridos</span>
               <span className={`text-[10px] font-bold ${isGrowthPositive ? 'text-state-success' : 'text-state-danger'}`}>
                 {isGrowthPositive ? '↑' : '↓'} {Math.abs(monthlyGrowth)}% <span className="font-normal text-ink-muted">vs periodo anterior</span>

@@ -32,6 +32,7 @@ import {
 } from '../repositories/chatRepository';
 import type { ChatMessage, ChatPinnedMessage, ChatReactionKind, ChatRoom } from '../types';
 import type { ChatAttachment } from './chatAttachmentsService';
+import { formatearFechaCorta } from '../utils/date';
 
 /** Cuanto dura fijado un mensaje por defecto. Elegible en el futuro por UI. */
 export const DEFAULT_PIN_DURATION_HOURS = 24;
@@ -126,12 +127,7 @@ export function subscribeToRoomAttachmentInserts(
 // --- @silenciar: pausar la sala ---------------------------------------------
 
 function formatFreezeUntil(iso: string): string {
-  return new Date(iso).toLocaleString([], {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatearFechaCorta(iso);
 }
 
 /**

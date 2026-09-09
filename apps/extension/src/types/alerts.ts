@@ -107,7 +107,7 @@ export const ALERT_TYPE_LABELS: Record<AlertType, { title: string; description: 
     description: 'Cuando un admin o helper envía un mensaje para todos.',
   },
   upcoming_appointment: {
-    title: 'Cita proxima',
+    title: 'Cita próxima',
     description: 'Antes de que empiece una cita agendada.',
   },
   overdue_task: {

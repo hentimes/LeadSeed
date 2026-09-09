@@ -50,9 +50,9 @@ export function getAppointmentSuccessMessage(
   }
 
   const pendingTailByAction: Record<AppointmentAction, string> = {
-    create: 'Google Calendar sigue pendiente; la hora ya quedo reservada aqui.',
-    reschedule: 'Google Calendar sigue pendiente; el nuevo horario ya quedo actualizado aqui.',
-    cancel: 'Google Calendar sigue pendiente; la hora ya fue liberada aqui.',
+    create: 'Google Calendar sigue pendiente; la hora ya quedó reservada aquí.',
+    reschedule: 'Google Calendar sigue pendiente; el nuevo horario ya quedó actualizado aquí.',
+    cancel: 'Google Calendar sigue pendiente; la hora ya fue liberada aquí.',
   };
 
   return `${baseMessageByAction[action]} ${pendingTailByAction[action]}`;
@@ -66,7 +66,7 @@ export function getGoogleSyncPendingSummary(appointment?: Partial<AppointmentSyn
   }
 
   if (status === 'skipped') {
-    return 'Esta cita existe en LeadSeed, pero Google Calendar no tenia un evento previo que sincronizar en esta accion.';
+    return 'Esta cita existe en LeadSeed, pero Google Calendar no tenía un evento previo que sincronizar en esta accion.';
   }
 
   if (appointment?.meetLink) {

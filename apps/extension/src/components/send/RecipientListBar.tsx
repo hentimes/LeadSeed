@@ -115,7 +115,7 @@ export function RecipientListPicker({
       </Select>
 
       {/*
-        Pesa mas que la casilla de "esta pagina", y es a proposito: este suma
+        Pesa mas que la casilla de "esta página", y es a proposito: este suma
         cuatrocientos destinatarios y aquella ocho. Estaba al reves -este gris
         abajo, aquella arriba en la cabecera-, o sea que el gesto caro se veia
         como el accesorio.

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { formatearFecha, formatearHora, formatearFechaHora, formatearFechaLarga } from './date';
+import {
+  formatearFecha,
+  formatearHora,
+  formatearFechaHora,
+  formatearFechaLarga,
+  formatearFechaCorta,
+} from './date';
 
 const ISO = '2026-08-19T14:05:00';
 
@@ -54,5 +60,32 @@ describe('formatearFechaLarga', () => {
 
   it('devuelve vacio si no hay dato', () => {
     expect(formatearFechaLarga(null)).toBe('');
+  });
+});
+
+describe('formatearFechaCorta', () => {
+  it('da dia, mes corto y hora, sin ano', () => {
+    const resultado = formatearFechaCorta(ISO);
+
+    expect(resultado).toMatch(/19/);
+    expect(resultado).toMatch(/ago/);
+    expect(resultado).toMatch(/14:05/);
+  });
+
+  /*
+   * El ano se omite a proposito: es para cosas que pasan dentro de las
+   * proximas horas o dias, donde "2026" no aporta y ocupa.
+   */
+  it('no incluye el ano', () => {
+    expect(formatearFechaCorta(ISO)).not.toMatch(/2026/);
+  });
+
+  it('usa reloj de 24 horas', () => {
+    expect(formatearFechaCorta('2026-08-19T20:30:00')).toMatch(/20:30/);
+  });
+
+  it('devuelve vacio si no hay dato', () => {
+    expect(formatearFechaCorta(null)).toBe('');
+    expect(formatearFechaCorta('no es una fecha')).toBe('');
   });
 });

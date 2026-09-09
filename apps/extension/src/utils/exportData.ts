@@ -19,7 +19,8 @@ export function exportToJSON(leads: Lead[]) {
 }
 
 export function exportToExcel(leads: Lead[]) {
-  const rows = leads.map(({ id, listaIds, updatedAt, ...rest }) => ({
+  // Los tres primeros se descartan a proposito: no van al fichero exportado.
+  const rows = leads.map(({ id: _id, listaIds: _listaIds, updatedAt: _updatedAt, ...rest }) => ({
     Nombre: rest.name,
     Teléfono: rest.phone,
     Email: rest.email,

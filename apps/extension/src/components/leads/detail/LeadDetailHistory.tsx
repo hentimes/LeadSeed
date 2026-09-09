@@ -1,6 +1,7 @@
 import type { LeadNote, SendLog } from '../../../types';
 import { Icon } from '../../../utils/icons';
 import { Modal } from '../../../design';
+import { formatearFechaHora } from '../../../utils/date';
 
 interface Props {
   notes: LeadNote[];
@@ -74,7 +75,7 @@ export default function LeadDetailHistory({
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[9px] text-ink-muted font-bold uppercase">Nota interna</span>
                   <span className="text-[9px] text-ink-muted font-medium">
-                    {new Date(note.createdAt).toLocaleString('es-CL')}
+                    {formatearFechaHora(note.createdAt)}
                   </span>
                 </div>
                 <p className="text-[11px] text-ink whitespace-pre-wrap leading-relaxed">{note.content}</p>

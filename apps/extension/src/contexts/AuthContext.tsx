@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (nextSession && nextUser) {
         void persistGoogleCalendarConnectionFromSession(nextSession).catch((error) => {
-          console.warn('No se pudo guardar la conexion Google Calendar:', error);
+          console.warn('No se pudo guardar la conexión Google Calendar:', error);
         });
         void loadFeatures(requestVersion).catch(() => {
           if (requestVersionRef.current !== requestVersion) return;

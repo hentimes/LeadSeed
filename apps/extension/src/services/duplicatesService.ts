@@ -53,7 +53,7 @@ export async function findUserDuplicatePairs(userId: string): Promise<DuplicateP
     const phone = lead.phone?.replace(/[^+\d]/g, '');
     const primeroConTelefono = phone ? seenPhone.get(phone) : undefined;
     if (phone && primeroConTelefono) {
-      found.push({ lead1: primeroConTelefono, lead2: lead, reason: `Telefono: ${lead.phone}` });
+      found.push({ lead1: primeroConTelefono, lead2: lead, reason: `Teléfono: ${lead.phone}` });
     } else if (phone) {
       seenPhone.set(phone, lead);
     }

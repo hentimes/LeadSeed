@@ -45,7 +45,7 @@ describe('validatePassword', () => {
   it('exige minuscula, mayuscula y numero por separado', () => {
     expect(validatePassword('CONTRASENA1')).toBe('La contrasena necesita alguna minuscula.');
     expect(validatePassword('contrasena1')).toBe('La contrasena necesita alguna mayuscula.');
-    expect(validatePassword('Contrasenaa')).toBe('La contrasena necesita algun numero.');
+    expect(validatePassword('Contrasenaa')).toBe('La contraseña necesita algún número.');
   });
 
   it('no exige simbolos', () => {
@@ -107,11 +107,11 @@ describe('validateOtpCode', () => {
   });
 
   it('pide el codigo cuando no hay ningun digito', () => {
-    expect(validateOtpCode('')).toBe('Escribe el codigo que te llego por correo.');
-    expect(validateOtpCode('abcdef')).toBe('Escribe el codigo que te llego por correo.');
+    expect(validateOtpCode('')).toBe('Escribe el código que te llegó por correo.');
+    expect(validateOtpCode('abcdef')).toBe('Escribe el código que te llegó por correo.');
   });
 
   it('avisa cuando el codigo esta claramente incompleto', () => {
-    expect(validateOtpCode('12345')).toBe('Ese codigo esta incompleto.');
+    expect(validateOtpCode('12345')).toBe('Ese código está incompleto.');
   });
 });

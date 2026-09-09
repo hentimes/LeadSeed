@@ -69,7 +69,7 @@ export default function QualityMatrix({ data }: QualityMatrixProps) {
                 </td>
                 <td className="py-2.5 text-right text-[12px] text-ink font-medium">
                   {/* Un guion, no un cero: sin convertidos no hay ciclo que medir,
-                      y un 0d se leeria como "cierra el mismo dia". */}
+                      y un 0d se leeria como "cierra el mismo día". */}
                   {fila.avgCycleDays === null ? '—' : `${fila.avgCycleDays}d`}
                 </td>
               </tr>

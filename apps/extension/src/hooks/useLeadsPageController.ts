@@ -359,7 +359,7 @@ export function useLeadsPageController() {
     if ((dupRut && !isSelfRut) || (dupPhone && !isSelfPhone)) {
       const messages: string[] = [];
       if (dupRut && !isSelfRut) messages.push(`RUT ${lead.rut} ya existe`);
-      if (dupPhone && !isSelfPhone) messages.push(`Telefono ${lead.phone} ya existe`);
+      if (dupPhone && !isSelfPhone) messages.push(`Teléfono ${lead.phone} ya existe`);
       if (!(await getPlatform().dialogs.confirm(`${messages.join(' y ')}. Guardar de todas formas?`))) return;
     }
 

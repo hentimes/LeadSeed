@@ -49,6 +49,29 @@ export function formatearFechaLarga(valor: Date | string | null | undefined): st
 }
 
 /**
+ * `08 sep, 14:05`. Dia, mes corto y hora, SIN año.
+ *
+ * Es el hueco que hacia improvisar. `chatService` lo necesitaba para el aviso
+ * de "sala pausada hasta ..." y, como aqui no estaba, se lo escribio a mano
+ * con `toLocaleString([], {...})` -sin idioma, o sea con el del navegador: en
+ * un equipo en ingles el aviso salia con el mes y el dia dados vuelta-.
+ *
+ * El año se omite a proposito: se usa para cosas que pasan dentro de las
+ * proximas horas o dias, donde decir "2026" no aporta y ocupa.
+ */
+export function formatearFechaCorta(valor: Date | string | null | undefined): string {
+  const d = comoFecha(valor);
+  if (!d) return VACIO;
+  return d.toLocaleString(IDIOMA, {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+/**
  * `ahora`, `hace 5 min`, `hace 3 h`, `hace 2 d`, y a partir de la semana la
  * fecha corta.
  *

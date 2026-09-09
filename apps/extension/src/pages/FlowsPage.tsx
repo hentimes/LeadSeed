@@ -431,7 +431,7 @@ export default function FlowsPage() {
       ) : lista.length === 0 ? (
         <EmptyState
           title="Todavía no tienes flujos"
-          description="Un flujo es una secuencia: el paso 1 hoy, el 2 a los tres dias. LeadSeed te avisa el dia que toca; tu decides si se envia."
+          description="Un flujo es una secuencia: el paso 1 hoy, el 2 a los tres días. LeadSeed te avisa el dia que toca; tu decides si se envia."
           action={<Button variant="primary" onClick={() => abrirEditor(null)}>Crear el primero</Button>}
         />
       ) : (

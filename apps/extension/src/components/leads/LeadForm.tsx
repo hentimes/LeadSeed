@@ -123,7 +123,7 @@ export default function LeadForm({ lead, lists, onSave, onCancel }: Props) {
     }
 
     if (!phone.trim() && !email.trim()) {
-      setError('Debe tener telefono o email.');
+      setError('Debe tener teléfono o email.');
       return;
     }
 

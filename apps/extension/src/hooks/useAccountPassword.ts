@@ -135,7 +135,7 @@ export function useAccountPassword(): AccountPassword {
           setStep('codigo');
           setBanner({
             tone: 'info',
-            text: 'Por seguridad te enviamos un codigo al correo. Escribelo para confirmar.',
+            text: 'Por seguridad te enviamos un código al correo. Escríbelo para confirmar.',
           });
           return;
         }

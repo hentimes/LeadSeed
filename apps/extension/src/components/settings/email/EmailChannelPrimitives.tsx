@@ -104,7 +104,7 @@ export function ChannelEditor({
           max="50000"
           value={draft.dailyLimit}
           onChange={(event) => onChange({ ...draft, dailyLimit: event.target.value })}
-          placeholder="Limite diario"
+          placeholder="Límite diario"
           className="w-full rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-xs shadow-sm outline-none focus:border-primary"
         />
         <div className="panel-md:col-span-2">

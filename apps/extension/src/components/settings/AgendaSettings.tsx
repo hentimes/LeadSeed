@@ -234,7 +234,7 @@ export default function AgendaSettings() {
       <div className="border-y border-line/80 py-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-ink">Configuracion de agenda</h3>
+            <h3 className="text-sm font-bold text-ink">Configuración de agenda</h3>
             <p className="text-xs text-ink-muted mt-1">
               Define disponibilidad, bloquea horas y sincroniza Google Calendar.
             </p>
@@ -420,7 +420,7 @@ export default function AgendaSettings() {
         <h4 className="text-xs font-bold uppercase tracking-wide text-ink-secondary mb-2">Bloqueos activos</h4>
         <div className="flex flex-col gap-2">
           {blocks.length === 0 ? (
-            <p className="text-xs text-ink-muted">Sin bloqueos en los proximos dias.</p>
+            <p className="text-xs text-ink-muted">Sin bloqueos en los próximos días.</p>
           ) : (
             blocks.map((block) => (
               <div key={block.id} className="flex items-start justify-between gap-2 border-l-2 border-l-slate-300 dark:border-l-slate-600 pl-2">

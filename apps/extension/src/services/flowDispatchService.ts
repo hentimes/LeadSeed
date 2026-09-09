@@ -126,7 +126,7 @@ export async function dispatchFlowStep(userId: string, fila: PendingFlowStep): P
       throw new Error(
         result.errors[0] ||
           (result.total === 0
-            ? `${lead.name} no tiene correo, asi que este paso no puede salir.`
+            ? `${lead.name} no tiene correo, así que este paso no puede salir.`
             : 'El correo no se pudo enviar.'),
       );
     }

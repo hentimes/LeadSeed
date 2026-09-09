@@ -96,7 +96,7 @@ export function LoginForm({ form }: { form: EmailAuthForm }) {
         </AuthLinkButton>
       </div>
 
-      <AuthPrimaryButton isBusy={form.isBusy}>Iniciar sesion</AuthPrimaryButton>
+      <AuthPrimaryButton isBusy={form.isBusy}>Iniciar sesión</AuthPrimaryButton>
     </form>
   );
 }
@@ -180,7 +180,7 @@ export function OtpVerifyForm({ form }: { form: EmailAuthForm }) {
         >
           {form.resendCooldownSeconds > 0
             ? `Reenviar en ${form.resendCooldownSeconds}s`
-            : 'Reenviar codigo'}
+            : 'Reenviar código'}
         </AuthLinkButton>
 
         <AuthLinkButton onClick={() => form.goTo('login')} disabled={form.isBusy}>
@@ -197,7 +197,7 @@ export function OtpVerifyForm({ form }: { form: EmailAuthForm }) {
       <p className="text-[12px] text-ink-secondary leading-relaxed">
         Si no llega ningun codigo, puede que ese correo ya tenga cuenta. Prueba a{' '}
         <AuthLinkButton onClick={() => form.goTo('login')} disabled={form.isBusy}>
-          <span className="text-[12px]">iniciar sesion</span>
+          <span className="text-[12px]">iniciar sesión</span>
         </AuthLinkButton>{' '}
         o a entrar con Google.
       </p>
@@ -231,7 +231,7 @@ export function RecoveryRequestForm({ form }: { form: EmailAuthForm }) {
         disabled={form.isBusy}
       />
 
-      <AuthPrimaryButton isBusy={form.isBusy}>Enviar codigo</AuthPrimaryButton>
+      <AuthPrimaryButton isBusy={form.isBusy}>Enviar código</AuthPrimaryButton>
 
       <div className="text-center">
         <AuthLinkButton onClick={() => form.goTo('login')} disabled={form.isBusy}>

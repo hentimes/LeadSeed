@@ -201,12 +201,12 @@ function authErrorMessage(error: unknown, fallback: string): string {
     case 'email_not_confirmed':
       return 'Todavia no confirmaste tu correo.';
     case 'otp_expired':
-      return 'Ese codigo ya caduco. Pide uno nuevo.';
+      return 'Ese código ya caducó. Pide uno nuevo.';
     case 'invalid_otp':
-      return 'El codigo no es correcto.';
+      return 'El código no es correcto.';
     case 'over_email_send_rate_limit':
     case 'over_request_rate_limit':
-      return 'Espera un minuto antes de pedir otro codigo.';
+      return 'Espera un minuto antes de pedir otro código.';
     case 'weak_password':
       return 'Esa contrasena es demasiado debil.';
     case 'same_password':
@@ -234,7 +234,7 @@ export async function confirmEmailSignUp(email: string, code: string): Promise<v
   try {
     await verifyEmailOtp(email.trim(), code, 'signup');
   } catch (error) {
-    throw new Error(authErrorMessage(error, 'No se pudo verificar el codigo.'), { cause: error });
+    throw new Error(authErrorMessage(error, 'No se pudo verificar el código.'), { cause: error });
   }
 }
 
@@ -254,7 +254,7 @@ export async function resendSignUpCode(email: string): Promise<void> {
   } catch (error) {
     const code = errorCode(error);
     if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') {
-      throw new Error(authErrorMessage(error, 'Espera un minuto antes de pedir otro codigo.'), {
+      throw new Error(authErrorMessage(error, 'Espera un minuto antes de pedir otro código.'), {
         cause: error,
       });
     }
@@ -277,7 +277,7 @@ export async function loginWithEmailPassword(
     if (errorCode(error) === 'email_not_confirmed') {
       return { status: 'pendiente_verificacion' };
     }
-    throw new Error(authErrorMessage(error, 'No se pudo iniciar sesion.'), { cause: error });
+    throw new Error(authErrorMessage(error, 'No se pudo iniciar sesión.'), { cause: error });
   }
 }
 
@@ -293,7 +293,7 @@ export async function beginPasswordRecovery(email: string): Promise<RecoveryStar
   } catch (error) {
     const code = errorCode(error);
     if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') {
-      throw new Error(authErrorMessage(error, 'Espera un minuto antes de pedir otro codigo.'), { cause: error });
+      throw new Error(authErrorMessage(error, 'Espera un minuto antes de pedir otro código.'), { cause: error });
     }
     // Cualquier otro fallo se traga a proposito: distinguirlos revelaria si la
     // cuenta existe. Se registra solo el codigo, nunca el correo, porque sin
@@ -327,7 +327,7 @@ export async function completePasswordRecovery(
   try {
     await verifyEmailOtp(email.trim(), code, 'recovery');
   } catch (error) {
-    throw new Error(authErrorMessage(error, 'No se pudo verificar el codigo.'), { cause: error });
+    throw new Error(authErrorMessage(error, 'No se pudo verificar el código.'), { cause: error });
   }
 
   // Si no se puede saber con que proveedores entra la cuenta, NO se sigue. El
@@ -428,7 +428,7 @@ export async function requestPasswordChangeCode(): Promise<void> {
   try {
     await requestPasswordChangeNonce();
   } catch (error) {
-    throw new Error(authErrorMessage(error, 'No se pudo enviar el codigo.'), { cause: error });
+    throw new Error(authErrorMessage(error, 'No se pudo enviar el código.'), { cause: error });
   }
 }
 

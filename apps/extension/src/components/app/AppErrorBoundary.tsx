@@ -19,7 +19,7 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
   static getDerivedStateFromError(error: unknown): AppErrorBoundaryState {
     return {
       hasError: true,
-      message: getErrorMessage(error, 'Error inesperado en la extension'),
+      message: getErrorMessage(error, 'Error inesperado en la extensión'),
     };
   }
 
@@ -40,7 +40,7 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
       <div className="min-h-screen bg-surface-muted text-ink p-6 flex items-center justify-center">
         <div className="w-full max-w-sm border border-red-200 bg-surface rounded-xl shadow-sm p-5 space-y-3">
           <div>
-            <h1 className="text-base font-bold text-red-700">La extension encontro un error</h1>
+            <h1 className="text-base font-bold text-red-700">La extensión encontró un error</h1>
             <p className="text-sm text-ink-secondary mt-1">{this.state.message}</p>
           </div>
           <button
