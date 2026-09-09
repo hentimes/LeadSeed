@@ -131,7 +131,7 @@ export default function AppointmentOutcomeModal({
                 value={minuta}
                 onChange={(evento) => setMinuta(evento.target.value)}
                 rows={4}
-                placeholder="Escribí lo que pasó en la reunión..."
+                placeholder="Escribe lo que pasó en la reunión..."
               />
             </Field>
 

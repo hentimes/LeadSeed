@@ -124,12 +124,23 @@ export default function FlowsPage() {
    * Se confirma porque cambia la agenda de golpe y no hay un "deshacer": lo
    * adelantado queda vencido, y volver a repartirlo es otra decision.
    */
-  const adelantar = async (hasta: Date, cuantos: number) => {
+  const adelantar = async (hasta: Date, cuantos: number, esHoy: boolean) => {
+    /*
+     * El dialogo cambia segun si la fecha pautada ya es hoy.
+     *
+     * Con "¿Traer 17 a hoy?" sobre pasos que vencian HOY, la pregunta no
+     * significaba nada: ya era hoy. Lo que se adelanta en ese caso son horas,
+     * no dias, y eso es lo que hay que preguntar.
+     */
     const confirmado = await getPlatform().dialogs.confirm(
-      `Quedan listos para mandar ahora, sin esperar a su fecha. El resto del flujo sigue igual: el paso siguiente se contará desde hoy.`,
+      esHoy
+        ? 'Vencen hoy más tarde. Esto los deja listos ahora, sin esperar a su hora. Si puedes esperar, aparecen solos.'
+        : 'Quedan listos para mandar ahora, sin esperar a su fecha. El resto del flujo sigue igual: el paso siguiente se contará desde hoy.',
       {
-        title: `¿Traer ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} a hoy?`,
-        confirmLabel: `Traer ${cuantos}`,
+        title: esHoy
+          ? `¿Mandar ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} antes de tiempo?`
+          : `¿Traer ${cuantos} ${cuantos === 1 ? 'mensaje' : 'mensajes'} a hoy?`,
+        confirmLabel: esHoy ? `Adelantar ${cuantos}` : `Traer ${cuantos}`,
       },
     );
     if (!confirmado) return;
@@ -142,7 +153,9 @@ export default function FlowsPage() {
       const movidos = await adelantarPasos(finDelDia);
       await flujos.recargarCola();
       setProximos(await fetchCargaProxima());
-      setAviso(`${movidos} pasos listos para mandar ahora.`);
+      setAviso(
+        `${movidos} ${movidos === 1 ? 'paso listo' : 'pasos listos'} para mandar ahora.`,
+      );
     } catch (error) {
       setAviso(error instanceof Error ? error.message : 'No se pudo adelantar la cola.');
     }
@@ -261,7 +274,7 @@ export default function FlowsPage() {
         Dos cosas mas, que no son de estilo:
 
         1. **El contador se muda a "Hoy".** Decia `Flujos · 3`, que es cuantos
-           flujos tenes: inventario, no urgencia. Nadie abre esta pantalla para
+           flujos tienes: inventario, no urgencia. Nadie abre esta pantalla para
            saber eso. El numero que importa es cuantos pasos te tocan hoy.
 
         2. **No se dibuja en las vistas profundas.** En detalle, editor e
@@ -390,7 +403,7 @@ export default function FlowsPage() {
             } catch (error) {
               setAviso(
                 error instanceof Error && /violates foreign key|restrict/i.test(error.message)
-                  ? 'No se pueden cambiar los pasos: alguno ya tiene envíos registrados. Pausá el flujo o creá uno nuevo.'
+                  ? 'No se pueden cambiar los pasos: alguno ya tiene envíos registrados. Pausa el flujo o crea uno nuevo.'
                   : 'No se pudo guardar el flujo.',
               );
               return;
@@ -409,7 +422,7 @@ export default function FlowsPage() {
           seMoverian={repartoPropuesto.length}
           proximos={proximos}
           onDespacharGrupo={despacharGrupo}
-          onAdelantar={(hasta, cuantos) => void adelantar(hasta, cuantos)}
+          onAdelantar={(hasta, cuantos, esHoy) => void adelantar(hasta, cuantos, esHoy)}
           tandaEnCurso={tanda.cola.activa || tanda.procesando}
           onDespachar={despachar}
           onOmitir={omitir}
@@ -417,7 +430,7 @@ export default function FlowsPage() {
         />
       ) : lista.length === 0 ? (
         <EmptyState
-          title="Todavía no tenés flujos"
+          title="Todavía no tienes flujos"
           description="Un flujo es una secuencia: el paso 1 hoy, el 2 a los tres dias. LeadSeed te avisa el dia que toca; tu decides si se envia."
           action={<Button variant="primary" onClick={() => abrirEditor(null)}>Crear el primero</Button>}
         />

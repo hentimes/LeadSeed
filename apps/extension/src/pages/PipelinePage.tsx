@@ -292,7 +292,7 @@ export default function PipelinePage() {
     } catch (error) {
       console.error('[pipeline] no se pudo deshacer el movimiento', error);
       setMovimientosPendientes(({ [id]: _descartado, ...resto }) => resto);
-      setAviso({ texto: 'No se pudo deshacer. Probá de nuevo.', error: true });
+      setAviso({ texto: 'No se pudo deshacer. Prueba de nuevo.', error: true });
     }
   };
 
@@ -400,7 +400,7 @@ export default function PipelinePage() {
     return (
       <LoadError
         title="No pudimos cargar tu pipeline"
-        description="Revisá la conexión y volvé a intentar."
+        description="Revisa la conexión y vuelve a intentar."
         onRetry={() => void recargar()}
       />
     );
@@ -464,8 +464,8 @@ export default function PipelinePage() {
       {leads.length === 0 ? (
         <EmptyState
           icon={<Icon.Pipeline />}
-          title="Todavía no tenés leads"
-          description="Cuando entren, vas a poder moverlos por las etapas desde acá."
+          title="Todavía no tienes leads"
+          description="Cuando entren, vas a poder moverlos por las etapas desde aquí."
         />
       ) : (
         <>
@@ -565,7 +565,8 @@ export default function PipelinePage() {
           lead={viewLead}
           lists={lists}
           onClose={() => setViewLead(null)}
-          onEdit={() => { /* Solo lectura en pipeline */ }}
+          /* Sin `onEdit`: en Pipeline la ficha es de lectura, asi que el lapiz
+             directamente no se pinta en vez de pintarse muerto. */
         />
       )}
     </div>

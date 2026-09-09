@@ -1,10 +1,45 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
+
+vi.mock('../../services/appSettingsService', () => ({
+  getSettings: vi.fn().mockRejectedValue(new Error('sin red en los tests')),
+  saveSettings: vi.fn(),
+}));
+
 import { useRecipientBrowsing } from './useRecipientBrowsing';
+import { reiniciarOcultarSinNombreParaTests } from '../../hooks/useHideUnnamedLeads';
+import { resetPlatformForTesting } from '../../platform/registry';
+import type { Platform } from '../../platform/types';
 
-const CLAVE = 'ls.destinatarios.ocultarSinNombre';
+/*
+ * El cache sincrono de preferencias va por la plataforma, y `getPlatform()`
+ * lanza si nadie la registro -a proposito: un fallback silencioso a la
+ * implementacion web reintroduciria el acoplamiento que el registro cierra-.
+ * Aqui se instala un cache en memoria, que es lo que el hook necesita.
+ */
+const cache = new Map<string, string>();
 
-beforeEach(() => localStorage.clear());
+/*
+ * El filtro de leads sin nombre ya no vive aqui: es el ajuste de cuenta
+ * compartido de `useHideUnnamedLeads`, con un cache en `localStorage` para que
+ * el primer fotograma no parpadee. Los tests de abajo comprueban que la hoja
+ * lo recuerda, sin atarse a como se guarda.
+ */
+const CLAVE = 'ls.leads.ocultarSinNombre';
+
+beforeEach(() => {
+  localStorage.clear();
+  cache.clear();
+  resetPlatformForTesting({
+    preferenceCache: {
+      get: (k: string) => cache.get(k) ?? null,
+      set: (k: string, v: string) => {
+        cache.set(k, v);
+      },
+    },
+  } as unknown as Platform);
+  reiniciarOcultarSinNombreParaTests();
+});
 
 describe('useRecipientBrowsing', () => {
   it('empieza en la primera pagina y sin filtro', () => {
@@ -43,21 +78,35 @@ describe('useRecipientBrowsing', () => {
   it('recuerda el filtro de leads sin nombre entre sesiones', () => {
     const primera = renderHook(() => useRecipientBrowsing(1));
     act(() => primera.result.current.setOcultarSinNombre(true));
-    expect(localStorage.getItem(CLAVE)).toBe('1');
 
-    // Otra apertura de la hoja, con el estado ya perdido.
+    // Otra apertura de la hoja, con el estado de este componente ya perdido.
     const segunda = renderHook(() => useRecipientBrowsing(1));
     expect(segunda.result.current.ocultarSinNombre).toBe(true);
   });
 
   it('al apagar el filtro deja de recordarlo encendido', () => {
-    localStorage.setItem(CLAVE, '1');
     const { result } = renderHook(() => useRecipientBrowsing(1));
+    act(() => result.current.setOcultarSinNombre(true));
 
     act(() => result.current.setOcultarSinNombre(false));
 
-    expect(localStorage.getItem(CLAVE)).toBe('0');
     expect(renderHook(() => useRecipientBrowsing(1)).result.current.ocultarSinNombre).toBe(false);
+  });
+
+  /*
+   * Lo que motivo unificarlo: la hoja tenia su propia clave, asi que apagarlo
+   * en Leads lo dejaba encendido aqui. Ahora el cache es el mismo, y una hoja
+   * recien abierta arranca con lo que dejo la otra pantalla.
+   */
+  it('arranca con el valor que dejo el resto de la aplicacion', () => {
+    cache.set(CLAVE, '1');
+    reiniciarOcultarSinNombreParaTests();
+
+    // El almacen de modulo se relee al reiniciar; se simula otra apertura.
+    const { result } = renderHook(() => useRecipientBrowsing(1));
+    act(() => result.current.setOcultarSinNombre(true));
+
+    expect(renderHook(() => useRecipientBrowsing(1)).result.current.ocultarSinNombre).toBe(true);
   });
 
   it('sin plantilla elegida no se queda enganchado en una pagina vieja', () => {

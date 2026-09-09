@@ -94,7 +94,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Error al iniciar sesion con Google:', error);
-      await getPlatform().dialogs.alert('Hubo un error al iniciar sesión. Revisá la consola.', {
+      await getPlatform().dialogs.alert('Hubo un error al iniciar sesión. Revisa la consola.', {
         title: 'No se pudo iniciar sesión',
       });
     }

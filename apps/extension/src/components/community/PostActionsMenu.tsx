@@ -157,7 +157,7 @@ export default function PostActionsMenu({
           <div className="flex flex-col gap-3 p-4">
             <h2 className="text-section-title font-semibold text-ink">Denunciar la publicación</h2>
             <p className="text-body text-ink-secondary">
-              La revisa el equipo. Contanos qué pasa para que puedan entenderlo sin escribirte.
+              La revisa el equipo. Cuéntanos qué pasa para que puedan entenderlo sin escribirte.
             </p>
 
             <textarea
@@ -165,7 +165,7 @@ export default function PostActionsMenu({
               onChange={(e) => setMotivo(e.target.value)}
               maxLength={REPORT_REASON_MAX}
               rows={3}
-              placeholder="¿Por qué la denunciás? (opcional)"
+              placeholder="¿Por qué la denuncias? (opcional)"
               aria-label="Motivo de la denuncia"
               className="w-full resize-none rounded-lg border border-line bg-surface px-3 py-2 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-focus"
             />

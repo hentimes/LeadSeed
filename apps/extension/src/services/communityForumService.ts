@@ -63,7 +63,7 @@ export function searchPosts(term: string): Promise<CommunityPost[]> {
 }
 
 export function validatePost({ title, body, categoryId }: NewCommunityPost): string | null {
-  if (!categoryId) return 'Elegí una categoría.';
+  if (!categoryId) return 'Elige una categoría.';
 
   const trimmedTitle = title.trim();
   if (trimmedTitle.length < POST_TITLE_MIN) {
@@ -74,7 +74,7 @@ export function validatePost({ title, body, categoryId }: NewCommunityPost): str
   }
 
   const trimmedBody = body.trim();
-  if (!trimmedBody) return 'Escribí el contenido de la publicación.';
+  if (!trimmedBody) return 'Escribe el contenido de la publicación.';
   if (trimmedBody.length > POST_BODY_MAX) {
     return `El contenido no puede superar los ${POST_BODY_MAX} caracteres.`;
   }

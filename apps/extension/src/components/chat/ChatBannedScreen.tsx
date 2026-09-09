@@ -22,9 +22,9 @@ function formatRemaining(bannedUntil: string | null): string {
   const when = formatearFechaHora(bannedUntil);
 
   if (days >= 1) {
-    return `Podés volver a escribir el ${when} (en ${days} ${days === 1 ? 'día' : 'días'}).`;
+    return `Puedes volver a escribir el ${when} (en ${days} ${days === 1 ? 'día' : 'días'}).`;
   }
-  return `Podés volver a escribir el ${when} (en ${hours} ${hours === 1 ? 'hora' : 'horas'}).`;
+  return `Puedes volver a escribir el ${when} (en ${hours} ${hours === 1 ? 'hora' : 'horas'}).`;
 }
 
 export default function ChatBannedScreen({ ban }: ChatBannedScreenProps) {

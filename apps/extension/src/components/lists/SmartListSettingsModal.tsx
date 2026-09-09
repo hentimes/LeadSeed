@@ -113,7 +113,7 @@ export function SmartListSettingsModal({
           {seccion === 'automaticas' ? (
             <div className="space-y-4">
               <p className="text-meta text-ink-secondary">
-                Elegí qué listas automáticas ves en el panel. Se actualizan solas.{' '}
+                Elige qué listas automáticas ves en el panel. Se actualizan solas.{' '}
                 <span className="font-semibold text-ink">
                   {selected.size} de {SMART_LIST_DEFS.length} activas
                 </span>

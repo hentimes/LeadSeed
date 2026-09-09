@@ -56,8 +56,8 @@ export function TemplatePicker<T extends TemplateLike>({
 
     return (
       <p className="rounded-md border border-dashed border-line bg-surface-sunken px-3 py-2.5 text-meta text-ink-secondary">
-        Todavía no tenés {plural} para este canal. Creá {itemLabel === 'guion' ? 'el primero' : 'la primera'}{' '}
-        desde <strong className="font-semibold text-ink">Plantillas</strong>, acá arriba.
+        Todavía no tienes {plural} para este canal. Crea {itemLabel === 'guion' ? 'el primero' : 'la primera'}{' '}
+        desde <strong className="font-semibold text-ink">Plantillas</strong>, aquí arriba.
       </p>
     );
   }

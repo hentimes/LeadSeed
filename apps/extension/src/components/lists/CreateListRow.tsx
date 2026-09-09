@@ -62,7 +62,7 @@ export default function CreateListRow({
     if (!limpio || creando) return;
 
     if (repetida) {
-      setError('Ya tenés una lista con ese nombre.');
+      setError('Ya tienes una lista con ese nombre.');
       return;
     }
 

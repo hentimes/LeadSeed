@@ -453,7 +453,7 @@ export function RecipientPicker({
             <EmptyState
               icon={<Icon.Search />}
               title="Sin resultados"
-              description={search ? 'Probá con otro nombre o número.' : 'No hay leads en esta selección.'}
+              description={search ? 'Prueba con otro nombre o número.' : 'No hay leads en esta selección.'}
             />
           }
         >
@@ -479,7 +479,7 @@ export function RecipientPicker({
                   }`}
                   title={
                     porLista
-                      ? `Va incluido por la lista «${porLista.name}». Quitá la lista para sacarlo.`
+                      ? `Va incluido por la lista «${porLista.name}». Quita la lista para sacarlo.`
                       : undefined
                   }
                 >

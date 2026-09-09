@@ -67,12 +67,22 @@ export default function AccountSettings() {
     }
   };
 
-  /** Los interruptores de comunidad se guardan solos, sin boton. */
+  /**
+   * Los interruptores de comunidad se guardan solos, sin boton.
+   *
+   * Y por eso mismo tienen que decir que se guardaron: sin boton que pulsar no
+   * queda ninguna señal de que el cambio llego. Avisaba solo cuando fallaba,
+   * asi que el caso normal -que funcione- era indistinguible de que no pasara
+   * nada. El aviso se apaga solo, como el de "Datos guardados" de abajo.
+   */
   const alternar = async (campo: 'show_premium_frame' | 'is_invisible', valor: boolean) => {
     if (!user) return;
+    setAviso(null);
     try {
       await saveProfileFields(user.id, { [campo]: valor });
       await refreshProfile();
+      setAviso({ tone: 'ok', text: 'Preferencia guardada.' });
+      setTimeout(() => setAviso(null), 2500);
     } catch (error) {
       setAviso({ tone: 'error', text: getErrorMessage(error, 'No se pudo guardar.') });
     }

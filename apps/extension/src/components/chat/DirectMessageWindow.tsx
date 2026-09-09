@@ -51,15 +51,28 @@ export default function DirectMessageWindow({
       setSendError('');
     } catch (error) {
       console.error('Error enviando mensaje directo', error);
-      // El bloqueo entre usuarios lo impone un trigger de Postgres con
-      // RAISE EXCEPTION (ver 079_chat_blocks_mutes.sql), y ese error llega como
-      // PostgrestError, que es un objeto plano y NO una instancia de Error. El
-      // `instanceof Error` que habia aqui daba false siempre, asi que el aviso
-      // de "no podes enviarle mensajes a este usuario" nunca se mostraba: el
-      // usuario veia el generico y no entendia por que no llegaba su mensaje.
-      const detalle = getErrorMessage(error, '');
+      /*
+       * El bloqueo entre usuarios lo impone un trigger de Postgres con
+       * RAISE EXCEPTION (ver 079_chat_blocks_mutes.sql), y ese error llega como
+       * PostgrestError, que es un objeto plano y NO una instancia de Error. El
+       * `instanceof Error` que habia aqui daba false siempre, asi que el aviso
+       * de bloqueo nunca se mostraba: el usuario veia el generico y no entendia
+       * por que no llegaba su mensaje.
+       *
+       * Se reconoce por el CODIGO del error, no por su texto. Antes comparaba
+       * la frase ("puedes enviarle"), lo que ataba el aviso a la redaccion
+       * exacta del mensaje de la base: al pasar los textos a español neutro,
+       * esa comparacion habria dejado de coincidir y el aviso habria
+       * desaparecido otra vez, en silencio. El 42501 lo pone el trigger a
+       * proposito y es el contrato entre las dos capas.
+       */
+      const codigo =
+        error && typeof error === 'object' && 'code' in error
+          ? String((error as { code?: unknown }).code ?? '')
+          : '';
+      const esBloqueo = codigo === '42501';
       setSendError(
-        detalle.includes('podés enviarle') ? detalle : 'No se pudo enviar el mensaje.'
+        esBloqueo ? getErrorMessage(error, 'No puedes enviarle mensajes a este usuario.') : 'No se pudo enviar el mensaje.'
       );
     }
   };
@@ -145,7 +158,7 @@ export default function DirectMessageWindow({
               setSendError('');
             }}
             maxLength={MAX_LENGTH}
-            placeholder="Escribí un mensaje..."
+            placeholder="Escribe un mensaje..."
             className="flex-1 min-w-0 rounded-full border border-line bg-surface px-3 py-1.5 text-body text-ink outline-none transition-colors focus:border-focus"
           />
 

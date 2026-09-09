@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { describeError } from '../../utils/errorMessage';
 import { Button, EmptyState, IconButton, Modal, SegmentedControl } from '../../design';
 import { updateChatRoomInfo } from '../../services/chatService';
 import { useOnlineDirectory } from '../../hooks/useOnlineDirectory';
@@ -70,16 +71,29 @@ export default function RoomInfoModal({
   const [description, setDescription] = useState(room.description || '');
   const [rules, setRules] = useState(room.rules || '');
   const [saving, setSaving] = useState(false);
+  const [fallo, setFallo] = useState('');
 
   const fieldClass =
     'w-full resize-none rounded-lg border border-line bg-surface px-3 py-2 text-body text-ink outline-none transition-colors focus:border-focus';
 
+  /*
+   * El `catch` que faltaba.
+   *
+   * Era `try/finally` pelado: si la escritura fallaba, la excepcion subia sin
+   * dueño, `onRoomUpdated` no corria y el modal se quedaba en modo edicion sin
+   * decir por que. La persona veia su texto intacto en pantalla, suponia que
+   * no habia pulsado bien, y volvia a pulsar. El texto NO se descarta al
+   * fallar, justamente para que se pueda reintentar sin reescribirlo.
+   */
   const handleSave = async () => {
     setSaving(true);
+    setFallo('');
     try {
       await updateChatRoomInfo(room.id, { description, rules });
       onRoomUpdated({ ...room, description, rules });
       setEditing(false);
+    } catch (error) {
+      setFallo(`No se pudo guardar: ${describeError(error)}`);
     } finally {
       setSaving(false);
     }
@@ -121,6 +135,11 @@ export default function RoomInfoModal({
         rows={6}
         className={fieldClass}
       />
+      {fallo && (
+        <p className="text-meta text-state-danger" role="alert">
+          {fallo}
+        </p>
+      )}
       <div className="flex justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
           Cancelar
@@ -242,7 +261,7 @@ export default function RoomInfoModal({
                 <EmptyState
                   icon={<ChatIcon.Paperclip />}
                   title="Sin imágenes"
-                  description="Las que se compartan en la sala aparecen acá."
+                  description="Las que se compartan en la sala aparecen aquí."
                 />
               ) : (
                 <div className="grid grid-cols-4 gap-1.5">
@@ -274,7 +293,7 @@ export default function RoomInfoModal({
               <EmptyState
                 icon={<ChatIcon.Document />}
                 title="Sin archivos"
-                description="Los adjuntos de la sala aparecen acá."
+                description="Los adjuntos de la sala aparecen aquí."
               />
             ) : (
               <div className="space-y-1.5">
@@ -306,7 +325,7 @@ export default function RoomInfoModal({
               <EmptyState
                 icon={<ChatIcon.Star />}
                 title="Sin destacados"
-                description="Acá aparecen los mensajes que alguien marcó como importantes."
+                description="Aquí aparecen los mensajes que alguien marcó como importantes."
               />
             ) : (
               <HighlightedMessagesCarousel highlights={highlights} onRemove={onRemoveHighlight} />

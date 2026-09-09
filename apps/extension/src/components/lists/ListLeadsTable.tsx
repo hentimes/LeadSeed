@@ -1,5 +1,6 @@
 import type { Lead } from '../../types';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useHideUnnamedLeads } from '../../hooks/useHideUnnamedLeads';
 import { useSendCounts } from '../../hooks/useSendCounts';
 import type { SortConfig, SortField } from '../../hooks/useSort';
 import LeadIdentity from '../leads/LeadIdentity';
@@ -28,7 +29,9 @@ interface Props {
 
 export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSelectAll, onRemoveLead, sort, onSort }: Props) {
   const sendCounts = useSendCounts();
-  const [ocultarSinNombre, setOcultarSinNombre] = useState(false);
+  /* El mismo ajuste de cuenta que el resto de la aplicacion, no un estado de
+     esta tabla: antes nacia apagado aunque estuviera encendido en Leads. */
+  const [ocultarSinNombre, setOcultarSinNombre] = useHideUnnamedLeads();
   const sinNombre = useMemo(() => contarSinNombre(leads), [leads]);
   const visibles = useMemo(
     () => leads.filter((lead) => pasaFiltroDeNombre(lead, ocultarSinNombre)),
@@ -50,7 +53,7 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
                 type="checkbox"
                 onChange={onSelectAll}
                 checked={isAllSelected}
-                className="rounded border-line-strong text-blue-600 focus:ring-blue-500 cursor-pointer"
+                className="cursor-pointer rounded border-line-strong accent-[var(--ls-primary)] focus:ring-focus"
               />
             </th>
             <th
@@ -72,7 +75,7 @@ export default function ListLeadsTable({ leads, selectedIds, onToggleLead, onSel
               <SinNombreToggle
                 count={sinNombre}
                 ocultos={ocultarSinNombre}
-                onToggle={() => setOcultarSinNombre((v) => !v)}
+                onToggle={() => setOcultarSinNombre(!ocultarSinNombre)}
               />
             </th>
           </tr>

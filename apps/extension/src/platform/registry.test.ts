@@ -17,6 +17,7 @@ function plataformaFalsa(): Platform {
     fileSaver: { save: vi.fn(async () => {}) },
     scrollLock: { lock: vi.fn(), unlock: vi.fn() },
     protectedFile: { open: vi.fn(async () => ({ ok: true as const })) },
+    preferenceCache: { get: vi.fn(() => null), set: vi.fn() },
   };
 }
 
@@ -57,7 +58,7 @@ describe('registro de plataforma', () => {
 
     expect(Object.keys(p).sort()).toEqual([
       'clipboard', 'deeplink', 'dialogs', 'fileSaver', 'messageBus', 'navigation', 'oauth',
-      'protectedFile', 'scrollLock', 'storage',
+      'preferenceCache', 'protectedFile', 'scrollLock', 'storage',
     ]);
   });
 

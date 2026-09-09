@@ -29,7 +29,7 @@ export const STATUS_LABELS: Record<LeadStatus, string> = {
  * Nuestros cuadrantes solo decian donde estaba el lead.
  *
  * `dias` es a partir de cuantos dias sin moverse el lead se considera trabado.
- * Es la adaptacion del consejo de "limitá a 10 elementos por cuadrante": el
+ * Es la adaptacion del consejo de "limita a 10 elementos por cuadrante": el
  * limite literal no aplica -no se puede capar cuantos leads hay en una etapa-,
  * pero la intuicion de abajo si: una etapa desbordada avisa de que algo no
  * avanza. En vez de un tope, un aviso.

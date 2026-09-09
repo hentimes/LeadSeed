@@ -162,7 +162,7 @@ export default function AgendaAppointmentCard({
           del navegador se pinta fuera del arbol del documento, asi que ningun
           `overflow` puede recortarlo, y trae teclado. `datetime-local` y no dos
           campos: dos son dos aperturas y dos chances de dejar una a medias, que
-          es justo lo que la validacion de "completá fecha y hora" atajaba.
+          es justo lo que la validacion de "completa fecha y hora" atajaba.
         */}
         <button
           type="button"

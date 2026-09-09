@@ -47,7 +47,7 @@ const PANEL_ID = 'filtros-destinatarios';
  * Es ademas mas accesible que el `title` que habia antes, que en un control
  * deshabilitado no se dispara nunca.
  */
-const MENSAJE_BLOQUEADO = 'Mensaje: elegí antes “Ya escritos” o “Sin escribir”';
+const MENSAJE_BLOQUEADO = 'Mensaje: elige antes “Ya escritos” o “Sin escribir”';
 
 export function RecipientFilters({
   search,
@@ -207,7 +207,7 @@ export function RecipientFilters({
           {estadoDelResumen === 'error' && (
             <p className="col-span-2 text-micro text-state-danger-ink">
               No se pudo leer el historial de envíos, así que no se puede filtrar por
-              contacto. Cerrá y volvé a abrir para reintentar.
+              contacto. Cierra y vuelve a abrir para reintentar.
             </p>
           )}
         </div>

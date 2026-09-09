@@ -59,7 +59,7 @@ USING (auth.uid() = user_id);
 GRANT SELECT, INSERT, DELETE ON public.chat_message_reactions TO authenticated;
 
 -- Vista agregada: una fila por (mensaje, emoji) con el conteo y quienes
--- reaccionaron. `user_ids` viaja para que el cliente sepa si reaccionaste vos
+-- reaccionaron. `user_ids` viaja para que el cliente sepa si reaccionaste tu
 -- sin una segunda consulta; son uuids que ese cliente ya puede leer por la
 -- politica de SELECT de arriba, asi que no expone nada nuevo.
 CREATE OR REPLACE VIEW public.chat_message_reaction_summary AS

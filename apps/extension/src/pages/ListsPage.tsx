@@ -4,6 +4,8 @@ import { useLists } from '../hooks/useLists';
 import { useLeads } from '../hooks/useLeads';
 import { Icon } from '../utils/icons';
 import type { Lead, LeadList, AppSettings } from '../types';
+import { LoadError } from '../design';
+import { describeError } from '../utils/errorMessage';
 import { useSort } from '../hooks/useSort';
 import { useAuth } from '../contexts/AuthContext';
 import ListLeadsTable from '../components/lists/ListLeadsTable';
@@ -23,6 +25,14 @@ type UnifiedList = {
   description?: string;
 };
 
+/**
+ * Cuantas sugerencias se ofrecen al buscar un lead para agregarlo.
+ *
+ * El corte existe para que el desplegable no tape la pantalla, no para
+ * esconder resultados: cuando hay mas, se dice cuantos son.
+ */
+const MAX_SUGERENCIAS = 15;
+
 export default function ListsPage() {
   const { hasFeature } = useAuth();
   const { getAll: getLists, save, remove: removeList, setColor: setListsColor } = useLists();
@@ -36,6 +46,8 @@ export default function ListsPage() {
   const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [leadSearch, setLeadSearch] = useState('');
+  /** El fallo de carga, para no confundirlo con una cuenta vacia. */
+  const [fallo, setFallo] = useState('');
   
   const [showSmartSettings, setShowSmartSettings] = useState(false);
   
@@ -45,12 +57,36 @@ export default function ListsPage() {
   const [draggedListId, setDraggedListId] = useState<string | number | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | number | null>(null);
 
+  /**
+   * Las cuatro cargas, EN PARALELO y con su fallo a la vista.
+   *
+   * Eran cuatro `await` encadenados y sin `try`. Dos consecuencias:
+   *
+   * - Coste. `load()` corre despues de CADA accion -crear una lista, agregar un
+   *   lead, cambiar un color, renombrar una carpeta- y cada vez traia de nuevo
+   *   los mil novecientos leads y los borrados, en cuatro viajes de ida y
+   *   vuelta uno detras de otro. Agregar un lead a una lista se sentia lento
+   *   comparado con el resto de la aplicacion.
+   * - Mentira. Sin `try`, un fallo de red dejaba el estado a medias y sin
+   *   aviso: la pantalla decia "No hay listas creadas", que es exactamente lo
+   *   que veria alguien que no tiene ninguna.
+   */
   const load = async () => {
-    const s = await getSettings();
-    setSettings(s);
-    setLists(await getLists());
-    setAllLeads(await getLeads());
-    setDeletedLeads(await getDeleted());
+    try {
+      const [s, listas, leads, borrados] = await Promise.all([
+        getSettings(),
+        getLists(),
+        getLeads(),
+        getDeleted(),
+      ]);
+      setSettings(s);
+      setLists(listas);
+      setAllLeads(leads);
+      setDeletedLeads(borrados);
+      setFallo('');
+    } catch (error) {
+      setFallo(describeError(error));
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -99,7 +135,7 @@ export default function ListsPage() {
 
   const handleCreateList = async ({ name, color }: { name: string; color: string }) => {
     if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
-      throw new Error('El plan Free permite 2 listas. Pasá a Pro para crear las que quieras.');
+      throw new Error('El plan Free permite 2 listas. Pasa a Pro para crear las que quieras.');
     }
 
     await save({ name, color, createdAt: '' });
@@ -288,11 +324,48 @@ export default function ListsPage() {
     else setSelectedLeadIds(new Set(sorted.map((l) => l.id!)));
   };
 
+  /*
+   * LOS LEADS DE CADA LISTA, CALCULADOS UNA VEZ.
+   *
+   * Estaba dentro de `renderListRow`, o sea que cada fila recorria los ~1.900
+   * leads por su cuenta y en CADA render: abrir una lista, escribir una letra
+   * en el buscador o arrastrar una fila disparaba tantos recorridos completos
+   * como listas hubiera. Con doce listas son mas de veinte mil vueltas para
+   * pintar una pantalla que no cambio de datos.
+   *
+   * Ahora las listas manuales salen de un solo recorrido que reparte cada lead
+   * en sus canastas, y las inteligentes se calculan una vez cada una. Se
+   * rehace solo cuando cambian los leads o las listas.
+   */
+  const leadsPorLista = useMemo(() => {
+    const mapa = new Map<string | number, Lead[]>();
+
+    for (const lead of allLeads) {
+      for (const listaId of lead.listaIds) {
+        const actual = mapa.get(listaId);
+        if (actual) actual.push(lead);
+        else mapa.set(listaId, [lead]);
+      }
+    }
+
+    for (const lista of unifiedLists) {
+      if (lista.isSmart) {
+        mapa.set(lista.id, getSmartListLeads(lista.id as string, allLeads, deletedLeads));
+      } else if (!mapa.has(lista.id)) {
+        // Una lista sin leads no aparece en el recorrido de arriba, y sin esto
+        // la fila leeria `undefined` en vez de una lista vacia.
+        mapa.set(lista.id, []);
+      }
+    }
+
+    return mapa;
+  }, [allLeads, deletedLeads, unifiedLists]);
+
   // Helper to render a single list row
   const renderListRow = (list: UnifiedList, insideGroup = false) => {
     const isExpanded = expandedId === list.id;
-    const leads = list.isSmart ? getSmartListLeads(list.id as string, allLeads, deletedLeads) : allLeads.filter(l => l.listaIds.includes(list.id as number));
-    
+    const leads = leadsPorLista.get(list.id) ?? [];
+
     return (
       <div 
         key={list.id} 
@@ -301,7 +374,7 @@ export default function ListsPage() {
         onDragOver={(e) => handleDragOver(e, list.id)}
         onDragLeave={handleDragLeave}
         onDrop={() => handleDropOnList(list.id)}
-        className={`bg-[#ffffff] dark:bg-slate-800 border-b border-line dark:border-slate-700/50 last:border-b-0 transition-colors group ${dragOverTarget === list.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-primary' : ''}`}
+        className={`bg-surface border-b border-line last:border-b-0 transition-colors group ${dragOverTarget === list.id ? 'bg-surface-muted ring-2 ring-focus' : ''}`}
       >
         <div
           onClick={() => { setExpandedId(isExpanded ? null : list.id); setSelectedLeadIds(new Set()); setLeadSearch(''); }}
@@ -374,12 +447,12 @@ export default function ListsPage() {
           <div className="border-t border-line bg-surface-muted/50 p-5">
             {!list.isSmart && selectedLeadIds.size > 0 && (
               <div className="mb-4 flex items-center gap-3 rounded-lg border border-state-info-soft bg-state-info-soft p-2.5 text-body text-ink">
-                <span className="text-blue-800 font-semibold">{selectedLeadIds.size} seleccionados</span>
+                <span className="font-semibold text-primary-ink">{selectedLeadIds.size} seleccionados</span>
                 <div className="mx-2 h-4 w-px bg-line"></div>
                 <button onClick={handleBulkRemove} className="text-orange-700 font-medium hover:text-orange-900 flex items-center gap-1">
                   Quitar de lista
                 </button>
-                <button onClick={handleBulkDelete} className="text-red-700 font-medium hover:text-red-900 flex items-center gap-1">
+                <button onClick={handleBulkDelete} className="flex items-center gap-1 font-medium text-state-danger hover:underline">
                   Eliminar permanentemente
                 </button>
                 <button onClick={() => setSelectedLeadIds(new Set())} className="text-ink-muted font-medium ml-auto hover:text-ink-secondary">
@@ -398,9 +471,19 @@ export default function ListsPage() {
                   className="w-full rounded-lg border border-line-strong bg-surface px-4 py-2 text-body text-ink shadow-sm outline-none transition-colors placeholder:text-ink-muted focus:border-focus focus:ring-1 focus:ring-focus" 
                 />
                 
+                {leadSearch && filteredNotInList.length > MAX_SUGERENCIAS && (
+                  /* Se dice cuantos quedaron fuera. Antes cortaba en quince sin
+                     avisar: el lead dieciseis no existia para esta pantalla y
+                     nada lo delataba. */
+                  <p className="mt-1 text-micro text-ink-muted">
+                    Se muestran {MAX_SUGERENCIAS} de {filteredNotInList.length}. Ajusta la búsqueda
+                    para ver el resto.
+                  </p>
+                )}
+
                 {leadSearch && filteredNotInList.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-surface border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredNotInList.slice(0, 15).map((lead) => (
+                    {filteredNotInList.slice(0, MAX_SUGERENCIAS).map((lead) => (
                       <button 
                         key={lead.id} 
                         onClick={() => handleAddLead(lead.id!)}
@@ -432,6 +515,23 @@ export default function ListsPage() {
     );
   };
 
+  /*
+   * El aviso de fallo va aqui, antes de la pantalla.
+   *
+   * Estaba dentro de `renderListRow`, asi que un fallo de carga pintaba un
+   * panel de error entero POR CADA lista: la misma frase repetida tantas veces
+   * como filas hubiera, cada una con su boton de reintentar.
+   */
+  if (fallo) {
+    return (
+      <LoadError
+        title="No se pudieron cargar las listas"
+        description={fallo}
+        onRetry={() => void load()}
+      />
+    );
+  }
+
   return (
     <div className="pb-20">
       
@@ -442,11 +542,11 @@ export default function ListsPage() {
         onOpenSettings={() => setShowSmartSettings(true)}
       />
 
-      <div className="bg-[#ffffff] dark:bg-slate-800 rounded-md shadow-sm border border-line dark:border-slate-700 overflow-hidden">
+      <div className="overflow-hidden rounded-md border border-line bg-surface shadow-sm">
          {renderedItems.groups.map(group => (
             <div 
                key={group.id} 
-               className={`border-b border-line dark:border-slate-700/50 last:border-0 ${dragOverTarget === group.id ? 'bg-blue-50 dark:bg-slate-700 ring-2 ring-primary' : ''}`}
+               className={`border-b border-line last:border-0 ${dragOverTarget === group.id ? 'bg-surface-muted ring-2 ring-focus' : ''}`}
                onDragOver={(e) => handleDragOver(e, group.id)}
                onDragLeave={handleDragLeave}
                onDrop={() => handleDropOnGroup(group.id)}
@@ -458,10 +558,10 @@ export default function ListsPage() {
                         type="text" 
                         value={group.name}
                         onChange={(e) => handleRenameGroup(group.id, e.target.value)}
-                        className="bg-transparent font-semibold text-ink text-sm outline-none border-b border-transparent focus:border-blue-500 hover:border-line-strong px-1 py-0.5 w-48"
+                        className="w-48 border-b border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-ink outline-none hover:border-line-strong focus:border-focus"
                      />
                   </div>
-                  <span className="text-[10px] text-ink-secondary font-medium bg-[#ffffff] dark:bg-slate-800 border border-line dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">
+                  <span className="rounded-md border border-line bg-surface px-2 py-0.5 text-micro font-medium text-ink-secondary shadow-sm">
                      {group.listIds.length} listas
                   </span>
                </div>

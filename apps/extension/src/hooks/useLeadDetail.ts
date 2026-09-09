@@ -114,10 +114,24 @@ export function toJourneyLabel(val: string, labels: Record<string, string>) {
 }
 
 export function useLeadDetail(lead: Lead) {
-  const metadata = (lead.metadata || {}) as LeadMetadata;
+  /*
+   * `metadata` y `rawPayload` van memoizados porque el `|| {}` creaba un objeto
+   * NUEVO en cada render cuando el lead no tenia metadata -que es lo normal en
+   * los importados y en los creados a mano-.
+   *
+   * `metadata` es dependencia del efecto que carga notas, envios y plantillas,
+   * asi que ese efecto se reejecutaba en CADA render de la ficha: escribir una
+   * nota, desplegar el historial o tocar la fecha de una cita disparaba una
+   * tanda de consultas y volvia a marcar el lead como leido, tecla por tecla. Y
+   * si una respuesta vieja llegaba tarde, podia pisar la nota recien escrita.
+   */
+  const metadata = useMemo(() => (lead.metadata || {}) as LeadMetadata, [lead.metadata]);
   const leadId = lead.id ?? '';
   const planesproMetadata = metadata as PlanesproLeadMetadata;
-  const rawPayload = (planesproMetadata.raw_payload || {}) as PlanesproLeadRawPayload;
+  const rawPayload = useMemo(
+    () => (planesproMetadata.raw_payload || {}) as PlanesproLeadRawPayload,
+    [planesproMetadata.raw_payload],
+  );
 
   const [notes, setNotes] = useState<LeadNote[]>([]);
   const [sendLogs, setSendLogs] = useState<SendLog[]>([]);

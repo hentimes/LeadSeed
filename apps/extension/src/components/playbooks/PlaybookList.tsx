@@ -20,7 +20,7 @@ export default function PlaybookList({ lista, onEditar, onArchivar }: Props) {
       <EmptyState
         icon={Icon.Bullseye()}
         title="Todavía no hay ningún guion"
-        description="Un guion te ayuda a no perder el hilo en la reunión: fases, preguntas y notas en un solo sitio. Empezá con «Nuevo», acá arriba."
+        description="Un guion te ayuda a no perder el hilo en la reunión: fases, preguntas y notas en un solo sitio. Empieza con «Nuevo», aquí arriba."
       />
     );
   }

@@ -37,7 +37,7 @@ export default function SupportTicketModal({ isOpen, onClose }: Props) {
       }, 2000);
     } catch {
       setLoading(false);
-      await getPlatform().dialogs.alert('No se pudo enviar el requerimiento. Probá de nuevo.', {
+      await getPlatform().dialogs.alert('No se pudo enviar el requerimiento. Prueba de nuevo.', {
         title: 'Algo falló',
       });
     }

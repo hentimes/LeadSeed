@@ -122,7 +122,7 @@ export function FlowEditor({ flujo, pasosIniciales, onGuardar, onCancelar }: Pro
           <p className="text-meta font-medium text-ink-secondary">Canal</p>
           <p className="text-body font-medium text-ink">{CHANNELS[canal].label}</p>
           <p className="mt-0.5 text-meta text-ink-secondary">
-            No se puede cambiar con pasos creados: las plantillas son de un canal. Quitá los
+            No se puede cambiar con pasos creados: las plantillas son de un canal. Quita los
             pasos para cambiarlo.
           </p>
         </div>

@@ -66,13 +66,13 @@ export function checkMessage(content: string, context: ModerationContext): Moder
   if (recent.length >= MAX_MESSAGES_PER_WINDOW) {
     return {
       ok: false,
-      reason: `Estás enviando demasiados mensajes. Esperá un momento (máximo ${MAX_MESSAGES_PER_WINDOW} por minuto).`,
+      reason: `Estás enviando demasiados mensajes. Espera un momento (máximo ${MAX_MESSAGES_PER_WINDOW} por minuto).`,
     };
   }
 
   const lastSent = recent[recent.length - 1];
   if (lastSent && now - lastSent < MIN_INTERVAL_MS) {
-    return { ok: false, reason: 'Escribís demasiado rápido. Esperá un segundo.' };
+    return { ok: false, reason: 'Escribes demasiado rápido. Espera un segundo.' };
   }
 
   if (context.lastMessage && normalize(context.lastMessage) === normalized) {

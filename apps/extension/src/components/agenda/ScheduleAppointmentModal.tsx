@@ -29,6 +29,14 @@ interface Props {
  * Reusa `createAppointmentFromLead`, la misma que usa la ficha, con su misma
  * sincronizacion con Google.
  */
+/**
+ * Cuantos leads se sugieren al buscar.
+ *
+ * Cortaba en seis sin decirlo: con dos homonimos y un apellido comun, el que
+ * buscabas podia no estar y la pantalla no daba ninguna pista.
+ */
+const MAX_COINCIDENCIAS = 6;
+
 export default function ScheduleAppointmentModal({
   leadId,
   leadName,
@@ -76,15 +84,25 @@ export default function ScheduleAppointmentModal({
     };
   }, [leadId, getAll]);
 
-  const coincidencias = busqueda.trim()
-    ? leads
-        .filter((lead) => nombreVisible(lead.name).toLowerCase().includes(busqueda.trim().toLowerCase()))
-        .slice(0, 6)
+  /*
+   * Busca por nombre Y por telefono, como el resto de la aplicacion.
+   *
+   * Solo por nombre dejaba fuera el caso mas comun de una agenda: tienes el
+   * numero de quien te acaba de escribir y no te acordas de como lo guardaste.
+   */
+  const termino = busqueda.trim().toLowerCase();
+  const todasLasCoincidencias = termino
+    ? leads.filter(
+        (lead) =>
+          nombreVisible(lead.name).toLowerCase().includes(termino) ||
+          (lead.phone || '').includes(termino),
+      )
     : [];
+  const coincidencias = todasLasCoincidencias.slice(0, MAX_COINCIDENCIAS);
 
   const agendar = async () => {
     if (!elegido) {
-      setError('Elegí a quién le vas a agendar la cita');
+      setError('Elige a quién le vas a agendar la cita');
       return;
     }
 
@@ -164,16 +182,36 @@ export default function ScheduleAppointmentModal({
                             onClick={() =>
                               setElegido({ id: lead.id!, nombre: nombreVisible(lead.name) })
                             }
-                            className="w-full truncate border-b border-line-soft px-2.5 py-1.5 text-left text-micro text-ink transition-colors last:border-0 hover:bg-surface-muted"
+                            className="flex w-full items-baseline gap-2 border-b border-line-soft px-2.5 py-1.5 text-left text-micro text-ink transition-colors last:border-0 hover:bg-surface-muted"
                           >
-                            {nombreVisible(lead.name)}
+                            <span className="min-w-0 flex-1 truncate">
+                              {nombreVisible(lead.name)}
+                            </span>
+                            {/* El telefono distingue a dos homonimos, que es
+                                justo cuando hace falta elegir bien. */}
+                            {lead.phone && (
+                              <span className="shrink-0 tabular-nums text-ink-muted">
+                                {lead.phone}
+                              </span>
+                            )}
                           </button>
                         </li>
                       ))}
                     </ul>
                   )}
+                  {todasLasCoincidencias.length > MAX_COINCIDENCIAS && (
+                    /* Se dice cuantos quedaron fuera: cortaba en seis en
+                       silencio, y con un apellido comun el que buscabas podia
+                       no estar sin ninguna pista de que faltaban. */
+                    <p className="mt-1 text-micro text-ink-muted">
+                      Se muestran {MAX_COINCIDENCIAS} de {todasLasCoincidencias.length}. Ajusta la
+                      búsqueda para ver el resto.
+                    </p>
+                  )}
                   {busqueda.trim() && coincidencias.length === 0 && !cargandoLeads && (
-                    <p className="mt-1 text-micro text-ink-muted">Ningún lead con ese nombre.</p>
+                    <p className="mt-1 text-micro text-ink-muted">
+                      Ningún lead con ese nombre ni con ese número.
+                    </p>
                   )}
                 </>
               )}

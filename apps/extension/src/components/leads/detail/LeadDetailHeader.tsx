@@ -4,7 +4,14 @@ import { Icon } from '../../../utils/icons';
 interface Props {
   lead: Lead;
   documentId?: string;
-  onEdit: () => void;
+  /**
+   * Abre la edicion. Sin este callback el lapiz NO se pinta.
+   *
+   * En Pipeline se pasaba una funcion vacia, asi que el boton existia, se
+   * enfocaba, se pulsaba y no pasaba nada. Un boton que miente se prueba cada
+   * vez; uno que falta se nota una sola.
+   */
+  onEdit?: (() => void) | undefined;
   onClose: () => void;
 }
 
@@ -25,13 +32,15 @@ export default function LeadDetailHeader({ lead, documentId, onEdit, onClose }: 
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <button
-          onClick={onEdit}
-          className="p-1.5 text-ink-muted hover:text-primary hover:bg-primary-soft rounded-[6px] transition-colors"
-          title="Editar"
-        >
-          {Icon.Edit()}
-        </button>
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="p-1.5 text-ink-muted hover:text-primary hover:bg-primary-soft rounded-[6px] transition-colors"
+            title="Editar"
+          >
+            {Icon.Edit()}
+          </button>
+        )}
         <button
           onClick={onClose}
           className="p-1.5 text-ink-muted hover:text-ink hover:bg-surface-hover rounded-[6px] transition-colors"

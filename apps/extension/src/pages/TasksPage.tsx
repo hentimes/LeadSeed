@@ -140,6 +140,31 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
     void loadData();
   };
 
+  /**
+   * Borrar una columna del tablero PREGUNTA antes.
+   *
+   * Era la unica accion destructiva de la pantalla que no lo hacia, y a la vez
+   * la mas cara: borrar una tarea suelta si confirmaba, y borrar la columna que
+   * las agrupa -que desvincula todas sus tareas de un golpe- salia con un solo
+   * clic y sin deshacer.
+   */
+  const borrarSeccion = async (id: string) => {
+    const columna = secciones.sections.find((seccion) => seccion.id === id);
+    if (
+      !(await getPlatform().dialogs.confirm(
+        'Las tareas que tenia dejan de estar agrupadas, pero no se borran.',
+        {
+          title: `¿Eliminar la columna${columna ? ` "${columna.name}"` : ''}?`,
+          confirmLabel: 'Eliminar',
+          tone: 'danger',
+        },
+      ))
+    ) {
+      return;
+    }
+    await secciones.borrar(id);
+  };
+
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const tomorrow = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
@@ -308,7 +333,7 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
                 }}
                 onCrearSeccion={(nombre) => void secciones.crear(nombre)}
                 onRenombrarSeccion={(id, nombre) => void secciones.renombrar(id, nombre)}
-                onBorrarSeccion={(id) => void secciones.borrar(id)}
+                onBorrarSeccion={(id) => void borrarSeccion(id)}
               />
             )}
           </div>

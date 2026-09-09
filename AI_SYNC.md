@@ -7453,7 +7453,7 @@ borrado fisico pendiente por seguridad del worktree.
   - decisión pendiente: qué hace `deleteTemplateRow` si la plantilla es paso de una secuencia con leads inscritos (recomendado: `ON DELETE RESTRICT` + aviso en Plantillas)
   - la migración SQL de esta feature no se escribió todavía; el número correcto se decide recién al crearla, mirando el estado real de `sql/migrations/` y `supabase/migrations/` en ese momento (ambas carpetas vienen avanzando rápido con trabajo de chat/capture-links de otra sesión)
 - Solicitud para otra sesión:
-  - si alguien más toca `src/config/routes.ts` o `src/components/layout/NavigationDrawer.tsx` para agregar rutas, avisar acá antes: `Secuencias` va a necesitar registrarse ahí y esos dos archivos vienen cambiando seguido por el trabajo de chat en paralelo
+  - si alguien más toca `src/config/routes.ts` o `src/components/layout/NavigationDrawer.tsx` para agregar rutas, avisar aquí antes: `Secuencias` va a necesitar registrarse ahí y esos dos archivos vienen cambiando seguido por el trabajo de chat en paralelo
   - no hay overlap de dominio con `src/components/send/` ni `src/design/Field.tsx` hasta ahora
 
 ## Claude (LeadSeed) - 2026-08-05 - Auditoria cruzada obligatoria (CONTROL 14.4) de bloques cerrados hoy por otras sesiones
@@ -8025,7 +8025,7 @@ incompatibles entre si:
   ppforms retirado pero el codigo real no lo estaba - un commit a medio
   terminar).
 
-Con autorizacion explicita del usuario ("Reconcilia vos las dos ramas"),
+Con autorizacion explicita del usuario ("Reconcilia tú las dos ramas"),
 se creo un branch nuevo `fix/reconcile-ppforms-retirement-with-tracking`
 desde `origin/master`, y se porto sobre el:
 - La carpeta `retiro-tecnico-extranjero/` completa (html, css, assets,

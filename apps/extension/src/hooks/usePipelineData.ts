@@ -15,7 +15,7 @@ import type { Lead, LeadList, WhatsAppTemplate } from '../types';
  *
  * Peor: no habia `try`. Si la primera llamada fallaba, la promesa quedaba
  * rechazada sin manejar y la pantalla se quedaba con `leads` en vacio, que es
- * indistinguible de "no tenes ningun lead". Un fallo de red se mostraba como un
+ * indistinguible de "no tienes ningun lead". Un fallo de red se mostraba como un
  * pipeline vacio.
  *
  * Y no habia estado de carga: el primer render pintaba los contadores en cero y

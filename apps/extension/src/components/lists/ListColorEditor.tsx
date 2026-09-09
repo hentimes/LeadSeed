@@ -41,7 +41,7 @@ export default function ListColorEditor({
     return (
       <EmptyState
         icon={<Icon.Lists />}
-        title="Todavía no tenés listas propias"
+        title="Todavía no tienes listas propias"
         description="Las automáticas tienen un color fijo que no se puede cambiar."
       />
     );
@@ -62,7 +62,7 @@ export default function ListColorEditor({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-meta text-ink-secondary">
-        Tocá el punto de una lista para cambiarle el color.
+        Toca el punto de una lista para cambiarle el color.
       </p>
 
       <ul className="overflow-hidden rounded-md border border-line">

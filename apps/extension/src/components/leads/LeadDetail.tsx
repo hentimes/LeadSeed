@@ -16,7 +16,17 @@ interface Props {
   lead: Lead;
   lists: LeadList[];
   onClose: () => void;
-  onEdit: (lead: Lead) => void;
+  /**
+   * Abre el formulario de edicion. OPCIONAL a proposito.
+   *
+   * En Pipeline se pasaba una funcion vacia con el comentario "solo lectura",
+   * asi que el lapiz se pintaba, se enfocaba, se pulsaba y no pasaba nada. Un
+   * boton que no hace nada es peor que uno que falta: el que falta se nota una
+   * vez, el que miente se prueba cada vez.
+   *
+   * Sin este callback, la cabecera no pinta el boton.
+   */
+  onEdit?: (lead: Lead) => void;
   onNavigate?: (page: Page) => void;
   /**
    * De donde se abrio esta ficha.
@@ -77,10 +87,14 @@ export default function LeadDetail({ lead, onClose, onEdit, onNavigate }: Props)
         <LeadDetailHeader
           lead={lead}
           documentId={documentId ? String(documentId) : undefined}
-          onEdit={() => {
-            onEdit(lead);
-            onClose();
-          }}
+          onEdit={
+            onEdit
+              ? () => {
+                  onEdit(lead);
+                  onClose();
+                }
+              : undefined
+          }
           onClose={onClose}
         />
 

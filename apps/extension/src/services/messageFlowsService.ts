@@ -155,7 +155,7 @@ export async function setFlowActive(id: string, activo: boolean): Promise<void> 
 export async function deleteFlow(id: string): Promise<void> {
   const borrados = await callDeleteFlowConInscripciones(id);
   if (borrados === 0) {
-    throw new Error('El flujo ya no existe. Actualizá la lista.');
+    throw new Error('El flujo ya no existe. Actualiza la lista.');
   }
 }
 

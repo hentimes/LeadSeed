@@ -70,7 +70,7 @@ export default function CriteriosAnswer({
   if (criterios.length === 0) {
     return (
       <p className="mt-1.5 text-micro text-ink-muted">
-        Todavía no hay nada que clasificar: marcá opciones en los puntos anteriores primero.
+        Todavía no hay nada que clasificar: marca opciones en los puntos anteriores primero.
       </p>
     );
   }

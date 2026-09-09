@@ -3,6 +3,7 @@ import { useDismissibleToast } from './useDismissibleToast';
 import { useLeads } from './useLeads';
 import { useLists } from './useLists';
 import { useLeadFilters } from './useLeadFilters';
+import { useValorDemorado } from './useValorDemorado';
 import type { ExportFormat, Lead, LeadList, LeadStatus } from '../types';
 import type { ParsedRow } from '../utils/importParser';
 import { exportToJSON, exportToExcel } from '../utils/exportData';
@@ -84,6 +85,28 @@ export function useLeadsPageController() {
     ocultarSinNombre, setOcultarSinNombre,
     search, setSearch,
   } = useLeadFilters();
+
+  /*
+   * LO QUE SE ESCRIBE Y LO QUE SE CONSULTA SON DOS COSAS.
+   *
+   * `search` sigue el teclado para que el campo responda; `searchConsultado`
+   * se asienta 300 ms despues y es el unico que entra en la consulta. Antes
+   * `search` iba directo a las dependencias de `loadLeads`: escribir
+   * "rodriguez" lanzaba nueve consultas contra la tabla completa mas nueve de
+   * fijados, y se descartaban ocho.
+   */
+  const searchConsultado = useValorDemorado(search, 300);
+
+  /*
+   * Numero de peticion, para que una respuesta vieja no pise a una nueva.
+   *
+   * `loadLeads` tiene varios `await` seguidos, y nada garantiza que vuelvan en
+   * el orden en que salieron: la consulta de "rod" puede tardar mas que la de
+   * "rodriguez" y aterrizar despues, dejando en pantalla el resultado de lo
+   * que se escribio hace tres letras. Cada llamada toma un numero; al volver
+   * de cada espera, la que ya no es la ultima se retira sin tocar el estado.
+   */
+  const peticionRef = useRef(0);
 
   useEffect(() => {
     const route = getPlatform().navigation.current();
@@ -173,10 +196,13 @@ export function useLeadsPageController() {
   }, [getIdentities, showForm, showImport, showTrash, user]);
 
   const loadLeads = useCallback(async () => {
+    const idPeticion = ++peticionRef.current;
+    const esVigente = () => idPeticion === peticionRef.current;
+
     const pageQuery: LeadPageQuery = {
       page: currentPage,
       pageSize,
-      search,
+      search: searchConsultado,
       listId: filterListId,
       status: filterStatus,
       dateFilter: filterDate,
@@ -199,6 +225,7 @@ export function useLeadsPageController() {
 
     if (showTrash) {
       const pageData = await getPage(pageQuery);
+      if (!esVigente()) return;
       data = pageData.items;
       nextFilteredCount = pageData.filteredCount;
       nextTotalCount = pageData.totalCount;
@@ -209,8 +236,10 @@ export function useLeadsPageController() {
       } else {
         pageData = await getPage(pageQuery);
       }
+      if (!esVigente()) return;
 
       const allPinned = await getPinned();
+      if (!esVigente()) return;
       const pinnedIds = new Set(allPinned.map((p) => p.id));
       const nonPinnedItems = pageData.items.filter((item) => !pinnedIds.has(item.id));
 
@@ -234,6 +263,7 @@ export function useLeadsPageController() {
         getPlatform().navigation.replace({ name: 'leads' });
       } else {
         const fetchedLead = await getById(leadIdFromHash);
+        if (!esVigente()) return;
         if (fetchedLead) {
           setViewing(fetchedLead);
           getPlatform().navigation.replace({ name: 'leads' });
@@ -283,7 +313,7 @@ export function useLeadsPageController() {
     // el efecto que la llama si se volvia a lanzar, pero ejecutaba la version
     // memoizada de antes y la consulta salia siempre con el filtro apagado.
     ocultarSinNombre,
-    search,
+    searchConsultado,
     showTrash,
     sort.dir,
     sort.field,
@@ -306,7 +336,7 @@ export function useLeadsPageController() {
   useEffect(() => {
     setCurrentPage(1);
     selection.clear();
-  }, [filterCaptureLinkId, filterDate, filterListId, filterMode, filterOrigin, filterSourceChannel, filterStatus, ocultarSinNombre, search, showTrash, sort.field, sort.dir]);
+  }, [filterCaptureLinkId, filterDate, filterListId, filterMode, filterOrigin, filterSourceChannel, filterStatus, ocultarSinNombre, searchConsultado, showTrash, sort.field, sort.dir]);
 
   const onSort = useCallback((field: LeadSortField) => {
     setSort((prev) => ({
@@ -505,7 +535,7 @@ export function useLeadsPageController() {
 
   const handleImport = async (rows: ParsedRow[]) => {
     if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
-      await getPlatform().dialogs.alert('Actualizá tu plan para poder importar más leads.', {
+      await getPlatform().dialogs.alert('Actualiza tu plan para poder importar más leads.', {
         title: 'Llegaste al límite del plan Free',
       });
       return;
@@ -522,7 +552,7 @@ export function useLeadsPageController() {
 
   const handleNewLeadClick = async () => {
     if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
-      await getPlatform().dialogs.alert('Mejorá tu plan para tener leads ilimitados.', {
+      await getPlatform().dialogs.alert('Mejora tu plan para tener leads ilimitados.', {
         title: 'Llegaste al límite del plan Free',
       });
       return;

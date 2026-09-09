@@ -112,7 +112,7 @@ export const ALERT_TYPE_LABELS: Record<AlertType, { title: string; description: 
   },
   overdue_task: {
     title: 'Tarea vencida',
-    description: 'Cuando tenes tareas pasadas de fecha.',
+    description: 'Cuando tienes tareas pasadas de fecha.',
   },
 };
 

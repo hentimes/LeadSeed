@@ -266,7 +266,19 @@ export interface FlowUpcomingRow {
  * pendientes".
  */
 export async function fetchFlowUpcomingRows(dias = 14): Promise<FlowUpcomingRow[]> {
-  const { data, error } = await supabase.rpc('my_flow_upcoming_load', { p_days: dias });
+  /*
+   * La zona viaja al servidor: el dia de un vencimiento depende de donde este
+   * quien mira. Un paso de las 21:00 en Santiago es del dia siguiente en UTC, y
+   * agrupado en UTC la pantalla mostraba una fecha y decidia con otra.
+   *
+   * Se manda el nombre IANA y no un desfase en minutos: el nombre lleva
+   * consigo los cambios de hora, un desfase fijo falla dos veces al año.
+   */
+  const zona = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const { data, error } = await supabase.rpc('my_flow_upcoming_load', {
+    p_days: dias,
+    p_tz: zona,
+  });
 
   if (error || !data) {
     if (error) console.error('fetchFlowUpcomingRows failed', error);

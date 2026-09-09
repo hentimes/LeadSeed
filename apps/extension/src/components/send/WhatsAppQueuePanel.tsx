@@ -35,7 +35,7 @@ export default function WhatsAppQueuePanel({ cola }: Props) {
             ? cola.error
             : cola.abriendo
               ? 'Abriendo el chat...'
-              : 'Enviá el mensaje en WhatsApp y volvé acá para seguir.'}
+              : 'Envía el mensaje en WhatsApp y vuelve aquí para seguir.'}
         </p>
 
         {cola.siguiente && !cola.error && (

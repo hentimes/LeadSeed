@@ -225,11 +225,22 @@ export default function AgendaPage({ onNavigate }: AgendaPageProps) {
             <p className="text-body text-ink-secondary">
               No hay citas en los próximos {DIAS_DEL_RANGO} días
             </p>
+            {/*
+              Decia "las citas se agendan desde la ficha de un lead" y mandaba a
+              Leads, a cien pixeles por debajo del "+" de la cabecera que hace
+              justamente eso sin salir de aqui. La pantalla se contradecia sola:
+              el texto describia el estado anterior al boton que ya existe.
+            */}
             <p className="mt-1 text-micro text-ink-secondary">
-              Las citas se agendan desde la ficha de un lead.
+              Agenda una desde aquí y elige el lead en el mismo paso.
             </p>
-            <Button size="sm" className="mt-2" onClick={() => onNavigate('leads')}>
-              Ver mis leads
+            <Button
+              size="sm"
+              variant="primary"
+              className="mt-2"
+              onClick={() => setCitaNueva({ leadId: '', leadName: '' })}
+            >
+              Agendar una cita
             </Button>
           </div>
         ) : (

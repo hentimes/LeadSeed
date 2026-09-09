@@ -162,7 +162,7 @@ export function TaskNotesBar({
             evento.preventDefault();
             enviar();
           }}
-          placeholder="Anotá lo que pasó…"
+          placeholder="Anota lo que pasó…"
           aria-label="Nueva nota"
           className="h-control-sm flex-1 text-chat"
         />

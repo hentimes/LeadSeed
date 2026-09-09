@@ -281,14 +281,26 @@ export default function LeadsTable({
           <thead className="border-b border-line bg-surface-muted text-micro font-bold uppercase tracking-wide text-ink-secondary">
             <tr>
               <th className={`w-8 ${headPad}`}>
-                <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer ${allSelected ? 'bg-primary border-primary' : 'border-line bg-surface'}`}
-                  onClick={onSelectAll}
-                >
-                  <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6L5 8.5L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={allSelected ? 1 : 0} />
-                  </svg>
-                </div>
+                {/*
+                  Una casilla de verdad, no un `div` con `onClick`.
+
+                  Era un div dibujado a mano con un SVG dentro: no entraba en el
+                  orden de tabulacion, no respondia a Enter ni a la barra
+                  espaciadora, y un lector de pantalla no lo anunciaba como
+                  control. O sea que la accion que existe para trabajar rapido
+                  sobre muchos leads a la vez era la unica de la tabla que no se
+                  podia usar sin raton.
+
+                  Es la misma casilla nativa que ya usa `ListLeadsTable` para
+                  esto mismo.
+                */}
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={onSelectAll}
+                  aria-label={allSelected ? 'Desmarcar todos los leads' : 'Marcar todos los leads'}
+                  className="h-4 w-4 shrink-0 cursor-pointer rounded-sm border-line accent-[var(--ls-primary)]"
+                />
               </th>
 
               {renderedColumns.map((column) => {
@@ -377,7 +389,7 @@ export default function LeadsTable({
               <tr><td colSpan={100} className="px-3 py-12 text-center text-ink-muted">
                 <div className="text-3xl mb-2 opacity-30 flex justify-center">{Icon.Leads()}</div>
                 <p className="text-sm font-medium">No hay leads</p>
-                <p className="text-xs mt-1">Creá uno o importá desde un archivo</p>
+                <p className="text-xs mt-1">Crea uno o importa desde un archivo</p>
               </td></tr>
             ) : (
               leads.map((lead, idx) => (

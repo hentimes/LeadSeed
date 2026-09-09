@@ -49,7 +49,7 @@ describe('AppointmentOutcomeModal', () => {
     const { onGuardar } = montar();
 
     fireEvent.click(screen.getByRole('button', { name: 'Sí, se conectó' }));
-    fireEvent.change(screen.getByPlaceholderText('Escribí lo que pasó en la reunión...'), {
+    fireEvent.change(screen.getByPlaceholderText('Escribe lo que pasó en la reunión...'), {
       target: { value: 'Pide propuesta el lunes' },
     });
     guardar();

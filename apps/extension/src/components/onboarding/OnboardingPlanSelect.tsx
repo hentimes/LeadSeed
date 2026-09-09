@@ -38,7 +38,7 @@ export default function OnboardingPlanSelect() {
       await refreshProfile();
     } catch (err) {
       console.error('Error al seleccionar plan:', err);
-      await getPlatform().dialogs.alert('Hubo un error al asignar el plan. Por favor intentá nuevamente.', {
+      await getPlatform().dialogs.alert('Hubo un error al asignar el plan. Por favor intenta nuevamente.', {
         title: 'No se pudo asignar el plan',
       });
       setSelectingId(null);
