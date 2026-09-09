@@ -21,18 +21,35 @@ interface LossReasonsChartProps {
 export default function LossReasonsChart({ data }: LossReasonsChartProps) {
   const COLORS = chartRamp();
 
-  const CustomTooltip = ({ active, payload }: PropsTooltip) => {
-    const entrada = payload?.[0];
-    if (active && entrada) {
-      if (data.length === 0) {
+  /*
+   * EL ESTADO VACIO VA AQUI, NO DENTRO DEL TOOLTIP.
+   *
+   * Estaba metido dentro de `CustomTooltip`, o sea que para verlo habia que
+   * pasar el raton por encima de un trozo del grafico estando el grafico
+   * vacio. Como vacio no hay nada por encima de lo que pasar, no se mostraba
+   * nunca: se pintaba una tarta sin datos y quedaba un recuadro en blanco sin
+   * ninguna explicacion.
+   *
+   * Se dice ademas COMO se llena, porque un recuadro que solo diga "no hay
+   * nada" no ayuda a que deje de estar vacio.
+   */
+  if (data.length === 0) {
     return (
-      <p className="py-8 text-center text-[11px] text-ink-muted">
-        Todavia no hay leads descartados.
-      </p>
+      <div className="flex h-full flex-col items-center justify-center gap-1 px-4 py-8 text-center">
+        <p className="text-[11px] font-medium text-ink-secondary">
+          Todavía no hay leads descartados.
+        </p>
+        <p className="text-[10px] text-ink-muted">
+          Al pasar un lead a «Descartado» se pregunta el motivo, y aquí se ve el reparto.
+        </p>
+      </div>
     );
   }
 
-  return (
+  const CustomTooltip = ({ active, payload }: PropsTooltip) => {
+    const entrada = payload?.[0];
+    if (active && entrada) {
+      return (
         <div className="bg-ink rounded-[6px] p-2 shadow-lg">
           <p className="text-[11px] text-white">
             <span className="font-bold">{entrada.name}:</span> {entrada.value}%

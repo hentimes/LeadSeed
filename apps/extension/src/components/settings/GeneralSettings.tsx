@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ColumnDef, ComparePeriod } from '../../types';
 import { getSettings, patchSettings } from '../../services/appSettingsService';
 import { useAcusarGuardado } from '../../hooks/useAcusarGuardado';
+import { PERIODOS } from '../dashboard/comparePeriod';
 import { Badge, Checkbox, Input, Section, Select, SettingGroup, SettingRow, Switch } from '../../design';
 
 interface Props {
@@ -219,10 +220,11 @@ export default function GeneralSettings({
                     }}
                     className="w-[140px]"
                   >
-                    <option value="yesterday">Ayer</option>
-                    <option value="lastWeek">Semana pasada</option>
-                    <option value="lastMonth">Mes pasado</option>
-                    <option value="lastYear">Año pasado</option>
+                    {PERIODOS.map((periodo) => (
+                      <option key={periodo.valor} value={periodo.valor}>
+                        {periodo.nombre}
+                      </option>
+                    ))}
                   </Select>
                 </div>
               }

@@ -177,13 +177,24 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
 
           Ahora cada uno lleva la explicacion que prometia, y como `role="img"`
           con `aria-label` para que tambien la reciba quien no ve el icono.
+
+          Y usa `HelpCircle`, no `Help`. Lo explica `utils/icons.tsx`: `Help`
+          es un interrogante PELADO, y suelto junto a un titulo se lee como un
+          caracter de texto que se colo, no como parte del juego de iconos.
+          Ademas baja a 12px y pierde algo de contraste: es una nota al pie
+          junto al titulo, no un elemento de la jerarquia.
         */}
         {/* Drop-off Analysis */}
         <Card className="col-span-2 flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
             <h3 className="text-card-title font-medium text-ink">Análisis de Fugas (Drop-offs)</h3>
-            <span className="text-ink-muted" role="img" title="En qué punto del embudo dejan de avanzar los leads. Cuanto más se estrecha un tramo, más se pierde ahí." aria-label="En qué punto del embudo dejan de avanzar los leads. Cuanto más se estrecha un tramo, más se pierde ahí.">
-              <Icon.Help />
+            <span
+              className="shrink-0 text-ink-muted/70 [&_svg]:h-3 [&_svg]:w-3"
+              role="img"
+              title="En qué punto del embudo dejan de avanzar los leads. Cuanto más se estrecha un tramo, más se pierde ahí."
+              aria-label="En qué punto del embudo dejan de avanzar los leads. Cuanto más se estrecha un tramo, más se pierde ahí."
+            >
+              <Icon.HelpCircle />
             </span>
           </div>
           <div className="flex-1 flex items-center justify-center min-h-[140px] max-w-[400px] w-full mx-auto">
@@ -195,8 +206,13 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-card-title font-medium text-ink">Razones de descarte</h3>
-            <span className="text-ink-muted" role="img" title="El motivo que registraste al marcar un lead como descartado." aria-label="El motivo que registraste al marcar un lead como descartado.">
-              <Icon.Help />
+            <span
+              className="shrink-0 text-ink-muted/70 [&_svg]:h-3 [&_svg]:w-3"
+              role="img"
+              title="El motivo que registraste al marcar un lead como descartado."
+              aria-label="El motivo que registraste al marcar un lead como descartado."
+            >
+              <Icon.HelpCircle />
             </span>
           </div>
           <div className="flex-1 min-h-[140px]">
@@ -212,8 +228,13 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         <Card className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-2">
             <h3 className="text-card-title font-medium text-ink">Tiempo promedio por etapa</h3>
-            <span className="text-ink-muted" role="img" title="Cuántos días pasa un lead en cada etapa antes de avanzar." aria-label="Cuántos días pasa un lead en cada etapa antes de avanzar.">
-              <Icon.Help />
+            <span
+              className="shrink-0 text-ink-muted/70 [&_svg]:h-3 [&_svg]:w-3"
+              role="img"
+              title="Cuántos días pasa un lead en cada etapa antes de avanzar."
+              aria-label="Cuántos días pasa un lead en cada etapa antes de avanzar."
+            >
+              <Icon.HelpCircle />
             </span>
           </div>
           <div className="flex-1">
@@ -225,8 +246,13 @@ export default function FunnelReport({ snapshot, onClose }: FunnelReportProps) {
         <Card className="flex flex-col overflow-hidden">
           <div className="flex items-center gap-1.5 mb-1">
             <h3 className="text-card-title font-medium text-ink">Calidad de Leads por Fuente</h3>
-            <span className="text-ink-muted" role="img" title="Qué porcentaje de los leads de cada origen termina convertido." aria-label="Qué porcentaje de los leads de cada origen termina convertido.">
-              <Icon.Help />
+            <span
+              className="shrink-0 text-ink-muted/70 [&_svg]:h-3 [&_svg]:w-3"
+              role="img"
+              title="Qué porcentaje de los leads de cada origen termina convertido."
+              aria-label="Qué porcentaje de los leads de cada origen termina convertido."
+            >
+              <Icon.HelpCircle />
             </span>
           </div>
           <div className="flex-1 overflow-auto">

@@ -1,6 +1,22 @@
 export type ExportFormat = 'json' | 'excel';
 
-export type ComparePeriod = 'yesterday' | 'lastWeek' | 'lastMonth' | 'lastYear';
+/**
+ * Contra que se compara el panel.
+ *
+ * Ojo con lo que significa, porque no es obvio: la comparacion es contra el
+ * MISMO DIA de hace N dias, no contra el acumulado del periodo. El panel dice
+ * cuantos leads entraron hoy y cuantos entraron ese dia.
+ *
+ * `lastQuarter` y `lastHalf` se añaden en la migracion 175: el mes se queda
+ * corto y el año se queda largo para mirar un negocio comercial.
+ */
+export type ComparePeriod =
+  | 'yesterday'
+  | 'lastWeek'
+  | 'lastMonth'
+  | 'lastQuarter'
+  | 'lastHalf'
+  | 'lastYear';
 
 export type EmailProvider = 'emailjs' | 'resend' | 'gmail';
 
