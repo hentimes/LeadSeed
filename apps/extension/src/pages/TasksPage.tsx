@@ -251,8 +251,25 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
 
   return (
     <div>
-      <div className="flex justify-end items-center mb-4">
-        <div className="flex gap-1.5 mr-2 self-center">
+      {/*
+        UNA FILA, NO TRES.
+
+        Habia tres bloques apilados: los distintivos de estado con el boton
+        "Tarea", el selector de vista, y las pestañas. Los dos primeros con
+        `justify-end`, asi que todo se amontonaba en la derecha y la mitad
+        izquierda del panel quedaba vacia en dos filas seguidas. Casi cada
+        control ocupaba una linea entera para si solo.
+
+        Ahora los distintivos van a la izquierda -que es donde se leen, y de
+        paso ocupan el hueco- y los dos controles a la derecha. Son ademas los
+        dos que se usan: elegir vista y crear una tarea.
+
+        Los distintivos pueden encogerse y los controles no: en un panel
+        estrecho es preferible que "3 vencidas" se recorte a que el boton de
+        crear se salga.
+      */}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {stats.overdue.length > 0 && (
             <span className="rounded-full border border-state-danger-soft bg-state-danger-soft px-2 py-0.5 text-micro font-semibold text-state-danger-ink">{stats.overdue.length} vencida{stats.overdue.length > 1 ? 's' : ''}</span>
           )}
@@ -260,29 +277,29 @@ export default function TasksPage({ onTasksChanged }: { onTasksChanged?: () => v
             <span className="rounded-full border border-state-warning-soft bg-state-warning-soft px-2 py-0.5 text-micro font-semibold text-state-warning-ink">{stats.dueToday.length} hoy</span>
           )}
           {stats.dueTomorrow.length > 0 && (
-            <span className="rounded-full border border-state-info-soft bg-state-info-soft px-2 py-0.5 text-micro font-semibold text-ink">{stats.dueTomorrow.length} manana</span>
+            <span className="rounded-full border border-state-info-soft bg-state-info-soft px-2 py-0.5 text-micro font-semibold text-ink">{stats.dueTomorrow.length} mañana</span>
           )}
         </div>
-        <Button variant="primary" onClick={openNew} icon={Icon.Plus()}>
-          Tarea
-        </Button>
-      </div>
 
-      <div className="mb-3 flex items-center justify-end">
-        <label className="flex items-center gap-1.5">
-          <span className="text-micro text-ink-secondary">Vista</span>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Sin el rotulo "Vista": las tres opciones -Lista, Matriz,
+              Tablero- ya dicen que son, y el nombre accesible lo cubre. */}
           <Select
             value={vista}
             onChange={(evento) => setVista(evento.target.value as typeof vista)}
             compact
             fullWidth={false}
             aria-label="Vista de las tareas"
+            className="w-[104px]"
           >
             <option value="lista">Lista</option>
             <option value="matriz">Matriz</option>
             <option value="tablero">Tablero</option>
           </Select>
-        </label>
+          <Button variant="primary" onClick={openNew} icon={Icon.Plus()}>
+            Tarea
+          </Button>
+        </div>
       </div>
 
       {/* Las pestanas de filtro solo mandan sobre la lista. */}
