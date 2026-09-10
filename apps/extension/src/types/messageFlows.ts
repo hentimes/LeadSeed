@@ -109,3 +109,18 @@ export interface PendingFlowStep {
   templateName: string;
   dueAt?: string;
 }
+
+/**
+ * Las dos salidas que se pueden marcar durante una ronda de envio.
+ *
+ * Vive en `types/` y no junto al componente que las pinta porque las usan las
+ * dos capas: el panel de la cola las recibe como props y `useMarcasDeCola` las
+ * produce. Un gancho no puede importar de `components/` -la capa de dominio no
+ * depende de la UI- y el tipo no es de la UI: es el contrato entre las dos.
+ */
+export interface AccionesDeSalida {
+  /** El numero abierto no esta en WhatsApp. */
+  onSinWhatsApp: () => Promise<void>;
+  /** Pidio no recibir mas mensajes. La nota es el detalle, puede ir vacia. */
+  onNoContactar: (nota: string) => Promise<void>;
+}

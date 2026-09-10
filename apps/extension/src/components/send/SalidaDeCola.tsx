@@ -2,13 +2,7 @@ import { useState } from 'react';
 import { Button, Input } from '../../design';
 import { getPlatform } from '../../platform/registry';
 import { LARGO_MAXIMO_NOTA_DE_SALIDA } from '../../types';
-
-export interface AccionesDeSalida {
-  /** El numero abierto no esta en WhatsApp. */
-  onSinWhatsApp: () => Promise<void>;
-  /** Pidio no recibir mas mensajes. La nota es el detalle, puede ir vacia. */
-  onNoContactar: (nota: string) => Promise<void>;
-}
+import type { AccionesDeSalida } from '../../types';
 
 interface Props extends AccionesDeSalida {
   /** Nombre de a quien le toca, para poder preguntar por el en el dialogo. */

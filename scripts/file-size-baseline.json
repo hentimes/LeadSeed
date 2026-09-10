@@ -10,6 +10,5 @@
   "apps/extension/src/components/agenda/AgendaCalendar.tsx": 555,
   "apps/extension/src/hooks/useLeadDetail.ts": 544,
   "apps/extension/src/components/send/EmailSender.tsx": 532,
-  "apps/extension/src/pages/FlowsPage.tsx": 512,
-  "apps/extension/src/components/send/WhatsAppSender.tsx": 509
+  "apps/extension/src/pages/FlowsPage.tsx": 512
 }

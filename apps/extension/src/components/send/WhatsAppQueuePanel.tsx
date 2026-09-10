@@ -1,6 +1,7 @@
 import { Badge, Button, Panel } from '../../design';
 import type { WhatsAppQueueState } from '../../hooks/useWhatsAppQueue';
-import { SalidaDeCola, type AccionesDeSalida } from './SalidaDeCola';
+import { SalidaDeCola } from './SalidaDeCola';
+import type { AccionesDeSalida } from '../../types';
 
 interface Props {
   cola: WhatsAppQueueState;

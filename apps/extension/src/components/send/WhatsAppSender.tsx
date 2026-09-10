@@ -24,6 +24,8 @@ import { SendHistoryDisclosure } from './SendHistoryDisclosure';
 import { contarWhatsAppDelDia } from '../../services/historyService';
 import { comienzoDelDia } from '../../services/whatsappQuota';
 import WhatsAppQueuePanel from './WhatsAppQueuePanel';
+import { useMarcasDeCola } from '../../hooks/useMarcasDeCola';
+import { useSeleccionDeDestinatarios } from '../../hooks/useSeleccionDeDestinatarios';
 
 interface Props {
   leads: Lead[];
@@ -78,8 +80,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
   // Edición dinámica al vuelo
   const [customBody, setCustomBody] = useState('');
 
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
-  const [selectedListIds, setSelectedListIds] = useState<Set<number>>(new Set());
+  const seleccion = useSeleccionDeDestinatarios();
 
   // Busqueda, pagina y filtro de la hoja de destinatarios. Viven aca porque
   // la hoja se desmonta al cerrarse y enviar de a uno es abrirla y cerrarla
@@ -171,6 +172,14 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   const sentLeadIds = useMemo(() => new Set(sentLog.map((l) => l.leadId)), [sentLog]);
 
+  /* Marcar al de turno sin mandarle nada: que no tiene WhatsApp, o que pidio
+     no recibir mas mensajes. Ver `useMarcasDeCola`. */
+  const marcas = useMarcasDeCola({
+    cola,
+    historial: sentLog,
+    onEnvioDeshecho: () => sesion.refrescarContador(),
+  });
+
   /*
    * El filtro por canal se aplica tambien aqui, no solo en la lista.
    *
@@ -180,12 +189,12 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
    * recibirlo. Filtrar en el selector no bastaba porque ese camino lo esquiva.
    */
   const recipients = useMemo(() => {
-    const ids = new Set<string>(selectedLeadIds);
-    for (const listId of selectedListIds) {
+    const ids = new Set<string>(seleccion.leadIds);
+    for (const listId of seleccion.listaIds) {
       leads.filter((l) => l.listaIds.includes(listId)).forEach((l) => ids.add(l.id!));
     }
     return leads.filter((l) => ids.has(l.id!) && puedeRecibirPor(l, 'whatsapp'));
-  }, [leads, selectedLeadIds, selectedListIds]);
+  }, [leads, seleccion.leadIds, seleccion.listaIds]);
 
   // Set default preview lead
   useEffect(() => {
@@ -220,38 +229,6 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       setCupo({ usados, tope: ajustes.whatsappDailyLimit });
     })();
   }, [sentLeadIds]);
-
-  const toggleLead = (id: string) => {
-    setSelectedLeadIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
-      else n.add(id); return n; });
-  };
-  /*
-   * Marcar o desmarcar varios de una vez, en UNA actualizacion de estado.
-   *
-   * Lo pide la casilla de "esta pagina" del selector. Llamar ocho veces a
-   * `toggleLead` habria hecho lo mismo, pero con semantica de alternar: los que
-   * ya estaban marcados se habrian desmarcado, que es lo contrario de lo que
-   * promete una casilla de "marcar todos".
-   */
-  const toggleLeads = (ids: string[], seleccionar: boolean) => {
-    setSelectedLeadIds((prev) => {
-      const n = new Set(prev);
-      for (const id of ids) {
-        if (seleccionar) n.add(id);
-        else n.delete(id);
-      }
-      return n;
-    });
-  };
-  const toggleList = (id: number) => {
-    setSelectedListIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id);
-      else n.add(id); return n; });
-  };
-
-  const clearRecipients = () => {
-    setSelectedLeadIds(new Set());
-    setSelectedListIds(new Set());
-  };
 
   /*
    * QUE HACE EL BOTON DEL PIE AHORA MISMO.
@@ -338,7 +315,12 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       </SendStep>
       </div>
 
-      <WhatsAppQueuePanel cola={cola} />
+      <WhatsAppQueuePanel cola={cola} acciones={marcas.acciones} />
+      {marcas.aviso && (
+        <p role="status" className="text-micro text-ink-secondary">
+          {marcas.aviso}
+        </p>
+      )}
 
       {selectedTemplate ? (
         <SendStep title="Mensaje">
@@ -434,12 +416,12 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
         <RecipientSheet
           leads={leads}
           leadLists={leadLists}
-          selectedLeadIds={selectedLeadIds}
-          selectedListIds={selectedListIds}
-          onToggleLead={toggleLead}
-          onToggleLeads={toggleLeads}
-          onToggleList={toggleList}
-          onClear={clearRecipients}
+          selectedLeadIds={seleccion.leadIds}
+          selectedListIds={seleccion.listaIds}
+          onToggleLead={seleccion.alternarLead}
+          onToggleLeads={seleccion.alternarLeads}
+          onToggleList={seleccion.alternarLista}
+          onClear={seleccion.limpiar}
           search={navegacion.search}
           onSearchChange={navegacion.setSearch}
           pagina={navegacion.pagina}
