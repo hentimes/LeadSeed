@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { fetchMyLimits, type CuotasDelPlan } from '../repositories/limitsRepository';
 import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types';
 import { getCurrentSession, logoutCurrentUser, mapSessionToUser, onAuthSessionChange, persistGoogleCalendarConnectionFromSession } from '../services/authService';
@@ -12,6 +13,20 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   loading: boolean;
   activeFeatures: string[];
+  /**
+   * Cuanto da el plan de cada funcionalidad numerica.
+   *
+   * La ausencia de una clave significa SIN LIMITE, no cero. Ver
+   * `limiteDe()`, que es como hay que leerlo.
+   */
+  limits: CuotasDelPlan;
+  /**
+   * El tope de una funcionalidad, o `null` si no tiene.
+   *
+   * `null` y no `Infinity` para que quien lo use tenga que decidir que hace
+   * sin limite en vez de comparar contra un numero magico.
+   */
+  limiteDe: (feat: string) => number | null;
   hasFeature: (feat: string) => boolean;
   refreshProfile: () => Promise<void>;
   isAdmin: boolean;
@@ -24,6 +39,8 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   loading: true,
   activeFeatures: [],
+  limits: {},
+  limiteDe: () => null,
   hasFeature: () => false,
   refreshProfile: async () => {},
   isAdmin: false,
@@ -37,15 +54,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeFeatures, setActiveFeatures] = useState<string[]>([]);
+  const [limits, setLimits] = useState<CuotasDelPlan>({});
   const requestVersionRef = useRef(0);
   const sessionRef = useRef<Session | null>(null);
 
   /* Estables las dos: son dependencia del valor del contexto, y recrearlas en
      cada render anularia su memo -que es justo lo que vino a arreglarse-. */
   const loadFeatures = useCallback(async (requestVersion: number) => {
-    const nextFeatures = await loadActiveFeatures();
+    /*
+     * Las dos cosas en paralelo y con la misma guarda de version.
+     *
+     * Van juntas porque describen el mismo plan y se invalidan a la vez: si se
+     * pidieran por separado, un cambio de plan podria dejar las funcionalidades
+     * nuevas con las cuotas viejas durante un instante, que es el momento en
+     * que alguien ve "0 de 2 listas" con un plan que le da veinte.
+     */
+    const [nextFeatures, nextLimits] = await Promise.all([
+      loadActiveFeatures(),
+      fetchMyLimits(),
+    ]);
     if (requestVersionRef.current !== requestVersion) return;
     setActiveFeatures(nextFeatures);
+    setLimits(nextLimits);
   }, []);
 
   const refreshProfile = useCallback(async (targetUserId = user?.id) => {
@@ -162,6 +192,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [isAdmin, activeFeatures],
   );
 
+  /**
+   * El tope de una funcionalidad, o `null` si no tiene ninguno.
+   *
+   * `null` y no un numero enorme: quien lo consulta tiene que decidir
+   * explicitamente que hace sin limite, en vez de comparar contra un valor
+   * magico que un dia se queda corto.
+   *
+   * Un administrador no tiene topes, por lo mismo que `hasFeature` le devuelve
+   * true: si los tuviera, no podria reproducir lo que ve un usuario ni
+   * gestionar cuentas grandes.
+   */
+  const limiteDe = useCallback(
+    (feat: string): number | null => {
+      if (isAdmin) return null;
+      const valor = limits[feat];
+      return typeof valor === 'number' ? valor : null;
+    },
+    [isAdmin, limits],
+  );
+
   /*
    * EL VALOR DEL CONTEXTO VA MEMOIZADO.
    *
@@ -185,11 +235,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signOut,
       loading,
       activeFeatures,
+      limits,
+      limiteDe,
       hasFeature,
       refreshProfile: refrescar,
       isAdmin,
     }),
-    [session, user, profile, signOut, loading, activeFeatures, hasFeature, refrescar, isAdmin],
+    [session, user, profile, signOut, loading, activeFeatures, limits, limiteDe, hasFeature, refrescar, isAdmin],
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

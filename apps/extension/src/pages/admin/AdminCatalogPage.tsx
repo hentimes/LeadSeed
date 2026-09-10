@@ -144,12 +144,6 @@ export default function AdminCatalogPage() {
     setSeleccion({ tipo: 'feature', id: guardada.id });
   };
 
-  if (loading) return <LoadingOverlay message="Cargando catálogo..." />;
-
-  const planActivo = seleccion?.tipo === 'plan' ? plans.find((plan) => plan.id === seleccion.id) : undefined;
-  const featureActiva =
-    seleccion?.tipo === 'feature' && seleccion.id ? features.find((f) => f.id === seleccion.id) : undefined;
-
   /*
    * LAS FUNCIONALIDADES, AGRUPADAS POR CATEGORIA.
    *
@@ -182,6 +176,13 @@ export default function AdminCatalogPage() {
 
     return grupos;
   }, [features]);
+
+  if (loading) return <LoadingOverlay message="Cargando catálogo..." />;
+
+  const planActivo = seleccion?.tipo === 'plan' ? plans.find((plan) => plan.id === seleccion.id) : undefined;
+  const featureActiva =
+    seleccion?.tipo === 'feature' && seleccion.id ? features.find((f) => f.id === seleccion.id) : undefined;
+
 
   const lista = (
     <div className="flex min-h-0 flex-col gap-2">

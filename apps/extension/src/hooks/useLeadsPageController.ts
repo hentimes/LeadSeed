@@ -33,7 +33,7 @@ function getLeadAppointmentMetadata(lead: Lead): { appointmentId: string; appoin
 export function useLeadsPageController() {
   const { getAll, getDeleted, getPage, getForgottenPage, getIdentities, getById, save, remove, restore, permanentDelete, addToList, importLeads, refreshKey, getPinned, reorderPinned } = useLeads();
   const { getAll: getLists } = useLists();
-  const { hasFeature, user } = useAuth();
+  const { limiteDe, user } = useAuth();
 
   const pageSize = PAGE_SIZE;
 
@@ -533,11 +533,23 @@ export function useLeadsPageController() {
     selection.clear();
   };
 
+  /*
+   * EL TOPE SALE DEL PLAN, NO DE UN 100 ESCRITO AQUI.
+   *
+   * Estaba en dos sitios de este fichero y decia siempre "plan Free", asi que
+   * un plan intermedio con 1000 leads era imposible: el catalogo solo sabia
+   * decir "con tope" o "sin tope" (`pro:unlimited_leads`). Ahora
+   * `plan_feature_limits` guarda el numero por plan y `limiteDe` lo lee;
+   * `null` es sin limite. Ver migracion 182.
+   */
+  const topeDeLeads = limiteDe('module:leads');
+
   const handleImport = async (rows: ParsedRow[]) => {
-    if (!hasFeature('pro:unlimited_leads') && totalCount + rows.length > 100) {
-      await getPlatform().dialogs.alert('Actualiza tu plan para poder importar más leads.', {
-        title: 'Llegaste al límite del plan Free',
-      });
+    if (topeDeLeads !== null && totalCount + rows.length > topeDeLeads) {
+      await getPlatform().dialogs.alert(
+        `Tu plan permite ${topeDeLeads} contactos y ya tienes ${totalCount}. Mejora el plan para importar más.`,
+        { title: 'Llegaste al límite de tu plan' },
+      );
       return;
     }
 
@@ -551,10 +563,11 @@ export function useLeadsPageController() {
   };
 
   const handleNewLeadClick = async () => {
-    if (!hasFeature('pro:unlimited_leads') && totalCount >= 100) {
-      await getPlatform().dialogs.alert('Mejora tu plan para tener leads ilimitados.', {
-        title: 'Llegaste al límite del plan Free',
-      });
+    if (topeDeLeads !== null && totalCount >= topeDeLeads) {
+      await getPlatform().dialogs.alert(
+        `Tu plan permite ${topeDeLeads} contactos. Mejora el plan para agregar más.`,
+        { title: 'Llegaste al límite de tu plan' },
+      );
       return;
     }
     setEditing(null);

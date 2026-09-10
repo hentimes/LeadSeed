@@ -2,7 +2,17 @@ import type { Feature, Plan, PlanFeature, Profile, UserFeatureOverride } from '.
 import { Badge, Block, Button, Field, Select } from '../../design';
 import { formatearFecha } from '../../utils/date';
 
-/** Los tres regalos de prueba que ya existian, en un solo sitio. */
+/**
+ * Duraciones de prueba que se ofrecen cuando la funcionalidad no dice la suya.
+ *
+ * `features.trial_days` existia desde la migracion 001, se recogia en el
+ * formulario del catalogo y se pintaba como distintivo, y **no lo miraba
+ * nadie**: aqui se ofrecian siempre estos tres numeros. El campo prometia una
+ * duracion y la duracion salia de otro sitio.
+ *
+ * Ahora la funcionalidad manda: si declara sus dias, esa es la opcion
+ * destacada. Estos quedan como alternativas para las que no declaran ninguna.
+ */
 const DIAS_DE_PRUEBA = [15, 30, 60];
 
 interface Props {
@@ -96,7 +106,17 @@ export default function AdminUserLicenses({
                       <Button size="sm" variant="primary" onClick={() => onAssignFeature(feature.id)}>
                         Asignar
                       </Button>
-                      {DIAS_DE_PRUEBA.map((dias) => (
+                      {feature.trial_days > 0 && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => onAssignFeature(feature.id, feature.trial_days)}
+                          title={`Prueba de ${feature.trial_days} días, la que declara esta funcionalidad`}
+                        >
+                          Prueba de {feature.trial_days} días
+                        </Button>
+                      )}
+                      {DIAS_DE_PRUEBA.filter((dias) => dias !== feature.trial_days).map((dias) => (
                         <Button key={dias} size="sm" onClick={() => onAssignFeature(feature.id, dias)}>
                           {dias} días
                         </Button>

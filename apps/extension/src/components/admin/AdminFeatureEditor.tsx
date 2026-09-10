@@ -180,7 +180,7 @@ export default function AdminFeatureEditor({
 
         <Field
           label="Días de prueba"
-          hint="Si es mayor que 0, cualquier usuario sin plan premium puede activar una prueba temporal."
+          hint="La duración que se ofrece al conceder esta funcionalidad a alguien desde su ficha. No la activa nadie por su cuenta."
         >
           <Input
             type="number"

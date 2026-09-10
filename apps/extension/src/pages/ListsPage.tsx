@@ -34,7 +34,7 @@ type UnifiedList = {
 const MAX_SUGERENCIAS = 15;
 
 export default function ListsPage() {
-  const { hasFeature } = useAuth();
+  const { limiteDe } = useAuth();
   const { getAll: getLists, save, remove: removeList, setColor: setListsColor } = useLists();
   const { getAll: getLeads, getDeleted, addToList, removeFromList, remove: deleteLead } = useLeads();
   
@@ -134,8 +134,13 @@ export default function ListsPage() {
   };
 
   const handleCreateList = async ({ name, color }: { name: string; color: string }) => {
-    if (lists.length >= 2 && !hasFeature('pro:unlimited_lists')) {
-      throw new Error('El plan Free permite 2 listas. Pasa a Pro para crear las que quieras.');
+    /* El tope sale del plan (migracion 182), no de un 2 escrito aqui: con el
+       booleano `pro:unlimited_lists` no habia forma de ofrecer veinte. */
+    const tope = limiteDe('module:lists');
+    if (tope !== null && lists.length >= tope) {
+      throw new Error(
+        `Tu plan permite ${tope} ${tope === 1 ? 'lista' : 'listas'}. Mejora el plan para crear más.`,
+      );
     }
 
     await save({ name, color, createdAt: '' });
