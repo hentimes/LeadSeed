@@ -50,6 +50,18 @@ jobs:
         # no esta garantizado, `python3` si.
         run: python3 scripts/audit-dark-gaps.py
 
+      - name: Espejo de migraciones
+        # Cada migracion vive dos veces: `supabase/migrations/` con marca
+        # temporal (la fuente, que es lo que el CLI aplica y lo que la base
+        # registra) y `sql/migrations/` numerada (el espejo legible).
+        #
+        # Hasta el 2026-09-10 nada comparaba las dos carpetas, y `sql/README.md`
+        # se declaraba fuente autorizada sin mencionar siquiera que el espejo
+        # existiera. Las migraciones 090, 091 y 137 llegaron a estar aplicadas
+        # en produccion sin equivalente numerado: leer esa carpeta daba una foto
+        # incompleta de la base y nadie tenia forma de notarlo.
+        run: npm run check:migrations
+
       - name: Tamano de archivo sobre el umbral del §41
         # El §41 del plan pide plan de extraccion al tocar un archivo sobre 500
         # lineas. Era la unica regla estructural sin guarda, y la auditoria del

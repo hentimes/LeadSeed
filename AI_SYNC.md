@@ -8800,3 +8800,99 @@ la consulta, porque pagina en servidor.
   `Lead`.
 - **`Trend.label` ya no se renderiza en ningun sitio** desde que el periodo subio
   a la cabecera de la tarjeta. Se puede retirar del tipo.
+
+---
+
+## Claude (LeadSeed) | 2026-09-10 | Auditoria CONTROL y correccion de 9 de sus hallazgos
+
+### Contexto
+
+El usuario pidio auditar el codigo contra las normas del proyecto -monolitos,
+escalabilidad, modularidad, convencion, orden del repositorio- y despues resolver
+cada hallazgo. Se apoyo en dos agentes especializados, uno de infraestructura de
+datos y otro de arquitectura, ambos de solo lectura para no pisar esta rama.
+
+Informe completo publicado como artefacto: "Auditoria CONTROL 2026-09-09".
+
+### AVISO DE CONCURRENCIA (§14.3)
+
+**Durante este bloque habia otra sesion trabajando en el mismo arbol.** Al empezar,
+`HEAD` era `4e9e4d5` y el arbol estaba limpio. Al terminar habia tres commits nuevos
+(`catalogo`, 2026-09-09 22:51-23:07) y tres archivos con cambios sin commitear de las
+09:34-09:36 del 2026-09-10: `AdminPlanEditor.tsx`, `AdminUserLicenses.tsx` y
+`AdminCatalogPage.tsx`.
+
+No hubo colision: ninguno de esos tres importa `CountBadge` ni coincide con los que
+se tocaron aqui, y el typecheck del arbol combinado pasa. **Pero este bloque no se
+reservo antes de editar, y eso incumple el §6.1.** Queda dicho en vez de disimulado.
+
+### Lo que quedo hecho
+
+- **Espejo de migraciones (§5.3).** `sql/migrations/` y `supabase/migrations/` tenian
+  183 archivos cada una sin que nada comparara las dos. Se invirtio el rol declarado:
+  la fuente es `supabase/migrations/` -es la que el CLI aplica, la que la base registra
+  y la unica capaz de expresar el orden, porque la numerada tiene DOS archivos `036` y
+  dos huecos-. `sql/README.md` decia ser "la fuente autorizada" y era falso. Nuevo
+  `scripts/check-migrations-mirror.mjs` + `npm run check:migrations`, en CI. README
+  nuevo en `supabase/migrations/`.
+- **Guarda del §41.** Nuevo `scripts/check-file-size.mjs` con linea base versionada.
+  Falla solo si un archivo sobre 500 lineas crece o si aparece uno nuevo sin plan. Era
+  la unica regla estructural sin guarda, y por eso se incumplia sin que nada lo dijera.
+- **Plan de extraccion escrito**, `docs/architecture/plan-extraccion-archivos-grandes.md`,
+  con la primera pieza a extraer de los cinco archivos que se tocaron el 2026-09-09 sin
+  declararlo. No se ejecuta ahora: solo se decide.
+- **`CountBadge` duplicado (§5.4).** Eran dos componentes DISTINTOS con el mismo nombre:
+  uno se cuelga de la esquina de un control, el otro va en linea en una fila. El de la
+  esquina paso a `OverlayCount` con nombre accesible obligatorio (`label: string | null`,
+  donde `null` declara que el padre ya lo anuncia); el de linea subio a `design/`.
+- **Ultima llamada suelta a `chrome`.** `App.tsx:39` pasa por `messageBus`. Ya no queda
+  ninguna fuera de `platform/` y los dos puntos de entrada.
+- **Norma de nombres corregida (§41).** Pedia kebab-case; habia 148 archivos camelCase y
+  0 kebab-case. Se corrigio la norma, no los 148 archivos: renombrarlos tocaria cada
+  import a cambio de nada, y el §12 lo prohibe.
+- **Cifras del roadmap (§8.4).** El conteo del nucleo compartido era del 2026-08-19 y ya
+  no era cierto. Remedido, con el anterior conservado al lado para ver la tendencia: las
+  capas crecieron entre 22% y 100% y el acoplamiento no subio.
+- **Techo de avisos de lint.** `--max-warnings 125`, el numero exacto de hoy. No aprueba
+  los avisos, impide que crezcan.
+- **Primera prueba de repositorio.** `leadsPageFilters.test.ts`, 12 casos sobre el
+  invariante de que la consulta de la bandeja lleva `user_id` en toda combinacion de
+  filtros. Verificada por mutacion: rompiendo el invariante fallan 7 de 12.
+- **`packages/` borrada.** Estaba vacia y **no versionada**: solo existia en esta maquina.
+  El glob `packages/*` de `workspaces` se conserva, que es donde la decision si esta
+  escrita y versionada.
+
+### Validacion ejecutada
+
+`typecheck` limpio, `lint` 0 errores / 125 avisos bajo el techo, `check:migrations` 183
+al dia, `check:file-size` sin crecimiento, `check:functions` 12 sin deriva, suite
+completa 1006 pruebas en 78 archivos, todas pasan.
+
+### Riesgos abiertos y pendientes
+
+- **`duplicatesRepository` permite colgar filas de un lead ajeno.** `moveLeadNotes` y
+  `moveSendLogs` cambian `lead_id` sin que nada compruebe que el destino sea del mismo
+  usuario. La politica `WITH CHECK (auth.uid() = user_id)` pasa igual, porque la columna
+  que cambia no es `user_id`. **No hay fuga de lectura** -la victima no ve esas filas-
+  pero si contaminacion entre tenants, y `send_logs` alimenta contadores del panel.
+  Corregirlo es cambio de RLS o RPC nueva, alto riesgo (§15.4): **requiere decision del
+  usuario, no se toco.**
+- **`148_playbooks.sql` no es reaplicable.** Sus `drop policy if exists` nombran politicas
+  que no coinciden con las que crea despues. Reaplicarla falla. Documentado en el README
+  nuevo, sin corregir por el mismo motivo.
+- **Doce funciones de repositorio tragan el error** (`const { data } = await` sin mirar
+  `error`). El propio `historyRepository.ts:171` ya argumenta por que eso importa.
+- **`AI_SYNC.md` sigue en 8.800+ lineas.** Partirlo estaba en el plan de este bloque y
+  **se dejo fuera a proposito** por la sesion concurrente: reestructurar el archivo donde
+  la otra IA va a escribir su handoff es la mejor forma de perder trabajo ajeno.
+- **`utils/imageCompression.ts`** sigue siendo el unico archivo del nucleo atado a
+  plataforma. Diseño del puerto `ImageEncoderPort` propuesto, sin implementar: va junto
+  con la creacion de `packages/core`, no antes.
+
+### Solicitud de revision cruzada (§14.4)
+
+Este bloque necesita auditoria de la otra IA, con atencion especial a:
+
+1. la inversion de fuente/espejo en migraciones, que cambia una regla operativa
+2. el cambio de la norma de nombres del §41, que es correccion de norma y no de codigo
+3. si el techo de 125 avisos es el mecanismo correcto o solo congela deuda

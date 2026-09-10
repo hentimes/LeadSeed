@@ -179,7 +179,7 @@ export function tokenizeSearch(rawSearch?: string): string[] {
  * compilar. Es el precio, y esta escrito para que se sepa que se pago.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applyLeadPageFilters(query: any, userId: string, params: LeadPageQuery) {
+export function applyLeadPageFilters(query: any, userId: string, params: LeadPageQuery) {
   let nextQuery = query.eq('user_id', userId);
 
   if (params.deleted) {

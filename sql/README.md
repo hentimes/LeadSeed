@@ -1,6 +1,58 @@
 # SQL Structure
 
-Este directorio es la fuente autorizada de SQL del proyecto.
+Este directorio documenta el SQL del proyecto. Para `seeds/`, `data-repairs/` y
+`diagnostics/` es ademas la fuente. Para `migrations/` **no lo es**: es un espejo.
+
+## migrations/ es un espejo, no la fuente
+
+Corregido el `2026-09-10`, tras la auditoria CONTROL de ese dia. Este README decia ser
+"la fuente autorizada de SQL del proyecto" y no mencionaba que existiera una segunda
+copia completa. Era falso para `migrations/`.
+
+Cada migracion vive dos veces:
+
+    supabase/migrations/20260909000300_tarea_diaria_de_envios.sql   <- fuente
+    sql/migrations/176_tarea_diaria_de_envios.sql                   <- espejo
+
+Manda la de marca temporal, por tres motivos que no son opinables:
+
+- es la unica que el CLI ejecuta (`supabase db push`)
+- es la unica que la base registra en `supabase_migrations.schema_migrations`
+- es la unica capaz de expresar el orden real: la numeracion de aqui tiene **dos
+  archivos `036`** y dos huecos (122 y 123, reservados por `no-aplicadas/`). Un
+  identificador que se repite no es un orden.
+
+Hay ademas testimonio escrito en el propio repo: las cabeceras de `090`, `091` y `137`
+dicen que esas migraciones nacieron en la carpeta temporal, se aplicaron a produccion
+desde ahi, y que el archivo numerado es una copia retroactiva.
+
+Este espejo se conserva por lo que la fuente no tiene: las cabeceras en prosa que
+explican por que cada cambio se hizo asi, y una numeracion corta con la que se puede
+hablar ("la 137").
+
+### Como agregar una migracion
+
+1. `supabase migration new <dominio_accion>`
+2. escribirla en `supabase/migrations/`
+3. copiarla a `sql/migrations/` con el siguiente numero libre
+4. `npm run check:migrations`
+
+Nunca al reves. Un archivo que solo existe aqui no se aplica jamas.
+
+### Cuando el espejo puede diferir
+
+Solo en comentarios, y solo con su motivo anotado en `DIVERGENCIAS_ACEPTADAS` dentro de
+`scripts/check-migrations-mirror.mjs`. Hoy hay cuatro casos: `090`, `091` y `137` llevan
+una cabecera de trazabilidad que la fuente no tiene, y `118` tiene otro titulo. **El SQL
+ejecutable coincide en las 183.**
+
+### El orden numerico no es el orden de aplicacion
+
+En dos puntos las dos carpetas se contradicen: `095` y `137` tienen marca temporal
+anterior a la de su vecino numerico. El orden real es el de la fuente. Aplicar esta
+carpeta en orden numerico no reproduce la base. Esos dos casos estan congelados en
+`ORDEN_HISTORICO_ACEPTADO` dentro del script, porque renumerar una migracion ya aplicada
+seria peor: la base la tiene anotada por su nombre temporal.
 
 ## Convencion
 

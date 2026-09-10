@@ -15,7 +15,8 @@
     "lint:fix": "eslint apps/extension/src --fix",
     "check:functions": "node scripts/check-edge-function-ownership.mjs",
     "check:classes": "node scripts/check-tailwind-classes.mjs",
-    "check:file-size": "node scripts/check-file-size.mjs"
+    "check:file-size": "node scripts/check-file-size.mjs",
+    "check:migrations": "node scripts/check-migrations-mirror.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
