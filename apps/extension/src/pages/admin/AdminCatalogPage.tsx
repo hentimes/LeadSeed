@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSaaS } from '../../hooks/useSaaS';
 import type { Feature, Plan, PlanFeature } from '../../types';
 import { getErrorMessage } from '../../utils/errorMessage';
@@ -7,6 +7,7 @@ import LoadingOverlay from '../../components/LoadingOverlay';
 import AdminMasterDetail from '../../components/admin/AdminMasterDetail';
 import AdminPlanEditor from '../../components/admin/AdminPlanEditor';
 import AdminFeatureEditor from '../../components/admin/AdminFeatureEditor';
+import { CATEGORIAS } from '../../config/featureCategories';
 
 const iconoCatalogo = (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -149,6 +150,39 @@ export default function AdminCatalogPage() {
   const featureActiva =
     seleccion?.tipo === 'feature' && seleccion.id ? features.find((f) => f.id === seleccion.id) : undefined;
 
+  /*
+   * LAS FUNCIONALIDADES, AGRUPADAS POR CATEGORIA.
+   *
+   * Eran una lista plana de doce. Con las cuarenta y tres que la aplicacion
+   * tiene de verdad, una lista plana no se recorre: hay que poder decir "de
+   * Mensajes, ¿que le doy a este plan?".
+   *
+   * Las que no tienen categoria van al final y no se esconden. Es el estado
+   * real de un catalogo a medio migrar, y esconderlas haria que nadie las
+   * clasificara nunca.
+   */
+  const porCategoria = useMemo(() => {
+    const grupos = CATEGORIAS.map((categoria) => ({
+      categoria,
+      funcionalidades: features
+        .filter((f) => f.category === categoria.id)
+        .sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100)),
+    })).filter((g) => g.funcionalidades.length > 0);
+
+    const sinClasificar = features.filter(
+      (f) => !f.category || !CATEGORIAS.some((c) => c.id === f.category),
+    );
+
+    if (sinClasificar.length > 0) {
+      grupos.push({
+        categoria: { id: '', nombre: 'Sin clasificar', resumen: 'Todavía no tienen categoría' },
+        funcionalidades: sinClasificar,
+      });
+    }
+
+    return grupos;
+  }, [features]);
+
   const lista = (
     <div className="flex min-h-0 flex-col gap-2">
       {error && <Notice onDismiss={() => setError('')}>{error}</Notice>}
@@ -195,21 +229,40 @@ export default function AdminCatalogPage() {
       >
         {features.length === 0
           ? null
-          : features.map((feature) => (
-              <ListRow
-                key={feature.id}
-                density="compact"
-                isSelected={seleccion?.tipo === 'feature' && seleccion.id === feature.id}
-                onClick={() => setSeleccion({ tipo: 'feature', id: feature.id })}
-                className="cursor-pointer"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-micro font-semibold text-ink">{feature.name}</p>
-                  <p className="truncate text-micro text-ink-muted">{feature.description || 'Sin descripción'}</p>
+          : porCategoria.map(({ categoria, funcionalidades }) => (
+              <div key={categoria.id || 'sin-clasificar'}>
+                {/* Cabecera pegajosa: en una lista de cuarenta y tres, al
+                    desplazar dentro de un grupo se pierde de vista en cual
+                    estas. */}
+                <div className="sticky top-0 z-10 flex items-baseline justify-between gap-2 border-b border-line bg-surface-muted px-3 py-1">
+                  <span className="truncate text-micro font-semibold uppercase tracking-wide text-ink-secondary">
+                    {categoria.nombre}
+                  </span>
+                  <span className="shrink-0 text-micro tabular-nums text-ink-muted">
+                    {funcionalidades.length}
+                  </span>
                 </div>
-                {!feature.is_active && <Badge tone="danger">Off</Badge>}
-                {feature.trial_days > 0 && <Badge tone="warning">{feature.trial_days} d</Badge>}
-              </ListRow>
+
+                {funcionalidades.map((feature) => (
+                  <ListRow
+                    key={feature.id}
+                    density="compact"
+                    isSelected={seleccion?.tipo === 'feature' && seleccion.id === feature.id}
+                    onClick={() => setSeleccion({ tipo: 'feature', id: feature.id })}
+                    className="cursor-pointer"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-micro font-semibold text-ink">{feature.name}</p>
+                      {/* El identificador y no la descripcion: es la clave que
+                          se busca cuando algo no se desbloquea, y la
+                          descripcion ya se lee al abrirla. */}
+                      <p className="truncate font-mono text-micro text-ink-muted">{feature.id}</p>
+                    </div>
+                    {!feature.is_active && <Badge tone="danger">Off</Badge>}
+                    {feature.trial_days > 0 && <Badge tone="warning">{feature.trial_days} d</Badge>}
+                  </ListRow>
+                ))}
+              </div>
             ))}
       </ListPanel>
     </div>

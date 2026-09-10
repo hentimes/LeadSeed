@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import type { Feature, Plan, PlanFeature } from '../../types';
 import { Badge, Checkbox, ListPanel, ListRow } from '../../design';
 import AdminSkeleton from './AdminSkeleton';
+import { CATEGORIAS, type CategoriaDeFuncionalidad } from '../../config/featureCategories';
 
 /**
  * Que funcionalidades trae un plan.
@@ -28,6 +30,38 @@ export default function AdminPlanEditor({
   onToggleFeature: (featureId: string) => void;
 }) {
   const incluidas = planFeatures.length;
+  const asignadas = useMemo(
+    () => new Set(planFeatures.map((pf) => pf.feature_id)),
+    [planFeatures],
+  );
+
+  /*
+   * AGRUPADO POR CATEGORIA, IGUAL QUE EL CATALOGO.
+   *
+   * Componer un plan es responder "de Mensajes, ¿que le doy?", y con una lista
+   * plana de cuarenta y tres eso no se puede hacer. Cada grupo dice ademas
+   * cuantas lleva incluidas, que es lo que se mira al comparar dos planes.
+   */
+  const porCategoria = useMemo(() => {
+    const grupos: Array<{ categoria: CategoriaDeFuncionalidad; funcionalidades: Feature[] }> =
+      CATEGORIAS.map((categoria) => ({
+      categoria,
+      funcionalidades: features
+        .filter((f) => f.category === categoria.id)
+        .sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100)),
+      })).filter((g) => g.funcionalidades.length > 0);
+
+    const sinClasificar = features.filter(
+      (f) => !f.category || !CATEGORIAS.some((c) => c.id === f.category),
+    );
+    if (sinClasificar.length > 0) {
+      grupos.push({
+        categoria: { id: '', nombre: 'Sin clasificar', resumen: '' },
+        funcionalidades: sinClasificar,
+      });
+    }
+    return grupos;
+  }, [features]);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-line bg-surface">
@@ -46,23 +80,40 @@ export default function AdminPlanEditor({
           <AdminSkeleton rows={4} />
         ) : (
           <ListPanel title="Funcionalidades incluidas" count={`${incluidas} activas`}>
-            {features.map((feature) => {
-              const asignada = planFeatures.some((planFeature) => planFeature.feature_id === feature.id);
+            {porCategoria.map(({ categoria, funcionalidades }) => {
+              const dentro = funcionalidades.filter((f) => asignadas.has(f.id)).length;
               return (
-                <ListRow key={feature.id} density="compact" isSelected={asignada} className="items-start">
-                  <Checkbox
-                    label={null}
-                    aria-label={feature.name}
-                    checked={asignada}
-                    onChange={() => onToggleFeature(feature.id)}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-micro font-medium text-ink">{feature.name}</p>
-                    <p className="line-clamp-2 text-micro text-ink-muted">
-                      {feature.description || 'Sin descripción'}
-                    </p>
+                <div key={categoria.id || 'sin-clasificar'}>
+                  <div className="sticky top-0 z-10 flex items-baseline justify-between gap-2 border-b border-line bg-surface-muted px-3 py-1">
+                    <span className="truncate text-micro font-semibold uppercase tracking-wide text-ink-secondary">
+                      {categoria.nombre}
+                    </span>
+                    <span className="shrink-0 text-micro tabular-nums text-ink-muted">
+                      {dentro} de {funcionalidades.length}
+                    </span>
                   </div>
-                </ListRow>
+
+                  {funcionalidades.map((feature) => {
+                    const asignada = asignadas.has(feature.id);
+                    return (
+                      <ListRow key={feature.id} density="compact" isSelected={asignada} className="items-start">
+                        <Checkbox
+                          label={null}
+                          aria-label={feature.name}
+                          checked={asignada}
+                          onChange={() => onToggleFeature(feature.id)}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-micro font-medium text-ink">{feature.name}</p>
+                          <p className="line-clamp-2 text-micro text-ink-muted">
+                            {feature.description || 'Sin descripción'}
+                          </p>
+                        </div>
+                        {!feature.is_active && <Badge tone="danger">Off</Badge>}
+                      </ListRow>
+                    );
+                  })}
+                </div>
               );
             })}
           </ListPanel>
