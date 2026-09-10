@@ -65,8 +65,14 @@ export function useSaaS() {
     await deleteUserOverride(userId, featureId);
   }, []);
 
-  const saveFeature = useCallback(async (feature: Partial<Feature>) => {
-    return upsertFeature(feature);
+  /**
+   * `esAlta` es explicito y no se deduce de si viene `id`.
+   *
+   * Ahora el identificador viaja SIEMPRE -es lo que faltaba y hacia que el alta
+   * fallara-, asi que su presencia ya no distingue un alta de una edicion.
+   */
+  const saveFeature = useCallback(async (feature: Partial<Feature>, esAlta: boolean) => {
+    return upsertFeature(feature, esAlta);
   }, []);
 
   return {

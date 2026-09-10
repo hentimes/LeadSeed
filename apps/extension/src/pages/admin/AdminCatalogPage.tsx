@@ -128,9 +128,17 @@ export default function AdminCatalogPage() {
   };
 
   const guardarFuncionalidad = async (borrador: Partial<Feature>) => {
-    const guardada = await saveFeature(borrador);
+    /*
+     * El alta se reconoce por la SELECCION, no por el `id` del borrador.
+     *
+     * `setSeleccion({ tipo: 'feature', id: null })` es lo que abre un alta, y
+     * ahora el borrador lleva identificador desde el primer momento, asi que
+     * mirar `borrador.id` diria "edicion" siempre.
+     */
+    const esAlta = seleccion?.tipo === 'feature' && seleccion.id === null;
+    const guardada = await saveFeature(borrador, esAlta);
     setFeatures((prev) =>
-      borrador.id ? prev.map((f) => (f.id === guardada.id ? guardada : f)) : [...prev, guardada],
+      esAlta ? [...prev, guardada] : prev.map((f) => (f.id === guardada.id ? guardada : f)),
     );
     setSeleccion({ tipo: 'feature', id: guardada.id });
   };

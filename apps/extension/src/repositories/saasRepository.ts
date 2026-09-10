@@ -101,17 +101,55 @@ export async function deleteUserOverride(userId: string, featureId: string): Pro
   }
 }
 
-export async function upsertFeature(feature: Partial<Feature>): Promise<Feature> {
-  if (feature.id) {
-    const { data, error } = await supabase.from('features').update(feature).eq('id', feature.id).select().single();
-    if (error) {
-      throw error;
-    }
+/**
+ * Alta o edicion de una funcionalidad del catalogo.
+ *
+ * EL ALTA NO FUNCIONABA. Hacia `insert([feature])` con un objeto sin `id`,
+ * contra una columna `text PRIMARY KEY` sin valor por defecto, asi que violaba
+ * la restriccion de no-nulo y fallaba siempre. El formulario tampoco lo
+ * recogia: tenia un campo rotulado "Codigo" enlazado a `name`.
+ *
+ * Ahora el `id` es obligatorio en los dos casos y lo distingue `esAlta`, no la
+ * presencia del id. Un `upsert` a secas tampoco servia: en la edicion machacaria
+ * con nulos las columnas que el formulario no manda.
+ */
+export async function upsertFeature(feature: Partial<Feature>, esAlta: boolean): Promise<Feature> {
+  const id = feature.id?.trim();
+  if (!id) {
+    throw new Error('Falta el identificador de la funcionalidad.');
+  }
+
+  if (!esAlta) {
+    const { data, error } = await supabase
+      .from('features')
+      // Sin el `id`: es la clave por la que se busca y no se cambia nunca.
+      .update({
+        name: feature.name,
+        description: feature.description,
+        is_active: feature.is_active,
+        trial_days: feature.trial_days,
+        category: feature.category,
+        sort_order: feature.sort_order,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
     return data;
   }
 
-  const { data, error } = await supabase.from('features').insert([feature]).select().single();
+  const { data, error } = await supabase
+    .from('features')
+    .insert([{ ...feature, id }])
+    .select()
+    .single();
+
   if (error) {
+    // 23505 es clave duplicada. El mensaje crudo de Postgres nombra el indice,
+    // que no le dice nada a quien esta rellenando un formulario.
+    if ((error as { code?: string }).code === '23505') {
+      throw new Error(`Ya existe una funcionalidad con el identificador «${id}».`);
+    }
     throw error;
   }
   return data;

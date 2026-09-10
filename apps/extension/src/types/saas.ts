@@ -7,11 +7,22 @@ export interface Plan {
 }
 
 export interface Feature {
+  /**
+   * La clave que consulta el codigo: `hasFeature('contactos.importar')`.
+   *
+   * Es inmutable despues del alta. Cambiarla no renombra nada: deja de
+   * coincidir con la comprobacion escrita en el codigo y la funcionalidad
+   * desaparece para todo el mundo.
+   */
   id: string;
   name: string;
   description?: string;
   is_active: boolean;
   trial_days: number;
+  /** A que grupo pertenece. Nula = sin clasificar. Ver migracion 179. */
+  category?: string | null;
+  /** Orden dentro de la categoria; el alfabetico no sirve. */
+  sort_order?: number;
   created_at: string;
 }
 
