@@ -12,12 +12,11 @@ import {
 import { getPlatform } from '../../platform/registry';
 import { getErrorMessage } from '../../utils/errorMessage';
 import { formatearTiempoRelativo } from '../../utils/date';
-import { Badge, Button, EmptyState, ListPanel, ListRow, Notice } from '../../design';
+import { Badge, Button, CountBadge, EmptyState, ListPanel, ListRow, Notice } from '../../design';
 import AdminMasterDetail from '../../components/admin/AdminMasterDetail';
 import AdminTicketDetail from '../../components/admin/AdminTicketDetail';
 import AdminUserAvatar from '../../components/admin/AdminUserAvatar';
 import AdminSkeleton from '../../components/admin/AdminSkeleton';
-import { CountBadge } from '../../components/admin/CountBadge';
 
 const iconoBandeja = (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

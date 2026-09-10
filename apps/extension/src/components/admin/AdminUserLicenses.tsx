@@ -1,5 +1,7 @@
 import type { Feature, Plan, PlanFeature, Profile, UserFeatureOverride } from '../../types';
-import { Badge, Block, Button, Field, Select } from '../../design';
+import { useMemo, useState } from 'react';
+import { Badge, Block, Button, Field, Input, Select } from '../../design';
+import { buscarFuncionalidades } from '../../utils/buscarFuncionalidad';
 import { formatearFecha } from '../../utils/date';
 
 /**
@@ -48,6 +50,9 @@ export default function AdminUserLicenses({
   onAssignFeature,
   onRemoveFeature,
 }: Props) {
+  const [busqueda, setBusqueda] = useState('');
+  const visibles = useMemo(() => buscarFuncionalidades(features, busqueda), [features, busqueda]);
+
   return (
     <div className="space-y-4">
       <Block title="Plan base">
@@ -63,9 +68,34 @@ export default function AdminUserLicenses({
         </Field>
       </Block>
 
-      <Block title="Permisos y promociones" count={`${features.length} funcionalidades`}>
+      <Block
+        title="Permisos y promociones"
+        count={
+          busqueda.trim()
+            ? `${visibles.length} de ${features.length}`
+            : `${features.length} funcionalidades`
+        }
+      >
+        {/* Aqui se concede o se revoca una a una, asi que buscar importa aun
+            mas: la lista son 44 y la equivocada esta pegada a la correcta. */}
+        <div className="mb-2">
+          <Input
+            type="search"
+            value={busqueda}
+            onChange={(evento) => setBusqueda(evento.target.value)}
+            placeholder="Buscar por nombre, clave o categoría…"
+            aria-label="Buscar funcionalidad del usuario"
+          />
+        </div>
+
+        {busqueda.trim() && visibles.length === 0 && (
+          <p className="py-4 text-center text-micro text-ink-muted">
+            Ninguna funcionalidad coincide con «{busqueda.trim()}».
+          </p>
+        )}
+
         <ul className="space-y-1.5">
-          {features.map((feature) => {
+          {visibles.map((feature) => {
             const vieneDelPlan = planFeatures.some((planFeature) => planFeature.feature_id === feature.id);
             const override = userOverrides.find((userOverride) => userOverride.feature_id === feature.id);
             const esPrueba = !!override?.expires_at;

@@ -11,10 +11,11 @@
     "test:watch": "npm run test:watch -w @leadseed/extension",
     "test:coverage": "npm run test:coverage -w @leadseed/extension",
     "typecheck": "npm run typecheck -w @leadseed/extension",
-    "lint": "eslint apps/extension/src",
+    "lint": "eslint apps/extension/src --max-warnings 125",
     "lint:fix": "eslint apps/extension/src --fix",
     "check:functions": "node scripts/check-edge-function-ownership.mjs",
-    "check:classes": "node scripts/check-tailwind-classes.mjs"
+    "check:classes": "node scripts/check-tailwind-classes.mjs",
+    "check:file-size": "node scripts/check-file-size.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

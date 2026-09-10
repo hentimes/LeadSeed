@@ -23,7 +23,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [reportType, setReportType] = useState<'acquisition' | 'funnel' | null>(null);
-  const { user } = useAuth();
+  const { user, hasFeature } = useAuth();
 
   /** El fallo de carga y el contador que permite reintentar. */
   const [fallo, setFallo] = useState('');
@@ -156,6 +156,13 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
           caen a solo icono y cada pixel cuenta. No se pierde nada para quien
           usa lector de pantalla: eso lo cubre el `aria-label`, no este texto.
         */}
+        {/*
+          EL SELECTOR DE PERIODO ES UNA FUNCIONALIDAD DEL PLAN.
+          Sin ella el panel muestra hoy, que es lo que mostraba antes de la
+          migracion 177. Hoy la tienen los mismos planes que tienen el panel,
+          asi que la puerta no cambia nada; lo que permite es cobrarla.
+        */}
+        {hasFeature('analisis.periodos') && (
         <div className="flex shrink-0 items-center gap-1.5 pb-1.5">
           <span className="hidden text-micro font-medium text-ink-secondary panel-sm:inline" aria-hidden="true">
             vs
@@ -182,6 +189,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (page: Page
             ))}
           </Select>
         </div>
+        )}
       </div>
 
       {/* Contenido Dinámico Modulizado */}

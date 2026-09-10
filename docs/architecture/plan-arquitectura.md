@@ -298,7 +298,26 @@ Problemas estructurales actuales:
 - ~~clave privada `dist.pem` dentro del proyecto~~ **resuelto**: no hay `.pem` ni `.crx` versionados;
 - artefactos de build en la raíz;
 - documentación histórica extensa y contradictoria;
-- ~~ausencia de lint, pruebas y CI~~ **resuelto**: ESLint con reglas de frontera entre capas, 349 pruebas, CI en GitHub Actions, umbrales de cobertura y tres guardas propias (`check:classes`, `audit-dark-gaps`, `check:functions`);
+- ~~ausencia de lint, pruebas y CI~~ **resuelto**: ESLint con reglas de frontera entre capas, 975 pruebas, CI en GitHub Actions, umbrales de cobertura y cuatro guardas propias (`check:classes`, `audit-dark-gaps`, `check:functions`, `check:file-size`);
+
+  > **Techo de avisos de ESLint, fijado el `2026-09-10`.** `npm run lint` corre con
+  > `--max-warnings 125`, que es el número exacto que había el día de la auditoría CONTROL:
+  > 73 de `react-hooks/set-state-in-effect`, 27 de `exhaustive-deps`, 16 de `react-hooks/refs`
+  > y 9 sueltos. El techo no aprueba esos avisos, impide que crezcan.
+  >
+  > El motivo es concreto y ya costó un defecto real, registrado en `AI_SYNC.md`: una
+  > dependencia puesta en el array equivocado dejó un filtro sin funcionar y *no destacó
+  > porque ese archivo ya arrastraba otros avisos*. Ese es el daño de un umbral de ruido
+  > alto: esconde el aviso que sí importaba.
+  >
+  > Bajar el número entero es un refactor de gestión de estado asíncrono que el roadmap ya
+  > clasificó como decisión de producto y no como corrección. Mientras tanto, el techo solo
+  > baja: al corregir avisos, se ajusta el número en `package.json`.
+
+- **`check:file-size`** hace cumplir el §41, que era la única regla estructural sin guarda y por
+  eso se incumplía sin que nada lo delatara. Compara contra `scripts/file-size-baseline.json` y
+  falla solo si un archivo sobre 500 líneas crece, o si aparece uno nuevo sin plan declarado en
+  [plan-extraccion-archivos-grandes.md](plan-extraccion-archivos-grandes.md);
 - tipos agrupados en un archivo grande;
 - componentes y páginas de cientos de líneas;
 - migraciones fuera de la convención Supabase;
@@ -3036,7 +3055,8 @@ Reglas:
 
 | Elemento | Convención |
 |---|---|
-| carpetas/archivos TS no componentes | kebab-case |
+| archivos TS no componentes | camelCase.ts |
+| carpetas | kebab-case, o una palabra en minúscula |
 | componentes | PascalCase.tsx |
 | hooks | useNombre.ts |
 | pruebas | archivo.test.ts(x) |
@@ -3044,6 +3064,24 @@ Reglas:
 | SQL | snake_case |
 | eventos | contexto.entidad.acción.vN |
 | paquetes | `@leadseed/<grupo>-<nombre>` |
+
+> **Corrección del `2026-09-10`, tras la auditoría CONTROL de ese día.** Esta tabla
+> pedía `kebab-case` para los archivos TS que no son componentes. La medición sobre
+> los 511 archivos fuente dio **148 en camelCase y 0 en kebab-case**: la norma no se
+> había cumplido nunca, ni una sola vez, mientras que PascalCase para componentes y
+> `useNombre` para hooks sí se respetan (69 casos correctos).
+>
+> Cuando el código entero va en una dirección y la norma en la otra, lo que está
+> equivocado es la norma. Renombrar 148 archivos tocaría cada ruta de importación del
+> proyecto a cambio de cero beneficio funcional, y el §12 de CONTROL prohíbe
+> expresamente convertir un bloque acotado en un refactor abierto. Se corrige el
+> documento y se deja constancia, que es lo que exige el §5.1.
+>
+> El criterio de fondo no cambia: **el nombre del archivo dice qué exporta**. Un
+> archivo que exporta un componente lleva su nombre en PascalCase, uno que exporta un
+> hook empieza por `use`, y el resto usa camelCase igual que el símbolo que exporta
+> (`authRepository.ts` exporta funciones de `authRepository`). Lo que se abandona es
+> el guion, no la coherencia.
 
 Guías de tamaño, no límites ciegos:
 

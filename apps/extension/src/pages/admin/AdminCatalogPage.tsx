@@ -8,6 +8,7 @@ import AdminMasterDetail from '../../components/admin/AdminMasterDetail';
 import AdminPlanEditor from '../../components/admin/AdminPlanEditor';
 import AdminFeatureEditor from '../../components/admin/AdminFeatureEditor';
 import { CATEGORIAS } from '../../config/featureCategories';
+import { buscarFuncionalidades } from '../../utils/buscarFuncionalidad';
 
 const iconoCatalogo = (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -50,6 +51,7 @@ export default function AdminCatalogPage() {
   const [error, setError] = useState('');
 
   const [seleccion, setSeleccion] = useState<Seleccion>(null);
+  const [busqueda, setBusqueda] = useState('');
   const [nuevoPlan, setNuevoPlan] = useState<{ nombre: string; descripcion: string } | null>(null);
   const [guardandoPlan, setGuardandoPlan] = useState(false);
 
@@ -156,14 +158,15 @@ export default function AdminCatalogPage() {
    * clasificara nunca.
    */
   const porCategoria = useMemo(() => {
+    const visibles = buscarFuncionalidades(features, busqueda);
     const grupos = CATEGORIAS.map((categoria) => ({
       categoria,
-      funcionalidades: features
+      funcionalidades: visibles
         .filter((f) => f.category === categoria.id)
         .sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100)),
     })).filter((g) => g.funcionalidades.length > 0);
 
-    const sinClasificar = features.filter(
+    const sinClasificar = visibles.filter(
       (f) => !f.category || !CATEGORIAS.some((c) => c.id === f.category),
     );
 
@@ -175,7 +178,9 @@ export default function AdminCatalogPage() {
     }
 
     return grupos;
-  }, [features]);
+  }, [features, busqueda]);
+
+  const encontradas = porCategoria.reduce((n, g) => n + g.funcionalidades.length, 0);
 
   if (loading) return <LoadingOverlay message="Cargando catálogo..." />;
 
@@ -219,7 +224,9 @@ export default function AdminCatalogPage() {
 
       <ListPanel
         title="Funcionalidades"
-        count={features.length}
+        /* Cuando se busca, el contador dice cuantas se ven de cuantas hay: sin
+           eso, "12" con una busqueda puesta se lee como el total del catalogo. */
+        count={busqueda.trim() ? `${encontradas} de ${features.length}` : features.length}
         className="min-h-0 flex-1"
         headerActions={
           <Button size="sm" variant="ghost" onClick={() => setSeleccion({ tipo: 'feature', id: null })}>
@@ -228,6 +235,31 @@ export default function AdminCatalogPage() {
         }
         empty={<EmptyState title="Sin funcionalidades" description="El catálogo está vacío." />}
       >
+        {/*
+          EL BUSCADOR.
+
+          Con 44 funcionalidades en nueve categorias, recorrer la lista deja de
+          ser viable. Busca ademas por IDENTIFICADOR: el panel se llama "Panel"
+          y su clave es `module:dashboard`, asi que quien escribe "dashboard"
+          -que es como se llama la seccion en el rail- no encontraba nada y
+          concluia, razonablemente, que no estaba en el catalogo.
+        */}
+        <div className="sticky top-0 z-20 border-b border-line bg-surface px-2 py-1.5">
+          <Input
+            type="search"
+            value={busqueda}
+            onChange={(evento) => setBusqueda(evento.target.value)}
+            placeholder="Buscar por nombre, clave o categoría…"
+            aria-label="Buscar funcionalidad"
+          />
+        </div>
+
+        {busqueda.trim() && encontradas === 0 && (
+          <p className="px-3 py-4 text-center text-micro text-ink-muted">
+            Ninguna funcionalidad coincide con «{busqueda.trim()}».
+          </p>
+        )}
+
         {features.length === 0
           ? null
           : porCategoria.map(({ categoria, funcionalidades }) => (

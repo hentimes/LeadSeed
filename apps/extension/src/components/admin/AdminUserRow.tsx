@@ -1,7 +1,6 @@
 import type { Plan, Profile } from '../../types';
-import { Badge, Checkbox, ListRow } from '../../design';
+import { Badge, Checkbox, CountBadge, ListRow } from '../../design';
 import AdminUserAvatar from './AdminUserAvatar';
-import { CountBadge } from './CountBadge';
 
 export function rolDeUsuario(profile: Profile): { label: string; tone: 'primary' | 'info' | 'neutral' } {
   if (profile.role === 'admin') return { label: 'Admin', tone: 'primary' };

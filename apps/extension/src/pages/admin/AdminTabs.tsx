@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CountBadge } from '../../components/admin/CountBadge';
+import { CountBadge } from '../../design';
 
 export type AdminTab = 'users' | 'catalog' | 'support';
 

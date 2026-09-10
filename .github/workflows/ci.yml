@@ -50,6 +50,18 @@ jobs:
         # no esta garantizado, `python3` si.
         run: python3 scripts/audit-dark-gaps.py
 
+      - name: Tamano de archivo sobre el umbral del §41
+        # El §41 del plan pide plan de extraccion al tocar un archivo sobre 500
+        # lineas. Era la unica regla estructural sin guarda, y la auditoria del
+        # 2026-09-10 encontro trece archivos por encima y cinco tocados el dia
+        # anterior sin plan escrito en ninguna parte.
+        #
+        # No compara contra 500 a secas -eso obligaria a refactorizar trece
+        # archivos de golpe, que es el refactor abierto que prohibe el §12-.
+        # Compara contra scripts/file-size-baseline.json y solo falla si uno
+        # crece o si aparece uno nuevo sin declarar. El numero solo baja.
+        run: npm run check:file-size
+
       - name: Tests y umbral de cobertura
         # `test:coverage` y no `test`: el umbral de trinquete de
         # vitest.config.ts solo se evalua al medir cobertura. Corriendo `test`

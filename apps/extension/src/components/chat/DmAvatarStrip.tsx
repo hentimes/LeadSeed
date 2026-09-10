@@ -1,4 +1,4 @@
-import { Avatar, CountBadge } from '../../design';
+import { Avatar, OverlayCount } from '../../design';
 import type { DmSession } from '../../types';
 
 interface DmAvatarStripProps {
@@ -47,7 +47,7 @@ export default function DmAvatarStrip({ sessions, onToggle }: DmAvatarStripProps
             size="lg"
             ring={session.minimized ? 'surface' : 'active'}
           />
-          <CountBadge count={session.unreadCount} tone="danger" max={9} />
+          <OverlayCount count={session.unreadCount} label="mensajes sin leer" tone="danger" max={9} />
         </button>
       ))}
 
@@ -63,7 +63,7 @@ export default function DmAvatarStrip({ sessions, onToggle }: DmAvatarStripProps
           className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-micro font-bold text-ink-secondary transition-colors hover:bg-surface-hover"
         >
           +{ocultas.length}
-          <CountBadge count={sinLeerOcultas} tone="danger" max={9} />
+          <OverlayCount count={sinLeerOcultas} label="mensajes sin leer" tone="danger" max={9} />
         </button>
       )}
     </div>

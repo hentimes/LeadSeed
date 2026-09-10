@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CountBadge, IconButton, Input, Select } from '../../design';
+import { IconButton, Input, OverlayCount, Select } from '../../design';
 import { Icon } from '../../utils/icons';
 import SinNombreToggle from '../leads/SinNombreToggle';
 import {
@@ -87,7 +87,7 @@ export function FlowEnrollFilters({
             aria-expanded={abierto}
             aria-controls={PANEL_ID}
           />
-          <CountBadge count={activos} />
+          <OverlayCount count={activos} label="filtros puestos" />
         </div>
       </div>
 

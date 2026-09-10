@@ -4,8 +4,7 @@ import AdminUserActivity from './AdminUserActivity';
 import AdminUserData from './AdminUserData';
 import AdminUserHeader from './AdminUserHeader';
 import AdminUserLicenses from './AdminUserLicenses';
-import { CountBadge } from './CountBadge';
-import { Section } from '../../design';
+import { CountBadge, Section } from '../../design';
 
 /** Las secciones del acordeon. `null` = todas cerradas. */
 export type UserSection = 'licencias' | 'datos' | 'actividad' | null;

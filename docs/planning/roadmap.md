@@ -1663,10 +1663,26 @@ LeadSeed/
     └── core/          repositories, services, types, utils, config, lib, hooks de datos
 ```
 
-**Lo que va a `packages/core`, medido el `2026-08-19`:** `repositories` (0 de 36 archivos atados a la
-plataforma), `services` (0 de 33), `types` (0 de 16), `config` (0 de 2), `lib` (0 de 2), `utils` (1 de
-22) y los hooks de datos (4 de 45 atados). Esas cifras no son una estimacion: son el conteo de
-archivos que mencionan `chrome`, `document` o `window`.
+**Lo que va a `packages/core`, remedido el `2026-09-10`:** `repositories` (0 de 44 archivos atados a
+la plataforma), `services` (0 de 43), `types` (0 de 17), `config` (0 de 6), `lib` (0 de 2), `utils` (1
+de 44) y los hooks (6 de 64 atados). Esas cifras no son una estimacion: son el conteo de archivos que
+mencionan `chrome`, `document` o `window`.
+
+**Conteo anterior, del `2026-08-19`, para ver la tendencia:** `repositories` 0 de 36, `services` 0 de
+33, `types` 0 de 16, `config` 0 de 2, `lib` 0 de 2, `utils` 1 de 22, hooks 4 de 45.
+
+**Lo que dice la comparacion, y es el dato importante:** en tres semanas esas capas crecieron entre un
+22% y un 100% -`services` de 33 a 43, `utils` de 22 a 44- y **el acoplamiento no subio**. La frontera
+no esta solo escrita: aguanta presion. El unico atado real sigue siendo
+`utils/imageCompression.ts`, que crea un `canvas` con `document.createElement`; las otras coincidencias
+del rastreo son menciones a `chrome` dentro de comentarios, no llamadas. De los 6 hooks atados, los 6
+son de interfaz (teclado, scroll, `Escape`, desbordamiento, columnas responsivas), asi que pertenecen a
+`apps/extension` y no al nucleo.
+
+> **Nota de mantenimiento.** Estas cifras envejecen y se leen como medicion, que es
+> lo que las vuelve enganosas cuando ya no son ciertas. Cada vez que se actualicen,
+> fechar el conteo y conservar el anterior, como esta hecho aca. La auditoria del
+> `2026-09-10` levanto justamente eso contra el §8.4 de CONTROL.
 
 **Consecuencia para el trabajo en curso:** la capa de cache (`lib/queryClient.ts` y los hooks
 migrados) **no toca plataforma**, asi que pertenece a `packages/core` y viaja a la app sin cambios.

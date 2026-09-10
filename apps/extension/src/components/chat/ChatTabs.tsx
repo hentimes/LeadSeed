@@ -1,4 +1,4 @@
-import { CountBadge } from '../../design';
+import { OverlayCount } from '../../design';
 import { ChatIcon } from './ChatIcons';
 import DmAvatarStrip from './DmAvatarStrip';
 import type { DmSession } from '../../types';
@@ -59,7 +59,7 @@ function BotonDePanel({
       }`}
     >
       {children}
-      {!active && <CountBadge count={count} tone={tone} />}
+      {!active && <OverlayCount count={count} label={null} tone={tone} />}
     </button>
   );
 }

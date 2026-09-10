@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { getPlatform } from '../../platform/registry';
 import type { Plan, Profile } from '../../types';
-import { Badge, IconButton } from '../../design';
+import { Badge, CountBadge, IconButton } from '../../design';
 import { formatearFechaHora, formatearTiempoRelativo } from '../../utils/date';
 import AdminUserAvatar from './AdminUserAvatar';
-import { CountBadge } from './CountBadge';
 import { rolDeUsuario } from './AdminUserRow';
 
 const iconoMensajes = (

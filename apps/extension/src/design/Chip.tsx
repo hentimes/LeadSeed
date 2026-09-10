@@ -129,20 +129,45 @@ export function SegmentedControl<T extends string>({
  * mensajes directos), y las tres se separaban del fondo con
  * `border-2 border-white dark:border-gray-800`: un color literal que hay que
  * acordarse de cambiar en dos temas. Aca es `ring-surface`, que sigue al token.
+ *
+ * ## Por que no se llama `CountBadge`
+ *
+ * Se llamaba asi, y en `components/admin/` habia otro `CountBadge` distinto:
+ * este se cuelga de la esquina de un control, aquel se pone en linea dentro de
+ * una fila. Dos roles visuales que no se pueden intercambiar compartiendo un
+ * nombre. El de linea se quedo con `CountBadge` porque es el caso general y
+ * ahora vive en `design/CountBadge.tsx`; este declara en el nombre que es una
+ * superposicion.
+ *
+ * ## `label` es obligatorio y admite `null`
+ *
+ * Un numero suelto pegado a un icono no dice nada a un lector de pantalla. Pero
+ * el control del que cuelga a veces ya anuncia la cifra en su propio
+ * `aria-label`, y repetirla la hace sonar dos veces. En vez de una bandera
+ * booleana ambigua, `label` obliga a decidir en cada uso: un texto describe que
+ * se cuenta, y `null` declara que el padre ya lo dice.
  */
-export function CountBadge({
+export function OverlayCount({
   count,
+  label,
   tone = 'primary',
   max = 99,
 }: {
   count: number;
+  /** Que se cuenta ("mensajes sin leer"), o `null` si el control padre ya lo anuncia. */
+  label: string | null;
   tone?: 'primary' | 'danger';
   max?: number;
 }) {
   if (count <= 0) return null;
 
+  const anunciado = label !== null;
+
   return (
     <span
+      role={anunciado ? 'status' : undefined}
+      aria-label={anunciado ? `${count} ${label}` : undefined}
+      aria-hidden={anunciado ? undefined : true}
       className={`absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-micro font-bold text-ink-inverse ring-2 ring-surface ${
         tone === 'danger' ? 'bg-state-danger' : 'bg-primary'
       }`}

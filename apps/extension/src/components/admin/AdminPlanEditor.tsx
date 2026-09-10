@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Feature, Plan, PlanFeature } from '../../types';
-import { Badge, Checkbox, ListPanel, ListRow } from '../../design';
+import { Badge, Checkbox, Input, ListPanel, ListRow } from '../../design';
 import AdminSkeleton from './AdminSkeleton';
 import { CATEGORIAS, type CategoriaDeFuncionalidad } from '../../config/featureCategories';
+import { buscarFuncionalidades } from '../../utils/buscarFuncionalidad';
 
 /**
  * Que funcionalidades trae un plan.
@@ -29,6 +30,7 @@ export default function AdminPlanEditor({
   isLoading: boolean;
   onToggleFeature: (featureId: string) => void;
 }) {
+  const [busqueda, setBusqueda] = useState('');
   const incluidas = planFeatures.length;
   const asignadas = useMemo(
     () => new Set(planFeatures.map((pf) => pf.feature_id)),
@@ -43,15 +45,16 @@ export default function AdminPlanEditor({
    * cuantas lleva incluidas, que es lo que se mira al comparar dos planes.
    */
   const porCategoria = useMemo(() => {
+    const visibles = buscarFuncionalidades(features, busqueda);
     const grupos: Array<{ categoria: CategoriaDeFuncionalidad; funcionalidades: Feature[] }> =
       CATEGORIAS.map((categoria) => ({
       categoria,
-      funcionalidades: features
+      funcionalidades: visibles
         .filter((f) => f.category === categoria.id)
         .sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100)),
       })).filter((g) => g.funcionalidades.length > 0);
 
-    const sinClasificar = features.filter(
+    const sinClasificar = visibles.filter(
       (f) => !f.category || !CATEGORIAS.some((c) => c.id === f.category),
     );
     if (sinClasificar.length > 0) {
@@ -61,7 +64,7 @@ export default function AdminPlanEditor({
       });
     }
     return grupos;
-  }, [features]);
+  }, [features, busqueda]);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-line bg-surface">
@@ -80,6 +83,19 @@ export default function AdminPlanEditor({
           <AdminSkeleton rows={4} />
         ) : (
           <ListPanel title="Funcionalidades incluidas" count={`${incluidas} activas`}>
+            {/* Buscar tambien aqui: componer un plan es ir marcando, y con 44
+                funcionalidades encontrar la que buscas por scroll es lo que
+                hace que se marque la de al lado por error. */}
+            <div className="sticky top-0 z-20 border-b border-line bg-surface px-2 py-1.5">
+              <Input
+                type="search"
+                value={busqueda}
+                onChange={(evento) => setBusqueda(evento.target.value)}
+                placeholder="Buscar por nombre, clave o categoría…"
+                aria-label="Buscar funcionalidad en el plan"
+              />
+            </div>
+
             {porCategoria.map(({ categoria, funcionalidades }) => {
               const dentro = funcionalidades.filter((f) => asignadas.has(f.id)).length;
               return (

@@ -5,11 +5,10 @@ import { loadAdminUserBase, transferAdminUserAssets } from '../../services/admin
 import { useAuth } from '../../contexts/AuthContext';
 import { getErrorMessage } from '../../utils/errorMessage';
 import { formatearTiempoRelativo } from '../../utils/date';
-import { Badge, Button, Checkbox, EmptyState, ListPanel, ListRow, Notice } from '../../design';
+import { Badge, Button, Checkbox, CountBadge, EmptyState, ListPanel, ListRow, Notice } from '../../design';
 import AdminSkeleton from './AdminSkeleton';
 import AdminTransferModal from './AdminTransferModal';
 import AdminUserAgenda from './AdminUserAgenda';
-import { CountBadge } from './CountBadge';
 
 const CANALES: Array<{ id: string; label: string }> = [
   { id: 'whatsapp', label: 'WA' },

@@ -16,6 +16,7 @@ import { loadAppPreferences, syncSettingsToChromeStorage, updateStoredSettings }
 import { DEFAULT_LEAD_COLUMNS } from './config/leadColumns';
 import { loadPendingTaskCount, processScheduledEmails, purgeDeletedLeads } from './services/appMaintenance';
 import { getErrorMessage } from './utils/errorMessage';
+import { getPlatform } from './platform/registry';
 
 
 export default function App() {
@@ -34,9 +35,14 @@ export default function App() {
 
   // El service worker arranca las alertas al instalarse/iniciar Chrome, pero
   // si el usuario recien inicio sesion todavia no hay suscripcion Realtime.
+  //
+  // Pasa por `messageBus` y no por `chrome.runtime`: era la ultima llamada
+  // directa a `chrome` fuera de `platform/` y de los dos puntos de entrada. El
+  // `.catch()` vacio que habia aca lo absorbe el puerto, que trata al service
+  // worker dormido como estado normal y no como error.
   useEffect(() => {
-    if (!session?.user?.id || !chrome?.runtime?.id) return;
-    chrome.runtime.sendMessage({ type: 'LEAD_ALERTS_RESTART' }).catch(() => {});
+    if (!session?.user?.id || !getPlatform().messageBus.isAvailable()) return;
+    void getPlatform().messageBus.send({ type: 'LEAD_ALERTS_RESTART' });
   }, [session?.user?.id]);
 
   useAppKeyboardShortcuts({ onNavigate: setPage });

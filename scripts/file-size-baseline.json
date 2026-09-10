@@ -1,0 +1,15 @@
+{
+  "apps/extension/src/components/flows/FlowEnrollPanel.tsx": 756,
+  "apps/extension/src/pages/TemplatesPage.tsx": 681,
+  "apps/extension/src/components/chat/ChatRoom.tsx": 676,
+  "apps/extension/src/hooks/useLeadsPageController.ts": 656,
+  "apps/extension/src/repositories/leadsRepository.ts": 647,
+  "apps/extension/src/pages/ListsPage.tsx": 606,
+  "apps/extension/src/pages/PipelinePage.tsx": 575,
+  "apps/extension/src/components/send/RecipientPicker.tsx": 570,
+  "apps/extension/src/components/agenda/AgendaCalendar.tsx": 555,
+  "apps/extension/src/hooks/useLeadDetail.ts": 544,
+  "apps/extension/src/components/send/EmailSender.tsx": 532,
+  "apps/extension/src/pages/FlowsPage.tsx": 512,
+  "apps/extension/src/components/send/WhatsAppSender.tsx": 509
+}

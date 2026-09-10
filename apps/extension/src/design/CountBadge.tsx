@@ -1,4 +1,4 @@
-import { Badge } from '../../design';
+import { Badge } from './Badge';
 
 /**
  * La cifra de "hay algo nuevo aca".
@@ -19,6 +19,15 @@ import { Badge } from '../../design';
  *
  * En un panel de 320px, algo que rebota o parpadea no se lee como urgencia: se
  * lee como que la interfaz se rompio. El numero ya destaca por color y forma.
+ *
+ * ## Por que vive aca y no en `components/admin/`
+ *
+ * Nacio resolviendo Admin, pero habia a la vez un `CountBadge` distinto en
+ * `design/Chip.tsx` que se colgaba de la esquina de un boton. Mismo nombre,
+ * dos roles visuales que no se pueden intercambiar: uno va en linea dentro de
+ * una fila, el otro se superpone a un control. El de la esquina paso a
+ * llamarse `OverlayCount` y este subio al sistema de diseno, porque poner una
+ * cifra en una fila es el caso general y no algo propio de Admin.
  */
 export type CountTone = 'primary' | 'info' | 'warning' | 'danger';
 

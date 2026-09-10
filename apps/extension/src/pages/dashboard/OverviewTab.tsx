@@ -8,6 +8,7 @@ import { Icon } from '../../utils/icons';
 import { chartColors } from '../../design/palette';
 import { Card } from '../../design';
 import { CardTitle } from '../../design';
+import { useAuth } from '../../contexts/AuthContext';
 import { calcularTendencia } from '../../components/dashboard/trend';
 import { nombreDePeriodo } from '../../components/dashboard/comparePeriod';
 import type { ComparePeriod } from '../../types';
@@ -51,6 +52,7 @@ interface OverviewTabProps {
 }
 
 export default function OverviewTab({ snapshot, settings, compareLabel, periodo, onNavigate }: OverviewTabProps) {
+  const { hasFeature } = useAuth();
   const { leadSummary, sendSummary, taskSummary } = snapshot;
 
   /*
@@ -134,7 +136,18 @@ export default function OverviewTab({ snapshot, settings, compareLabel, periodo,
 
   return (
     <div className="flex flex-col gap-3 animate-ios-slide-up pb-4">
-      {/* Progreso de metas */}
+      {/*
+        LAS METAS DIARIAS SON UNA FUNCIONALIDAD DEL PLAN.
+
+        Es lo unico del panel que hay que RELLENAR para que sirva -los tres
+        objetivos se ponen en Ajustes-, y quien no las usa no las echa de
+        menos. Hoy la tienen los tres planes, asi que la puerta no cambia nada;
+        lo que permite es cobrarla.
+
+        Envuelve solo la <Card>: el comentario de arriba es otro nodo JSX, y
+        dos nodos dentro de un `&&` no compilan.
+      */}
+      {hasFeature('analisis.metas') && (
       <Card>
         {/*
           AQUI HABIA UNA ETIQUETA CON EL PERIODO ("vs ayer").
@@ -201,6 +214,7 @@ export default function OverviewTab({ snapshot, settings, compareLabel, periodo,
           />
         </div>
       </Card>
+      )}
 
       {/* Conversión global */}
       <ConversionBar 
