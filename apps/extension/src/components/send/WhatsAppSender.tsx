@@ -3,14 +3,12 @@ import type { Lead, WhatsAppTemplate, WhatsAppTemplateList, LeadList, SendLog } 
 import type { SendActionState } from './channels';
 import { useSendAction } from './useSendAction';
 import { buildLeadMessages } from '../../utils/waHelper';
-import { useWhatsAppQueue } from '../../hooks/useWhatsAppQueue';
 import { useMessageReasons } from '../../hooks/useMessageReasons';
 import { getSettings } from '../../services/appSettingsService';
 import { ReasonPicker } from './ReasonPicker';
 import VariableDropdown from '../VariableDropdown';
 import { insertTextAtCursor } from '../../utils/textHelper';
-import { getCurrentSession } from '../../services/authService';
-import { loadTemplateSendLog, logWhatsAppSend } from '../../services/sendService';
+import { loadTemplateSendLog } from '../../services/sendService';
 import { Badge, Field, Select, Textarea } from '../../design';
 import { SendStep, SendRequisito } from './SendStep';
 import { puedeRecibirPor } from '../../utils/leadContacto';
@@ -25,6 +23,7 @@ import { contarWhatsAppDelDia } from '../../services/historyService';
 import { comienzoDelDia } from '../../services/whatsappQuota';
 import WhatsAppQueuePanel from './WhatsAppQueuePanel';
 import { useMarcasDeCola } from '../../hooks/useMarcasDeCola';
+import { useColaDeWhatsApp } from '../../contexts/WhatsAppQueueContext';
 import { useSeleccionDeDestinatarios } from '../../hooks/useSeleccionDeDestinatarios';
 
 interface Props {
@@ -62,7 +61,27 @@ const LEAD_DE_EJEMPLO = {
 } as Lead;
 
 export default function WhatsAppSender({ leads, templates, templateLists, leadLists, onActionChange }: Props) {
-  const sesion = useSendSession('whatsapp');
+  /*
+   * LA COLA ES LA DE LA APLICACION, no una de esta pantalla.
+   *
+   * Vive en `WhatsAppQueueProvider`, por encima del conmutador de paginas. Dos
+   * cosas se ganan con eso:
+   *
+   *   Una ronda empezada en Flujos continua aqui. Flujos carga la cola y
+   *   navega; sin un estado que sobreviva al cambio de pestaña, la ronda moria
+   *   en el camino y Flujos necesitaba su propio panel de envio.
+   *
+   *   El registro del envio lo hace un solo sitio. Antes esta pantalla tenia su
+   *   `onAbierto` y la tanda de flujos otro, y la regla que costo descubrir
+   *   -abrir primero, registrar despues- estaba escrita dos veces.
+   *
+   * La plantilla de la tanda ya no se congela en una ref de aqui: viaja con la
+   * cola (`iniciar(mensajes, tanda)`), que es donde tiene que estar para que
+   * cambiar de plantilla a mitad de ronda no cruce el historial.
+   */
+  const { cola, version: versionDeEnvios } = useColaDeWhatsApp();
+
+  const sesion = useSendSession('whatsapp', versionDeEnvios);
 
   /*
    * Se arranca donde se dejo. El compositor abria siempre en blanco, y quien
@@ -98,31 +117,6 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
    * solo sobrevivia uno, mientras el historial ya los daba todos por enviados.
    * La cola abre uno, espera a que se envie, y sigue.
    */
-  /*
-   * LA PLANTILLA DE LA TANDA SE CONGELA AL EMPEZAR.
-   *
-   * El selector sigue usable con una cola en marcha, y este callback leia
-   * `selectedTemplate` en cada avance. Cambiar de plantilla entre destinatarios
-   * mandaba el texto de la vieja -ya resuelto en los mensajes de la cola- y lo
-   * registraba bajo el id y el nombre de la nueva: el historial y los
-   * contadores por plantilla quedaban cruzados, que es justo lo que la cola
-   * vino a arreglar.
-   */
-  const plantillaDeLaTanda = useRef<{ id: string | number; nombre: string } | null>(null);
-
-  const cola = useWhatsAppQueue({
-    onAbierto: async (mensaje) => {
-      const session = await getCurrentSession();
-      const userId = session?.user?.id;
-      const plantilla = plantillaDeLaTanda.current;
-      if (!userId || !plantilla) return;
-
-      // Se registra el que se acaba de abrir, no el envio entero.
-      setSentLog(await logWhatsAppSend(userId, plantilla.id, [mensaje], plantilla.nombre));
-      await sesion.refrescarContador();
-    },
-  });
-
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showRecipients, setShowRecipients] = useState(false);
 
@@ -165,7 +159,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
       setCustomBody('');
       setMotivoId(null);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, versionDeEnvios]);
 
   const usaMotivo = /\{motivo\}/i.test(customBody);
   const motivoTexto = reasons.find((reason) => reason.id === motivoId)?.text;
@@ -174,11 +168,7 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
 
   /* Marcar al de turno sin mandarle nada: que no tiene WhatsApp, o que pidio
      no recibir mas mensajes. Ver `useMarcasDeCola`. */
-  const marcas = useMarcasDeCola({
-    cola,
-    historial: sentLog,
-    onEnvioDeshecho: () => sesion.refrescarContador(),
-  });
+  const marcas = useMarcasDeCola();
 
   /*
    * El filtro por canal se aplica tambien aqui, no solo en la lista.
@@ -277,13 +267,11 @@ export default function WhatsAppSender({ leads, templates, templateLists, leadLi
     if (!selectedTemplate || recipients.length === 0) return;
 
     // Se resuelve una sola vez: lo que se guarda en el historial y lo que se
-    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones. La
-    // plantilla se anota junto a los mensajes, por el mismo motivo.
-    plantillaDeLaTanda.current = {
-      id: selectedTemplate.id!,
-      nombre: selectedTemplate.nombre,
-    };
-    await cola.iniciar(buildLeadMessages(recipients, customBody, motivoTexto));
+    // abre en WhatsApp tienen que ser el mismo texto, no dos resoluciones.
+    await cola.iniciar(buildLeadMessages(recipients, customBody, motivoTexto), {
+      templateId: selectedTemplate.id!,
+      templateName: selectedTemplate.nombre,
+    });
   };
 
   return (

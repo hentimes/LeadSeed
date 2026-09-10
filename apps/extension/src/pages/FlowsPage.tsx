@@ -4,7 +4,6 @@ import { getSettings } from '../services/appSettingsService';
 import { contarWhatsAppDelDia } from '../services/historyService';
 import { adelantarPasos, fetchCargaProxima, reprogramarPasos } from '../services/messageFlowsService';
 import { useFlowBatchDispatch } from '../hooks/useFlowBatchDispatch';
-import WhatsAppQueuePanel from '../components/send/WhatsAppQueuePanel';
 import {
   comienzoDelDia,
   diasQueAbarca,
@@ -20,9 +19,14 @@ import { FlowEnrollPanel } from '../components/flows/FlowEnrollPanel';
 import { FlowDetail } from '../components/flows/FlowDetail';
 import { FlowList } from '../components/flows/FlowList';
 import { dispatchFlowStep } from '../services/flowDispatchService';
-import type { MessageFlow, MessageFlowStep, PendingFlowStep } from '../types';
+import type { MessageFlow, MessageFlowStep, Page, PendingFlowStep } from '../types';
 
 type Vista = 'hoy' | 'flujos' | 'editor' | 'detalle' | 'inscribir';
+
+interface Props {
+  /** Para llevar a "Enviar", que es donde se ve la ronda que se carga aqui. */
+  onNavigate: (page: Page) => void;
+}
 
 /**
  * Flujos de mensajes.
@@ -31,7 +35,7 @@ type Vista = 'hoy' | 'flujos' | 'editor' | 'detalle' | 'inscribir';
  * usuario es "que me falta enviar hoy", que cruza todos los flujos. Entrar por
  * la lista obligaria a abrir cada uno para enterarse de si hay algo pendiente.
  */
-export default function FlowsPage() {
+export default function FlowsPage({ onNavigate }: Props) {
   const { user } = useAuth();
   const flujos = useMessageFlows();
   const [vista, setVista] = useState<Vista>('hoy');
@@ -105,41 +109,11 @@ export default function FlowsPage() {
   /*
    * LA TANDA. Convierte "a estos 47 les toca el mismo mensaje" en mandarlo.
    *
-   * El contador del cupo sube con cada chat que se abre -no al final- porque el
-   * tope tiene que frenar en el mensaje 50, no enterarse en el 51.
+   * Ya no trae cola ni panel: arma los destinatarios con su paso y los carga en
+   * la cola de la aplicacion. Las marcas de "sin WhatsApp" y "no contactar"
+   * viven con esa cola, en "Enviar", que es donde se ve el chat abierto.
    */
-  const tanda = useFlowBatchDispatch(user?.id, {
-    onDespachado: () => setEnviadosHoy((usados) => usados + 1),
-    /*
-     * Marcar un numero como sin WhatsApp borra su registro de envio, asi que
-     * el cupo del dia tiene que devolverlo. Sin esto, mandar cincuenta a diez
-     * numeros muertos agotaria el tope con cuarenta mensajes de verdad.
-     */
-    onRevertido: () => setEnviadosHoy((usados) => Math.max(0, usados - 1)),
-  });
-
-  /*
-   * LAS DOS SALIDAS DE LA RONDA, con lo que la pantalla hace despues.
-   *
-   * El gancho escribe y avanza la cola; recargar la lista de hoy y decir que
-   * paso son cosas de esta pagina, y por eso se envuelven aqui.
-   */
-  const accionesDeLaCola = {
-    onSinWhatsApp: async () => {
-      const quien = tanda.cola.actual?.lead.name ?? 'El contacto';
-      await tanda.marcarSinWhatsApp();
-      await flujos.recargarCola();
-      setAviso(`${quien} quedó en la lista "Sin WhatsApp" y ese mensaje ya no cuenta.`);
-    },
-    onNoContactar: async (nota: string) => {
-      const quien = tanda.cola.actual?.lead.name ?? 'El contacto';
-      await tanda.sacarPorNoContactar(nota);
-      await flujos.recargarCola();
-      setAviso(
-        `${quien} quedó en la lista "No contactar" y salió de todos sus flujos. Lo que ya recibió queda registrado.`,
-      );
-    },
-  };
+  const tanda = useFlowBatchDispatch(user?.id);
 
   /*
    * Traer a hoy lo que estaba para mas adelante.
@@ -184,9 +158,18 @@ export default function FlowsPage() {
     }
   };
 
-  const despacharGrupo = (filas: PendingFlowStep[]) => {
+  /*
+   * LA RONDA SE VE EN "ENVIAR", NO AQUI.
+   *
+   * Se cargan los destinatarios -con su paso colgado de cada mensaje- en la
+   * cola de la aplicacion y se lleva alli, que es donde se abre un chat, se
+   * espera y se sigue. Correo y llamada no navegan: no abren nada, se resuelven
+   * en el sitio y reportan al terminar.
+   */
+  const despacharGrupo = async (filas: PendingFlowStep[]) => {
     const tope = filas[0]?.channel === 'whatsapp' ? cupo.quedan : filas.length;
-    void tanda.despacharGrupo(filas, tope);
+    if (await tanda.despacharGrupo(filas, tope)) onNavigate('send');
+    else await flujos.recargarCola();
   };
 
   /*
@@ -355,13 +338,12 @@ export default function FlowsPage() {
       )}
 
       {/*
-        LA COLA EN MARCHA, encima de todo.
+        AQUI NO SE PINTA LA COLA.
         
-        Mientras hay una tanda abierta, lo unico que importa es a quien le toca
-        y cuantos faltan. Es la misma barra del envio masivo: la tarea es la
-        misma y no tiene por que verse distinta segun de donde salio.
+        La barra de la ronda vivia aqui y en "Enviar", con su propia cola
+        detras. Ahora hay una sola, por encima del conmutador de paginas, y se
+        ve en "Enviar": a esta pantalla le toca cargarla y llevar alla.
       */}
-      <WhatsAppQueuePanel cola={tanda.cola} acciones={accionesDeLaCola} />
       {tanda.error && (
         <p role="alert" className="text-micro text-state-danger">
           {tanda.error}
@@ -477,9 +459,9 @@ export default function FlowsPage() {
           onRepartir={repartir}
           seMoverian={repartoPropuesto.length}
           proximos={proximos}
-          onDespacharGrupo={despacharGrupo}
+          onDespacharGrupo={(filas) => void despacharGrupo(filas)}
           onAdelantar={(hasta, cuantos, esHoy) => void adelantar(hasta, cuantos, esHoy)}
-          tandaEnCurso={tanda.cola.activa || tanda.procesando}
+          tandaEnCurso={tanda.procesando}
           onDespachar={despachar}
           onOmitir={omitir}
           onIrAFlujos={() => setVista('flujos')}

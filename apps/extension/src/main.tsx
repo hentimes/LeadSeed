@@ -3,6 +3,7 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { PresenceProvider } from './hooks/usePresence';
+import { WhatsAppQueueProvider } from './contexts/WhatsAppQueueContext';
 import AppErrorBoundary from './components/app/AppErrorBoundary';
 import AppDialogHost from './components/app/AppDialogHost';
 import { setPlatform } from './platform/registry';
@@ -70,7 +71,15 @@ if (!rootEl) {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <PresenceProvider>
-              <App />
+              {/*
+                Dentro de `AuthProvider` porque necesita el usuario para
+                registrar el envio, y por ENCIMA de `App` porque `App` conmuta
+                entre paginas y desmonta la que sale: con la cola dentro de una
+                pagina, la ronda moria al cambiar de pestaña.
+              */}
+              <WhatsAppQueueProvider>
+                <App />
+              </WhatsAppQueueProvider>
             </PresenceProvider>
           </AuthProvider>
         </QueryClientProvider>

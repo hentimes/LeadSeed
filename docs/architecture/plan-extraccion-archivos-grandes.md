@@ -105,9 +105,12 @@ frontera que el §11 quiere hacer automatizable con ESLint boundaries. Extraer p
 
 > **HECHA** el 2026-09-10, al agregar las salidas por "sin WhatsApp" y "no contactar".
 > `components/flows/FlowList.tsx` existe con las props previstas y `eliminarFlujo` subió a la
-> página. El archivo no bajó de 512 porque el mismo cambio le sumó las dos salidas nuevas: la
-> extracción pagó lo que el trabajo nuevo costó. **La segunda extracción sigue pendiente** y es
-> la que hay que hacer antes de volver a crecer aquí.
+> página.
+>
+> Ese mismo día bajó a **493 líneas** y salió de la línea base, por una razón distinta: la cola
+> de envío subió a `WhatsAppQueueProvider` y esta pantalla dejó de tener panel propio. La segunda
+> extracción -el cupo de WhatsApp hacia `hooks/useWhatsAppQuota.ts`- **sigue pendiente** y es la
+> que hay que hacer antes de volver a crecer aquí.
 
 **Sale:** la lista de flujos. El `<Card>` con su `<ul>` de las líneas 437-501, incluido el
 `onClick` asíncrono de 24 líneas embebido en el JSX del botón de borrar (472-495).
@@ -142,10 +145,15 @@ aquí antes de cerrar su bloque.
 | `components/agenda/AgendaCalendar.tsx` | 554 |
 | `hooks/useLeadDetail.ts` | 543 |
 | `components/send/EmailSender.tsx` | 531 |
-| `components/send/WhatsAppSender.tsx` | 508 |
+| ~~`components/send/WhatsAppSender.tsx`~~ | ~~508~~ → **478**, fuera de la línea base |
 
 No se inventa plan para ellos: bajo el §5.6 de CONTROL, proponer una extracción sin haber leído
 el archivo sería declarar una certeza que no se tiene.
+
+**`WhatsAppSender.tsx` salió de la lista el 2026-09-10**, ya leído. Dos piezas se fueron:
+`hooks/useSeleccionDeDestinatarios.ts` -elegir a quién se le manda no es del canal, funciona igual
+para correo y llamadas- y la cola de envío, que subió a `contexts/WhatsAppQueueContext.tsx` para
+que una ronda empezada en Flujos sobreviva al cambio de pestaña.
 
 ---
 

@@ -1,7 +1,7 @@
 import { fetchLeadById } from './leadsService';
 import { fetchTemplatesByType } from './templatesService';
 import { logCallSend, logWhatsAppSend, loadTemplateSendLog, sendImmediateEmail } from './sendService';
-import { buildLeadMessages, openWhatsAppMessages, type LeadMessage } from '../utils/waHelper';
+import { buildLeadMessages, openWhatsAppMessages } from '../utils/waHelper';
 import { markStepRegistered } from './messageFlowsService';
 import type { PendingFlowStep } from '../types';
 
@@ -41,27 +41,12 @@ export interface PlantillaDePaso {
   defaultReasonId?: number | null;
 }
 
-/**
- * REGISTRA UN PASO YA ABIERTO. No abre nada.
- *
- * Existe para el despacho en tanda por WhatsApp, donde quien abre el chat es la
- * cola guiada y no este servicio. El orden importa y es el contrario al del
- * despacho de a uno: **primero se abre y despues se registra**.
- *
- * Es el mismo criterio que ya documenta `useWhatsAppQueue`: registrar antes de
- * abrir deja el historial dando por enviados mensajes que nunca llegaron a
- * abrirse. Con la cola, entre abrir el primero y el ultimo pueden pasar veinte
- * minutos, asi que la diferencia deja de ser teorica.
+/*
+ * Aqui vivia `registrarPasoAbierto`, que registraba el envio y marcaba el paso
+ * para la tanda de flujos. Se fue con la segunda cola: ahora el mensaje lleva
+ * su paso y de eso se encarga `WhatsAppQueueProvider`, el unico sitio que
+ * registra los envios de una ronda.
  */
-export async function registrarPasoAbierto(
-  userId: string,
-  fila: PendingFlowStep,
-  plantilla: PlantillaDePaso,
-  mensaje: LeadMessage,
-): Promise<void> {
-  const log = await logWhatsAppSend(userId, fila.templateId, [mensaje], plantilla.nombre);
-  await markStepRegistered(fila.progressId, log.find((l) => l.leadId === mensaje.lead.id)?.id);
-}
 
 export async function dispatchFlowStep(userId: string, fila: PendingFlowStep): Promise<void> {
   const lead = await fetchLeadById(fila.leadId);

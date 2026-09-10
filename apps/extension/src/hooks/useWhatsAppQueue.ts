@@ -3,6 +3,19 @@ import type { LeadMessage } from '../utils/waHelper';
 import { openWhatsApp } from '../utils/waHelper';
 import { getErrorMessage } from '../utils/errorMessage';
 
+/**
+ * La plantilla con la que sale una tanda entera.
+ *
+ * Viaja con la cola y no con cada mensaje porque es la misma para todos: se
+ * elige una vez por ronda. Que viva aqui es lo que permite que el registro del
+ * envio lo haga un solo sitio, sin que quien lo hace tenga que saber si la
+ * ronda salio del compositor o de un flujo.
+ */
+export interface TandaDeEnvio {
+  templateId: string | number;
+  templateName: string;
+}
+
 export interface WhatsAppQueueState {
   /** Los destinatarios del envio en curso. Vacio si no hay envio abierto. */
   mensajes: LeadMessage[];
@@ -14,8 +27,10 @@ export interface WhatsAppQueueState {
   activa: boolean;
   abriendo: boolean;
   error: string;
+  /** La plantilla de la ronda en curso, si hay una. */
+  tanda: TandaDeEnvio | undefined;
   /** Abre el chat del primero y deja la cola en marcha. */
-  iniciar: (mensajes: LeadMessage[]) => Promise<void>;
+  iniciar: (mensajes: LeadMessage[], tanda: TandaDeEnvio) => Promise<void>;
   /** Abre el chat del siguiente destinatario. */
   avanzar: () => Promise<void>;
   /** Cierra la cola sin abrir el resto. */
@@ -30,7 +45,7 @@ interface Opciones {
    * completo antes de abrir nada, asi que el historial daba por enviados
    * mensajes que nunca llegaron a abrirse.
    */
-  onAbierto?: (mensaje: LeadMessage) => Promise<void> | void;
+  onAbierto?: (mensaje: LeadMessage, tanda: TandaDeEnvio) => Promise<void> | void;
 }
 
 /**
@@ -44,17 +59,18 @@ interface Opciones {
  */
 export function useWhatsAppQueue({ onAbierto }: Opciones = {}): WhatsAppQueueState {
   const [mensajes, setMensajes] = useState<LeadMessage[]>([]);
+  const [tanda, setTanda] = useState<TandaDeEnvio | undefined>(undefined);
   const [indice, setIndice] = useState(0);
   const [abriendo, setAbriendo] = useState(false);
   const [error, setError] = useState('');
 
   const abrir = useCallback(
-    async (mensaje: LeadMessage) => {
+    async (mensaje: LeadMessage, deLaTanda: TandaDeEnvio) => {
       setAbriendo(true);
       setError('');
       try {
         await openWhatsApp(mensaje.lead.phone, mensaje.message);
-        await onAbierto?.(mensaje);
+        await onAbierto?.(mensaje, deLaTanda);
       } catch (err) {
         setError(getErrorMessage(err, `No se pudo abrir el chat de ${mensaje.lead.name}`));
       } finally {
@@ -65,36 +81,39 @@ export function useWhatsAppQueue({ onAbierto }: Opciones = {}): WhatsAppQueueSta
   );
 
   const iniciar = useCallback(
-    async (nuevos: LeadMessage[]) => {
+    async (nuevos: LeadMessage[], nuevaTanda: TandaDeEnvio) => {
       const primero = nuevos[0];
       if (!primero) return;
 
       setMensajes(nuevos);
+      setTanda(nuevaTanda);
       setIndice(0);
-      await abrir(primero);
+      await abrir(primero, nuevaTanda);
     },
     [abrir],
   );
 
   const avanzar = useCallback(async () => {
     const proximo = mensajes[indice + 1];
-    if (!proximo) {
+    if (!proximo || !tanda) {
       setMensajes([]);
+      setTanda(undefined);
       setIndice(0);
       return;
     }
 
     setIndice((actual) => actual + 1);
-    await abrir(proximo);
-  }, [mensajes, indice, abrir]);
+    await abrir(proximo, tanda);
+  }, [mensajes, indice, tanda, abrir]);
 
   const reintentar = useCallback(async () => {
     const actual = mensajes[indice];
-    if (actual) await abrir(actual);
-  }, [mensajes, indice, abrir]);
+    if (actual && tanda) await abrir(actual, tanda);
+  }, [mensajes, indice, tanda, abrir]);
 
   const terminar = useCallback(() => {
     setMensajes([]);
+    setTanda(undefined);
     setIndice(0);
     setError('');
   }, []);
@@ -105,6 +124,7 @@ export function useWhatsAppQueue({ onAbierto }: Opciones = {}): WhatsAppQueueSta
     actual: mensajes[indice],
     siguiente: mensajes[indice + 1],
     total: mensajes.length,
+    tanda,
     activa: mensajes.length > 0,
     abriendo,
     error,

@@ -1,14 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
-import { useWhatsAppQueue, type WhatsAppQueueState } from './useWhatsAppQueue';
-import {
-  dispatchFlowStep,
-  plantillaDelPaso,
-  registrarPasoAbierto,
-} from '../services/flowDispatchService';
-import { exitEnrollment, marcarPasoSinWhatsApp } from '../services/messageFlowsService';
+import { useCallback, useState } from 'react';
+import { dispatchFlowStep, plantillaDelPaso } from '../services/flowDispatchService';
 import { fetchLeadsByIds } from '../services/leadsService';
 import { buildLeadMessages } from '../utils/waHelper';
 import { getErrorMessage } from '../utils/errorMessage';
+import { useColaDeWhatsApp } from '../contexts/WhatsAppQueueContext';
 import type { PendingFlowStep } from '../types';
 
 /**
@@ -21,25 +16,22 @@ import type { PendingFlowStep } from '../types';
  * scroll para encontrar la siguiente. Saber que toca no sirve de nada sin una
  * forma de hacerlo.
  *
- * ## Por que aqui y no en "Enviar"
+ * ## Por que ya no tiene cola propia
  *
- * Porque en el compositor un destinatario es solo un lead: no hay donde colgar
- * el paso del flujo. Si el envio sale por ahi, el mensaje queda en el historial
- * pero el flujo no se entera, el paso sigue pendiente para siempre y en la
- * proxima ronda se manda otra vez. El identificador del paso tiene que viajar
- * con cada destinatario, y eso solo pasa si la tanda vive en la cola.
+ * La tenia, con este argumento: "en el compositor un destinatario es solo un
+ * lead, no hay donde colgar el paso del flujo". Era cierto y era la
+ * descripcion de una carencia del tipo, no una razon de diseño. Se uso para
+ * justificar una segunda cola, un segundo panel y un segundo registro de
+ * envios; dos caminos que hacian lo mismo y podian separarse.
  *
- * ## Como funciona
+ * Ahora el paso viaja dentro del mensaje -`LeadMessage.pasoDeFlujo`- y la ronda
+ * usa la cola de la aplicacion, la misma de "Enviar". Esta funcion arma los
+ * destinatarios con su paso y se los entrega; quien abre los chats, registra
+ * los envios y marca los pasos es `WhatsAppQueueProvider`, en un solo sitio.
  *
- * Reutiliza `useWhatsAppQueue`, la misma cola guiada del envio masivo: abre un
- * chat, espera a que la persona vuelva, abre el siguiente. No hay envio masivo
- * de verdad en WhatsApp y esta es la unica forma honesta de acercarse.
- *
- * Lo que agrega es el registro: al abrir cada chat -y no antes- se registra el
- * envio y se marca ESE paso, con lo que el flujo avanza y programa el
- * siguiente. El orden importa y es el contrario al del despacho de a uno:
- * registrar antes de abrir daria por enviados los cuarenta y siete en cuanto se
- * abre el primero.
+ * La pantalla que llama a esto se encarga de llevar al usuario a "Enviar", que
+ * es donde la ronda se ve. La cola vive por encima del conmutador de paginas
+ * justamente para que ese viaje no la borre.
  *
  * ## Los otros canales no usan cola
  *
@@ -49,8 +41,6 @@ import type { PendingFlowStep } from '../types';
  * nada.
  */
 export interface FlowBatchDispatch {
-  /** La cola guiada de WhatsApp, para pintar su panel. */
-  cola: WhatsAppQueueState;
   /** Hay una tanda de correo o llamada en curso. */
   procesando: boolean;
   error: string;
@@ -59,58 +49,25 @@ export interface FlowBatchDispatch {
   /**
    * Arranca la tanda de un grupo. `tope` acota cuantos entran -el cupo del dia-
    * y se aplica ANTES de abrir nada.
-   */
-  despacharGrupo: (filas: PendingFlowStep[], tope: number) => Promise<void>;
-  /**
-   * El numero del que esta abierto no tiene WhatsApp: deshace su registro y lo
-   * saca del flujo. Avanza la cola al siguiente.
-   */
-  marcarSinWhatsApp: () => Promise<void>;
-  /**
-   * El que esta abierto pidio no recibir mas mensajes. Avanza la cola.
    *
-   * A diferencia de la anterior NO deshace el envio: el mensaje si salio, y es
-   * precisamente el que provoco la respuesta.
+   * Devuelve `true` si la tanda quedo cargada en la cola de WhatsApp, para que
+   * la pantalla sepa que tiene que navegar a "Enviar". Las de correo y llamada
+   * devuelven `false`: se resuelven aqui mismo y no hay nada que ver en otra
+   * pantalla.
    */
-  sacarPorNoContactar: (nota: string) => Promise<void>;
+  despacharGrupo: (filas: PendingFlowStep[], tope: number) => Promise<boolean>;
 }
 
-interface Avisos {
-  /** Se despacho un paso: sube el contador del cupo. */
-  onDespachado: () => void;
-  /** Un envio ya contado dejo de contar: el contador del cupo baja. */
-  onRevertido: () => void;
-}
-
-export function useFlowBatchDispatch(
-  userId: string | undefined,
-  { onDespachado, onRevertido }: Avisos,
-): FlowBatchDispatch {
+export function useFlowBatchDispatch(userId: string | undefined): FlowBatchDispatch {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState('');
   const [ultimoResultado, setUltimoResultado] = useState('');
-
-  /*
-   * El grupo en curso vive en una ref y no en estado: lo lee el callback que
-   * `useWhatsAppQueue` guarda al montar, y desde el estado leeria siempre el
-   * valor del primer render.
-   */
-  const grupo = useRef(new Map<string, PendingFlowStep>());
-  const plantilla = useRef<Awaited<ReturnType<typeof plantillaDelPaso>> | null>(null);
-
-  const cola = useWhatsAppQueue({
-    onAbierto: async (mensaje) => {
-      const fila = mensaje.lead.id ? grupo.current.get(mensaje.lead.id) : undefined;
-      if (!fila || !userId || !plantilla.current) return;
-      await registrarPasoAbierto(userId, fila, plantilla.current, mensaje);
-      onDespachado();
-    },
-  });
+  const { cola } = useColaDeWhatsApp();
 
   const despacharGrupo = useCallback(
-    async (filas: PendingFlowStep[], tope: number) => {
+    async (filas: PendingFlowStep[], tope: number): Promise<boolean> => {
       const primera = filas[0];
-      if (!userId || !primera) return;
+      if (!userId || !primera) return false;
 
       setError('');
       setUltimoResultado('');
@@ -126,7 +83,7 @@ export function useFlowBatchDispatch(
             ? 'No queda cupo de WhatsApp para hoy.'
             : 'No hay nada que despachar en este grupo.',
         );
-        return;
+        return false;
       }
 
       try {
@@ -145,7 +102,6 @@ export function useFlowBatchDispatch(
             try {
               await dispatchFlowStep(userId, fila);
               hechos += 1;
-              onDespachado();
             } catch (fallo) {
               /*
                * Uno que falla no frena a los otros cuarenta y seis, pero su
@@ -170,7 +126,7 @@ export function useFlowBatchDispatch(
           /* Sin ninguno enviado no es un resultado parcial, es un fallo: va al
              canal de error para que se vea como tal. */
           if (hechos === 0 && fallaron > 0) setError(primerFallo);
-          return;
+          return false;
         }
 
         /*
@@ -181,77 +137,43 @@ export function useFlowBatchDispatch(
          */
         const leads = await fetchLeadsByIds(enTanda.map((fila) => fila.leadId));
         const porId = new Map(leads.map((lead) => [lead.id!, lead]));
-
         const conLead = enTanda.filter((fila) => porId.has(fila.leadId));
-        grupo.current = new Map(conLead.map((fila) => [fila.leadId, fila]));
-        plantilla.current = suPlantilla;
 
         const mensajes = buildLeadMessages(
           conLead.map((fila) => porId.get(fila.leadId)!),
           suPlantilla.contenido,
         );
 
-        await cola.iniciar(mensajes);
+        /*
+         * Cada mensaje se lleva SU paso. Es lo que hace que el flujo avance sin
+         * una cola aparte: la cola registra el envio siempre y marca el paso
+         * cuando el mensaje trae uno.
+         *
+         * Van emparejados por posicion porque `buildLeadMessages` conserva el
+         * orden de `conLead`, que es de donde salen las dos listas.
+         */
+        const conPaso = mensajes.map((mensaje, i) => {
+          const fila = conLead[i]!;
+          return {
+            ...mensaje,
+            pasoDeFlujo: { progressId: fila.progressId, enrollmentId: fila.enrollmentId },
+          };
+        });
+
+        await cola.iniciar(conPaso, {
+          templateId: suPlantilla.id,
+          templateName: suPlantilla.nombre,
+        });
+        return true;
       } catch (e) {
         setError(getErrorMessage(e, 'No se pudo empezar la tanda.'));
+        return false;
       } finally {
         setProcesando(false);
       }
     },
-    [cola, onDespachado, userId],
+    [cola, userId],
   );
 
-  /*
-   * LA FILA DEL QUE ESTA ABIERTO AHORA.
-   *
-   * La cola trabaja con mensajes y no con pasos de flujo: el puente entre los
-   * dos es el mismo `grupo` que usa `onAbierto`, indexado por lead.
-   */
-  const filaEnCurso = useCallback(() => {
-    const id = cola.actual?.lead.id;
-    return id ? grupo.current.get(id) : undefined;
-  }, [cola.actual]);
-
-  /*
-   * En las dos: si falla, NO se avanza.
-   *
-   * Avanzar igual dejaria al lead marcado a medias y ya fuera de la pantalla,
-   * sin nada que delatara que la marca no llego a guardarse. Quedandose donde
-   * esta, el error se ve y se puede volver a intentar sobre el mismo.
-   */
-  const marcarSinWhatsApp = useCallback(async () => {
-    const fila = filaEnCurso();
-    if (!fila) return;
-
-    setError('');
-    try {
-      await marcarPasoSinWhatsApp(fila.progressId);
-    } catch (e) {
-      setError(getErrorMessage(e, 'No se pudo marcar el numero como sin WhatsApp.'));
-      return;
-    }
-    // El registro que se escribio al abrir el chat dejo de contar: el cupo del
-    // dia tiene que reflejarlo o el tope frenaria antes de tiempo.
-    onRevertido();
-    await cola.avanzar();
-  }, [cola, filaEnCurso, onRevertido]);
-
-  const sacarPorNoContactar = useCallback(
-    async (nota: string) => {
-      const fila = filaEnCurso();
-      if (!fila) return;
-
-      setError('');
-      try {
-        await exitEnrollment(fila.enrollmentId, 'no_contactar', nota);
-      } catch (e) {
-        setError(getErrorMessage(e, 'No se pudo sacar al lead del flujo.'));
-        return;
-      }
-      await cola.avanzar();
-    },
-    [cola, filaEnCurso],
-  );
-
-  return { cola, procesando, error, ultimoResultado, despacharGrupo, marcarSinWhatsApp, sacarPorNoContactar };
+  return { procesando, error, ultimoResultado, despacharGrupo };
 }

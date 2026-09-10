@@ -15,6 +15,9 @@ function mensaje(nombre: string, phone: string): LeadMessage {
   return { lead: { id: nombre, name: nombre, phone } as Lead, message: `Hola ${nombre}` };
 }
 
+/** La plantilla de la ronda. Viaja con la cola, no con cada mensaje. */
+const TANDA = { templateId: 'plantilla-1', templateName: 'WS Cold #1' };
+
 const tres = [
   mensaje('Ana', '+56911111111'),
   mensaje('Beto', '+56922222222'),
@@ -42,7 +45,7 @@ describe('useWhatsAppQueue', () => {
     const { result } = renderHook(() => useWhatsAppQueue());
 
     await act(async () => {
-      await result.current.iniciar(tres);
+      await result.current.iniciar(tres, TANDA);
     });
 
     expect(abrir).toHaveBeenCalledTimes(1);
@@ -55,7 +58,7 @@ describe('useWhatsAppQueue', () => {
     const { result } = renderHook(() => useWhatsAppQueue());
 
     await act(async () => {
-      await result.current.iniciar(tres);
+      await result.current.iniciar(tres, TANDA);
     });
     expect(result.current.siguiente?.lead.name).toBe('Beto');
 
@@ -73,7 +76,7 @@ describe('useWhatsAppQueue', () => {
     const { result } = renderHook(() => useWhatsAppQueue());
 
     await act(async () => {
-      await result.current.iniciar([tres[0]!]);
+      await result.current.iniciar([tres[0]!], TANDA);
     });
     await act(async () => {
       await result.current.avanzar();
@@ -92,23 +95,23 @@ describe('useWhatsAppQueue', () => {
     const { result } = renderHook(() => useWhatsAppQueue({ onAbierto: abierto }));
 
     await act(async () => {
-      await result.current.iniciar(tres);
+      await result.current.iniciar(tres, TANDA);
     });
     expect(abierto).toHaveBeenCalledTimes(1);
-    expect(abierto).toHaveBeenCalledWith(tres[0]);
+    expect(abierto).toHaveBeenCalledWith(tres[0], TANDA);
 
     await act(async () => {
       await result.current.avanzar();
     });
     expect(abierto).toHaveBeenCalledTimes(2);
-    expect(abierto).toHaveBeenLastCalledWith(tres[1]);
+    expect(abierto).toHaveBeenLastCalledWith(tres[1], TANDA);
   });
 
   it('cancelar el resto no abre a los que faltaban', async () => {
     const { result } = renderHook(() => useWhatsAppQueue());
 
     await act(async () => {
-      await result.current.iniciar(tres);
+      await result.current.iniciar(tres, TANDA);
     });
     act(() => result.current.terminar());
 
@@ -121,7 +124,7 @@ describe('useWhatsAppQueue', () => {
     const { result } = renderHook(() => useWhatsAppQueue());
 
     await act(async () => {
-      await result.current.iniciar(tres);
+      await result.current.iniciar(tres, TANDA);
     });
     expect(result.current.error).toBe('sin pestaña');
 
@@ -138,10 +141,45 @@ describe('useWhatsAppQueue', () => {
     const { result } = renderHook(() => useWhatsAppQueue());
 
     await act(async () => {
-      await result.current.iniciar([]);
+      await result.current.iniciar([], TANDA);
     });
 
     expect(abrir).not.toHaveBeenCalled();
     expect(result.current.activa).toBe(false);
+  });
+
+  /*
+   * Lo que permitio borrar la segunda cola.
+   *
+   * La ronda de flujos tenia la suya porque "un destinatario es solo un lead y
+   * no hay donde colgar el paso". Ahora el paso viaja dentro del mensaje y
+   * llega intacto a quien registra: esa es toda la diferencia entre las dos
+   * rondas, y por eso alcanza con una.
+   */
+  it('el paso de flujo viaja con el mensaje hasta quien registra', async () => {
+    const abierto = vi.fn();
+    const { result } = renderHook(() => useWhatsAppQueue({ onAbierto: abierto }));
+    const conPaso: LeadMessage = {
+      ...mensaje('Ana', '+56911111111'),
+      pasoDeFlujo: { progressId: 42, enrollmentId: 7 },
+    };
+
+    await act(async () => {
+      await result.current.iniciar([conPaso], TANDA);
+    });
+
+    expect(abierto).toHaveBeenCalledWith(conPaso, TANDA);
+    expect(abierto.mock.calls[0]?.[0].pasoDeFlujo).toEqual({ progressId: 42, enrollmentId: 7 });
+  });
+
+  it('un mensaje del compositor llega sin paso', async () => {
+    const abierto = vi.fn();
+    const { result } = renderHook(() => useWhatsAppQueue({ onAbierto: abierto }));
+
+    await act(async () => {
+      await result.current.iniciar([tres[0]!], TANDA);
+    });
+
+    expect(abierto.mock.calls[0]?.[0].pasoDeFlujo).toBeUndefined();
   });
 });

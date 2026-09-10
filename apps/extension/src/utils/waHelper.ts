@@ -116,10 +116,32 @@ export function applyReason(text: string, motivo?: string): string {
   return motivo ? text.replace(/\{motivo\}/gi, motivo) : text;
 }
 
+/**
+ * El paso de flujo que viaja con un destinatario, cuando viene de una tanda de
+ * flujos.
+ *
+ * ## Por que el mensaje lleva el paso y no al reves
+ *
+ * Durante un tiempo la tanda de flujos tuvo su propia cola, con este argumento
+ * escrito en `useFlowBatchDispatch`: "en el compositor un destinatario es solo
+ * un lead, no hay donde colgar el paso". Eso describia una carencia del tipo y
+ * se uso como razon para duplicar el envio.
+ *
+ * La carencia era esta, y se arregla aqui. Con el paso viajando dentro del
+ * mensaje, la MISMA cola sirve para las dos rondas: al abrir un chat se
+ * registra el envio siempre, y ademas se marca el paso cuando lo hay.
+ */
+export interface PasoDeFlujoDelMensaje {
+  progressId: number;
+  enrollmentId: number;
+}
+
 /** Un destinatario con el texto ya resuelto para el. */
 export interface LeadMessage {
   lead: Lead;
   message: string;
+  /** Presente solo si el destinatario viene de la cola de un flujo. */
+  pasoDeFlujo?: PasoDeFlujoDelMensaje;
 }
 
 /**

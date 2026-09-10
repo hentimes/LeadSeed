@@ -1,23 +1,9 @@
 import { useCallback, useState } from 'react';
 import { marcarNoContactar, marcarSinWhatsApp } from '../services/leadMarks';
+import { marcarPasoSinWhatsApp } from '../services/messageFlowsService';
 import { getErrorMessage } from '../utils/errorMessage';
-import type { WhatsAppQueueState } from './useWhatsAppQueue';
-import type { AccionesDeSalida, SendLog } from '../types';
-
-interface Opciones {
-  cola: WhatsAppQueueState;
-  /**
-   * El historial de la plantilla en curso. De ahi sale el registro que hay que
-   * deshacer al marcar "no tiene WhatsApp": `logWhatsAppSend` devuelve el
-   * historial entero y no la fila que acaba de escribir.
-   */
-  historial: SendLog[];
-  /**
-   * Se llama cuando un envio ya contado deja de contar, para que el contador
-   * del dia lo refleje. Sin esto el tope frenaria antes de tiempo.
-   */
-  onEnvioDeshecho: () => Promise<void> | void;
-}
+import { useColaDeWhatsApp } from '../contexts/WhatsAppQueueContext';
+import type { AccionesDeSalida } from '../types';
 
 export interface MarcasDeCola {
   acciones: AccionesDeSalida;
@@ -26,17 +12,25 @@ export interface MarcasDeCola {
 }
 
 /**
- * MARCAR AL DE TURNO DURANTE UNA RONDA DE ENVIO MASIVO.
+ * MARCAR AL DE TURNO DURANTE UNA RONDA DE ENVIO.
  *
- * ## Por que existe aparte de `useFlowBatchDispatch`
+ * ## Un solo cableado para las dos rondas
  *
- * Ese gancho hace lo mismo para la ronda de Flujos, donde cada destinatario
- * trae su paso y su inscripcion. Aqui no hay ninguna de las dos: en el envio
- * masivo un destinatario es solo un lead. Las marcas se ponen sobre la persona
- * y no sobre una inscripcion que no existe.
+ * Hubo dos: uno en la tanda de flujos y otro en el compositor, escritos con
+ * dias de diferencia y ya divergiendo en los mensajes de error. Existian porque
+ * la ronda de flujos tenia su propia cola.
  *
- * Las dos vias terminan en las mismas funciones de la base -ver migracion
- * 186-, asi que no pueden divergir aunque el camino sea distinto.
+ * Ahora la cola es una sola y el mensaje sabe si trae un paso de flujo, asi que
+ * la decision cabe en un `if`:
+ *
+ *   Con paso, se llama al RPC que ademas DESHACE el paso -lo devuelve a
+ *   omitido y borra el siguiente que el trigger acababa de programar-. Sin eso
+ *   el flujo seguiria adelante hacia un numero que no existe.
+ *
+ *   Sin paso, basta con marcar al lead y borrar su registro de envio.
+ *
+ * Las dos ramas terminan marcando al lead igual, porque el RPC del paso delega
+ * en el del lead. Ver migraciones 184 y 186.
  *
  * ## Si falla, no se avanza
  *
@@ -44,23 +38,32 @@ export interface MarcasDeCola {
  * que delatara que la marca no llego a guardarse. Quedandose donde esta, el
  * error se ve y se puede volver a intentar sobre el mismo.
  */
-export function useMarcasDeCola({ cola, historial, onEnvioDeshecho }: Opciones): MarcasDeCola {
+export function useMarcasDeCola(): MarcasDeCola {
+  const { cola, envioRegistradoDe, marcarCambio } = useColaDeWhatsApp();
   const [aviso, setAviso] = useState('');
 
   const onSinWhatsApp = useCallback(async () => {
-    const lead = cola.actual?.lead;
-    if (!lead?.id) return;
+    const mensaje = cola.actual;
+    const lead = mensaje?.lead;
+    if (!mensaje || !lead?.id) return;
 
     try {
-      await marcarSinWhatsApp(lead.id, historial);
-      await onEnvioDeshecho();
-      setAviso(`${lead.name} quedó en la lista "Sin WhatsApp" y ese mensaje ya no cuenta.`);
+      if (mensaje.pasoDeFlujo) {
+        await marcarPasoSinWhatsApp(mensaje.pasoDeFlujo.progressId);
+      } else {
+        await marcarSinWhatsApp(lead.id, envioRegistradoDe(lead.id) ?? null);
+      }
     } catch (e) {
       setAviso(getErrorMessage(e, 'No se pudo marcar el número como sin WhatsApp.'));
       return;
     }
+
+    // El envio que se escribio al abrir el chat dejo de contar: los contadores
+    // del dia tienen que volver a leerse o el tope frenaria antes de tiempo.
+    marcarCambio();
+    setAviso(`${lead.name} quedó en la lista "Sin WhatsApp" y ese mensaje ya no cuenta.`);
     await cola.avanzar();
-  }, [cola, historial, onEnvioDeshecho]);
+  }, [cola, envioRegistradoDe, marcarCambio]);
 
   const onNoContactar = useCallback(
     async (nota: string) => {
@@ -68,14 +71,19 @@ export function useMarcasDeCola({ cola, historial, onEnvioDeshecho }: Opciones):
       if (!lead?.id) return;
 
       try {
-        // No se deshace el envio: el mensaje si salio, y es el que provoco la
-        // respuesta.
+        /*
+         * No se deshace el envio, ni con paso ni sin el: el mensaje si salio, y
+         * es el que provoco la respuesta. Y no hace falta cerrar el flujo
+         * aparte, porque `no_contactar` cierra TODAS sus inscripciones activas,
+         * de todos los canales.
+         */
         await marcarNoContactar(lead.id, nota);
-        setAviso(`${lead.name} quedó en la lista "No contactar" y salió de todos sus flujos.`);
       } catch (e) {
         setAviso(getErrorMessage(e, 'No se pudo marcar el contacto.'));
         return;
       }
+
+      setAviso(`${lead.name} quedó en la lista "No contactar" y salió de todos sus flujos.`);
       await cola.avanzar();
     },
     [cola],

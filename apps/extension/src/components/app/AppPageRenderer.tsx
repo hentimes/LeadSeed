@@ -198,7 +198,7 @@ export default function AppPageRenderer({
       pageContent = <TemplatesPage highlightTemplate={highlightTemplate} onClearHighlight={onClearHighlightTemplate} onNavigate={onNavigate} />;
       break;
     case 'flows':
-      pageContent = <FlowsPage />;
+      pageContent = <FlowsPage onNavigate={onNavigate} />;
       break;
     case 'playbooks':
       pageContent = <PlaybooksPage />;

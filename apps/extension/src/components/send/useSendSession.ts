@@ -60,7 +60,15 @@ export interface SendSession {
  * El contador sale de `send_logs` y no de un numero en memoria: tiene que
  * sobrevivir a cerrar el panel, que es justo lo que pasa entre envio y envio.
  */
-export function useSendSession(canal: Canal): SendSession {
+/**
+ * `version` vuelve a contar cuando algo cambia fuera de aqui.
+ *
+ * Quien registra los envios de una ronda ya no es el compositor sino la cola de
+ * la aplicacion (`WhatsAppQueueProvider`), asi que este contador no se entera
+ * solo. Se le pasa el numero que la cola incrementa con cada envio registrado o
+ * deshecho, y con eso alcanza: la cifra se lee de la base, no se lleva aqui.
+ */
+export function useSendSession(canal: Canal, version = 0): SendSession {
   const [ultima] = useState(() => leerSeleccion(canal));
   const [enviadosHoy, setEnviadosHoy] = useState(0);
 
@@ -75,7 +83,7 @@ export function useSendSession(canal: Canal): SendSession {
 
   useEffect(() => {
     void refrescarContador();
-  }, [refrescarContador]);
+  }, [refrescarContador, version]);
 
   const recordar = useCallback(
     (seleccion: UltimaSeleccion) => guardarSeleccion(canal, seleccion),
