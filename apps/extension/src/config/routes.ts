@@ -13,8 +13,11 @@ export interface RouteDef {
 
 export const primaryRoutes: RouteDef[] = [
   { page: 'dashboard', label: 'Dashboard', icon: Icon.Dashboard, requiredFeature: 'module:dashboard' },
-  { page: 'leads', label: 'Leads', icon: Icon.Leads, shortcut: '1' },
-  { page: 'agenda', label: 'Agenda', icon: Icon.Calendar },
+  /* `module:leads` existia en el catalogo desde el principio y no la
+     comprobaba nadie: era una clave muerta. Esta asignada a los tres planes,
+     asi que declararla no cierra nada. */
+  { page: 'leads', label: 'Leads', icon: Icon.Leads, shortcut: '1', requiredFeature: 'module:leads' },
+  { page: 'agenda', label: 'Agenda', icon: Icon.Calendar, requiredFeature: 'seguimiento.agenda' },
   { page: 'pipeline', label: 'Pipeline', icon: Icon.Pipeline, requiredFeature: 'module:pipeline' },
   { page: 'send', label: 'Enviar', icon: Icon.Send, shortcut: '2', requiredFeature: 'module:send' },
   { page: 'tasks', label: 'Tareas', icon: Icon.Tasks, shortcut: '3', badge: true, requiredFeature: 'module:tasks' },
@@ -29,33 +32,28 @@ export const secondaryRoutes: RouteDef[] = [
    */
   { page: 'templates', label: 'Plantillas', icon: Icon.Templates, requiredFeature: 'module:templates' },
   /*
-   * `flows` no estaba declarada, asi que `AppPageRenderer` no encontraba su
-   * ruta y Flujos quedaba fuera de cualquier comprobacion de plan. Se declara
-   * para que la barra de Mensajes pueda leer su rotulo y su icono.
+   * LAS CUATRO PUERTAS QUE FALTABAN, Y POR QUE AHORA SI.
    *
-   * **Sin `requiredFeature`, y no por descuido.** La primera version puso
-   * `module:flows`, que suena a lo correcto y es exactamente el error: esa
-   * clave no existe en el catalogo (`sql/seeds/001_saas_catalog_seed.sql`) ni
-   * esta asignada a ningun plan. Como `hasFeature` falla cerrado, declararla
-   * no habria "empezado a cobrar Flujos": habria **quitado Flujos a todos los
-   * usuarios no-admin que lo usan hoy**, sin que se notara probando con una
-   * cuenta de admin, porque para el admin `hasFeature` devuelve true siempre.
+   * Agenda, Chat, Flujos y Playbooks eran modulos completos abiertos a
+   * cualquiera con sesion. No por descuido: la version anterior de este
+   * comentario explicaba que declarar una clave inexistente NO empieza a
+   * cobrar la seccion, sino que **se la quita a todo el que no la tenga**,
+   * porque `hasFeature` falla cerrado. Y probandolo con una cuenta de
+   * administrador no se nota, porque para el siempre devuelve true.
    *
-   * Cobrar Flujos es una decision de producto con su migracion de datos
-   * -alta en el catalogo y reparto por planes-, no un renglon en este archivo.
-   * Hasta que eso exista, la ruta se comporta como hasta ahora: abierta.
+   * Lo que cambia es que ahora las cuatro claves existen en el catalogo
+   * (migracion 180) y estan asignadas a LOS TRES PLANES (migracion 181), que
+   * es exactamente lo que pasa hoy. Poner la puerta no le quita nada a nadie.
+   *
+   * Lo que se gana es poder decidir. Hasta ahora Flujos no se podia cobrar de
+   * ninguna manera: sin clave, y ponersela lo cerraba de golpe. Ahora quitarlo
+   * del plan gratuito es un clic en el panel, reversible, y con el aviso de
+   * "funcionalidad no disponible" que la aplicacion ya sabe pintar.
    */
-  { page: 'flows', label: 'Flujos', icon: Icon.Share },
-  /*
-   * Sin `requiredFeature`, por lo mismo que Flujos: `module:playbooks` no
-   * existe en el catalogo del SaaS, y como `hasFeature` falla cerrado,
-   * declararla dejaria Playbooks cerrado a todo el que no sea admin -sin que
-   * se note probando con una cuenta de admin, para la que siempre devuelve
-   * true-. Cobrarlo es una decision de producto con su alta en el catalogo.
-   */
-  { page: 'playbooks', label: 'Playbooks', icon: Icon.Bullseye },
+  { page: 'flows', label: 'Flujos', icon: Icon.Share, requiredFeature: 'mensajes.flujos' },
+  { page: 'playbooks', label: 'Playbooks', icon: Icon.Bullseye, requiredFeature: 'mensajes.playbooks' },
   { page: 'lists', label: 'Listas', icon: Icon.Lists, requiredFeature: 'module:lists' },
-  { page: 'chat', label: 'Chat', icon: Icon.Messages, badge: true },
+  { page: 'chat', label: 'Chat', icon: Icon.Messages, badge: true, requiredFeature: 'comunidad.chat' },
   { page: 'community', label: 'Comunidad', icon: Icon.Users, requiredFeature: 'module:community' },
   { page: 'settings', label: 'Ajustes', icon: Icon.Settings, shortcut: '5' },
   // Vivia suelta dentro del cajon de navegacion, con su propio `hasFeature`
