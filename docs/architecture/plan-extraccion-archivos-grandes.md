@@ -103,6 +103,12 @@ frontera que el §11 quiere hacer automatizable con ESLint boundaries. Extraer p
 
 ### 5. `pages/FlowsPage.tsx` — 511 líneas
 
+> **HECHA** el 2026-09-10, al agregar las salidas por "sin WhatsApp" y "no contactar".
+> `components/flows/FlowList.tsx` existe con las props previstas y `eliminarFlujo` subió a la
+> página. El archivo no bajó de 512 porque el mismo cambio le sumó las dos salidas nuevas: la
+> extracción pagó lo que el trabajo nuevo costó. **La segunda extracción sigue pendiente** y es
+> la que hay que hacer antes de volver a crecer aquí.
+
 **Sale:** la lista de flujos. El `<Card>` con su `<ul>` de las líneas 437-501, incluido el
 `onClick` asíncrono de 24 líneas embebido en el JSX del botón de borrar (472-495).
 

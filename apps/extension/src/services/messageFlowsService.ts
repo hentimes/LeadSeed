@@ -4,7 +4,9 @@ import {
   callEnrollLeadInFlow,
   callEnrollLeadInFlowFrom,
   callEnrollLeadsInFlow,
+  callMarcarPasoSinWhatsApp,
   callRescheduleFlowSteps,
+  callSalirDelFlujo,
   fetchFlowPositionRows,
   callAdvanceFlowSteps,
   fetchFlowUpcomingRows,
@@ -16,7 +18,6 @@ import {
   fetchProgressRows,
   insertFlow,
   replaceFlowSteps,
-  updateEnrollment,
   updateFlow,
   updateProgress,
   type MessageFlowEnrollmentRow,
@@ -24,6 +25,7 @@ import {
   type MessageFlowRow,
   type MessageFlowStepRow,
 } from '../repositories/messageFlowsRepository';
+import { mensajeDeRechazoAlInscribir } from './flowEnrollErrors';
 import type { PuntoDeRetoma } from './flowResume';
 import type { PosicionEnFlujo } from './flowEnrollSort';
 import type { Reprogramacion } from './whatsappQuota';
@@ -94,6 +96,7 @@ export async function fetchEnrollments(flowId: string): Promise<MessageFlowEnrol
     ...(nombreIncrustado(row.leads) ? { leadName: nombreIncrustado(row.leads) as string } : {}),
     ...(row.exited_at ? { exitedAt: row.exited_at } : {}),
     ...(row.exit_reason ? { exitReason: row.exit_reason } : {}),
+    ...(row.exit_note ? { exitNote: row.exit_note } : {}),
   }));
 }
 
@@ -215,7 +218,19 @@ export async function enrollLeadFrom(
   ultimoPasoHecho: number,
   desde: string | null,
 ): Promise<void> {
-  await callEnrollLeadInFlowFrom(flowId, leadId, ultimoPasoHecho, desde);
+  try {
+    await callEnrollLeadInFlowFrom(flowId, leadId, ultimoPasoHecho, desde);
+  } catch (error) {
+    /*
+     * Esta via no traducia nada, y es la que usa el panel de inscribir. Con las
+     * marcas de la 185 empezo a rechazar dos casos mas, asi que sin esto lo
+     * primero que veria el usuario al inscribir a alguien de la lista "No
+     * contactar" seria el texto crudo de Postgres con un UUID adentro.
+     */
+    const mensaje = mensajeDeRechazoAlInscribir(error);
+    if (mensaje) throw new Error(mensaje, { cause: error });
+    throw error;
+  }
 }
 
 /**
@@ -258,25 +273,54 @@ export async function enrollLead(flowId: string, leadId: string): Promise<void> 
   try {
     await callEnrollLeadInFlow(flowId, leadId);
   } catch (error) {
-    const mensaje = error instanceof Error ? error.message : String(error);
-    // El indice unico parcial de la 108 es quien rechaza al lead que ya ocupa
-    // ese canal. Sin traducir, el usuario veria el texto crudo de Postgres.
-    if (/una_activa_por_canal|duplicate key/i.test(mensaje)) {
-      throw new Error('Este lead ya esta en otro flujo del mismo canal. Sacalo de ese primero.', {
-        cause: error,
-      });
-    }
+    // Los rechazos que se saben explicar se traducen; el resto sube tal cual.
+    // Ver `flowEnrollErrors`.
+    const mensaje = mensajeDeRechazoAlInscribir(error);
+    if (mensaje) throw new Error(mensaje, { cause: error });
     throw error;
   }
 }
 
-export async function exitEnrollment(id: number, motivo: ExitReason): Promise<void> {
-  await updateEnrollment(id, {
-    status: 'salida',
-    exited_at: new Date().toISOString(),
-    exit_reason: motivo,
-    updated_at: new Date().toISOString(),
-  });
+/**
+ * Saca un lead de un flujo, con motivo y con detalle.
+ *
+ * ## Por que ya no es un `update`
+ *
+ * Lo era, y dejaba el trabajo a medias: cerraba la inscripcion y no tocaba las
+ * filas de progreso, que se quedaban en `pendiente` para siempre. La cola del
+ * dia no las mostraba -filtra por el estado de la inscripcion- pero seguian
+ * ahi, diciendo que tocaban, contando en cualquier consulta que no supiera de
+ * ese filtro.
+ *
+ * Ahora lo hace el RPC de la 184, en una transaccion, y ademas marca al lead
+ * cuando el motivo lo exige.
+ *
+ * ## Lo que se conserva
+ *
+ * Los pasos ya registrados NO se tocan: hasta donde llego cada uno es
+ * justamente lo que hay que poder mirar despues, junto con la nota.
+ */
+export async function exitEnrollment(
+  id: number,
+  motivo: ExitReason,
+  nota?: string,
+): Promise<void> {
+  await callSalirDelFlujo(id, motivo, nota?.trim() || null);
+}
+
+/**
+ * El numero de este paso no esta en WhatsApp.
+ *
+ * Deshace el envio que se registro al abrir el chat -deja de contar en el cupo,
+ * en el panel y en la ficha del lead-, omite el paso, borra el siguiente que el
+ * trigger habia programado y saca al lead de sus flujos de WhatsApp.
+ *
+ * Existe porque WhatsApp Web avisa en un dialogo propio, dentro de una pestaña
+ * que no es nuestra: la unica que puede saberlo es la persona que esta
+ * mirando.
+ */
+export async function marcarPasoSinWhatsApp(progressId: number): Promise<void> {
+  await callMarcarPasoSinWhatsApp(progressId);
 }
 
 /**

@@ -1,8 +1,18 @@
 import { Badge, Button, Panel } from '../../design';
 import type { WhatsAppQueueState } from '../../hooks/useWhatsAppQueue';
+import { SalidaDeCola, type AccionesDeSalida } from './SalidaDeCola';
 
 interface Props {
   cola: WhatsAppQueueState;
+  /**
+   * Marcar al de turno sin mandarle nada: que no tiene WhatsApp, o que pidio
+   * no recibir mas mensajes.
+   *
+   * Es opcional porque las dos necesitan una inscripcion de flujo a la que
+   * colgar la salida, y el envio masivo de "Enviar" no tiene ninguna: ahi un
+   * destinatario es solo un lead. Ver `useFlowBatchDispatch`.
+   */
+  acciones?: AccionesDeSalida;
 }
 
 /**
@@ -12,7 +22,7 @@ interface Props {
  * varios destinatarios era ciego: se abria un chat, no habia forma de saber
  * cual de los elegidos era ni cuantos quedaban, y los demas no se abrian nunca.
  */
-export default function WhatsAppQueuePanel({ cola }: Props) {
+export default function WhatsAppQueuePanel({ cola, acciones }: Props) {
   if (!cola.activa || !cola.actual) return null;
 
   const posicion = cola.indice + 1;
@@ -63,6 +73,21 @@ export default function WhatsAppQueuePanel({ cola }: Props) {
             {esUltimo ? 'Cerrar' : 'Cancelar el resto'}
           </Button>
         </div>
+
+        {/*
+          `key` por lead: el formulario de la nota guarda su propio estado, y sin
+          esto lo escrito para uno seguiria en pantalla cuando se abre el chat
+          del siguiente.
+        */}
+        {acciones && (
+          <SalidaDeCola
+            key={cola.actual.lead.id ?? cola.indice}
+            nombre={cola.actual.lead.name}
+            bloqueado={cola.abriendo}
+            onSinWhatsApp={acciones.onSinWhatsApp}
+            onNoContactar={acciones.onNoContactar}
+          />
+        )}
       </div>
     </Panel>
   );

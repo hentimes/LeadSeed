@@ -37,6 +37,7 @@ export interface MessageFlowEnrollmentRow {
   enrolled_at: string;
   exited_at: string | null;
   exit_reason: ExitReason | null;
+  exit_note: string | null;
 }
 
 export interface MessageFlowProgressRow {
@@ -131,7 +132,7 @@ export async function fetchEnrollmentRows(
     // Se trae el nombre del lead en el mismo viaje: la alternativa era pedir
     // los leads aparte y cruzarlos en el cliente, que con 1900 leads seria
     // traerlos todos para mostrar doce.
-    .select('id, flow_id, lead_id, channel, status, enrolled_at, exited_at, exit_reason, leads(name)')
+    .select('id, flow_id, lead_id, channel, status, enrolled_at, exited_at, exit_reason, exit_note, leads(name)')
     .eq('flow_id', flowId)
     .order('enrolled_at', { ascending: false });
 
@@ -148,7 +149,7 @@ export async function fetchActiveEnrollmentsForLead(
 ): Promise<MessageFlowEnrollmentRow[]> {
   const { data, error } = await supabase
     .from(ENROLLMENTS)
-    .select('id, flow_id, lead_id, channel, status, enrolled_at, exited_at, exit_reason')
+    .select('id, flow_id, lead_id, channel, status, enrolled_at, exited_at, exit_reason, exit_note')
     .eq('lead_id', leadId)
     .eq('status', 'activa');
 
@@ -362,11 +363,20 @@ export async function callRescheduleFlowSteps(
   return Number(data ?? 0);
 }
 
-/** Lo que devuelve una inscripcion en tanda. Ver migracion 160. */
+/** Lo que devuelve una inscripcion en tanda. Ver migraciones 160 y 185. */
 export interface ResultadoDeTanda {
   inscritos: number;
   yaEnFlujo: number;
   fallidos: number;
+  /**
+   * Los que no entraron porque estan marcados: pidieron no recibir mas
+   * mensajes, o su numero no esta en WhatsApp.
+   *
+   * Se cuentan aparte de `fallidos` porque no fallo nada. Meterlos ahi
+   * convierte una decision del usuario en un error de la aplicacion, y lo
+   * manda a buscar una causa que no existe.
+   */
+  marcados: number;
 }
 
 /**
@@ -389,11 +399,19 @@ export async function callEnrollLeadsInFlow(
   });
   if (error) throw error;
 
-  const fila = (data as Array<{ inscritos: number; ya_en_flujo: number; fallidos: number }>)?.[0];
+  const fila = (
+    data as Array<{
+      inscritos: number;
+      ya_en_flujo: number;
+      fallidos: number;
+      marcados: number;
+    }>
+  )?.[0];
   return {
     inscritos: fila?.inscritos ?? 0,
     yaEnFlujo: fila?.ya_en_flujo ?? 0,
     fallidos: fila?.fallidos ?? 0,
+    marcados: fila?.marcados ?? 0,
   };
 }
 
@@ -414,5 +432,41 @@ export async function callDispatchQueue(): Promise<Array<Record<string, unknown>
 
 export async function updateProgress(id: number, payload: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.from(PROGRESS).update(payload).eq('id', id);
+  if (error) throw error;
+}
+
+
+/**
+ * Cierra una inscripcion con motivo y nota.
+ *
+ * Va por RPC y no por un `update` suelto porque la salida son cuatro
+ * escrituras -cerrar la inscripcion, omitir lo que quedaba, marcar al lead y
+ * meterlo en su lista- que no tienen sentido a medias: un lead marcado con la
+ * inscripcion todavia activa seguiria recibiendo mensajes. Ver migracion 184.
+ */
+export async function callSalirDelFlujo(
+  enrollmentId: number,
+  motivo: ExitReason,
+  nota: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('salir_del_flujo', {
+    p_enrollment_id: enrollmentId,
+    p_motivo: motivo,
+    p_nota: nota,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Deshace el envio que se registro al abrir el chat de un numero sin WhatsApp.
+ *
+ * No es una salida mas: ademas de cerrar la inscripcion hay que DESHACER lo ya
+ * escrito -el registro del envio, el paso marcado y el paso siguiente que el
+ * trigger programo-. Ver migracion 184.
+ */
+export async function callMarcarPasoSinWhatsApp(progressId: number): Promise<void> {
+  const { error } = await supabase.rpc('marcar_paso_sin_whatsapp', {
+    p_progress_id: progressId,
+  });
   if (error) throw error;
 }

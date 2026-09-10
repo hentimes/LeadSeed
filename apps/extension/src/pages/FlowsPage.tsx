@@ -11,24 +11,18 @@ import {
   estadoDelCupo,
   repartirEnDias,
 } from '../services/whatsappQuota';
-import { Button, Card, EmptyState, IconButton, SegmentedControl } from '../design';
-import { Icon } from '../utils/icons';
+import { Button, EmptyState, SegmentedControl } from '../design';
 import { useAuth } from '../contexts/AuthContext';
 import { useMessageFlows } from '../hooks/useMessageFlows';
 import { FlowTodayList } from '../components/flows/FlowTodayList';
 import { FlowEditor } from '../components/flows/FlowEditor';
 import { FlowEnrollPanel } from '../components/flows/FlowEnrollPanel';
 import { FlowDetail } from '../components/flows/FlowDetail';
+import { FlowList } from '../components/flows/FlowList';
 import { dispatchFlowStep } from '../services/flowDispatchService';
 import type { MessageFlow, MessageFlowStep, PendingFlowStep } from '../types';
 
 type Vista = 'hoy' | 'flujos' | 'editor' | 'detalle' | 'inscribir';
-
-const CANAL_LABEL = {
-  whatsapp: 'WhatsApp',
-  email: 'Email',
-  call: 'Llamadas',
-} as const;
 
 /**
  * Flujos de mensajes.
@@ -114,9 +108,38 @@ export default function FlowsPage() {
    * El contador del cupo sube con cada chat que se abre -no al final- porque el
    * tope tiene que frenar en el mensaje 50, no enterarse en el 51.
    */
-  const tanda = useFlowBatchDispatch(user?.id, () => {
-    setEnviadosHoy((usados) => usados + 1);
+  const tanda = useFlowBatchDispatch(user?.id, {
+    onDespachado: () => setEnviadosHoy((usados) => usados + 1),
+    /*
+     * Marcar un numero como sin WhatsApp borra su registro de envio, asi que
+     * el cupo del dia tiene que devolverlo. Sin esto, mandar cincuenta a diez
+     * numeros muertos agotaria el tope con cuarenta mensajes de verdad.
+     */
+    onRevertido: () => setEnviadosHoy((usados) => Math.max(0, usados - 1)),
   });
+
+  /*
+   * LAS DOS SALIDAS DE LA RONDA, con lo que la pantalla hace despues.
+   *
+   * El gancho escribe y avanza la cola; recargar la lista de hoy y decir que
+   * paso son cosas de esta pagina, y por eso se envuelven aqui.
+   */
+  const accionesDeLaCola = {
+    onSinWhatsApp: async () => {
+      const quien = tanda.cola.actual?.lead.name ?? 'El contacto';
+      await tanda.marcarSinWhatsApp();
+      await flujos.recargarCola();
+      setAviso(`${quien} quedó en la lista "Sin WhatsApp" y ese mensaje ya no cuenta.`);
+    },
+    onNoContactar: async (nota: string) => {
+      const quien = tanda.cola.actual?.lead.name ?? 'El contacto';
+      await tanda.sacarPorNoContactar(nota);
+      await flujos.recargarCola();
+      setAviso(
+        `${quien} quedó en la lista "No contactar" y salió de todos sus flujos. Lo que ya recibió queda registrado.`,
+      );
+    },
+  };
 
   /*
    * Traer a hoy lo que estaba para mas adelante.
@@ -248,6 +271,28 @@ export default function FlowsPage() {
     }
   };
 
+  /*
+   * El dialogo dice las dos mitades. Antes solo decia que los inscritos
+   * dejaban de recibir sus pasos, y con eso no se podia decidir: lo que frena a
+   * cualquiera es no saber si borrar el flujo borra tambien lo ya enviado. No
+   * lo borra -eso vive en send_logs- y decirlo es la diferencia entre poder
+   * decidir y no tocar el boton.
+   */
+  const eliminarFlujo = async (flujo: MessageFlow) => {
+    const confirmado = await getPlatform().dialogs.confirm(
+      'Se pierde quién estaba inscrito y por qué paso iba. Los mensajes ya enviados NO se borran: quedan en el historial de cada lead.',
+      { title: `¿Eliminar el flujo ${flujo.name}?`, confirmLabel: 'Eliminar', tone: 'danger' },
+    );
+    if (!confirmado) return;
+
+    try {
+      await flujos.remove(flujo.id);
+      setAviso(`Flujo ${flujo.name} eliminado.`);
+    } catch (error) {
+      setAviso(error instanceof Error ? error.message : 'No se pudo eliminar.');
+    }
+  };
+
   const omitir = async (fila: PendingFlowStep) => {
     if (
       !(await getPlatform().dialogs.confirm(
@@ -316,7 +361,7 @@ export default function FlowsPage() {
         y cuantos faltan. Es la misma barra del envio masivo: la tarea es la
         misma y no tiene por que verse distinta segun de donde salio.
       */}
-      <WhatsAppQueuePanel cola={tanda.cola} />
+      <WhatsAppQueuePanel cola={tanda.cola} acciones={accionesDeLaCola} />
       {tanda.error && (
         <p role="alert" className="text-micro text-state-danger">
           {tanda.error}
@@ -375,9 +420,20 @@ export default function FlowsPage() {
             if (actualizado) setViendo(actualizado);
             setAviso(activo ? `Flujo ${viendo.name} reanudado.` : `Flujo ${viendo.name} pausado.`);
           }}
-          onSacar={async (enrollmentId, motivo) => {
-            await flujos.sacar(enrollmentId, motivo);
-            setAviso('Lead sacado del flujo.');
+          onSacar={async (enrollmentId, motivo, nota) => {
+            await flujos.sacar(enrollmentId, motivo, nota);
+            /*
+             * El aviso dice lo que hizo cada motivo. Los dos ultimos marcan al
+             * lead y le cierran la puerta a futuras inscripciones: decir "lead
+             * sacado del flujo" para eso se queda corto justo donde importa.
+             */
+            setAviso(
+              motivo === 'no_contactar'
+                ? 'Salió de todos sus flujos y quedó en la lista "No contactar".'
+                : motivo === 'sin_whatsapp'
+                  ? 'Salió de sus flujos de WhatsApp y quedó en la lista "Sin WhatsApp".'
+                  : 'Lead sacado del flujo.',
+            );
           }}
         />
       ) : vista === 'editor' ? (
@@ -435,69 +491,13 @@ export default function FlowsPage() {
           action={<Button variant="primary" onClick={() => abrirEditor(null)}>Crear el primero</Button>}
         />
       ) : (
-        <Card padding="none">
-          <ul className="min-w-0">
-            {lista.map((flujo) => (
-              <li
-                key={flujo.id}
-                className="flex min-w-0 items-center gap-2 border-b border-line-soft px-3 py-2.5 last:border-0"
-              >
-                <button
-                  type="button"
-                  onClick={() => abrirDetalle(flujo)}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <span className="block truncate text-body font-semibold text-ink">{flujo.name}</span>
-                  <span className="mt-0.5 block truncate text-micro text-ink-secondary">
-                    {CANAL_LABEL[flujo.channel]}
-                    {!flujo.isActive && ' · pausado'}
-                  </span>
-                </button>
-                <Button size="sm" onClick={() => { setInscribiendoEn(flujo); setVista('inscribir'); }}>
-                  Inscribir
-                </Button>
-                <IconButton
-                  icon={<Icon.Edit />}
-                  label={`Editar el flujo ${flujo.name}`}
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => abrirEditor(flujo)}
-                />
-                <IconButton
-                  icon={<Icon.Trash />}
-                  label={`Eliminar el flujo ${flujo.name}`}
-                  size="sm"
-                  variant="ghost-danger"
-                  className="shrink-0"
-                  onClick={async () => {
-                    if (
-                      /*
-                        El dialogo dice las dos mitades. Antes solo decia que
-                        los inscritos dejaban de recibir sus pasos, y con eso no
-                        se podia decidir: lo que frena a cualquiera es no saber
-                        si borrar el flujo borra tambien lo ya enviado. No lo
-                        borra -eso vive en send_logs- y decirlo es la diferencia
-                        entre poder decidir y no tocar el boton.
-                      */
-                      !(await getPlatform().dialogs.confirm(
-                        'Se pierde quién estaba inscrito y por qué paso iba. Los mensajes ya enviados NO se borran: quedan en el historial de cada lead.',
-                        { title: `¿Eliminar el flujo ${flujo.name}?`, confirmLabel: 'Eliminar', tone: 'danger' },
-                      ))
-                    ) {
-                      return;
-                    }
-                    try {
-                      await flujos.remove(flujo.id);
-                      setAviso(`Flujo ${flujo.name} eliminado.`);
-                    } catch (error) {
-                      setAviso(error instanceof Error ? error.message : 'No se pudo eliminar.');
-                    }
-                  }}
-                />
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <FlowList
+          flujos={lista}
+          onAbrirDetalle={abrirDetalle}
+          onInscribir={(flujo) => { setInscribiendoEn(flujo); setVista('inscribir'); }}
+          onEditar={abrirEditor}
+          onEliminar={eliminarFlujo}
+        />
       )}
 
       {vista === 'flujos' && lista.length > 0 && (

@@ -12,14 +12,30 @@ export type FlowStepStatus = 'pendiente' | 'toca' | 'registrado' | 'omitido' | '
 
 export type EnrollmentStatus = 'activa' | 'completada' | 'salida';
 
-/** Por que salio un lead del flujo. Nulo mientras siga dentro. */
+/**
+ * Por que salio un lead del flujo. Nulo mientras siga dentro.
+ *
+ * Los dos ultimos no son formas de decir `manual`: marcan a la PERSONA, no a
+ * esta inscripcion, y por eso impiden volver a inscribirla. Ver la migracion
+ * 184.
+ *
+ *   `sin_whatsapp`  su numero no esta en WhatsApp. Cierra sus flujos de ese
+ *                   canal y deja el correo y las llamadas intactos.
+ *   `no_contactar`  pidio no recibir mas mensajes. Cierra todos sus flujos, de
+ *                   todos los canales.
+ */
 export type ExitReason =
   | 'convertido'
   | 'descartado'
   | 'fin_secuencia'
   | 'respondio'
   | 'manual'
-  | 'otro_flujo';
+  | 'otro_flujo'
+  | 'sin_whatsapp'
+  | 'no_contactar';
+
+/** Lo mas largo que puede ser el detalle de una salida. Lo exige la base. */
+export const LARGO_MAXIMO_NOTA_DE_SALIDA = 50;
 
 export interface MessageFlow {
   id: string;
@@ -49,6 +65,13 @@ export interface MessageFlowEnrollment {
   enrolledAt: string;
   exitedAt?: string;
   exitReason?: ExitReason;
+  /**
+   * El detalle escrito al sacarlo, hasta 50 caracteres.
+   *
+   * Es lo que convierte una salida en contexto: dentro de tres meses, "pidio
+   * que lo llame en marzo" y "se enojo" son la misma `salida` sin esto.
+   */
+  exitNote?: string;
   /** Nombre del lead, resuelto en la consulta. */
   leadName?: string;
 }

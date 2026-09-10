@@ -45,7 +45,7 @@ interface Props {
   /** Inscribe a todos los que quedaron en el filtro, cada uno por donde va. */
   onInscribirTodos: (
     leadIds: string[],
-  ) => Promise<{ inscritos: number; yaEnFlujo: number; fallidos: number }>;
+  ) => Promise<{ inscritos: number; yaEnFlujo: number; fallidos: number; marcados: number }>;
   onVolver: () => void;
 }
 
@@ -325,15 +325,15 @@ export function FlowEnrollPanel({ flujo, onInscribir, onInscribirTodos, onVolver
     setError('');
     setEnTanda(true);
     try {
-      const { inscritos, yaEnFlujo, fallidos } = await onInscribirTodos(ids);
+      const { inscritos, yaEnFlujo, fallidos, marcados } = await onInscribirTodos(ids);
       const partes = [`${inscritos} inscritos`];
       if (yaEnFlujo > 0) partes.push(`${yaEnFlujo} ya estaban en un flujo`);
+      if (marcados > 0) partes.push(`${marcados} marcados como sin contactar o sin WhatsApp`);
       if (fallidos > 0) partes.push(`${fallidos} no se pudieron`);
       setResumen(partes.join(' · '));
       setInscritosAqui((cuantos) => cuantos + inscritos);
       /* Aca si se vuelve a preguntar: anotar cien inscripciones a mano seria
-         reconstruir en el cliente lo que la base acaba de decidir, y con la
-         primera que no cuadrara la lista empezaria a mentir. */
+         reconstruir lo que la base decidio, y a la primera empezaria a mentir. */
       setPosiciones(indexarPosiciones(await fetchFlowPositions()));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo inscribir la tanda.');

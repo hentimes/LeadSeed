@@ -116,8 +116,8 @@ export function useMessageFlows() {
   );
 
   const sacar = useCallback(
-    async (enrollmentId: number, motivo: ExitReason) => {
-      await exitEnrollment(enrollmentId, motivo);
+    async (enrollmentId: number, motivo: ExitReason, nota?: string) => {
+      await exitEnrollment(enrollmentId, motivo, nota);
       triggerRefresh();
       await recargarCola();
     },

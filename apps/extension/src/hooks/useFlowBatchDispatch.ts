@@ -5,6 +5,7 @@ import {
   plantillaDelPaso,
   registrarPasoAbierto,
 } from '../services/flowDispatchService';
+import { exitEnrollment, marcarPasoSinWhatsApp } from '../services/messageFlowsService';
 import { fetchLeadsByIds } from '../services/leadsService';
 import { buildLeadMessages } from '../utils/waHelper';
 import { getErrorMessage } from '../utils/errorMessage';
@@ -60,11 +61,30 @@ export interface FlowBatchDispatch {
    * y se aplica ANTES de abrir nada.
    */
   despacharGrupo: (filas: PendingFlowStep[], tope: number) => Promise<void>;
+  /**
+   * El numero del que esta abierto no tiene WhatsApp: deshace su registro y lo
+   * saca del flujo. Avanza la cola al siguiente.
+   */
+  marcarSinWhatsApp: () => Promise<void>;
+  /**
+   * El que esta abierto pidio no recibir mas mensajes. Avanza la cola.
+   *
+   * A diferencia de la anterior NO deshace el envio: el mensaje si salio, y es
+   * precisamente el que provoco la respuesta.
+   */
+  sacarPorNoContactar: (nota: string) => Promise<void>;
+}
+
+interface Avisos {
+  /** Se despacho un paso: sube el contador del cupo. */
+  onDespachado: () => void;
+  /** Un envio ya contado dejo de contar: el contador del cupo baja. */
+  onRevertido: () => void;
 }
 
 export function useFlowBatchDispatch(
   userId: string | undefined,
-  onPasoDespachado: () => void,
+  { onDespachado, onRevertido }: Avisos,
 ): FlowBatchDispatch {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState('');
@@ -83,7 +103,7 @@ export function useFlowBatchDispatch(
       const fila = mensaje.lead.id ? grupo.current.get(mensaje.lead.id) : undefined;
       if (!fila || !userId || !plantilla.current) return;
       await registrarPasoAbierto(userId, fila, plantilla.current, mensaje);
-      onPasoDespachado();
+      onDespachado();
     },
   });
 
@@ -125,7 +145,7 @@ export function useFlowBatchDispatch(
             try {
               await dispatchFlowStep(userId, fila);
               hechos += 1;
-              onPasoDespachado();
+              onDespachado();
             } catch (fallo) {
               /*
                * Uno que falla no frena a los otros cuarenta y seis, pero su
@@ -178,8 +198,60 @@ export function useFlowBatchDispatch(
         setProcesando(false);
       }
     },
-    [cola, onPasoDespachado, userId],
+    [cola, onDespachado, userId],
   );
 
-  return { cola, procesando, error, ultimoResultado, despacharGrupo };
+  /*
+   * LA FILA DEL QUE ESTA ABIERTO AHORA.
+   *
+   * La cola trabaja con mensajes y no con pasos de flujo: el puente entre los
+   * dos es el mismo `grupo` que usa `onAbierto`, indexado por lead.
+   */
+  const filaEnCurso = useCallback(() => {
+    const id = cola.actual?.lead.id;
+    return id ? grupo.current.get(id) : undefined;
+  }, [cola.actual]);
+
+  /*
+   * En las dos: si falla, NO se avanza.
+   *
+   * Avanzar igual dejaria al lead marcado a medias y ya fuera de la pantalla,
+   * sin nada que delatara que la marca no llego a guardarse. Quedandose donde
+   * esta, el error se ve y se puede volver a intentar sobre el mismo.
+   */
+  const marcarSinWhatsApp = useCallback(async () => {
+    const fila = filaEnCurso();
+    if (!fila) return;
+
+    setError('');
+    try {
+      await marcarPasoSinWhatsApp(fila.progressId);
+    } catch (e) {
+      setError(getErrorMessage(e, 'No se pudo marcar el numero como sin WhatsApp.'));
+      return;
+    }
+    // El registro que se escribio al abrir el chat dejo de contar: el cupo del
+    // dia tiene que reflejarlo o el tope frenaria antes de tiempo.
+    onRevertido();
+    await cola.avanzar();
+  }, [cola, filaEnCurso, onRevertido]);
+
+  const sacarPorNoContactar = useCallback(
+    async (nota: string) => {
+      const fila = filaEnCurso();
+      if (!fila) return;
+
+      setError('');
+      try {
+        await exitEnrollment(fila.enrollmentId, 'no_contactar', nota);
+      } catch (e) {
+        setError(getErrorMessage(e, 'No se pudo sacar al lead del flujo.'));
+        return;
+      }
+      await cola.avanzar();
+    },
+    [cola, filaEnCurso],
+  );
+
+  return { cola, procesando, error, ultimoResultado, despacharGrupo, marcarSinWhatsApp, sacarPorNoContactar };
 }

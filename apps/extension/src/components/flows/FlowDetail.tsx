@@ -14,6 +14,7 @@ import { nombreCorto, nombreVisible } from '../../utils/leadDisplay';
 import { FlowProgressRail, MAX_PASOS_RIEL } from './FlowProgressRail';
 import { fetchEnrollments, fetchProgress } from '../../services/messageFlowsService';
 import { computeFlowProgress, estadosDePasos, tocaAhora } from '../../services/flowProgress';
+import { LARGO_MAXIMO_NOTA_DE_SALIDA } from '../../types';
 import type {
   ExitReason,
   MessageFlow,
@@ -30,12 +31,27 @@ import type {
  * mismo canal. Ofrecerlos a mano seria dejar que alguien afirme algo que en
  * realidad decidio el sistema.
  */
+/*
+ * Los dos ultimos no son "otro motivo" con otro nombre: marcan a la PERSONA y
+ * le cierran la puerta a futuras inscripciones, en todos los canales o solo en
+ * WhatsApp. Por eso el formulario avisa cual eligio antes de confirmar.
+ */
 const MOTIVOS_SALIDA: Array<{ valor: ExitReason; label: string }> = [
-  { valor: 'convertido', label: 'Se convirtio' },
-  { valor: 'descartado', label: 'Se descarto' },
-  { valor: 'respondio', label: 'Respondio' },
+  { valor: 'convertido', label: 'Se convirtió' },
+  { valor: 'descartado', label: 'Se descartó' },
+  { valor: 'respondio', label: 'Respondió' },
+  { valor: 'no_contactar', label: 'Pidió no recibir más mensajes' },
+  { valor: 'sin_whatsapp', label: 'Su número no está en WhatsApp' },
   { valor: 'manual', label: 'Otro motivo' },
 ];
+
+/** Lo que cada motivo hace de mas, dicho antes de confirmar y no despues. */
+const CONSECUENCIA_SALIDA: Partial<Record<ExitReason, string>> = {
+  no_contactar:
+    'Además queda en la lista "No contactar", sale de todos sus flujos y no se le podrá volver a inscribir en ninguno.',
+  sin_whatsapp:
+    'Además queda en la lista "Sin WhatsApp" y no se le podrá volver a inscribir en flujos de ese canal. Su correo y sus llamadas no se tocan.',
+};
 
 /** Dia y mes: en esta lista la hora no cambia ninguna decision. */
 const FECHA_INSCRITO = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit' });
@@ -52,10 +68,12 @@ const INSCRITOS_POR_PAGINA = 12;
 const ETIQUETA_SALIDA: Record<ExitReason, string> = {
   convertido: 'Convertido',
   descartado: 'Descartado',
-  fin_secuencia: 'Termino la secuencia',
-  respondio: 'Respondio',
+  fin_secuencia: 'Terminó la secuencia',
+  respondio: 'Respondió',
   manual: 'Retirado a mano',
-  otro_flujo: 'Paso a otro flujo',
+  otro_flujo: 'Pasó a otro flujo',
+  sin_whatsapp: 'Sin WhatsApp',
+  no_contactar: 'Pidió no recibir más',
 };
 
 interface Props {
@@ -65,7 +83,7 @@ interface Props {
   onEditar: () => void;
   onInscribir: () => void;
   onPausar: (activo: boolean) => Promise<void>;
-  onSacar: (enrollmentId: number, motivo: ExitReason) => Promise<void>;
+  onSacar: (enrollmentId: number, motivo: ExitReason, nota: string) => Promise<void>;
   refreshKey: number;
 }
 
@@ -89,6 +107,9 @@ export function FlowDetail({
   const [inscritos, setInscritos] = useState<MessageFlowEnrollment[]>([]);
   const [progreso, setProgreso] = useState<MessageFlowProgress[]>([]);
   const [sacando, setSacando] = useState<number | null>(null);
+  /* Se vacia al abrir cada formulario y no con un efecto: lo escrito para un
+     inscrito no tiene por que aparecer en el de al lado. */
+  const [notaSalida, setNotaSalida] = useState('');
   const [motivoSalida, setMotivoSalida] = useState<ExitReason>('manual');
 
   useEffect(() => {
@@ -338,7 +359,7 @@ export function FlowDetail({
                       label={`Sacar a ${nombre} del flujo`}
                       size="sm"
                       variant="ghost-danger"
-                      onClick={() => setSacando(inscrito.id)}
+                      onClick={() => { setSacando(inscrito.id); setNotaSalida(''); }}
                     />
 
                     {sacando === inscrito.id && (
@@ -362,8 +383,24 @@ export function FlowDetail({
                             </option>
                           ))}
                         </Select>
+                        <label
+                          className="text-micro text-ink-secondary"
+                          htmlFor={`nota-${inscrito.id}`}
+                        >
+                          Detalle
+                        </label>
+                        <Input
+                          id={`nota-${inscrito.id}`}
+                          value={notaSalida}
+                          maxLength={LARGO_MAXIMO_NOTA_DE_SALIDA}
+                          placeholder="Opcional. Por ejemplo: pidió que lo llame en marzo"
+                          onChange={(e) => setNotaSalida(e.target.value)}
+                        />
                         <p className="text-micro text-ink-muted">
                           Los pasos que faltan se cancelan. Lo ya registrado se conserva.
+                          {CONSECUENCIA_SALIDA[motivoSalida]
+                            ? ` ${CONSECUENCIA_SALIDA[motivoSalida]}`
+                            : ''}
                         </p>
                         <div className="flex justify-end gap-2">
                           <Button size="sm" onClick={() => setSacando(null)}>
@@ -373,8 +410,9 @@ export function FlowDetail({
                             size="sm"
                             variant="danger"
                             onClick={async () => {
-                              await onSacar(inscrito.id, motivoSalida);
+                              await onSacar(inscrito.id, motivoSalida, notaSalida);
                               setSacando(null);
+                              setNotaSalida('');
                             }}
                           >
                             Sacar
@@ -402,11 +440,21 @@ export function FlowDetail({
                   key={inscrito.id}
                   className="flex min-w-0 items-center gap-2 border-b border-line-soft px-3 py-2 last:border-0"
                 >
-                  <span className="min-w-0 flex-1 truncate text-body text-ink-secondary">
-                    {nombreVisible(inscrito.leadName)}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-body text-ink-secondary">
+                      {nombreVisible(inscrito.leadName)}
+                    </span>
+                    {/* El detalle escrito al sacarlo. Es todo el motivo por el
+                        que existe el campo: sin leerse aqui, guardarlo no
+                        serviria de nada. */}
+                    {inscrito.exitNote && (
+                      <span className="mt-0.5 block truncate text-micro text-ink-muted" title={inscrito.exitNote}>
+                        {inscrito.exitNote}
+                      </span>
+                    )}
                   </span>
                   <span className="shrink-0 text-micro text-ink-muted">
-                    {inscrito.exitReason ? ETIQUETA_SALIDA[inscrito.exitReason] : 'Salio'}
+                    {inscrito.exitReason ? ETIQUETA_SALIDA[inscrito.exitReason] : 'Salió'}
                   </span>
                 </li>
               ))}
